@@ -27,13 +27,12 @@ School project for a web application to play a dungeon crawler game.
 
 - **Routing**: [Bramus Router](https://github.com/bramus/router)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/) (via CDN for development)
-- **Database**: PDO connection with `vlucas/phpdotenv` configuration.
+- **Database**: PDO connection with .env configuration.
 
-## Database Connection
 
-The database connection is handled in `config/database.php`. You can include this file to get a `$pdo` instance:
+## Contributors
 
-```php
-require_once __DIR__ . '/../config/database.php';
-// Use $pdo here
-```
+- [Antoine Matter](https://github.com/Antoin9-e)
+- [Arthur Langlois](https://github.com/FxBam)
+- [aR7dx](https://github.com/aR7dx)
+- [Remy Leber](https://github.com/Remynder0)
