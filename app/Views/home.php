@@ -26,9 +26,9 @@
                 </div>
                 <div class="hidden md:block">
                     <div class="ml-10 flex items-baseline space-x-4">
-                        <a href="#" class="text-gray-700 hover:text-violet-600 px-3 py-2 rounded-md text-sm font-medium transition">Accueil</a>
+                        <a href="/" class="text-gray-700 hover:text-violet-600 px-3 py-2 rounded-md text-sm font-medium transition">Accueil</a>
                         <a href="#features" class="text-gray-700 hover:text-violet-600 px-3 py-2 rounded-md text-sm font-medium transition">Fonctionnalités</a>
-                        <a href="#" class="bg-violet-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-violet-700 transition shadow-lg shadow-violet-200">Jouer Maintenant</a>
+                        <a href="/login" class="bg-violet-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-violet-700 transition shadow-lg shadow-violet-200">Jouer Maintenant</a>
                     </div>
                 </div>
             </div>
@@ -48,7 +48,7 @@
                         Plongez dans un RPG textuel immersif. Créez votre destinée, combattez des créatures légendaires et vivez une épopée unique à chaque partie.
                     </p>
                     <div class="mt-8 sm:max-w-lg sm:mx-auto sm:text-center lg:text-left lg:mx-0">
-                        <a href="#" class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-full text-white bg-violet-600 hover:bg-violet-700 md:py-4 md:text-lg md:px-10 shadow-xl shadow-violet-200 transition transform hover:-translate-y-1">
+                        <a href="/register" class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-full text-white bg-violet-600 hover:bg-violet-700 md:py-4 md:text-lg md:px-10 shadow-xl shadow-violet-200 transition transform hover:-translate-y-1">
                             Commencer l'aventure
                         </a>
                         <a href="#features" class="mt-3 sm:mt-0 sm:ml-3 inline-flex items-center justify-center px-8 py-3 border border-gray-200 text-base font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10 transition">
@@ -168,7 +168,7 @@
             </h2>
             <div class="mt-8 flex lg:mt-0 lg:flex-shrink-0">
                 <div class="inline-flex rounded-md shadow">
-                    <a href="#" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-violet-600 bg-white hover:bg-violet-50">
+                    <a href="/register" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-violet-600 bg-white hover:bg-violet-50">
                         Créer un compte
                     </a>
                 </div>
