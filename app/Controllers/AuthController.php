@@ -9,19 +9,12 @@ class AuthController
     public function login()
     {
         // If already logged in, redirect to home
-        if (isset($_SESSION['user_id'])) {
-            header('Location: /');
-            exit;
-        }
+       
         require_once __DIR__ . '/../Views/auth/login.php';
     }
 
     public function register()
     {
-        if (isset($_SESSION['user_id'])) {
-            header('Location: /');
-            exit;
-        }
         require_once __DIR__ . '/../Views/auth/register.php';
     }
 

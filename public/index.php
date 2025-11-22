@@ -6,6 +6,9 @@ require __DIR__ . '/../vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
 $dotenv->load();
 
+// Load helper functions
+require_once __DIR__ . '/../app/helpers.php';
+
 session_start();
 
 $router = new \Bramus\Router\Router();
@@ -17,9 +20,6 @@ $router->get('/register', 'App\Controllers\AuthController@register');
 $router->post('/register', 'App\Controllers\AuthController@registerPost');
 $router->get('/logout', 'App\Controllers\AuthController@logout');
 
-$router->set404(function() {
-    header('HTTP/1.1 404 Not Found');
-    echo '404 - Page Not Found';
-});
+$router->set404('App\Controllers\ErrorController@error404');
 
 $router->run();
