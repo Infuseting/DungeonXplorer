@@ -29,7 +29,10 @@ ob_start();
     $errorMessages = [
         'missing_fields' => 'Veuillez remplir tous les champs.',
         'email_exists' => 'Cette adresse email est déjà utilisée.',
+        'email_already_exists' => 'Cette adresse email est déjà utilisée.',
         'username_exists' => 'Ce nom d\'utilisateur est déjà pris.',
+        'passwords_do_not_match' => 'Les mots de passe ne correspondent pas.',
+        'registration_failed' => 'L\'inscription a échoué. Veuillez réessayer.',
         'server_error' => 'Une erreur est survenue. Veuillez réessayer.',
     ];
     
@@ -73,6 +76,15 @@ ob_start();
                     </label>
                     <div class="mt-1">
                         <input id="password" name="password" type="password" autocomplete="new-password" required class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition duration-200 sm:text-sm">
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label for="confirm_password" class="block text-sm font-medium text-gray-700">
+                        Confirmer le mot de passe
+                    </label>
+                    <div class="mt-1">
+                        <input id="confirm_password" name="confirm_password" type="password" autocomplete="new-password" required class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition duration-200 sm:text-sm">
                     </div>
                 </div>
 
