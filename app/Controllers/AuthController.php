@@ -139,7 +139,38 @@ class AuthController
 
     private function checkAuth()
     {
-        // Simple check for redirection purposes (Middleware handles real auth)
-        return isset($_COOKIE['access_token']) || isset($_COOKIE['refresh_token']);
+        // Check Access Token validity
+        if (isset($_COOKIE['access_token'])) {
+            if ($this->tokenService->validateToken($_COOKIE['access_token'])) {
+                return true;
+            }
+        }
+
+        // Check Refresh Token validity (simplified check, just existence isn't enough but full validation might be heavy here, 
+        // ideally we trust the middleware to handle refresh, but for redirection from login page, we want to be sure)
+        // If access token is invalid but refresh token exists, we let them go to /personnage where middleware will handle the refresh.
+        // BUT, if middleware fails refresh, it redirects back to login.
+        // So here, we should only redirect if we are reasonably sure they are logged in.
+        
+        // Actually, the safest bet to avoid loops is: 
+        // If we are on login page, only redirect if Access Token is VALID.
+        // If Access Token is invalid/missing, stay on login page (even if Refresh Token exists).
+        // Why? Because if Refresh Token is valid, the user can just click "Login" (or we could auto-login, but that's complex).
+        // Wait, if Refresh Token is valid, they ARE logged in.
+        
+        // Let's try to validate the refresh token too if access token fails.
+        if (isset($_COOKIE['refresh_token'])) {
+             $parts = explode(':', $_COOKIE['refresh_token']);
+             if (count($parts) === 2) {
+                 // We can't easily validate against DB here without duplicating logic or making a DB call.
+                 // To break the loop, let's assume if Access Token is invalid, we are NOT authenticated for the purpose of the Login page redirection.
+                 // This means if your access token expired, you see the login page. 
+                 // BUT, if you try to go to /personnage, the middleware will refresh it and let you in.
+                 // This is a better UX failure mode than a loop.
+                 return false;
+             }
+        }
+
+        return false;
     }
 }
