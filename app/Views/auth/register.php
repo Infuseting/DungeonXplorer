@@ -52,9 +52,30 @@
                     </p>
                 </div>
 
+                <?php
+                // Display error messages
+                $errorMessages = [
+                    'missing_fields' => 'Veuillez remplir tous les champs.',
+                    'email_exists' => 'Cette adresse email est déjà utilisée.',
+                    'username_exists' => 'Ce nom d\'utilisateur est déjà pris.',
+                    'server_error' => 'Une erreur est survenue. Veuillez réessayer.',
+                ];
+                
+                if (isset($_GET['error']) && isset($errorMessages[$_GET['error']])):
+                ?>
+                    <div class="mt-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+                        <div class="flex">
+                            <svg class="h-5 w-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-sm font-medium"><?= htmlspecialchars($errorMessages[$_GET['error']]) ?></span>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
                 <div class="mt-8">
                     <div class="mt-6">
-                        <form action="#" method="POST" class="space-y-6">
+                        <form action="/register" method="POST" class="space-y-6">
                             
                             <div>
                                 <label for="username" class="block text-sm font-medium text-gray-700">
