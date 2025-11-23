@@ -70,8 +70,8 @@ ob_start();
                     <?php foreach ($characters as $char): 
                         $image = $classImages[$char['class_name']] ?? 'class_warrior.png';
                     ?>
-                        <div class="character-card cursor-pointer bg-gray-800 border border-gray-700 p-3 rounded-lg flex items-center gap-4 <?= ($char['id'] === $selectedCharacter['id']) ? 'border-violet-500 ring-1 ring-violet-500' : '' ?>"
-                             onclick="window.location.href='?id=<?= $char['id'] ?>'">
+                        <div class="character-card char-card-<?= $char['id'] ?> cursor-pointer bg-gray-800 border border-gray-700 p-3 rounded-lg flex items-center gap-4 <?= ($char['id'] === $selectedCharacter['id']) ? 'border-violet-500 ring-1 ring-violet-500' : '' ?>"
+                             onclick="selectCharacter(<?= $char['id'] ?>)">
                             <div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden border border-gray-600 flex-shrink-0">
                                 <img src="/assets/images/<?= $image ?>" alt="<?= $char['class_name'] ?>" class="w-full h-full object-cover">
                             </div>
@@ -88,36 +88,70 @@ ob_start();
                     </a>
                 </div>
             </div>
+            <!-- Stats / Actions (Right on Desktop, Bottom on Mobile) -->
+            <div class="order-3 lg:order-3 lg:col-span-3 bg-gray-800/80 backdrop-blur p-4 md:p-6 rounded-xl border border-gray-700 w-full max-w-md mx-auto lg:max-w-none">
+                <!-- Stats Hidden on Mobile -->
+                <div class="hidden md:block space-y-3 mb-6 md:mb-8">
+                    <h3 class="text-lg font-medium text-white mb-4 border-b border-gray-700 pb-2">Statistiques</h3>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-400">Force</span>
+                        <span id="stat-strength" class="text-white font-bold"><?= $selectedCharacter['strength'] ?? 10 ?></span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-400">Dextérité</span>
+                        <span id="stat-dexterity" class="text-white font-bold"><?= $selectedCharacter['dexterity'] ?? 10 ?></span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-400">Intelligence</span>
+                        <span id="stat-intelligence" class="text-white font-bold"><?= $selectedCharacter['intelligence'] ?? 10 ?></span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-400">Vitalité</span>
+                        <span id="stat-vitality" class="text-white font-bold"><?= $selectedCharacter['vitality'] ?? 10 ?></span>
+                    </div>
+                </div>
 
+                <div class="flex flex-col gap-3">
+                    <form action="/game" method="POST">
+                        <input type="hidden" id="selected-character-id" name="character_id" value="<?= $selectedCharacter['id'] ?>">
+                        <button type="submit" class="w-full py-3 md:py-4 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-lg shadow-lg shadow-violet-600/30 transition transform hover:-translate-y-1 uppercase tracking-wider text-lg">
+                            Jouer
+                        </button>
+                    </form>
+                    <button onclick="openDeleteModal()" class="w-full py-2 border border-gray-600 text-gray-300 hover:bg-gray-700 rounded-lg transition text-sm">
+                        Supprimer
+                    </button>
+                </div>
+            </div>
             <!-- Character Preview (Center) -->
-            <div class="lg:col-span-6 flex flex-col items-center justify-center relative h-[60vh] lg:h-[60vh]">
+            <div class="order-1 lg:order-2 lg:col-span-6 flex flex-col items-center justify-center relative h-[60vh] lg:h-[60vh]">
                 <!-- Pedestal Effect -->
                 <div class="absolute bottom-0 w-full h-1/4 bg-gradient-to-t from-violet-900/20 to-transparent rounded-full blur-3xl"></div>
                 
                 <!-- Character Model -->
                 <div class="relative z-10 h-full w-full flex items-center justify-center pb-8 md:pb-12">
-                    <img src="/assets/images/<?= $classImages[$selectedCharacter['class_name']] ?? 'class_warrior.png' ?>" 
+                    <img id="character-image" src="/assets/images/<?= $classImages[$selectedCharacter['class_name']] ?? 'class_warrior.png' ?>" 
                          alt="<?= $selectedCharacter['class_name'] ?>" 
                          class="max-h-full max-w-full object-contain drop-shadow-2xl filter hover:brightness-110 transition duration-500">
                 </div>
 
                 <!-- Selected Character Info -->
-                <div class="absolute bottom-0 text-center pb-4 md:pb-8">
-                    <h1 class="text-4xl md:text-5xl font-bold text-white mb-1 md:mb-2 text-shadow-lg"><?= htmlspecialchars($selectedCharacter['name']) ?></h1>
-                    <p class="text-lg md:text-xl text-violet-400 font-medium tracking-wide">
+                <div class="absolute bottom-0 text-center   ">
+                    <h1 id="character-name" class="text-4xl md:text-5xl font-bold text-white mb-1 md:mb-2 text-shadow-lg"><?= htmlspecialchars($selectedCharacter['name']) ?></h1>
+                    <p id="character-details" class="text-lg md:text-xl text-violet-400 font-medium tracking-wide">
                         Niveau <?= $selectedCharacter['level'] ?> <?= $selectedCharacter['class_name'] ?>
                     </p>
                 </div>
             </div>
 
             <!-- Desktop Character List (Hidden on Mobile) -->
-            <div class="hidden lg:block lg:col-span-3 space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar order-1">
+            <div class="hidden lg:block lg:col-span-3 space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar lg:order-1">
                 <h2 class="text-xl text-gray-400 font-medium mb-6 border-b border-gray-700 pb-2">Vos Héros</h2>
                 <?php foreach ($characters as $char): 
                     $image = $classImages[$char['class_name']] ?? 'class_warrior.png';
                 ?>
-                    <div class="character-card cursor-pointer bg-gray-800/80 backdrop-blur border border-gray-700 p-4 rounded-lg flex items-center gap-4 <?= ($char['id'] === $selectedCharacter['id']) ? 'border-violet-500 ring-1 ring-violet-500 bg-gray-800' : 'hover:border-gray-500' ?>"
-                         onclick="window.location.href='?id=<?= $char['id'] ?>'">
+                    <div class="character-card char-card-<?= $char['id'] ?> cursor-pointer bg-gray-800/80 backdrop-blur border border-gray-700 p-4 rounded-lg flex items-center gap-4 <?= ($char['id'] === $selectedCharacter['id']) ? 'border-violet-500 ring-1 ring-violet-500 bg-gray-800' : 'hover:border-gray-500' ?>"
+                         onclick="selectCharacter(<?= $char['id'] ?>)">
                         <div class="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden border border-gray-600">
                             <img src="/assets/images/<?= $image ?>" alt="<?= $char['class_name'] ?>" class="w-full h-full object-cover">
                         </div>
@@ -133,44 +167,49 @@ ob_start();
                 </a>
             </div>
 
-            <!-- Stats / Actions (Right on Desktop, Bottom on Mobile) -->
-            <div class="lg:col-span-3 bg-gray-800/80 backdrop-blur p-4 md:p-6 rounded-xl border border-gray-700 w-full max-w-md mx-auto lg:max-w-none">
-                <!-- Stats Hidden on Mobile -->
-                <div class="hidden md:block space-y-3 mb-6 md:mb-8">
-                    <h3 class="text-lg font-medium text-white mb-4 border-b border-gray-700 pb-2">Statistiques</h3>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-400">Force</span>
-                        <span class="text-white font-bold"><?= $selectedCharacter['strength'] ?? 10 ?></span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-400">Dextérité</span>
-                        <span class="text-white font-bold"><?= $selectedCharacter['dexterity'] ?? 10 ?></span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-400">Intelligence</span>
-                        <span class="text-white font-bold"><?= $selectedCharacter['intelligence'] ?? 10 ?></span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-400">Vitalité</span>
-                        <span class="text-white font-bold"><?= $selectedCharacter['vitality'] ?? 10 ?></span>
-                    </div>
-                </div>
-
-                <div class="flex flex-col gap-3">
-                    <button class="w-full py-3 md:py-4 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-lg shadow-lg shadow-violet-600/30 transition transform hover:-translate-y-1 uppercase tracking-wider text-lg">
-                        Jouer
-                    </button>
-                    <button class="w-full py-2 border border-gray-600 text-gray-300 hover:bg-gray-700 rounded-lg transition text-sm">
-                        Supprimer
-                    </button>
-                </div>
-            </div>
+            
 
         </div>
     </main>
+    
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="fixed inset-0 z-50 hidden">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity opacity-0 duration-300" id="delete-modal-backdrop" onclick="closeDeleteModal()"></div>
+        
+        <!-- Modal Content -->
+        <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+            <div class="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl max-w-md w-full transform scale-95 opacity-0 transition-all duration-300 pointer-events-auto" id="delete-modal-content">
+                <div class="p-6 text-center">
+                    <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">Supprimer ce héros ?</h3>
+                    <p class="text-gray-400 mb-6">Cette action est irréversible. Toutes les données associées à ce personnage seront perdues.</p>
+                    
+                    <div class="flex gap-3">
+                        <button onclick="closeDeleteModal()" class="flex-1 py-2 px-4 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition border border-gray-700">
+                            Annuler
+                        </button>
+                        <form action="/personnage/delete" method="POST" class="flex-1">
+                            <input type="hidden" name="character_id" id="modal-character-id">
+                            <button type="submit" class="w-full py-2 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition shadow-lg shadow-red-600/20">
+                                Supprimer
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
+const characters = <?= json_encode($characters) ?>;
+const classImages = <?= json_encode($classImages) ?>;
+
 function toggleCharacterMenu() {
     const menu = document.getElementById('mobile-menu');
     const overlay = document.getElementById('mobile-menu-overlay');
@@ -186,6 +225,80 @@ function toggleCharacterMenu() {
         overlay.classList.add('opacity-0');
         setTimeout(() => overlay.classList.add('hidden'), 300); // Wait for fade out
     }
+}
+
+function selectCharacter(id) {
+    const char = characters.find(c => c.id == id);
+    if (!char) return;
+
+    // Update Stats
+    document.getElementById('stat-strength').textContent = char.strength || 10;
+    document.getElementById('stat-dexterity').textContent = char.dexterity || 10;
+    document.getElementById('stat-intelligence').textContent = char.intelligence || 10;
+    document.getElementById('stat-vitality').textContent = char.vitality || 10;
+
+    // Update Image
+    const imagePath = '/assets/images/' + (classImages[char.class_name] || 'class_warrior.png');
+    const imgElement = document.getElementById('character-image');
+    imgElement.src = imagePath;
+    imgElement.alt = char.class_name;
+
+    // Update Info
+    document.getElementById('character-name').textContent = char.name;
+    document.getElementById('character-details').textContent = `Niveau ${char.level} ${char.class_name}`;
+    
+    // Update Hidden Input
+    document.getElementById('selected-character-id').value = char.id;
+
+    // Update Selection Visuals (Desktop & Mobile)
+    document.querySelectorAll('.character-card').forEach(card => {
+        card.classList.remove('border-violet-500', 'ring-1', 'ring-violet-500', 'bg-gray-800');
+        card.classList.add('hover:border-gray-500');
+        // Reset background for desktop list if needed, though 'bg-gray-800/80' is default
+    });
+
+    const selectedCards = document.querySelectorAll(`.char-card-${id}`);
+    selectedCards.forEach(card => {
+        card.classList.remove('hover:border-gray-500');
+        card.classList.add('border-violet-500', 'ring-1', 'ring-violet-500', 'bg-gray-800');
+    });
+
+    // Close mobile menu if open
+    const menu = document.getElementById('mobile-menu');
+    if (!menu.classList.contains('-translate-x-full')) {
+        toggleCharacterMenu();
+    }
+}
+
+function openDeleteModal() {
+    const modal = document.getElementById('delete-modal');
+    const backdrop = document.getElementById('delete-modal-backdrop');
+    const content = document.getElementById('delete-modal-content');
+    const charId = document.getElementById('selected-character-id').value;
+    
+    document.getElementById('modal-character-id').value = charId;
+    
+    modal.classList.remove('hidden');
+    // Trigger reflow
+    void modal.offsetWidth;
+    
+    backdrop.classList.remove('opacity-0');
+    content.classList.remove('scale-95', 'opacity-0');
+    content.classList.add('scale-100', 'opacity-100');
+}
+
+function closeDeleteModal() {
+    const modal = document.getElementById('delete-modal');
+    const backdrop = document.getElementById('delete-modal-backdrop');
+    const content = document.getElementById('delete-modal-content');
+    
+    backdrop.classList.add('opacity-0');
+    content.classList.remove('scale-100', 'opacity-100');
+    content.classList.add('scale-95', 'opacity-0');
+    
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
 }
 </script>
 

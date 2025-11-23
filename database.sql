@@ -64,3 +64,44 @@ INSERT INTO classes (name, description, base_stats_json) VALUES
 ('Mage', 'Un maître des arcanes capable de déchaîner des sorts dévastateurs.', '{"strength": 5, "dexterity": 10, "intelligence": 15, "vitality": 10}'),
 ('Voleur', 'Un expert de la furtivité et des attaques rapides.', '{"strength": 10, "dexterity": 15, "intelligence": 10, "vitality": 10}')
 ON DUPLICATE KEY UPDATE name=name;
+
+-- Items Table
+CREATE TABLE IF NOT EXISTS items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    type ENUM('equipment', 'consumable', 'material') NOT NULL,
+    slot_type ENUM('head', 'shoulders', 'amulet', 'chest', 'belt', 'legs', 'boots', 'ring', 'main_hand', 'off_hand', 'gloves', 'bracers', 'backpack', 'none') NOT NULL DEFAULT 'none',
+    two_handed BOOLEAN NOT NULL DEFAULT FALSE,
+    width TINYINT NOT NULL DEFAULT 1,
+    height TINYINT NOT NULL DEFAULT 1,
+    weight DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+    icon VARCHAR(255),
+    stats JSON,
+    max_stack TINYINT NOT NULL DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Character Inventory Table
+CREATE TABLE IF NOT EXISTS character_inventory (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    character_id INT NOT NULL,
+    item_id INT NOT NULL,
+    location ENUM('equipped', 'backpack', 'pockets') NOT NULL,
+    slot_name ENUM('head', 'shoulders', 'amulet', 'chest', 'belt', 'legs', 'boots', 'ring_1', 'ring_2', 'main_hand', 'off_hand', 'gloves', 'bracers', 'backpack') DEFAULT NULL,
+    grid_x TINYINT DEFAULT NULL,
+    grid_y TINYINT DEFAULT NULL,
+    quantity INT NOT NULL DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE,
+    FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Seed Items
+INSERT INTO items (name, description, type, slot_type, two_handed, width, height, weight, icon, stats, max_stack) VALUES 
+('Épée Rouillée', 'Une vieille épée qui a vu des jours meilleurs.', 'equipment', 'main_hand', FALSE, 1, 3, 2.5, 'rusty_sword.png', '{"strength": 2, "damage": 5}', 1),
+('Sac à Dos en Cuir', 'Un sac simple mais robuste.', 'equipment', 'backpack', FALSE, 2, 2, 1.0, 'leather_backpack.png', '{"capacity_width": 6, "capacity_height": 4}', 1),
+('Potion de Soin', 'Restaure 50 PV.', 'consumable', 'none', FALSE, 1, 1, 0.5, 'health_potion.png', '{"heal": 50}', 5),
+('Plastron de Fer', 'Une armure lourde pour les guerriers.', 'equipment', 'chest', FALSE, 2, 3, 8.0, 'iron_chestplate.png', '{"defense": 15, "vitality": 5}', 1),
+('Grande Épée', 'Une épée massive nécessitant deux mains.', 'equipment', 'main_hand', TRUE, 1, 4, 5.0, 'greatsword.png', '{"strength": 5, "damage": 15}', 1);
+

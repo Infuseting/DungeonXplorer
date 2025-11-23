@@ -103,4 +103,22 @@ class CharacterController
             exit;
         }
     }
+
+    public function delete()
+    {
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: /login');
+            exit;
+        }
+
+        $characterId = $_POST['character_id'] ?? null;
+
+        if ($characterId) {
+            $characterModel = new Character();
+            $characterModel->delete($characterId, $_SESSION['user_id']);
+        }
+
+        header('Location: /personnage');
+        exit;
+    }
 }

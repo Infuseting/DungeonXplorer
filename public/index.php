@@ -29,6 +29,22 @@ $router->mount('/personnage', function() use ($router) {
     $router->get('/', 'App\Controllers\CharacterController@index');
     $router->get('/create', 'App\Controllers\CharacterController@create');
     $router->post('/create', 'App\Controllers\CharacterController@store');
+    $router->post('/delete', 'App\Controllers\CharacterController@delete');
+});
+
+// Game Routes (Protected)
+$router->mount('/game', function() use ($router) {
+    $router->before('GET|POST', '/.*', function() {
+        (new \App\Middleware\AuthMiddleware())->handle();
+    });
+
+    $router->post('/', 'App\Controllers\GameController@index'); // POST from character select
+    $router->get('/', 'App\Controllers\GameController@index'); // GET for refresh
+
+    // Inventory API
+    $router->post('/inventory/move', 'App\Controllers\InventoryController@move');
+    $router->post('/inventory/equip', 'App\Controllers\InventoryController@equip');
+    $router->post('/inventory/unequip', 'App\Controllers\InventoryController@unequip');
 });
 
 $router->set404('App\Controllers\ErrorController@error404');

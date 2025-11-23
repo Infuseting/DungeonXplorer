@@ -53,4 +53,11 @@ class Character
         $stmt->bind_param("i", $id);
         return $stmt->execute();
     }
+
+    public function delete($id, $userId)
+    {
+        $stmt = $this->db->prepare("DELETE FROM characters WHERE id = ? AND user_id = ?");
+        $stmt->bind_param("ii", $id, $userId);
+        return $stmt->execute();
+    }
 }
