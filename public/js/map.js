@@ -32,6 +32,12 @@ document.addEventListener('DOMContentLoaded', () => {
         map.setMaxBounds(bounds);
         map.fitBounds(bounds);
 
+        // Expose map globally for adding points
+        window.gameMap = map;
+        window.gameMapMaxZoom = maxZoom;
+
+        // Trigger event that map is ready
+        window.dispatchEvent(new Event('mapReady'));
 
     }).catch(err => {
         console.error('Impossible de charger map_config.json', err);

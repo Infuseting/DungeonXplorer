@@ -22,7 +22,7 @@ $router->get('/logout', 'App\Controllers\AuthController@logout');
 
 // Character Routes (Protected)
 $router->mount('/personnage', function() use ($router) {
-    $router->before('GET|POST', '/.*', function() {
+    $router->before('GET|POST', '', function() {
         (new \App\Middleware\AuthMiddleware())->handle();
     });
 
@@ -34,7 +34,7 @@ $router->mount('/personnage', function() use ($router) {
 
 // Game Routes (Protected)
 $router->mount('/game', function() use ($router) {
-    $router->before('GET|POST', '/.*', function() {
+    $router->before('GET|POST', '', function() {
         (new \App\Middleware\AuthMiddleware())->handle();
     });
 
@@ -45,6 +45,20 @@ $router->mount('/game', function() use ($router) {
     $router->post('/inventory/move', 'App\Controllers\InventoryController@move');
     $router->post('/inventory/equip', 'App\Controllers\InventoryController@equip');
     $router->post('/inventory/unequip', 'App\Controllers\InventoryController@unequip');
+});
+
+// Admin Routes (Protected)
+$router->mount('/admin', function() use ($router) {
+    $router->before('GET|POST', '', function() {
+        (new \App\Middleware\AdminMiddleware())->handle();
+    });
+
+    $router->get('/', 'App\Controllers\AdminController@dashboard');
+    
+    // Map Management
+    $router->get('/map', 'App\Controllers\AdminMapController@index');
+    $router->post('/map/create', 'App\Controllers\AdminMapController@createPoint');
+    $router->post('/map/delete/(\d+)', 'App\Controllers\AdminMapController@deletePoint');
 });
 
 $router->set404('App\Controllers\ErrorController@error404');

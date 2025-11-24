@@ -108,6 +108,38 @@ ob_start();
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
         </svg>
     </button>
+    
+    <!-- Map Point Details Panel -->
+    <div id="point-panel" class="absolute top-0 right-0 h-full w-96 bg-gray-800/95 backdrop-blur-md border-l border-gray-700 shadow-2xl transform translate-x-full transition-transform duration-300 z-50">
+        <div class="h-full flex flex-col">
+            <!-- Panel Header -->
+            <div class="flex items-center justify-between p-6 border-b border-gray-700">
+                <h2 id="point-title" class="text-2xl font-bold text-white"></h2>
+                <button id="close-point-panel" class="text-gray-400 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Panel Content -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <div id="point-type" class="inline-block px-3 py-1 rounded-full text-sm font-semibold mb-4"></div>
+                <p id="point-description" class="text-gray-300 mb-6"></p>
+                
+                <div class="space-y-4">
+                    <div class="bg-gray-900/50 rounded-lg p-4">
+                        <h3 class="text-sm font-semibold text-gray-400 uppercase mb-2">Coordonnées</h3>
+                        <p id="point-coords" class="text-white"></p>
+                    </div>
+                    
+                    <div id="point-actions" class="space-y-2">
+                        <!-- Actions will be added dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Inventory Modal -->
     <div id="inventory-modal" class="fixed inset-0 z-50 hidden">
@@ -812,26 +844,8 @@ ob_start();
 
 <!-- Map Logic -->
 <script src="/js/map.js"></script>
-                    if (wasTwoHanded && fromSlot && (fromSlot === 'main_hand' || fromSlot === 'off_hand') && location !== 'equipped') {
-                        clearTwoHandedWeaponVisual(fromSlot);
-                    }
-                }
-                
-                // Handle two-handed weapons for equipped items
-                if (location === 'equipped' && data.two_handed && data.slot_name && data.icon) {
-                    handleTwoHandedWeapon(data.slot_name, data.icon);
-                }
-            } else {
-                // Error: Show Toast
-                showToast(data.message || 'Impossible de déplacer l\'objet', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Erreur de communication avec le serveur', 'error');
-        });
-    }
 
+<script>
     function getTargetContainer(location, slot, pocketIndex) {
         if (location === 'equipped') {
             return document.querySelector(`.slot[data-slot="${slot}"]`);
@@ -938,6 +952,142 @@ ob_start();
             });
         }, 3000);
     }
+    
+    // Map Points Logic
+    const mapPoints = <?= json_encode($mapPoints ?? []) ?>;
+    console.log('Map points loaded:', mapPoints);
+    console.log('Number of points:', mapPoints.length);
+    
+    // Panel controls
+    const pointPanel = document.getElementById('point-panel');
+    const closePanelBtn = document.getElementById('close-point-panel');
+    
+    closePanelBtn.addEventListener('click', () => {
+        pointPanel.classList.add('translate-x-full');
+    });
+    
+    function getTypeColor(type) {
+        const colors = {
+            'story': '#6366f1',
+            'place': '#22c55e',
+            'dungeon': '#ef4444',
+            'npc': '#fbbf24',
+            'quest': '#a855f7'
+        };
+        return colors[type] || '#6366f1';
+    }
+    
+    function getTypeLabel(type) {
+        const labels = {
+            'story': 'Histoire',
+            'place': 'Lieu',
+            'dungeon': 'Donjon',
+            'npc': 'PNJ',
+            'quest': 'Quête'
+        };
+        return labels[type] || type;
+    }
+    
+    function showPointDetails(point) {
+        console.log('Showing details for point:', point);
+        // Update panel content
+        document.getElementById('point-title').textContent = point.name;
+        document.getElementById('point-description').textContent = point.description || 'Aucune description disponible.';
+        document.getElementById('point-coords').textContent = `Lat: ${parseFloat(point.y).toFixed(6)}, Lng: ${parseFloat(point.x).toFixed(6)}`;
+        
+        // Update type badge
+        const typeBadge = document.getElementById('point-type');
+        const typeColor = getTypeColor(point.type);
+        typeBadge.textContent = getTypeLabel(point.type);
+        typeBadge.style.backgroundColor = typeColor + '33';
+        typeBadge.style.color = typeColor;
+        
+        // Add action button based on type
+        const actionsDiv = document.getElementById('point-actions');
+        actionsDiv.innerHTML = '';
+        
+        const actionBtn = document.createElement('button');
+        actionBtn.className = 'w-full px-4 py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-lg font-semibold transition-colors';
+        
+        switch(point.type) {
+            case 'story':
+                actionBtn.textContent = '📖 Lire l\'histoire';
+                break;
+            case 'place':
+                actionBtn.textContent = '🚪 Entrer';
+                break;
+            case 'dungeon':
+                actionBtn.textContent = '⚔️ Entrer dans le donjon';
+                break;
+            case 'npc':
+                actionBtn.textContent = '💬 Parler';
+                break;
+            case 'quest':
+                actionBtn.textContent = '📜 Accepter la quête';
+                break;
+        }
+        
+        actionBtn.addEventListener('click', () => {
+            showToast(`Fonctionnalité "${getTypeLabel(point.type)}" à venir !`, 'info');
+        });
+        
+        actionsDiv.appendChild(actionBtn);
+        
+        // Show panel
+        pointPanel.classList.remove('translate-x-full');
+    }
+    
+    // Wait for map to be ready
+    console.log('Setting up mapReady event listener...');
+    window.addEventListener('mapReady', () => {
+        console.log('mapReady event fired!');
+        console.log('window.gameMap:', window.gameMap);
+        
+        if (!window.gameMap) {
+            console.error('window.gameMap is not defined!');
+            return;
+        }
+        
+        console.log('Adding markers for', mapPoints.length, 'points');
+        
+        // Add markers for each point
+        mapPoints.forEach((point, index) => {
+            console.log(`Adding marker ${index + 1}:`, point);
+            const marker = L.circleMarker([parseFloat(point.y), parseFloat(point.x)], {
+                radius: 8,
+                fillColor: getTypeColor(point.type),
+                color: '#fff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(window.gameMap);
+            
+            console.log(`Marker ${index + 1} added at`, [parseFloat(point.y), parseFloat(point.x)]);
+            
+            // Click handler
+            marker.on('click', () => {
+                console.log('Marker clicked:', point.name);
+                showPointDetails(point);
+            });
+            
+            // Hover effect
+            marker.on('mouseover', function() {
+                this.setStyle({
+                    radius: 10,
+                    weight: 3
+                });
+            });
+            
+            marker.on('mouseout', function() {
+                this.setStyle({
+                    radius: 8,
+                    weight: 2
+                });
+            });
+        });
+        
+        console.log('All markers added successfully');
+    });
 </script>
 
 <?php

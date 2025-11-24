@@ -36,6 +36,11 @@ class GameController
 
         $inventoryModel = new Inventory();
         $inventory = $inventoryModel->getCharacterInventory($characterId);
+        
+        // Load map points for the game
+        $db = \App\Config\Database::getInstance()->getConnection();
+        $result = $db->query("SELECT * FROM map_points WHERE map_id = 1 ORDER BY created_at DESC");
+        $mapPoints = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 
         require_once __DIR__ . '/../Views/game/index.php';
     }
