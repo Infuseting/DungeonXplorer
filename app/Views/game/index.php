@@ -81,6 +81,16 @@ $customStyles = '
         pointer-events: none;
         z-index: 1;
     }
+    #map {
+        width: 100%;
+        height: 100%;
+        background: url(\'/assets/images/texture_table.webp\') no-repeat center center fixed;
+        background-size: cover;
+        z-index: 0;
+    }
+    .leaflet-container {
+        background: transparent;
+    }
 ';
 
 ob_start();
@@ -88,12 +98,8 @@ ob_start();
 
 <div class="relative w-full h-screen bg-gray-900 overflow-hidden">
     <!-- Game Area (Full Screen) -->
-    <div class="absolute inset-0 flex items-center justify-center bg-[url('/assets/images/dungeon_bg.jpg')] bg-cover bg-center">
-        <div class="text-center bg-black/50 p-8 rounded-xl backdrop-blur-sm border border-gray-700">
-            <h1 class="text-5xl font-bold text-violet-500 mb-4 drop-shadow-lg">Zone de Jeu</h1>
-            <p class="text-gray-300 text-lg">L'aventure commence ici...</p>
-            <p class="text-sm text-gray-400 mt-2">Utilisez le bouton en bas à droite pour ouvrir l'inventaire</p>
-        </div>
+    <div class="absolute inset-0 bg-gray-900">
+        <div id="map"></div>
     </div>
 
     <!-- Inventory Toggle Button -->
@@ -798,6 +804,14 @@ ob_start();
                     updateItemPosition(itemElement, location, slot, x, y, pocketIndex);
                     
                     // Clean up two-handed weapon visual if unequipping
+</script>
+
+<!-- Leaflet CSS & JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<!-- Map Logic -->
+<script src="/js/map.js"></script>
                     if (wasTwoHanded && fromSlot && (fromSlot === 'main_hand' || fromSlot === 'off_hand') && location !== 'equipped') {
                         clearTwoHandedWeaponVisual(fromSlot);
                     }
