@@ -127,7 +127,21 @@ ob_start();
 <div class="grid grid-cols-2 gap-6">
     <!-- Left: Map -->
     <div class="card">
-        <h3 class="card-header">Carte Interactive</h3>
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="card-header" style="margin-bottom: 0;">Carte Interactive</h3>
+            
+            <!-- Map Selector Dropdown -->
+            <div style="min-width: 250px;">
+                <select id="map-selector" class="form-select" onchange="changeMap(this.value)">
+                    <?php foreach ($maps as $map): ?>
+                        <option value="<?= $map['id'] ?>" <?= $map['id'] == $selectedMap['id'] ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($map['name']) ?> (ID: <?= $map['id'] ?>)
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
+        
         <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.875rem;">
             Cliquez sur la carte pour placer un nouveau point
         </p>
@@ -140,7 +154,7 @@ ob_start();
         <div class="card">
             <h3 class="card-header">Ajouter un Point</h3>
             <form id="point-form" method="POST" action="/admin/map/create">
-                <input type="hidden" name="map_id" value="1">
+                <input type="hidden" name="map_id" id="form-map-id" value="<?= $selectedMap['id'] ?>">
                 
                 <div class="form-group">
                     <label class="form-label">Nom du Point</label>
@@ -234,9 +248,15 @@ ob_start();
 let adminMap;
 let tempMarker = null;
 let radiusCircle = null;
+const selectedMapId = <?= $selectedMap['id'] ?>;
+const selectedMapConfig = '<?= $selectedMap['image_path'] ?? '/assets/map/main/map_config.json' ?>';
+
+function changeMap(mapId) {
+    window.location.href = '/admin/map?map_id=' + mapId;
+}
 
 document.addEventListener('DOMContentLoaded', () => {
-    fetch('/assets/tiles/map_config.json').then(r => r.json()).then(cfg => {
+    fetch(selectedMapConfig).then(r => r.json()).then(cfg => {
         const tileSize = cfg.tile_size || 256;
         const maxZoom = cfg.max_zoom || 0;
         const width = cfg.width;
@@ -253,7 +273,9 @@ document.addEventListener('DOMContentLoaded', () => {
             maxBoundsViscosity: 1.0
         });
 
-        L.tileLayer('/assets/tiles/{z}/{x}/{y}.png', {
+        // Determine tile path from config path
+        const basePath = selectedMapConfig.substring(0, selectedMapConfig.lastIndexOf('/'));
+        L.tileLayer(basePath + '/{z}/{x}/{y}.png', {
             tileSize: tileSize,
             minZoom: maxZoom - 3,
             maxZoom: maxZoom,

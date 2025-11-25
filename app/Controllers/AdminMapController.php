@@ -13,16 +13,104 @@ class AdminMapController
     
     public function index()
     {
-        // Ensure main map exists
-        $mainMapId = $this->ensureMainMapExists();
+        // Get selected map ID from query parameter, default to lowest ID
+        $selectedMapId = isset($_GET['map_id']) ? (int)$_GET['map_id'] : null;
         
-        // Get all maps
+        // Ensure at least one map exists
+        $defaultMapId = $this->ensureMainMapExists();
+        
+        // If no map selected, use the default (lowest ID)
+        if (!$selectedMapId) {
+            $selectedMapId = $defaultMapId;
+        }
+        
+        // Get all maps for dropdown
         $maps = $this->getAllMaps();
         
-        // Get map points for the main map
-        $mapPoints = $this->getMapPoints($mainMapId);
+        // Get selected map details
+        $selectedMap = $this->getMapById($selectedMapId);
+        
+        // Get map points for the selected map
+        $mapPoints = $this->getMapPoints($selectedMapId);
         
         require_once __DIR__ . '/../Views/admin/map/index.php';
+    }
+    
+    public function managePoints()
+    {
+        // Get search/filter parameters
+        $search = $_GET['search'] ?? '';
+        $typeFilter = $_GET['type'] ?? '';
+        $mapFilter = $_GET['map_id'] ?? '';
+        
+        // Get all maps for filters and dropdowns
+        $maps = $this->getAllMaps();
+        
+        // Build query with filters
+        $query = "SELECT mp.*, m.name as map_name FROM map_points mp 
+                  LEFT JOIN maps m ON mp.map_id = m.id WHERE 1=1";
+        $params = [];
+        $types = '';
+        
+        if ($search) {
+            $query .= " AND mp.name LIKE ?";
+            $params[] = "%$search%";
+            $types .= 's';
+        }
+        
+        if ($typeFilter) {
+            $query .= " AND mp.type = ?";
+            $params[] = $typeFilter;
+            $types .= 's';
+        }
+        
+        if ($mapFilter) {
+            $query .= " AND mp.map_id = ?";
+            $params[] = $mapFilter;
+            $types .= 'i';
+        }
+        
+        $query .= " ORDER BY mp.created_at DESC";
+        
+        if (!empty($params)) {
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param($types, ...$params);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $points = $result->fetch_all(MYSQLI_ASSOC);
+        } else {
+            $result = $this->db->query($query);
+            $points = $result->fetch_all(MYSQLI_ASSOC);
+        }
+        
+        require_once __DIR__ . '/../Views/admin/points/index.php';
+    }
+    
+    public function updatePointSubMap()
+    {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $data = json_decode(file_get_contents('php://input'), true);
+            $pointId = $data['point_id'] ?? null;
+            $subMapId = $data['sub_map_id'] ?? null;
+            
+            if (!$pointId) {
+                echo json_encode(['success' => false, 'message' => 'Point ID manquant']);
+                exit;
+            }
+            
+            // Allow null for sub_map_id (to unassign)
+            $stmt = $this->db->prepare("UPDATE map_points SET sub_map_id = ? WHERE id = ?");
+            $stmt->bind_param("ii", $subMapId, $pointId);
+            
+            if ($stmt->execute()) {
+                echo json_encode(['success' => true, 'message' => 'Sous-carte mise à jour']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Erreur lors de la mise à jour']);
+            }
+        }
+        exit;
     }
     
     public function createPoint()
@@ -130,6 +218,15 @@ class AdminMapController
         return $result->fetch_all(MYSQLI_ASSOC);
     }
     
+    private function getMapById($mapId)
+    {
+        $stmt = $this->db->prepare("SELECT * FROM maps WHERE id = ?");
+        $stmt->bind_param("i", $mapId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_assoc();
+    }
+    
     private function ensureMainMapExists()
     {
         // Check if any map exists
@@ -143,7 +240,7 @@ class AdminMapController
         $stmt = $this->db->prepare("INSERT INTO maps (name, description, image_path) VALUES (?, ?, ?)");
         $name = 'Main World';
         $desc = 'The main game world';
-        $path = '/assets/tiles/map_config.json';
+        $path = '/assets/map/main/map_config.json';
         $stmt->bind_param("sss", $name, $desc, $path);
         
         if ($stmt->execute()) {

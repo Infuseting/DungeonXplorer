@@ -189,13 +189,13 @@
                     <span class="nav-icon">🗺️</span>
                     Gestion de la Carte
                 </a>
-                <a href="/admin/story" class="nav-item <?= strpos($_SERVER['REQUEST_URI'], '/admin/story') !== false ? 'active' : '' ?>">
-                    <span class="nav-icon">📖</span>
-                    Gestion des Histoires
-                </a>
-                <a href="/admin/game" class="nav-item <?= strpos($_SERVER['REQUEST_URI'], '/admin/game') !== false ? 'active' : '' ?>">
+                <a href="/admin/points" class="nav-item <?= strpos($_SERVER['REQUEST_URI'], '/admin/points') !== false ? 'active' : '' ?>">
                     <span class="nav-icon">⚙️</span>
-                    Gestion du Jeu
+                    Gestion des lieux
+                </a>
+                <a href="/admin/items" class="nav-item <?= strpos($_SERVER['REQUEST_URI'], '/admin/items') !== false ? 'active' : '' ?>">
+                    <span class="nav-icon">🎒</span>
+                    Gestion des Items
                 </a>
                 <a href="/" class="nav-item">
                     <span class="nav-icon">🏠</span>
