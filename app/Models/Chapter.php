@@ -7,28 +7,25 @@ use App\Config\Database;
 class Chapter
 {
     private $db;
-    private $chapterId;
-    private $historyId;
-    private $name;
-    private $description;
+    public $chapterId;
+    public $historyId;
+    public $name;
+    public $description;
 
     public function __construct()
     {
         $this->db = Database::getInstance()->getConnection();
     }
 
-    
-    /*
-
-    public function create($chapterId, $historyId, $name, $description)
-    {
-        $stmt = $this->db->prepare("INSERT INTO chapters (chapter_id, history_id, name, description) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("iiss", $chapterId, $historyId, $name, $description);
-        
-        if ($stmt->execute()) {
-            return $this->db->insert_id;
+    public function load (array $data): bool {
+        if (count($data) === 4) {
+            $this->chapterId = $data['chapter_id'];
+            $this->historyId = $data['name'];
+            $this->name = $data['description'];
+            $this->description = $data['history_id'];
+            
+            return true;
         }
         return false;
     }
-        */
 }
