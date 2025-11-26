@@ -259,7 +259,7 @@ CREATE TABLE `npc_merchant_inventory` (
 CREATE TABLE `npcs` (
   `id` int NOT NULL,
   `name` varchar(100) NOT NULL,
-  `role` enum('merchant','quest_giver','lore','guard') NOT NULL,
+  `role` varchar(255) NOT NULL,
   `image_path` varchar(255) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `texture` varchar(255) DEFAULT NULL COMMENT 'Chemin vers l''image du PNJ',

@@ -104,6 +104,22 @@ $router->mount('/admin', function() use ($router) {
     $router->post('/dialogues/node/add', 'App\Controllers\AdminDialogueController@addNode');
     $router->post('/dialogues/node/update', 'App\Controllers\AdminDialogueController@updateNode');
     $router->post('/dialogues/node/delete', 'App\Controllers\AdminDialogueController@deleteNode');
+    
+    // Quest Management
+    $router->get('/quests', 'App\Controllers\AdminQuestController@index');
+    $router->match('GET|POST', '/quests/create', 'App\Controllers\AdminQuestController@create');
+    $router->match('GET|POST', '/quests/edit/(\d+)', 'App\Controllers\AdminQuestController@edit');
+    $router->post('/quests/delete/(\d+)', 'App\Controllers\AdminQuestController@delete');
+    $router->post('/quests/stage/add', 'App\Controllers\AdminQuestController@addStage');
+    $router->post('/quests/stage/update', 'App\Controllers\AdminQuestController@updateStage');
+    $router->post('/quests/stage/delete', 'App\Controllers\AdminQuestController@deleteStage');
+    $router->post('/quests/objective/add', 'App\Controllers\AdminQuestController@addObjective');
+    $router->post('/quests/objective/update', 'App\Controllers\AdminQuestController@updateObjective');
+    $router->post('/quests/objective/delete', 'App\Controllers\AdminQuestController@deleteObjective');
+    $router->post('/quests/assign-npc', 'App\Controllers\AdminQuestController@assignNPC');
+    $router->post('/quests/remove-npc', 'App\Controllers\AdminQuestController@removeNPC');
+    $router->post('/quests/stage/add-unlock', 'App\Controllers\AdminQuestController@addMapUnlock');
+    $router->post('/quests/stage/remove-unlock', 'App\Controllers\AdminQuestController@removeMapUnlock');
 });
 
 $router->set404('App\Controllers\ErrorController@error404');

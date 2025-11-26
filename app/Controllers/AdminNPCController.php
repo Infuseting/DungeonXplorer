@@ -77,6 +77,11 @@ class AdminNPCController
         // Support multiple roles (array -> CSV)
         $rolesArr = $_POST['roles'] ?? (isset($_POST['role']) ? [$_POST['role']] : []);
         $rolesStr = implode(',', array_filter(array_map('trim', $rolesArr)));
+        
+        // Ensure role is not empty - default to 'npc' if no role specified
+        if (empty($rolesStr)) {
+            $rolesStr = 'npc';
+        }
 
         $data = [
             'name' => $_POST['name'],
@@ -156,6 +161,11 @@ class AdminNPCController
         // Support multiple roles
         $rolesArr = $_POST['roles'] ?? (isset($_POST['role']) ? [$_POST['role']] : []);
         $rolesStr = implode(',', array_filter(array_map('trim', $rolesArr)));
+        
+        // Ensure role is not empty - default to 'npc' if no role specified
+        if (empty($rolesStr)) {
+            $rolesStr = 'npc';
+        }
 
         $data = [
             'name' => $_POST['name'],

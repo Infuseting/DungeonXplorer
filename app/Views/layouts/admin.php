@@ -205,6 +205,10 @@
                     <span class="nav-icon">💬</span>
                     Gestion des Dialogues
                 </a>
+                <a href="/admin/quests" class="nav-item <?= strpos($_SERVER['REQUEST_URI'], '/admin/quests') === 0 ? 'active' : '' ?>">
+                    <span class="nav-icon">📜</span>
+                    Gestion des Quêtes
+                </a>
                 <a href="/" class="nav-item">
                     <span class="nav-icon">🏠</span>
                     Retour au Jeu

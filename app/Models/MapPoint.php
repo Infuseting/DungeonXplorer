@@ -83,14 +83,14 @@ class MapPoint
     public function create($data)
     {
         $stmt = $this->db->prepare(
-            "INSERT INTO map_points (map_id, name, description, type, x, y, icon, metadata) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+            "INSERT INTO map_points (map_id, name, description, type, x, y, icon, metadata, is_hidden) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
         );
         
         $metadata = isset($data['metadata']) ? json_encode($data['metadata']) : null;
         
         $stmt->bind_param(
-            "isssddss",
+            "isssddssi",
             $data['map_id'],
             $data['name'],
             $data['description'],
@@ -98,7 +98,8 @@ class MapPoint
             $data['x'],
             $data['y'],
             $data['icon'],
-            $metadata
+            $metadata,
+            $data['is_hidden'] ?? 0
         );
         
         if ($stmt->execute()) {
@@ -268,5 +269,76 @@ class MapPoint
         $stmt->bind_param("ii", $subMapId, $pointId);
         
         return $stmt->execute();
+    }
+    /**
+     * Check if a point is visible for a user
+     * 
+     * @param int $pointId
+     * @param int $userId
+     * @return bool
+     */
+    public function isVisibleForUser($pointId, $userId)
+    {
+        // Get point details
+        $point = $this->findById($pointId);
+        if (!$point) return false;
+        
+        // If not hidden, it's visible
+        if (!$point['is_hidden']) return true;
+        
+        // Check if unlocked for user
+        $stmt = $this->db->prepare(
+            "SELECT 1 FROM user_map_unlocks WHERE user_id = ? AND map_point_id = ?"
+        );
+        $stmt->bind_param("ii", $userId, $pointId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        return $result->num_rows > 0;
+    }
+
+    /**
+     * Unlock a point for a user
+     * 
+     * @param int $userId
+     * @param int $pointId
+     * @return bool
+     */
+    public function unlockForUser($userId, $pointId)
+    {
+        $stmt = $this->db->prepare(
+            "INSERT IGNORE INTO user_map_unlocks (user_id, map_point_id) VALUES (?, ?)"
+        );
+        $stmt->bind_param("ii", $userId, $pointId);
+        
+        return $stmt->execute();
+    }
+    
+    /**
+     * Get unlocked points for user in a map
+     * 
+     * @param int $mapId
+     * @param int $userId
+     * @return array
+     */
+    public function getVisiblePointsForUser($mapId, $userId)
+    {
+        $stmt = $this->db->prepare(
+            "SELECT mp.* 
+             FROM map_points mp
+             LEFT JOIN user_map_unlocks umu ON mp.id = umu.map_point_id AND umu.user_id = ?
+             WHERE mp.map_id = ? 
+             AND (mp.is_hidden = 0 OR umu.user_id IS NOT NULL)
+             ORDER BY mp.created_at DESC"
+        );
+        $stmt->bind_param("ii", $userId, $mapId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if (!$result) {
+            return [];
+        }
+
+        return $result->fetch_all(MYSQLI_ASSOC);
     }
 }

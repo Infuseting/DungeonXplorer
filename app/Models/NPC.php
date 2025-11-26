@@ -38,8 +38,7 @@ class NPC
     public function create($data)
     {
         $stmt = $this->db->prepare("INSERT INTO npcs (name, role, texture, merchant_seed, buy_rate_own, buy_rate_other) VALUES (?, ?, ?, ?, ?, ?)");
- 
-
+        
         $stmt->bind_param(
             "sssidd",
             $data['name'],
@@ -49,7 +48,7 @@ class NPC
             $data['buy_rate_own'],
             $data['buy_rate_other']
         );
-        
+        echo $data['role'];
         if ($stmt->execute()) {
             return $this->db->insert_id;
         }
