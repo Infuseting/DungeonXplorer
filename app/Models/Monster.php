@@ -12,6 +12,8 @@ class Monster
     private $vitality;
     private $intelligence;
     private $dexterity;
+    private $defense;
+    private $attaque;
 
     public function __construct()
     {
@@ -33,6 +35,8 @@ class Monster
             $this->vitality = $stats['vitality'];
             $this->intelligence = $stats['intelligence'];
             $this->dexterity = $stats['dexterity'];
+            $this->defense = $stats['defense'];
+            $this->attaque = $stats['attaque'];
 
            
         }
@@ -71,9 +75,41 @@ class Monster
         return $this->dexterity;
     }
 
+    public function getDefense()
+    {
+        return $this->defense;
+    }
+
+    public function getAttaque()
+    {
+        return $this->attaque;
+    }
+
+   
+
     public function toString()
     {
         return "Monster: " . $this->name . " (STR: " . $this->strength . ", VIT: " . $this->vitality . ", INT: " . $this->intelligence . ", DEX: " . $this->dexterity . ")";
+    }
+
+    public function setVitality($vitality)
+    {
+        $this->vitality = $vitality;
+    }
+
+    public function getArmorClass()
+    {
+        return  $this->getStrength()/2 + $this->getDefense();
+    }
+
+    public function getAttaqueClass()
+    {
+        return  $this->getStrength() + $this->getAttaque();
+    }
+
+    public function isAlive()
+    {
+        return $this->vitality > 0;
     }
 
 
