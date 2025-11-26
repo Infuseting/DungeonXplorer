@@ -37,16 +37,13 @@ class NPC
      */
     public function create($data)
     {
-        $stmt = $this->db->prepare("
-            INSERT INTO npcs (name, role, image_path, texture, merchant_seed, buy_rate_own, buy_rate_other)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ");
-        
+        $stmt = $this->db->prepare("INSERT INTO npcs (name, role, texture, merchant_seed, buy_rate_own, buy_rate_other) VALUES (?, ?, ?, ?, ?, ?)");
+ 
+
         $stmt->bind_param(
-            "ssssidd",
+            "sssidd",
             $data['name'],
             $data['role'],
-            $data['image_path'],
             $data['texture'],
             $data['merchant_seed'],
             $data['buy_rate_own'],
@@ -64,18 +61,12 @@ class NPC
      */
     public function update($id, $data)
     {
-        $stmt = $this->db->prepare("
-            UPDATE npcs 
-            SET name = ?, role = ?, image_path = ?, texture = ?, 
-                merchant_seed = ?, buy_rate_own = ?, buy_rate_other = ?
-            WHERE id = ?
-        ");
-        
+        $stmt = $this->db->prepare("UPDATE npcs SET name = ?, role = ?, texture = ?, merchant_seed = ?, buy_rate_own = ?, buy_rate_other = ? WHERE id = ?");
+
         $stmt->bind_param(
-            "ssssiddi",
+            "sssiddi",
             $data['name'],
             $data['role'],
-            $data['image_path'],
             $data['texture'],
             $data['merchant_seed'],
             $data['buy_rate_own'],

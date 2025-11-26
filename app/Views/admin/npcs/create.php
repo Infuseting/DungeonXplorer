@@ -40,13 +40,13 @@ ob_start();
             </div>
             
             <div class="form-group">
-                <label class="form-label">Rôle *</label>
-                <select name="role" id="role-select" class="form-select" required>
-                    <option value="merchant">Marchand</option>
-                    <option value="quest_giver">Donneur de quêtes</option>
-                    <option value="lore">Lore</option>
-                    <option value="guard">Garde</option>
-                </select>
+                <label class="form-label">Rôles</label>
+                <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+                    <label><input type="checkbox" name="roles[]" value="merchant"> Marchand</label>
+                    <label><input type="checkbox" name="roles[]" value="quest_giver"> Donneur de quêtes</label>
+                    <label><input type="checkbox" name="roles[]" value="lore"> Lore</label>
+                    <label><input type="checkbox" name="roles[]" value="guard"> Garde</label>
+                </div>
             </div>
             
             <!-- Texture Upload -->
@@ -104,12 +104,18 @@ ob_start();
                 </div>
             </div>
             
-            <!-- Dialogue Trees (Future) -->
+            <!-- Dialogue Trees -->
             <div class="form-group-full">
                 <label class="form-label">Arbres de Dialogue</label>
-                <p style="color: var(--text-muted); font-size: 0.875rem;">
-                    Les arbres de dialogue pourront être assignés après la création du PNJ.
-                </p>
+                <div style="display:flex; flex-direction:column; gap:0.5rem; margin-top:0.5rem;">
+                    <?php if (!empty($dialogueTrees)): ?>
+                        <?php foreach ($dialogueTrees as $tree): ?>
+                            <label><input type="checkbox" name="dialogue_trees[]" value="<?= $tree['id'] ?>"> <?= htmlspecialchars($tree['name']) ?></label>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p style="color: var(--text-muted);">Aucun arbre de dialogue créé.</p>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
         
@@ -122,21 +128,17 @@ ob_start();
 
 <script>
 // Show/hide merchant fields
-const roleSelect = document.getElementById('role-select');
 const merchantFields = document.getElementById('merchant-fields');
 const merchantSeed = document.getElementById('merchant-seed');
+const roleCheckboxes = document.querySelectorAll('[name="roles[]"]');
 
 function updateMerchantFields() {
-    const isMerchant = roleSelect.value === 'merchant';
+    const isMerchant = Array.from(roleCheckboxes).some(cb => cb.value === 'merchant' && cb.checked);
     merchantFields.style.display = isMerchant ? 'block' : 'none';
-    if (isMerchant) {
-        merchantSeed.required = true;
-    } else {
-        merchantSeed.required = false;
-    }
+    merchantSeed.required = isMerchant;
 }
 
-roleSelect.addEventListener('change', updateMerchantFields);
+roleCheckboxes.forEach(cb => cb.addEventListener('change', updateMerchantFields));
 updateMerchantFields();
 
 // Generate random SEED

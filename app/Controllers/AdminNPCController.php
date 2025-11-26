@@ -27,7 +27,12 @@ class AdminNPCController
         if ($search || $roleFilter) {
             $npcs = array_filter($npcs, function($npc) use ($search, $roleFilter) {
                 $matchSearch = empty($search) || stripos($npc['name'], $search) !== false;
-                $matchRole = empty($roleFilter) || $npc['role'] === $roleFilter;
+                if (empty($roleFilter)) {
+                    $matchRole = true;
+                } else {
+                    $roles = array_map('trim', explode(',', $npc['role'] ?? ''));
+                    $matchRole = in_array($roleFilter, $roles);
+                }
                 return $matchSearch && $matchRole;
             });
         }
@@ -69,10 +74,13 @@ class AdminNPCController
             }
         }
         
+        // Support multiple roles (array -> CSV)
+        $rolesArr = $_POST['roles'] ?? (isset($_POST['role']) ? [$_POST['role']] : []);
+        $rolesStr = implode(',', array_filter(array_map('trim', $rolesArr)));
+
         $data = [
             'name' => $_POST['name'],
-            'role' => $_POST['role'],
-            'image_path' => $_POST['image_path'] ?? null,
+            'role' => $rolesStr,
             'texture' => $texturePath,
             'merchant_seed' => $_POST['merchant_seed'] ?? null,
             'buy_rate_own' => $_POST['buy_rate_own'] ?? 0.05,
@@ -80,9 +88,9 @@ class AdminNPCController
         ];
         
         $npcId = $this->npcModel->create($data);
-        
-        if ($npcId && $_POST['role'] === 'merchant' && !empty($_POST['merchant_seed'])) {
-            // Generate and save merchant inventory
+
+        // If merchant role included, generate inventory
+        if ($npcId && in_array('merchant', explode(',', $data['role'])) && !empty($_POST['merchant_seed'])) {
             $inventory = $this->npcModel->generateMerchantInventory($_POST['merchant_seed']);
             $this->npcModel->saveMerchantInventory($npcId, $inventory);
         }
@@ -113,7 +121,7 @@ class AdminNPCController
             $dialogueTrees = $this->dialogueModel->getAll();
             $assignedTrees = $this->npcModel->getDialogueTrees($id);
             $merchantInventory = $this->npcModel->getMerchantInventory($id);
-            
+
             require_once __DIR__ . '/../Views/admin/npcs/edit.php';
             return;
         }
@@ -145,18 +153,40 @@ class AdminNPCController
             }
         }
         
+        // Support multiple roles
+        $rolesArr = $_POST['roles'] ?? (isset($_POST['role']) ? [$_POST['role']] : []);
+        $rolesStr = implode(',', array_filter(array_map('trim', $rolesArr)));
+
         $data = [
             'name' => $_POST['name'],
-            'role' => $_POST['role'],
-            'image_path' => $_POST['image_path'] ?? null,
+            'role' => $rolesStr,
             'texture' => $texturePath,
             'merchant_seed' => $_POST['merchant_seed'] ?? null,
             'buy_rate_own' => $_POST['buy_rate_own'] ?? 0.05,
             'buy_rate_other' => $_POST['buy_rate_other'] ?? 0.15
         ];
-        
+
         $this->npcModel->update($id, $data);
-        
+
+        // Update dialogue assignments
+        $existing = $this->npcModel->getDialogueTrees($id);
+        $existingIds = array_column($existing, 'id');
+        $newIds = $_POST['dialogue_trees'] ?? [];
+
+        // Remove deselected
+        foreach ($existingIds as $eid) {
+            if (!in_array($eid, $newIds)) {
+                $this->npcModel->removeDialogueTree($id, $eid);
+            }
+        }
+
+        // Add newly selected
+        foreach ($newIds as $nid) {
+            if (!in_array($nid, $existingIds)) {
+                $this->npcModel->assignDialogueTree($id, $nid);
+            }
+        }
+
         header('Location: /admin/npcs?success=updated');
         exit;
     }

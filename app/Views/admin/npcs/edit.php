@@ -55,13 +55,16 @@ ob_start();
             </div>
             
             <div class="form-group">
-                <label class="form-label">Rôle *</label>
-                <select name="role" id="role-select" class="form-select" required>
-                    <option value="merchant" <?= $npc['role'] === 'merchant' ? 'selected' : '' ?>>Marchand</option>
-                    <option value="quest_giver" <?= $npc['role'] === 'quest_giver' ? 'selected' : '' ?>>Donneur de quêtes</option>
-                    <option value="lore" <?= $npc['role'] === 'lore' ? 'selected' : '' ?>>Lore</option>
-                    <option value="guard" <?= $npc['role'] === 'guard' ? 'selected' : '' ?>>Garde</option>
-                </select>
+                <label class="form-label">Rôles</label>
+                <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+                    <?php
+                        $npcRoles = array_map('trim', explode(',', $npc['role'] ?? ''));
+                    ?>
+                    <label><input type="checkbox" name="roles[]" value="merchant" <?= in_array('merchant', $npcRoles) ? 'checked' : '' ?>> Marchand</label>
+                    <label><input type="checkbox" name="roles[]" value="quest_giver" <?= in_array('quest_giver', $npcRoles) ? 'checked' : '' ?>> Donneur de quêtes</label>
+                    <label><input type="checkbox" name="roles[]" value="lore" <?= in_array('lore', $npcRoles) ? 'checked' : '' ?>> Lore</label>
+                    <label><input type="checkbox" name="roles[]" value="guard" <?= in_array('guard', $npcRoles) ? 'checked' : '' ?>> Garde</label>
+                </div>
             </div>
             
             <!-- Texture Upload -->
@@ -142,6 +145,28 @@ ob_start();
                     </div>
                 <?php endif; ?>
             </div>
+            <div class="form-group-full" id="dialogue-fields">
+                <h4 style="color: var(--text-light); margin-bottom: 1rem; font-size: 1.125rem;">
+                    Configuration Dialogues
+                </h4>
+                
+                <div style="display:flex; flex-direction:column; gap:0.5rem; margin-top:0.5rem;">
+                    <?php
+                        $assignedIds = array_column($assignedTrees, 'id');
+                    ?>
+                    <?php if (!empty($dialogueTrees)): ?>
+                        <?php foreach ($dialogueTrees as $tree): ?>
+                            <label>
+                                <input type="checkbox" name="dialogue_trees[]" value="<?= $tree['id'] ?>" <?= in_array($tree['id'], $assignedIds) ? 'checked' : '' ?> >
+                                <?= htmlspecialchars($tree['name']) ?>
+                            </label>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p style="color: var(--text-muted);">Aucun arbre de dialogue créé.</p>
+                    <?php endif; ?>
+                </div>
+                
+            </div>
         </div>
         
         <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
@@ -153,21 +178,17 @@ ob_start();
 
 <script>
 // Show/hide merchant fields
-const roleSelect = document.getElementById('role-select');
 const merchantFields = document.getElementById('merchant-fields');
 const merchantSeed = document.getElementById('merchant-seed');
+const roleCheckboxes = document.querySelectorAll('[name="roles[]"]');
 
 function updateMerchantFields() {
-    const isMerchant = roleSelect.value === 'merchant';
+    const isMerchant = Array.from(roleCheckboxes).some(cb => cb.value === 'merchant' && cb.checked);
     merchantFields.style.display = isMerchant ? 'block' : 'none';
-    if (isMerchant) {
-        merchantSeed.required = true;
-    } else {
-        merchantSeed.required = false;
-    }
+    merchantSeed.required = isMerchant;
 }
 
-roleSelect.addEventListener('change', updateMerchantFields);
+roleCheckboxes.forEach(cb => cb.addEventListener('change', updateMerchantFields));
 updateMerchantFields();
 
 // Regenerate inventory

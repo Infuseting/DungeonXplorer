@@ -110,14 +110,20 @@ ob_start();
                             <div style="font-size: 1.125rem; font-weight: 600; color: var(--text-light); margin-bottom: 0.25rem;">
                                 <?= htmlspecialchars($npc['name']) ?>
                             </div>
-                            <span class="role-badge role-<?= $npc['role'] ?>">
-                                <?= str_replace('_', ' ', $npc['role']) ?>
-                            </span>
+                            <?php
+                                $roles = array_map('trim', explode(',', $npc['role'] ?? ''));
+                                foreach ($roles as $r):
+                            ?>
+                                <span class="role-badge role-<?= $r ?>">
+                                    <?= str_replace('_', ' ', $r) ?>
+                                </span>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                     
                     <!-- Merchant Info -->
-                    <?php if ($npc['role'] === 'merchant' && $npc['merchant_seed']): ?>
+                    <?php $rolesArr = array_map('trim', explode(',', $npc['role'] ?? '')); ?>
+                    <?php if (in_array('merchant', $rolesArr) && $npc['merchant_seed']): ?>
                         <div style="background: var(--bg-dark); padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 1rem;">
                             <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem;">SEED Marchand</div>
                             <div style="color: var(--text-light); font-weight: 600; font-family: monospace;">

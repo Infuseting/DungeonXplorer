@@ -117,9 +117,10 @@ class GameController
         // Get dialogue trees
         $dialogueTrees = $npcModel->getDialogueTrees($id);
         
-        // Get merchant inventory if merchant
+        // Get merchant inventory if NPC has merchant role
         $merchantInventory = [];
-        if ($npc['role'] === 'merchant' && $npc['merchant_seed']) {
+        $npcRoles = array_map('trim', explode(',', $npc['role'] ?? ''));
+        if (in_array('merchant', $npcRoles) && $npc['merchant_seed']) {
             $merchantInventory = $npcModel->getMerchantInventory($id);
         }
         

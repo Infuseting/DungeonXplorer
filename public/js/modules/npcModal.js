@@ -53,11 +53,12 @@ function displayNPCModal() {
     choicesEl.innerHTML = '';
     choicesEl.style.display = 'none';
 
-    // Display initial greeting
-    textEl.textContent = getGreeting(currentNPC.role);
+    // Display initial greeting (support multiple roles stored as CSV)
+    const npcRoles = Array.isArray(currentNPC.role) ? currentNPC.role : (String(currentNPC.role || '').split(',').map(r => r.trim()).filter(Boolean));
+    textEl.textContent = getGreeting(npcRoles);
 
-    // Add action buttons based on role
-    if (currentNPC.role === 'merchant') {
+    // Add action buttons based on roles
+    if (npcRoles.includes('merchant')) {
         const merchantBtn = document.createElement('button');
         merchantBtn.className = 'npc-action-btn';
         merchantBtn.textContent = '💰 Vous vendez ou rachetez des trucs ?';
@@ -75,7 +76,7 @@ function displayNPCModal() {
     }
 
     // Add quest button if quest_giver
-    if (currentNPC.role === 'quest_giver') {
+    if (npcRoles.includes('quest_giver')) {
         const questBtn = document.createElement('button');
         questBtn.className = 'npc-action-btn';
         questBtn.textContent = '⚔️ Avez-vous des quêtes ?';
@@ -91,14 +92,21 @@ function displayNPCModal() {
 /**
  * Get greeting based on NPC role
  */
-function getGreeting(role) {
+function getGreeting(roles) {
     const greetings = {
         merchant: "Bienvenue dans ma boutique ! Je vends et rachète toutes sortes d'objets.",
         quest_giver: "Salutations, aventurier ! J'ai peut-être quelque chose pour toi.",
         lore: "Ah, un visiteur curieux ! Que puis-je t'apprendre aujourd'hui ?",
         guard: "Halte ! Que fais-tu ici ?"
     };
-    return greetings[role] || "Bonjour, voyageur.";
+
+    // roles may be array or CSV string; prefer merchant, then quest_giver, then lore, then guard
+    const ordered = ['merchant', 'quest_giver', 'lore', 'guard'];
+    const r = Array.isArray(roles) ? roles : (String(roles || '').split(',').map(x => x.trim()).filter(Boolean));
+    for (const key of ordered) {
+        if (r.includes(key)) return greetings[key];
+    }
+    return "Bonjour, voyageur.";
 }
 
 /**
