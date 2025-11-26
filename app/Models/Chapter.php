@@ -8,12 +8,17 @@ class Chapter
 {
     private $db;
     private $chapterId;
+    private $historyId;
     private $name;
+    private $description;
 
     public function __construct()
     {
         $this->db = Database::getInstance()->getConnection();
     }
+
+    
+    /*
 
     public function create($chapterId, $historyId, $name, $description)
     {
@@ -25,4 +30,5 @@ class Chapter
         }
         return false;
     }
+        */
 }
