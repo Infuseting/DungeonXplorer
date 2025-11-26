@@ -15,10 +15,10 @@ class Chapter
         $this->db = Database::getInstance()->getConnection();
     }
 
-    public function create($chapterId, $name, $description)
+    public function create($chapterId, $historyId, $name, $description)
     {
-        $stmt = $this->db->prepare("INSERT INTO chapters (chapter_id, name, description) VALUES (?, ?, ?)");
-        $stmt->bind_param("iss", $chapterId, $name, $description);
+        $stmt = $this->db->prepare("INSERT INTO chapters (chapter_id, history_id, name, description) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("iiss", $chapterId, $historyId, $name, $description);
         
         if ($stmt->execute()) {
             return $this->db->insert_id;
