@@ -54,7 +54,6 @@ class GameController
 
     /**
      * API endpoint to load sub-map data
-     * Returns map configuration and points for a sub-map
      */
     public function loadSubMap()
     {
@@ -65,7 +64,6 @@ class GameController
             exit;
         }
 
-        // Get map ID from request
         $data = json_decode(file_get_contents('php://input'), true);
         $mapId = $data['mapId'] ?? null;
 
@@ -77,7 +75,6 @@ class GameController
         $mapModel = new \App\Models\Map();
         $mapPointModel = new \App\Models\MapPoint();
 
-        // Get map configuration
         $map = $mapModel->findById($mapId);
         
         if (!$map) {
@@ -85,7 +82,6 @@ class GameController
             exit;
         }
 
-        // Get map points
         $points = $mapPointModel->getPointsByMapId($mapId);
 
         echo json_encode([
@@ -98,5 +94,66 @@ class GameController
             ],
             'points' => $points
         ]);
+        exit;
+    }
+    
+    /**
+     * Get NPC data for interaction
+     */
+    public function getNPC($id)
+    {
+        header('Content-Type: application/json');
+        
+        $npcModel = new \App\Models\NPC();
+        $dialogueModel = new \App\Models\DialogueTree();
+        
+        $npc = $npcModel->findById($id);
+        
+        if (!$npc) {
+            echo json_encode(['success' => false, 'message' => 'PNJ non trouvé']);
+            exit;
+        }
+        
+        // Get dialogue trees
+        $dialogueTrees = $npcModel->getDialogueTrees($id);
+        
+        // Get merchant inventory if merchant
+        $merchantInventory = [];
+        if ($npc['role'] === 'merchant' && $npc['merchant_seed']) {
+            $merchantInventory = $npcModel->getMerchantInventory($id);
+        }
+        
+        echo json_encode([
+            'success' => true,
+            'npc' => $npc,
+            'dialogue_trees' => $dialogueTrees,
+            'merchant_inventory' => $merchantInventory
+        ]);
+        exit;
+    }
+    
+    /**
+     * Get dialogue tree structure
+     */
+    public function getDialogueTree($treeId)
+    {
+        header('Content-Type: application/json');
+        
+        $dialogueModel = new \App\Models\DialogueTree();
+        $tree = $dialogueModel->getDialogueTree($treeId);
+        
+        if (empty($tree)) {
+            echo json_encode(['success' => false, 'message' => 'Arbre de dialogue non trouvé']);
+            exit;
+        }
+        
+        // Get first root dialogue
+        $dialogue = $tree[0] ?? null;
+        
+        echo json_encode([
+            'success' => true,
+            'dialogue' => $dialogue
+        ]);
+        exit;
     }
 }

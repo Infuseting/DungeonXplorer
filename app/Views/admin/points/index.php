@@ -161,6 +161,7 @@ ob_start();
                     <th>Carte</th>
                     <th>Coordonnées</th>
                     <th>Sous-Carte</th>
+                    <th>PNJ Associé</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -208,6 +209,33 @@ ob_start();
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
+                                <?php else: ?>
+                                    <span style="color: var(--text-muted);">-</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?php if ($point['type'] === 'npc'): ?>
+                                    <select 
+                                        class="submap-select" 
+                                        onchange="updateNPC(<?= $point['id'] ?>, this.value)"
+                                    >
+                                        <option value="">Aucun PNJ</option>
+                                        <?php foreach ($npcs as $npc): ?>
+                                            <option 
+                                                value="<?= $npc['id'] ?>" 
+                                                <?= $point['target_id'] == $npc['id'] ? 'selected' : '' ?>
+                                            >
+                                                <?= htmlspecialchars($npc['name']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <?php if ($point['target_id']): ?>
+                                        <a href="/admin/npcs/edit/<?= $point['target_id'] ?>" 
+                                           class="btn btn-sm btn-primary" 
+                                           style="margin-top: 0.5rem; display: inline-block;">
+                                            👤 Gérer PNJ
+                                        </a>
+                                    <?php endif; ?>
                                 <?php else: ?>
                                     <span style="color: var(--text-muted);">-</span>
                                 <?php endif; ?>
@@ -279,6 +307,33 @@ function updateSubMap(pointId, subMapId) {
     .then(data => {
         if (data.success) {
             showToast(data.message, 'success');
+        } else {
+            showToast(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Erreur de communication avec le serveur', 'error');
+    });
+}
+
+// Update NPC assignment
+function updateNPC(pointId, npcId) {
+    fetch('/admin/points/update-npc', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            point_id: pointId,
+            npc_id: npcId || null
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message, 'success');
+            setTimeout(() => location.reload(), 1000);
         } else {
             showToast(data.message, 'error');
         }

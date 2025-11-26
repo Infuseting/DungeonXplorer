@@ -5,11 +5,10 @@
 
 import { showToast } from './toast.js';
 import { openSubMap } from './subMap.js';
+import { openNPCModal } from './npcModal.js';
 
 /**
  * Get color for point type
- * @param {string} type - Point type
- * @returns {string} Hex color
  */
 function getTypeColor(type) {
     const colors = {
@@ -24,8 +23,6 @@ function getTypeColor(type) {
 
 /**
  * Get label for point type
- * @param {string} type - Point type
- * @returns {string} Translated label
  */
 function getTypeLabel(type) {
     const labels = {
@@ -40,15 +37,19 @@ function getTypeLabel(type) {
 
 /**
  * Show point details in the side panel
- * @param {Object} point - Point data
  */
 export function showPointDetails(point) {
     console.log('Showing details for point:', point);
-
-    // Check if this point has a sub-map
-    if (point.sub_map_id && point.type === 'place') {
+    if (point.type === 'place' && point.sub_map_id) {
         console.log('Opening sub-map:', point.sub_map_id);
-        openSubMap(point.sub_map_id);
+        openSubMap(point.sub_map_id, point.name);
+        return;
+    }
+
+    // Check if this is an NPC point
+    if (point.type === 'npc' && point.target_id) {
+        console.log('Opening NPC modal:', point.target_id);
+        openNPCModal(point.target_id);
         return;
     }
 
@@ -103,8 +104,6 @@ export function showPointDetails(point) {
 
 /**
  * Initialize map points on the map
- * @param {L.Map} map - Leaflet map instance
- * @param {Array} points - Array of point objects
  */
 export function initMapPoints(map, points) {
     console.log('Adding markers for', points.length, 'points');

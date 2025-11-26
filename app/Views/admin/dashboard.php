@@ -181,86 +181,110 @@ ob_start();
 </div>
 
 <script>
-    // Class Distribution Chart
-    const classCtx = document.getElementById('classChart').getContext('2d');
-    new Chart(classCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Guerrier', 'Mage', 'Voleur'],
-            datasets: [{
-                data: [12, 8, 5], // TODO: Get real data from backend
-                backgroundColor: [
-                    'rgba(99, 102, 241, 0.8)',
-                    'rgba(168, 85, 247, 0.8)',
-                    'rgba(236, 72, 153, 0.8)'
-                ],
-                borderColor: [
-                    'rgba(99, 102, 241, 1)',
-                    'rgba(168, 85, 247, 1)',
-                    'rgba(236, 72, 153, 1)'
-                ],
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        color: '#e2e8f0',
-                        padding: 15
-                    }
-                }
+document.addEventListener('DOMContentLoaded', () => {
+    fetch('/admin/stats')
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) {
+                console.error('Failed to fetch dashboard stats');
+                return;
             }
-        }
-    });
-    
-    // Activity Chart
-    const activityCtx = document.getElementById('activityChart').getContext('2d');
-    new Chart(activityCtx, {
-        type: 'line',
-        data: {
-            labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
-            datasets: [{
-                label: 'Nouveaux Personnages',
-                data: [3, 5, 2, 8, 4, 6, 7], // TODO: Get real data from backend
-                borderColor: 'rgba(99, 102, 241, 1)',
-                backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    labels: {
-                        color: '#e2e8f0'
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        color: '#94a3b8'
-                    },
-                    grid: {
-                        color: '#1e293b'
-                    }
+
+            // Class Distribution Chart
+            const classLabels = data.class_distribution.map(c => c.name);
+            const classData = data.class_distribution.map(c => c.count);
+            const classCtx = document.getElementById('classChart').getContext('2d');
+            new Chart(classCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: classLabels,
+                    datasets: [{
+                        data: classData,
+                        backgroundColor: [
+                            'rgba(99, 102, 241, 0.8)',
+                            'rgba(168, 85, 247, 0.8)',
+                            'rgba(236, 72, 153, 0.8)',
+                            'rgba(34, 197, 94, 0.8)',
+                            'rgba(59, 130, 246, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(99, 102, 241, 1)',
+                            'rgba(168, 85, 247, 1)',
+                            'rgba(236, 72, 153, 1)',
+                            'rgba(34, 197, 94, 1)',
+                            'rgba(59, 130, 246, 1)'
+                        ],
+                        borderWidth: 2
+                    }]
                 },
-                x: {
-                    ticks: {
-                        color: '#94a3b8'
-                    },
-                    grid: {
-                        color: '#1e293b'
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#e2e8f0',
+                                padding: 15
+                            }
+                        }
                     }
                 }
-            }
-        }
-    });
+            });
+
+            // Activity Chart (last 7 days)
+            const activityLabels = data.activity.map(a => {
+                // Convert YYYY-MM-DD to localized short weekday
+                const d = new Date(a.date + 'T00:00:00');
+                return d.toLocaleDateString('fr-FR', { weekday: 'short' });
+            });
+            const activityData = data.activity.map(a => a.count);
+            const activityCtx = document.getElementById('activityChart').getContext('2d');
+            new Chart(activityCtx, {
+                type: 'line',
+                data: {
+                    labels: activityLabels,
+                    datasets: [{
+                        label: 'Nouveaux Personnages',
+                        data: activityData,
+                        borderColor: 'rgba(99, 102, 241, 1)',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#e2e8f0'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#94a3b8'
+                            },
+                            grid: {
+                                color: '#1e293b'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#94a3b8'
+                            },
+                            grid: {
+                                color: '#1e293b'
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(err => console.error('Error loading dashboard stats:', err));
+});
 </script>
 
 <?php

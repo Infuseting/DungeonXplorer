@@ -25,7 +25,9 @@ $router->mount('/personnage', function() use ($router) {
     $router->before('GET|POST', '', function() {
         (new \App\Middleware\AuthMiddleware())->handle();
     });
-
+    $router->before('GET|POST', '.*', function() {
+        (new \App\Middleware\AuthMiddleware())->handle();
+    });
     $router->get('/', 'App\Controllers\CharacterController@index');
     $router->get('/create', 'App\Controllers\CharacterController@create');
     $router->post('/create', 'App\Controllers\CharacterController@store');
@@ -37,12 +39,19 @@ $router->mount('/game', function() use ($router) {
     $router->before('GET|POST', '', function() {
         (new \App\Middleware\AuthMiddleware())->handle();
     });
+    $router->before('GET|POST', '.*', function() {
+        (new \App\Middleware\AuthMiddleware())->handle();
+    });
 
     $router->post('/', 'App\Controllers\GameController@index'); // POST from character select
     $router->get('/', 'App\Controllers\GameController@index'); // GET for refresh
 
     // Map API
     $router->post('/submap/load', 'App\Controllers\GameController@loadSubMap');
+    
+    // NPC API
+    $router->get('/npc/(\d+)', 'App\Controllers\GameController@getNPC');
+    $router->get('/dialogue/tree/(\d+)', 'App\Controllers\GameController@getDialogueTree');
 
     // Inventory API
     $router->post('/inventory/move', 'App\Controllers\InventoryController@move');
@@ -53,11 +62,15 @@ $router->mount('/game', function() use ($router) {
 
 // Admin Routes (Protected)
 $router->mount('/admin', function() use ($router) {
+    $router->before('GET|POST', '.*', function() {
+        (new \App\Middleware\AdminMiddleware())->handle();
+    });
     $router->before('GET|POST', '', function() {
         (new \App\Middleware\AdminMiddleware())->handle();
     });
 
     $router->get('/', 'App\Controllers\AdminController@dashboard');
+    $router->get('/stats', 'App\Controllers\AdminController@stats');
     
     // Map Management
     $router->get('/map', 'App\Controllers\AdminMapController@index');
@@ -67,14 +80,30 @@ $router->mount('/admin', function() use ($router) {
     // Points Management
     $router->get('/points', 'App\Controllers\AdminMapController@managePoints');
     $router->post('/points/update-submap', 'App\Controllers\AdminMapController@updatePointSubMap');
+    $router->post('/points/update-npc', 'App\Controllers\AdminMapController@updatePointNPC');
     
     // Items Management
     $router->get('/items', 'App\Controllers\AdminItemController@index');
-    $router->get('/items/create', 'App\Controllers\AdminItemController@create');
-    $router->post('/items/create', 'App\Controllers\AdminItemController@create');
-    $router->get('/items/edit/(\d+)', 'App\Controllers\AdminItemController@edit');
-    $router->post('/items/edit/(\d+)', 'App\Controllers\AdminItemController@edit');
+    $router->match('GET|POST', '/items/create', 'App\Controllers\AdminItemController@create');
+    $router->match('GET|POST', '/items/edit/(\d+)', 'App\Controllers\AdminItemController@edit');
     $router->post('/items/delete/(\d+)', 'App\Controllers\AdminItemController@delete');
+    
+    // NPC Management
+    $router->get('/npcs', 'App\Controllers\AdminNPCController@index');
+    $router->match('GET|POST', '/npcs/create', 'App\Controllers\AdminNPCController@create');
+    $router->match('GET|POST', '/npcs/edit/(\d+)', 'App\Controllers\AdminNPCController@edit');
+    $router->post('/npcs/delete/(\d+)', 'App\Controllers\AdminNPCController@delete');
+    $router->post('/npcs/(\d+)/regenerate-inventory', 'App\Controllers\AdminNPCController@regenerateInventory');
+    
+    // Dialogue Management
+    $router->get('/dialogues', 'App\Controllers\AdminDialogueController@index');
+    $router->match('GET|POST', '/dialogues/create', 'App\Controllers\AdminDialogueController@create');
+    $router->match('GET|POST', '/dialogues/edit/(\d+)', 'App\Controllers\AdminDialogueController@edit');
+    $router->post('/dialogues/delete/(\d+)', 'App\Controllers\AdminDialogueController@delete');
+    $router->get('/dialogues/tree/(\d+)', 'App\Controllers\AdminDialogueController@editTree');
+    $router->post('/dialogues/node/add', 'App\Controllers\AdminDialogueController@addNode');
+    $router->post('/dialogues/node/update', 'App\Controllers\AdminDialogueController@updateNode');
+    $router->post('/dialogues/node/delete', 'App\Controllers\AdminDialogueController@deleteNode');
 });
 
 $router->set404('App\Controllers\ErrorController@error404');

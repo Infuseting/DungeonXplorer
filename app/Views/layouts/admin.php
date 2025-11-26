@@ -197,6 +197,14 @@
                     <span class="nav-icon">🎒</span>
                     Gestion des Items
                 </a>
+                <a href="/admin/npcs" class="nav-item <?= strpos($_SERVER['REQUEST_URI'], '/admin/npcs') === 0 ? 'active' : '' ?>">
+                    <span class="nav-icon">👥</span>
+                    Gestion des PNJ
+                </a>
+                <a href="/admin/dialogues" class="nav-item <?= strpos($_SERVER['REQUEST_URI'], '/admin/dialogues') === 0 ? 'active' : '' ?>">
+                    <span class="nav-icon">💬</span>
+                    Gestion des Dialogues
+                </a>
                 <a href="/" class="nav-item">
                     <span class="nav-icon">🏠</span>
                     Retour au Jeu

@@ -3,6 +3,7 @@
  * Handles loading and displaying sub-maps in a modal
  */
 
+import { initMapPoints, showPointDetails } from './mapPoints.js';
 import { showToast } from './toast.js';
 
 let subMapInstance = null;
@@ -54,11 +55,6 @@ export async function openSubMap(mapId) {
     }
 }
 
-/**
- * Initialize Leaflet map for sub-map
- * @param {Object} mapData - Map configuration data
- * @param {Array} points - Array of map points
- */
 async function initSubMap(mapData, points) {
     const container = document.getElementById('submap-container');
     container.innerHTML = '';
@@ -125,44 +121,7 @@ async function initSubMap(mapData, points) {
  * @param {Array} points - Array of point objects
  */
 function addSubMapPoints(map, points) {
-    const typeColors = {
-        'story': '#6366f1',
-        'place': '#22c55e',
-        'dungeon': '#ef4444',
-        'npc': '#fbbf24',
-        'quest': '#a855f7'
-    };
-
-    points.forEach((point) => {
-        const marker = L.circleMarker([parseFloat(point.y), parseFloat(point.x)], {
-            radius: 8,
-            fillColor: typeColors[point.type] || '#6366f1',
-            color: '#fff',
-            weight: 2,
-            opacity: 1,
-            fillOpacity: 0.8
-        }).addTo(map);
-
-        // Click handler
-        marker.on('click', () => {
-            showSubMapPointDetails(point);
-        });
-
-        // Hover effect
-        marker.on('mouseover', function () {
-            this.setStyle({
-                radius: 10,
-                weight: 3
-            });
-        });
-
-        marker.on('mouseout', function () {
-            this.setStyle({
-                radius: 8,
-                weight: 2
-            });
-        });
-    });
+    initMapPoints(map, points);
 }
 
 /**
@@ -170,36 +129,7 @@ function addSubMapPoints(map, points) {
  * @param {Object} point - Point data
  */
 function showSubMapPointDetails(point) {
-    const panel = document.getElementById('submap-point-panel');
-    const typeLabels = {
-        'story': 'Histoire',
-        'place': 'Lieu',
-        'dungeon': 'Donjon',
-        'npc': 'PNJ',
-        'quest': 'Quête'
-    };
-    const typeColors = {
-        'story': '#6366f1',
-        'place': '#22c55e',
-        'dungeon': '#ef4444',
-        'npc': '#fbbf24',
-        'quest': '#a855f7'
-    };
-
-    // Update panel content
-    document.getElementById('submap-point-title').textContent = point.name;
-    document.getElementById('submap-point-description').textContent = point.description || 'Aucune description disponible.';
-    document.getElementById('submap-point-coords').textContent = `Lat: ${parseFloat(point.y).toFixed(6)}, Lng: ${parseFloat(point.x).toFixed(6)}`;
-
-    // Update type badge
-    const typeBadge = document.getElementById('submap-point-type');
-    const typeColor = typeColors[point.type] || '#6366f1';
-    typeBadge.textContent = typeLabels[point.type] || point.type;
-    typeBadge.style.backgroundColor = typeColor + '33';
-    typeBadge.style.color = typeColor;
-
-    // Show panel
-    panel.classList.remove('translate-x-full');
+    showPointDetails(point);
 }
 
 /**

@@ -22,6 +22,9 @@ ob_start();
 
     <!-- Sub-Map Modal Component -->
     <?php require __DIR__ . '/components/submap-modal.php'; ?>
+    
+    <!-- NPC Interaction Modal -->
+    <?php require __DIR__ . '/components/npc-modal.php'; ?>
 
     <!-- Toast Container -->
     <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
@@ -37,6 +40,7 @@ ob_start();
     import { initMapPoints, initPanelControls } from '/js/modules/mapPoints.js';
     import { initInventory } from '/js/modules/inventory.js';
     import { initSubMapControls } from '/js/modules/subMap.js';
+    import { initNPCModal } from '/js/modules/npcModal.js';
 
     // Map points data from PHP
     const mapPoints = <?= json_encode($mapPoints ?? []) ?>;
@@ -56,6 +60,10 @@ ob_start();
         // Initialize sub-map controls
         initSubMapControls();
         console.log('Sub-map controls initialized');
+        
+        // Initialize NPC modal
+        initNPCModal();
+        console.log('NPC modal initialized');
         
         // Initialize map
         try {

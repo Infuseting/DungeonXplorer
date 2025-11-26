@@ -1,52 +1,14 @@
--- phpMyAdmin SQL Dump
--- version 5.2.3
--- https://www.phpmyadmin.net/
---
--- Host: mysql:3306
--- Generation Time: Nov 25, 2025 at 02:31 PM
--- Server version: 8.0.44
--- PHP Version: 8.3.26
+-- Database Export: dungeon_xplorer
+-- Generated: 2025-11-26 07:08:46
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
 
 
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
-
---
--- Database: `dungeon_xplorer`
---
-
 -- --------------------------------------------------------
-
---
--- Table structure for table `characters`
---
-
-CREATE TABLE `characters` (
-  `id` int NOT NULL,
-  `user_id` int NOT NULL,
-  `class_id` int NOT NULL,
-  `name` varchar(50) NOT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `last_played_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `gold` decimal(10,2) DEFAULT '0.00'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `characters`
---
-
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `character_appearance`
---
+-- --------------------------------------------------------
 
 CREATE TABLE `character_appearance` (
   `character_id` int NOT NULL,
@@ -54,22 +16,17 @@ CREATE TABLE `character_appearance` (
   `hair_style` varchar(50) DEFAULT 'bald',
   `hair_color` varchar(20) DEFAULT '#000000',
   `eye_color` varchar(20) DEFAULT '#000000',
-  `face_style` varchar(50) DEFAULT 'default'
+  `face_style` varchar(50) DEFAULT 'default',
+  PRIMARY KEY (`character_id`),
+  CONSTRAINT `character_appearance_ibfk_1` FOREIGN KEY (`character_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
---
--- Dumping data for table `character_appearance`
---
-
-
+-- --------------------------------------------------------
+-- Table structure for table `character_inventory`
 -- --------------------------------------------------------
 
---
--- Table structure for table `character_inventory`
---
-
 CREATE TABLE `character_inventory` (
-  `id` int NOT NULL,
+  `id` int NOT NULL AUTO_INCREMENT,
   `character_id` int NOT NULL,
   `item_id` int NOT NULL,
   `location` enum('equipped','backpack','pockets') NOT NULL,
@@ -78,17 +35,17 @@ CREATE TABLE `character_inventory` (
   `grid_y` tinyint DEFAULT NULL,
   `quantity` int NOT NULL DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `instance_stats` json DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `character_inventory`
+  `instance_stats` json DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `character_id` (`character_id`),
+  KEY `item_id` (`item_id`),
+  CONSTRAINT `character_inventory_ibfk_1` FOREIGN KEY (`character_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `character_inventory_ibfk_2` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
-
---
 -- Table structure for table `character_stats`
---
+-- --------------------------------------------------------
 
 CREATE TABLE `character_stats` (
   `character_id` int NOT NULL,
@@ -97,63 +54,83 @@ CREATE TABLE `character_stats` (
   `strength` int DEFAULT '10',
   `dexterity` int DEFAULT '10',
   `intelligence` int DEFAULT '10',
-  `vitality` int DEFAULT '10'
+  `vitality` int DEFAULT '10',
+  PRIMARY KEY (`character_id`),
+  CONSTRAINT `character_stats_ibfk_1` FOREIGN KEY (`character_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
---
--- Dumping data for table `character_stats`
---
--------------------------
+-- --------------------------------------------------------
+-- Table structure for table `characters`
+-- --------------------------------------------------------
 
---
+CREATE TABLE `characters` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `class_id` int NOT NULL,
+  `name` varchar(50) NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `last_played_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `gold` decimal(10,2) DEFAULT '0.00',
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  KEY `class_id` (`class_id`),
+  CONSTRAINT `characters_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `characters_ibfk_2` FOREIGN KEY (`class_id`) REFERENCES `classes` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
 -- Table structure for table `classes`
---
+-- --------------------------------------------------------
 
 CREATE TABLE `classes` (
-  `id` int NOT NULL,
+  `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(50) NOT NULL,
   `description` text,
   `base_stats_json` json DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+-- Table structure for table `dialogue_trees`
+-- --------------------------------------------------------
+
+CREATE TABLE `dialogue_trees` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL COMMENT 'Nom de l''arbre (ex: "Salutation marchand")',
+  `description` text COMMENT 'Description de l''arbre de dialogue',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
---
---
+-- --------------------------------------------------------
+-- Table structure for table `dialogues`
+-- --------------------------------------------------------
 
 CREATE TABLE `dialogues` (
-  `id` int NOT NULL,
-  `npc_id` int NOT NULL,
-  `title` varchar(100) NOT NULL,
-  `tree_json` json NOT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+  `id` int NOT NULL AUTO_INCREMENT,
+  `tree_id` int NOT NULL COMMENT 'Arbre de dialogue auquel appartient ce n┼ôud',
+  `parent_id` int DEFAULT NULL COMMENT 'ID du dialogue parent (NULL = racine de l''arbre)',
+  `text` text NOT NULL COMMENT 'Texte dit par le PNJ ou texte de la r├®ponse',
+  `is_player_choice` tinyint(1) DEFAULT '0' COMMENT 'TRUE si c''est un choix du joueur, FALSE si c''est le PNJ qui parle',
+  `choice_text` varchar(255) DEFAULT NULL COMMENT 'Texte du bouton de choix (si is_player_choice=TRUE)',
+  `order_index` int DEFAULT '0' COMMENT 'Ordre d''affichage parmi les fr├¿res',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_dialogues_tree` (`tree_id`),
+  KEY `idx_dialogues_parent` (`parent_id`),
+  CONSTRAINT `dialogues_ibfk_1` FOREIGN KEY (`tree_id`) REFERENCES `dialogue_trees` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `dialogues_ibfk_2` FOREIGN KEY (`parent_id`) REFERENCES `dialogues` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
-
-
-CREATE TABLE `dungeon_configs` (
-  `id` int NOT NULL,
-  `name` varchar(100) NOT NULL,
-  `theme` varchar(50) DEFAULT 'cave',
-  `min_rooms` int DEFAULT '5',
-  `max_rooms` int DEFAULT '15',
-  `loot_room_chance` int DEFAULT '20',
-  `connection_density` int DEFAULT '50',
-  `difficulty_tier` int DEFAULT '1',
-  `boss_id` int DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
+-- Table structure for table `items`
 -- --------------------------------------------------------
-
-CREATE TABLE `dungeon_monsters` (
-  `dungeon_config_id` int NOT NULL,
-  `monster_id` int NOT NULL,
-  `spawn_weight` int DEFAULT '10'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `items` (
-  `id` int NOT NULL,
+  `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
   `description` text,
   `type` enum('equipment','consumable','material') NOT NULL,
@@ -165,51 +142,40 @@ CREATE TABLE `items` (
   `icon` varchar(255) DEFAULT NULL,
   `stats` json DEFAULT NULL,
   `max_stack` tinyint NOT NULL DEFAULT '1',
+  `price` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `stat_ranges` json DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  `stat_ranges` json DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-
-
-
+-- --------------------------------------------------------
+-- Table structure for table `loot_tables`
+-- --------------------------------------------------------
 
 CREATE TABLE `loot_tables` (
-  `id` int NOT NULL,
+  `id` int NOT NULL AUTO_INCREMENT,
   `source_type` enum('mob','dungeon') NOT NULL,
   `source_id` int NOT NULL,
   `item_id` int NOT NULL,
   `chance` int DEFAULT '10',
   `min_quantity` int DEFAULT '1',
-  `max_quantity` int DEFAULT '1'
+  `max_quantity` int DEFAULT '1',
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-
-CREATE TABLE `maps` (
-  `id` int NOT NULL,
-  `name` varchar(100) NOT NULL,
-  `description` text,
-  `parent_map_id` int DEFAULT NULL,
-  `image_path` varchar(255) DEFAULT NULL COMMENT 'Path to tile config JSON or image',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-
-
-
-INSERT INTO `maps` (`id`, `name`, `description`, `parent_map_id`, `image_path`, `created_at`) VALUES
-(1, 'Main World', 'The main game world', NULL, '/assets/map/main/map_config.json', '2025-11-24 23:45:29');
-
-
+-- --------------------------------------------------------
+-- Table structure for table `map_points`
+-- --------------------------------------------------------
 
 CREATE TABLE `map_points` (
-  `id` int NOT NULL,
+  `id` int NOT NULL AUTO_INCREMENT,
   `map_id` int NOT NULL,
   `name` varchar(255) NOT NULL,
   `x` int NOT NULL,
   `y` int NOT NULL,
   `type` enum('story','place','dungeon','npc','quest') NOT NULL,
   `target_id` int DEFAULT NULL,
-  `sub_map_id` int DEFAULT NULL COMMENT 'ID of sub-map to open when this point is clicked (for place type)',
+  `sub_map_id` int DEFAULT NULL,
   `icon` varchar(255) DEFAULT NULL,
   `is_locked` tinyint(1) DEFAULT '0',
   `unlock_quest_id` int DEFAULT NULL,
@@ -217,493 +183,124 @@ CREATE TABLE `map_points` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `radius` int DEFAULT '20',
   `label` varchar(100) DEFAULT NULL,
-  `description` text
+  `description` text,
+  PRIMARY KEY (`id`),
+  KEY `map_id` (`map_id`),
+  KEY `sub_map_id` (`sub_map_id`),
+  CONSTRAINT `map_points_ibfk_1` FOREIGN KEY (`map_id`) REFERENCES `maps` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `map_points_ibfk_2` FOREIGN KEY (`sub_map_id`) REFERENCES `maps` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+-- Table structure for table `maps`
+-- --------------------------------------------------------
+
+CREATE TABLE `maps` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `description` text,
+  `parent_map_id` int DEFAULT NULL,
+  `image_path` varchar(255) NOT NULL,
+  `parent_location_id` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `parent_location_id` (`parent_location_id`),
+  CONSTRAINT `maps_ibfk_1` FOREIGN KEY (`parent_location_id`) REFERENCES `locations` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+-- Table structure for table `monsters`
+-- --------------------------------------------------------
+
+CREATE TABLE `monsters` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `image_path` varchar(255) DEFAULT NULL,
+  `level_min` int DEFAULT '1',
+  `level_max` int DEFAULT '100',
+  `base_stats_json` json DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+-- Table structure for table `npc_dialogue_trees`
+-- --------------------------------------------------------
+
+CREATE TABLE `npc_dialogue_trees` (
+  `npc_id` int NOT NULL,
+  `tree_id` int NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`npc_id`,`tree_id`),
+  KEY `tree_id` (`tree_id`),
+  CONSTRAINT `npc_dialogue_trees_ibfk_1` FOREIGN KEY (`npc_id`) REFERENCES `npcs` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `npc_dialogue_trees_ibfk_2` FOREIGN KEY (`tree_id`) REFERENCES `dialogue_trees` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+-- --------------------------------------------------------
+-- Table structure for table `npc_merchant_inventory`
+-- --------------------------------------------------------
 
+CREATE TABLE `npc_merchant_inventory` (
+  `npc_id` int NOT NULL,
+  `item_id` int NOT NULL,
+  `quantity` int DEFAULT '1' COMMENT 'Quantit├® en stock (pour futurs d├®veloppements)',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`npc_id`,`item_id`),
+  KEY `item_id` (`item_id`),
+  CONSTRAINT `npc_merchant_inventory_ibfk_1` FOREIGN KEY (`npc_id`) REFERENCES `npcs` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `npc_merchant_inventory_ibfk_2` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-
-INSERT INTO `map_points` (`id`, `map_id`, `name`, `x`, `y`, `type`, `target_id`, `sub_map_id`, `icon`, `is_locked`, `unlock_quest_id`, `unlock_condition_json`, `created_at`, `radius`, `label`, `description`) VALUES
-(3, 1, 'Labyrinthe du Minotaure', 60, -102, 'story', NULL, NULL, '', 0, NULL, NULL, '2025-11-24 23:46:12', 20, NULL, ''),
-(4, 1, 'Ville d\'Ege', 47, -114, 'place', NULL, NULL, '', 0, NULL, NULL, '2025-11-24 23:48:01', 20, NULL, '');
-
-
-
-
-
+-- --------------------------------------------------------
+-- Table structure for table `npcs`
+-- --------------------------------------------------------
 
 CREATE TABLE `npcs` (
   `id` int NOT NULL,
   `name` varchar(100) NOT NULL,
   `role` enum('merchant','quest_giver','lore','guard') NOT NULL,
   `image_path` varchar(255) DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-
--- --------------------------------------------------------
-
---
--- Table structure for table `quests`
---
-
-CREATE TABLE `quests` (
-  `id` int NOT NULL,
-  `title` varchar(100) NOT NULL,
-  `description` text,
-  `rewards_json` json DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `texture` varchar(255) DEFAULT NULL COMMENT 'Chemin vers l''image du PNJ',
+  `merchant_seed` int DEFAULT NULL COMMENT 'SEED pour g├®n├®ration inventaire marchand (NULL si non marchand)',
+  `buy_rate_own` decimal(5,2) DEFAULT '0.05' COMMENT 'Taux rachat items vendus par le marchand (5%)',
+  `buy_rate_other` decimal(5,2) DEFAULT '0.15' COMMENT 'Taux rachat autres items (15%)',
+  PRIMARY KEY (`id`),
+  KEY `idx_npcs_merchant_seed` (`merchant_seed`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
-
---
--- Table structure for table `quest_stages`
---
-
-CREATE TABLE `quest_stages` (
-  `id` int NOT NULL,
-  `quest_id` int NOT NULL,
-  `stage_order` int NOT NULL,
-  `description` text NOT NULL,
-  `type` enum('talk','visit','kill','fetch','interact') NOT NULL,
-  `target_id` int DEFAULT NULL,
-  `quantity` int DEFAULT '1',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
+-- Table structure for table `user_tokens`
 -- --------------------------------------------------------
 
---
--- Table structure for table `shops`
---
-
-CREATE TABLE `shops` (
-  `id` int NOT NULL,
-  `npc_id` int NOT NULL,
-  `name` varchar(100) NOT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `shop_items`
---
-
-CREATE TABLE `shop_items` (
-  `id` int NOT NULL,
-  `shop_id` int NOT NULL,
-  `item_id` int NOT NULL,
-  `price` decimal(10,2) NOT NULL,
-  `stock` int DEFAULT '-1',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `user_tokens` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `selector` varchar(24) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `hashed_validator` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `expires_at` datetime NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `user_tokens_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=79 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
-
---
--- Table structure for table `stories`
---
-
-CREATE TABLE `stories` (
-  `id` int NOT NULL,
-  `title` varchar(255) NOT NULL,
-  `description` text,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `users`
---
+-- --------------------------------------------------------
 
 CREATE TABLE `users` (
-  `id` int NOT NULL,
+  `id` int NOT NULL AUTO_INCREMENT,
   `username` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `email` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `role` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `username` (`username`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `users`
---
--- --------------------------------------------------------
-
---
--- Table structure for table `user_tokens`
---
-
-CREATE TABLE `user_tokens` (
-  `id` int NOT NULL,
-  `user_id` int NOT NULL,
-  `selector` varchar(24) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `hashed_validator` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `expires_at` datetime NOT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `user_tokens`
---
--- Indexes for dumped tables
---
-
---
--- Indexes for table `characters`
---
-ALTER TABLE `characters`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `user_id` (`user_id`),
-  ADD KEY `class_id` (`class_id`);
-
---
--- Indexes for table `character_appearance`
---
-ALTER TABLE `character_appearance`
-  ADD PRIMARY KEY (`character_id`);
-
---
--- Indexes for table `character_inventory`
---
-ALTER TABLE `character_inventory`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `character_id` (`character_id`),
-  ADD KEY `item_id` (`item_id`);
-
---
--- Indexes for table `character_stats`
---
-ALTER TABLE `character_stats`
-  ADD PRIMARY KEY (`character_id`);
-
---
--- Indexes for table `classes`
---
-ALTER TABLE `classes`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `name` (`name`);
-
---
--- Indexes for table `dialogues`
---
-ALTER TABLE `dialogues`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `npc_id` (`npc_id`);
-
---
--- Indexes for table `dungeon_configs`
---
-ALTER TABLE `dungeon_configs`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `boss_id` (`boss_id`);
-
---
--- Indexes for table `dungeon_monsters`
---
-ALTER TABLE `dungeon_monsters`
-  ADD PRIMARY KEY (`dungeon_config_id`,`monster_id`),
-  ADD KEY `monster_id` (`monster_id`);
-
---
--- Indexes for table `items`
---
-ALTER TABLE `items`
-  ADD PRIMARY KEY (`id`);
-
-
---
--- Indexes for table `loot_tables`
---
-ALTER TABLE `loot_tables`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `maps`
---
-ALTER TABLE `maps`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `map_points`
---
-ALTER TABLE `map_points`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `map_id` (`map_id`),
-  ADD KEY `sub_map_id` (`sub_map_id`);
-
-
-
---
--- Indexes for table `monsters`
---
-ALTER TABLE `monsters`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `npcs`
---
-ALTER TABLE `npcs`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `location_id` (`location_id`);
-
---
--- Indexes for table `quests`
---
-ALTER TABLE `quests`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `quest_stages`
---
-ALTER TABLE `quest_stages`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `quest_id` (`quest_id`);
-
---
--- Indexes for table `shops`
---
-ALTER TABLE `shops`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `npc_id` (`npc_id`);
-
---
--- Indexes for table `shop_items`
---
-ALTER TABLE `shop_items`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `shop_id` (`shop_id`),
-  ADD KEY `item_id` (`item_id`);
-
---
--- Indexes for table `stories`
---
-ALTER TABLE `stories`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `users`
---
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `username` (`username`),
-  ADD UNIQUE KEY `email` (`email`);
-
---
--- Indexes for table `user_tokens`
---
-ALTER TABLE `user_tokens`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `user_id` (`user_id`);
-
---
--- AUTO_INCREMENT for dumped tables
---
-
---
--- AUTO_INCREMENT for table `characters`
---
-ALTER TABLE `characters`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
-
---
--- AUTO_INCREMENT for table `character_inventory`
---
-ALTER TABLE `character_inventory`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
--- AUTO_INCREMENT for table `classes`
---
-ALTER TABLE `classes`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
--- AUTO_INCREMENT for table `dialogues`
---
-ALTER TABLE `dialogues`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `dungeon_configs`
---
-ALTER TABLE `dungeon_configs`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `items`
---
-ALTER TABLE `items`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
-
---
--- AUTO_INCREMENT for table `locations`
---
-ALTER TABLE `locations`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `loot_tables`
---
-ALTER TABLE `loot_tables`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `maps`
---
-ALTER TABLE `maps`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT for table `map_points`
---
-ALTER TABLE `map_points`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
-
---
--- AUTO_INCREMENT for table `monsters`
---
-ALTER TABLE `monsters`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `npcs`
---
-ALTER TABLE `npcs`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `quests`
---
-ALTER TABLE `quests`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `quest_stages`
---
-ALTER TABLE `quest_stages`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `shops`
---
-ALTER TABLE `shops`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `shop_items`
---
-ALTER TABLE `shop_items`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `stories`
---
-ALTER TABLE `stories`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `users`
---
-ALTER TABLE `users`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
-
---
--- AUTO_INCREMENT for table `user_tokens`
---
-ALTER TABLE `user_tokens`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=70;
-
---
--- Constraints for dumped tables
---
-
---
--- Constraints for table `characters`
---
-ALTER TABLE `characters`
-  ADD CONSTRAINT `characters_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `characters_ibfk_2` FOREIGN KEY (`class_id`) REFERENCES `classes` (`id`);
-
---
--- Constraints for table `character_appearance`
---
-ALTER TABLE `character_appearance`
-  ADD CONSTRAINT `character_appearance_ibfk_1` FOREIGN KEY (`character_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `character_inventory`
---
-ALTER TABLE `character_inventory`
-  ADD CONSTRAINT `character_inventory_ibfk_1` FOREIGN KEY (`character_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `character_inventory_ibfk_2` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `character_stats`
---
-ALTER TABLE `character_stats`
-  ADD CONSTRAINT `character_stats_ibfk_1` FOREIGN KEY (`character_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `dialogues`
---
-ALTER TABLE `dialogues`
-  ADD CONSTRAINT `dialogues_ibfk_1` FOREIGN KEY (`npc_id`) REFERENCES `npcs` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `dungeon_configs`
---
-ALTER TABLE `dungeon_configs`
-  ADD CONSTRAINT `dungeon_configs_ibfk_1` FOREIGN KEY (`boss_id`) REFERENCES `monsters` (`id`) ON DELETE SET NULL;
-
---
--- Constraints for table `dungeon_monsters`
---
-ALTER TABLE `dungeon_monsters`
-  ADD CONSTRAINT `dungeon_monsters_ibfk_1` FOREIGN KEY (`dungeon_config_id`) REFERENCES `dungeon_configs` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `dungeon_monsters_ibfk_2` FOREIGN KEY (`monster_id`) REFERENCES `monsters` (`id`) ON DELETE CASCADE;
-
-
---
--- Constraints for table `map_points`
---
-ALTER TABLE `map_points`
-  ADD CONSTRAINT `map_points_ibfk_1` FOREIGN KEY (`map_id`) REFERENCES `maps` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `map_points_ibfk_2` FOREIGN KEY (`sub_map_id`) REFERENCES `maps` (`id`) ON DELETE SET NULL;
-
-
-
---
--- Constraints for table `quest_stages`
---
-ALTER TABLE `quest_stages`
-  ADD CONSTRAINT `quest_stages_ibfk_1` FOREIGN KEY (`quest_id`) REFERENCES `quests` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `shops`
---
-ALTER TABLE `shops`
-  ADD CONSTRAINT `shops_ibfk_1` FOREIGN KEY (`npc_id`) REFERENCES `npcs` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `shop_items`
---
-ALTER TABLE `shop_items`
-  ADD CONSTRAINT `shop_items_ibfk_1` FOREIGN KEY (`shop_id`) REFERENCES `shops` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `shop_items_ibfk_2` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `user_tokens`
---
-ALTER TABLE `user_tokens`
-  ADD CONSTRAINT `user_tokens_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 COMMIT;
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

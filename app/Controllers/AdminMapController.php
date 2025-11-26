@@ -46,6 +46,10 @@ class AdminMapController
         // Get all maps for filters and dropdowns
         $maps = $this->getAllMaps();
         
+        // Get all NPCs for assignment dropdown
+        $npcModel = new \App\Models\NPC();
+        $npcs = $npcModel->getAll();
+        
         // Build query with filters
         $query = "SELECT mp.*, m.name as map_name FROM map_points mp 
                   LEFT JOIN maps m ON mp.map_id = m.id WHERE 1=1";
@@ -106,6 +110,33 @@ class AdminMapController
             
             if ($stmt->execute()) {
                 echo json_encode(['success' => true, 'message' => 'Sous-carte mise à jour']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Erreur lors de la mise à jour']);
+            }
+        }
+        exit;
+    }
+    
+    public function updatePointNPC()
+    {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $data = json_decode(file_get_contents('php://input'), true);
+            $pointId = $data['point_id'] ?? null;
+            $npcId = $data['npc_id'] ?? null;
+            
+            if (!$pointId) {
+                echo json_encode(['success' => false, 'message' => 'Point ID manquant']);
+                exit;
+            }
+            
+            // Allow null for npc_id (to unassign)
+            $stmt = $this->db->prepare("UPDATE map_points SET target_id = ? WHERE id = ?");
+            $stmt->bind_param("ii", $npcId, $pointId);
+            
+            if ($stmt->execute()) {
+                echo json_encode(['success' => true, 'message' => 'PNJ mis à jour']);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Erreur lors de la mise à jour']);
             }
