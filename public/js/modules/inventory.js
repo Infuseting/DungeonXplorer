@@ -189,7 +189,7 @@ function quickEquipItem(itemId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Determine target slot
+                console.log('Item equipped successfully');
                 const slotMapping = {
                     'head': 'head',
                     'shoulders': 'shoulders',
@@ -262,7 +262,7 @@ function handleTwoHandedWeapon(equippedSlot, iconPath) {
 
         // Add grayed-out image
         const grayedImg = document.createElement('img');
-        grayedImg.src = '/assets/images/items/' + iconPath;
+        grayedImg.src = '/'+ iconPath;
         grayedImg.className = 'w-full h-full object-contain p-1 opacity-30 pointer-events-none';
         grayedImg.style.filter = 'grayscale(100%)';
 
@@ -411,12 +411,15 @@ function moveItem(itemId, location, slot = null, x = null, y = null, pocketIndex
                     // Check if we're unequipping a two-handed weapon
                     const wasTwoHanded = itemElement.dataset.twoHanded === '1';
                     const fromSlot = itemElement.closest('.slot[data-slot]')?.dataset.slot;
-
+                    const toSlot = location === 'equipped' ? slot : null;
                     updateItemPosition(itemElement, location, slot, x, y, pocketIndex);
 
                     // Clean up two-handed weapon visual if unequipping
                     if (wasTwoHanded && fromSlot && (fromSlot === 'main_hand' || fromSlot === 'off_hand')) {
                         clearTwoHandedWeaponVisual(fromSlot);
+                    }
+                    if (data.two_handed && toSlot && (toSlot === 'main_hand' || toSlot === 'off_hand')) {
+                        handleTwoHandedWeapon(toSlot, data.icon);
                     }
                 }
                 showToast('Objet déplacé avec succès', 'success');

@@ -114,21 +114,36 @@ class AdminItemController
         $statRangesJson = json_encode($statRanges);
         $twoHanded = isset($_POST['two_handed']) ? 1 : 0;
         $finalIcon = $iconPath ?? ($_POST['icon'] ?? null);
-        
+
+        // Prepare variables for bind_param (must be variables, not expressions)
+        $p_name = $_POST['name'] ?? '';
+        $p_description = $_POST['description'] ?? '';
+        $p_type = $_POST['type'] ?? '';
+        $p_slot_type = $_POST['slot_type'] ?? '';
+        $p_two_handed = (int)$twoHanded;
+        $p_width = (int)($_POST['width'] ?? 0);
+        $p_height = (int)($_POST['height'] ?? 0);
+        $p_weight = (int)($_POST['weight'] ?? 0);
+        $p_icon = $finalIcon;
+        $p_stat_ranges = $statRangesJson;
+        $p_max_stack = (int)($_POST['max_stack'] ?? 1);
+        $p_price = ($_POST['price'] === '' || !isset($_POST['price'])) ? null : $_POST['price'];
+
+        $types = "ssssiiiissii"; // name,desc,type,slot | two_handed,width,height,weight | icon,stat_ranges,max_stack,price
         $stmt->bind_param(
-            "ssssiiiiisii",
-            $_POST['name'],
-            $_POST['description'],
-            $_POST['type'],
-            $_POST['slot_type'],
-            $twoHanded,
-            $_POST['width'],
-            $_POST['height'],
-            $_POST['weight'],
-            $finalIcon,
-            $statRangesJson,
-            $_POST['max_stack'],
-            $_POST['price'] ?? null
+            $types,
+            $p_name,
+            $p_description,
+            $p_type,
+            $p_slot_type,
+            $p_two_handed,
+            $p_width,
+            $p_height,
+            $p_weight,
+            $p_icon,
+            $p_stat_ranges,
+            $p_max_stack,
+            $p_price
         );
         
         if ($stmt->execute()) {
@@ -213,22 +228,38 @@ class AdminItemController
         
         $statRangesJson = json_encode($statRanges);
         $twoHanded = isset($_POST['two_handed']) ? 1 : 0;
-        
+
+        // Prepare variables for bind_param (must be variables, not expressions)
+        $p_name = $_POST['name'] ?? $item['name'];
+        $p_description = $_POST['description'] ?? $item['description'];
+        $p_type = $_POST['type'] ?? $item['type'];
+        $p_slot_type = $_POST['slot_type'] ?? $item['slot_type'];
+        $p_two_handed = (int)$twoHanded;
+        $p_width = (int)($_POST['width'] ?? $item['width']);
+        $p_height = (int)($_POST['height'] ?? $item['height']);
+        $p_weight = (int)($_POST['weight'] ?? $item['weight']);
+        $p_icon = $iconPath;
+        $p_stat_ranges = $statRangesJson;
+        $p_max_stack = (int)($_POST['max_stack'] ?? $item['max_stack']);
+        $p_price = (isset($_POST['price']) && $_POST['price'] !== '') ? $_POST['price'] : null;
+        $p_id = (int)$id;
+
+        $types = "ssssiiiissiii"; // name,desc,type,slot | two_handed,width,height,weight | icon,stat_ranges,max_stack,price | id
         $stmt->bind_param(
-            "ssssiiiiissii",
-            $_POST['name'],
-            $_POST['description'],
-            $_POST['type'],
-            $_POST['slot_type'],
-            $twoHanded,
-            $_POST['width'],
-            $_POST['height'],
-            $_POST['weight'],
-            $iconPath,
-            $statRangesJson,
-            $_POST['max_stack'],
-            $_POST['price'] ?? null,
-            $id
+            $types,
+            $p_name,
+            $p_description,
+            $p_type,
+            $p_slot_type,
+            $p_two_handed,
+            $p_width,
+            $p_height,
+            $p_weight,
+            $p_icon,
+            $p_stat_ranges,
+            $p_max_stack,
+            $p_price,
+            $p_id
         );
         
         if ($stmt->execute()) {

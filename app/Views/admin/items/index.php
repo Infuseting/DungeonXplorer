@@ -156,7 +156,11 @@ ob_start();
                             <?php endif; ?>
                         </div>
                         <div class="item-icon">
-                            <?= $item['icon'] ? '🎨' : '📦' ?>
+                            <?php if (!empty($item['icon'])): ?>
+                                <img src="/<?= htmlspecialchars($item['icon']) ?>" style="width:100%;height:100%;object-fit:cover;border-radius:4px;">
+                            <?php else: ?>
+                                📦
+                            <?php endif; ?>
                         </div>
                     </div>
                     

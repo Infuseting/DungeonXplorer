@@ -23,7 +23,7 @@
                         <div class="absolute top-4 left-1/2 transform -translate-x-1/2 w-16 h-16 slot rounded-lg" data-slot="head">
                             <span class="slot-label">Tête</span>
                             <?php if(isset($inventory['equipped']['head'])): $item = $inventory['equipped']['head']; ?>
-                                <img src="/assets/images/items/<?= $item['icon'] ?>" 
+                                <img src="/<?= $item['icon'] ?>" 
                                      class="w-full h-full object-contain item-icon p-1" 
                                      draggable="true" 
                                      data-id="<?= $item['id'] ?>"
@@ -39,7 +39,7 @@
                         <div class="absolute top-16 left-16 w-16 h-16 slot rounded-lg" data-slot="shoulders">
                             <span class="slot-label">Épaules</span>
                             <?php if(isset($inventory['equipped']['shoulders'])): $item = $inventory['equipped']['shoulders']; ?>
-                                <img src="/assets/images/items/<?= $item['icon'] ?>" 
+                                <img src="/<?= $item['icon'] ?>" 
                                      class="w-full h-full object-contain item-icon p-1" 
                                      draggable="true" 
                                      data-id="<?= $item['id'] ?>"
@@ -55,7 +55,7 @@
                         <div class="absolute top-16 right-16 transform w-16 h-16 slot rounded-lg" data-slot="amulet">
                             <span class="slot-label">Amulette</span>
                             <?php if(isset($inventory['equipped']['amulet'])): $item = $inventory['equipped']['amulet']; ?>
-                                <img src="/assets/images/items/<?= $item['icon'] ?>" 
+                                <img src="/<?= $item['icon'] ?>" 
                                      class="w-full h-full object-contain item-icon p-1" 
                                      draggable="true" 
                                      data-id="<?= $item['id'] ?>"
@@ -71,7 +71,7 @@
                         <div class="absolute top-36 left-1/2 transform -translate-x-1/2 w-20 h-24 slot rounded-lg" data-slot="chest">
                             <span class="slot-label">Torse</span>
                             <?php if(isset($inventory['equipped']['chest'])): $item = $inventory['equipped']['chest']; ?>
-                                <img src="/assets/images/items/<?= $item['icon'] ?>" 
+                                <img src="/<?= $item['icon'] ?>" 
                                      class="w-full h-full object-contain item-icon p-1" 
                                      draggable="true" 
                                      data-id="<?= $item['id'] ?>"
@@ -87,7 +87,7 @@
                         <div class="absolute top-40 left-8 w-16 h-32 slot rounded-lg" data-slot="gloves">
                             <span class="slot-label">Gants</span>
                             <?php if(isset($inventory['equipped']['gloves'])): $item = $inventory['equipped']['gloves']; ?>
-                                <img src="/assets/images/items/<?= $item['icon'] ?>" 
+                                <img src="/<?= $item['icon'] ?>" 
                                      class="w-full h-full object-contain item-icon p-1" 
                                      draggable="true" 
                                      data-id="<?= $item['id'] ?>"
@@ -103,7 +103,7 @@
                         <div class="absolute top-40 right-8 w-16 h-32 slot rounded-lg" data-slot="bracers">
                             <span class="slot-label">Bracelets</span>
                             <?php if(isset($inventory['equipped']['bracers'])): $item = $inventory['equipped']['bracers']; ?>
-                                <img src="/assets/images/items/<?= $item['icon'] ?>" 
+                                <img src="/<?= $item['icon'] ?>" 
                                      class="w-full h-full object-contain item-icon p-1" 
                                      draggable="true" 
                                      data-id="<?= $item['id'] ?>"
@@ -119,7 +119,7 @@
                         <div class="absolute top-[260px] left-1/2 transform -translate-x-1/2 w-20 h-10 slot rounded-lg" data-slot="belt">
                             <span class="slot-label">Ceinture</span>
                             <?php if(isset($inventory['equipped']['belt'])): $item = $inventory['equipped']['belt']; ?>
-                                <img src="/assets/images/items/<?= $item['icon'] ?>" 
+                                <img src="/<?= $item['icon'] ?>" 
                                      class="w-full h-full object-contain item-icon p-1" 
                                      draggable="true" 
                                      data-id="<?= $item['id'] ?>"
@@ -135,7 +135,7 @@
                         <div class="absolute top-[310px] left-1/2 w-20 transform -translate-x-1/2 h-24 slot rounded-lg" data-slot="legs">
                             <span class="slot-label">Jambes</span>
                             <?php if(isset($inventory['equipped']['legs'])): $item = $inventory['equipped']['legs']; ?>
-                                <img src="/assets/images/items/<?= $item['icon'] ?>" 
+                                <img src="/<?= $item['icon'] ?>" 
                                      class="w-full h-full object-contain item-icon p-1" 
                                      draggable="true" 
                                      data-id="<?= $item['id'] ?>"
@@ -151,7 +151,7 @@
                         <div class="absolute top-[420px] left-1/2 w-20 transform -translate-x-1/2 h-16 slot rounded-lg" data-slot="boots">
                             <span class="slot-label">Bottes</span>
                             <?php if(isset($inventory['equipped']['boots'])): $item = $inventory['equipped']['boots']; ?>
-                                <img src="/assets/images/items/<?= $item['icon'] ?>" 
+                                <img src="/<?= $item['icon'] ?>" 
                                      class="w-full h-full object-contain item-icon p-1" 
                                      draggable="true" 
                                      data-id="<?= $item['id'] ?>"
@@ -167,7 +167,7 @@
                         <div class="absolute top-80 left-28 w-10 h-10 slot rounded-full" data-slot="ring_1">
                             <span class="slot-label">Ring1</span>
                             <?php if(isset($inventory['equipped']['ring_1'])): $item = $inventory['equipped']['ring_1']; ?>
-                                <img src="/assets/images/items/<?= $item['icon'] ?>" 
+                                <img src="/<?= $item['icon'] ?>" 
                                      class="w-full h-full object-contain item-icon p-1" 
                                      draggable="true" 
                                      data-id="<?= $item['id'] ?>"
@@ -181,7 +181,7 @@
                         <div class="absolute top-80 right-28 w-10 h-10 slot rounded-full" data-slot="ring_2">
                             <span class="slot-label">Ring2</span>
                             <?php if(isset($inventory['equipped']['ring_2'])): $item = $inventory['equipped']['ring_2']; ?>
-                                <img src="/assets/images/items/<?= $item['icon'] ?>" 
+                                <img src="/<?= $item['icon'] ?>" 
                                      class="w-full h-full object-contain item-icon p-1" 
                                      draggable="true" 
                                      data-id="<?= $item['id'] ?>"
@@ -197,7 +197,7 @@
                         <div class="absolute top-[360px] left-8 w-16 h-32 slot rounded-lg" data-slot="main_hand">
                             <span class="slot-label">Main</span>
                             <?php if(isset($inventory['equipped']['main_hand'])): $item = $inventory['equipped']['main_hand']; ?>
-                                <img src="/assets/images/items/<?= $item['icon'] ?>" 
+                                <img src="/<?= $item['icon'] ?>" 
                                      class="w-full h-full object-contain item-icon p-1" 
                                      draggable="true" 
                                      data-id="<?= $item['id'] ?>"
@@ -209,7 +209,7 @@
                                      data-stats='<?= htmlspecialchars($item['stats']) ?>'>
                             <?php elseif(isset($inventory['equipped']['off_hand']) && $inventory['equipped']['off_hand']['two_handed']): ?>
                                 <!-- Show grayed-out image if off_hand has two-handed weapon -->
-                                <img src="/assets/images/items/<?= $inventory['equipped']['off_hand']['icon'] ?>" 
+                                <img src="/<?= $inventory['equipped']['off_hand']['icon'] ?>" 
                                      class="w-full h-full object-contain p-1 opacity-30 pointer-events-none"
                                      style="filter: grayscale(100%);">
                                 <div class="absolute inset-0 border-2 border-red-500 rounded-lg pointer-events-none"></div>
@@ -220,7 +220,7 @@
                         <div class="absolute top-[360px] right-8 w-16 h-32 slot rounded-lg" data-slot="off_hand">
                             <span class="slot-label">Off</span>
                             <?php if(isset($inventory['equipped']['off_hand'])): $item = $inventory['equipped']['off_hand']; ?>
-                                <img src="/assets/images/items/<?= $item['icon'] ?>" 
+                                <img src="/<?= $item['icon'] ?>" 
                                      class="w-full h-full object-contain item-icon p-1" 
                                      draggable="true" 
                                      data-id="<?= $item['id'] ?>"
@@ -232,7 +232,7 @@
                                      data-stats='<?= htmlspecialchars($item['stats']) ?>'>
                             <?php elseif(isset($inventory['equipped']['main_hand']) && $inventory['equipped']['main_hand']['two_handed']): ?>
                                 <!-- Show grayed-out image if main_hand has two-handed weapon -->
-                                <img src="/assets/images/items/<?= $inventory['equipped']['main_hand']['icon'] ?>" 
+                                <img src="/<?= $inventory['equipped']['main_hand']['icon'] ?>" 
                                      class="w-full h-full object-contain p-1 opacity-30 pointer-events-none"
                                      style="filter: grayscale(100%);">
                                 <div class="absolute inset-0 border-2 border-red-500 rounded-lg pointer-events-none"></div>
@@ -243,7 +243,7 @@
                         <div class="absolute bottom-4 right-4 w-12 h-12 slot rounded-lg border-yellow-500/50" data-slot="backpack">
                             <span class="slot-label">Sac</span>
                             <?php if(isset($inventory['equipped']['backpack'])): $item = $inventory['equipped']['backpack']; ?>
-                                <img src="/assets/images/items/<?= $item['icon'] ?>" 
+                                <img src="/<?= $item['icon'] ?>" 
                                      class="w-full h-full object-contain item-icon p-1" 
                                      draggable="true" 
                                      data-id="<?= $item['id'] ?>"
@@ -274,7 +274,7 @@
                         <?php for($i=0; $i<4; $i++): ?>
                             <div class="w-16 h-16 slot rounded-lg flex items-center justify-center relative bg-gray-800" data-location="pockets" data-index="<?= $i ?>">
                                 <?php if(isset($inventory['pockets'][$i])): $item = $inventory['pockets'][$i]; ?>
-                                    <img src="/assets/images/items/<?= $item['icon'] ?>" 
+                                    <img src="/<?= $item['icon'] ?>" 
                                          class="w-12 h-12 object-contain item-icon" 
                                          draggable="true" 
                                          data-id="<?= $item['id'] ?>"
@@ -321,7 +321,7 @@
                                      data-description="<?= htmlspecialchars($item['description']) ?>"
                                      data-stats='<?= htmlspecialchars($item['stats']) ?>'
                                 >
-                                    <img src="/assets/images/items/<?= $item['icon'] ?>" class="max-w-full max-h-full object-contain">
+                                    <img src="/<?= $item['icon'] ?>" class="max-w-full max-h-full object-contain">
                                 </div>
                             <?php endforeach; ?>
                         </div>
