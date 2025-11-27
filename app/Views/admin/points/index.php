@@ -115,6 +115,48 @@ ob_start();
     
     .toast.success { border-color: #22c55e; }
     .toast.error { border-color: #ef4444; }
+
+    /* Toggle Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 20px;
+      vertical-align: middle;
+    }
+    .switch input { 
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #4b5563;
+      transition: .4s;
+      border-radius: 20px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #6366f1;
+    }
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
 </style>
 
 <div class="card">
@@ -159,7 +201,7 @@ ob_start();
                     <th>Nom</th>
                     <th>Type</th>
                     <th>Carte</th>
-                    <th>Coordonnées</th>
+                    <th>Visibilité</th>
                     <th>Sous-Carte</th>
                     <th>PNJ Associé</th>
                     <th>Actions</th>
@@ -187,6 +229,17 @@ ob_start();
                                 </span>
                             </td>
                             <td><?= htmlspecialchars($point['map_name'] ?? 'N/A') ?></td>
+                            <td>
+                                <label class="switch" title="Visible par défaut ?">
+                                    <input type="checkbox" 
+                                           onchange="toggleVisibility(<?= $point['id'] ?>, !this.checked)"
+                                           <?= empty($point['is_hidden']) ? 'checked' : '' ?>>
+                                    <span class="slider round"></span>
+                                </label>
+                                <small style="display:block; color:var(--text-muted); margin-top:0.25rem;">
+                                    <?= empty($point['is_hidden']) ? 'Visible' : 'Caché' ?>
+                                </small>
+                            </td>
                             <td>
                                 <small>
                                     X: <?= number_format($point['x'], 2) ?><br>
@@ -252,7 +305,7 @@ ob_start();
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="6" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                        <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted);">
                             Aucun point trouvé
                         </td>
                     </tr>
@@ -289,6 +342,45 @@ function applyFilters() {
 
 function resetFilters() {
     window.location.href = '/admin/points';
+}
+
+// Update visibility
+function toggleVisibility(pointId, isVisible) {
+    // isVisible is true if checked (Visible), so is_hidden should be 0
+    // isVisible is false if unchecked (Hidden), so is_hidden should be 1
+    const isHidden = isVisible ? 0 : 1;
+    
+    fetch('/admin/points/update-visibility', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            point_id: pointId,
+            is_hidden: isHidden
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message, 'success');
+            // Update text label
+            const row = document.querySelector(`input[onchange*="${pointId}"]`).closest('td');
+            const label = row.querySelector('small');
+            if (label) {
+                label.textContent = isHidden ? 'Caché' : 'Visible';
+            }
+        } else {
+            showToast(data.message, 'error');
+            // Revert checkbox state
+            const checkbox = document.querySelector(`input[onchange*="${pointId}"]`);
+            checkbox.checked = !isVisible;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Erreur de communication avec le serveur', 'error');
+    });
 }
 
 // Update sub-map assignment

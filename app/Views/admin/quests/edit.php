@@ -11,7 +11,7 @@ ob_start();
 <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('general')">📋 Général</button>
     <button class="tab-btn" onclick="switchTab('stages')">🎯 Étapes & Objectifs</button>
-    <button class="tab-btn" onclick="switchTab('npcs')">👥 PNJ</button>
+    <button class="tab-btn" onclick="switchTab('prerequisites')">🔒 Prérequis</button>
 </div>
 
 <!-- General Tab -->
@@ -25,6 +25,11 @@ ob_start();
         <div class="form-group">
             <label for="description">Description</label>
             <textarea id="description" name="description" rows="5"><?= htmlspecialchars($quest['description'] ?? '') ?></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="intro_text">Texte d'introduction (Dialogue PNJ)</label>
+            <textarea id="intro_text" name="intro_text" rows="3" placeholder="Texte dit par le PNJ avant d'accepter la quête..."><?= htmlspecialchars($quest['intro_text'] ?? '') ?></textarea>
         </div>
         
         <div class="form-group">
@@ -104,29 +109,32 @@ ob_start();
     </div>
 </div>
 
-<!-- NPCs Tab -->
-<div id="tab-npcs" class="tab-content">
-    <div class="npc-assignment">
-        <h3>Assigner des PNJ</h3>
+<!-- Prerequisites Tab -->
+<div id="tab-prerequisites" class="tab-content">
+    <div class="prerequisites-container">
+        <h3>Prérequis de la Quête</h3>
+        <p>Le joueur doit avoir terminé ces quêtes pour débloquer celle-ci.</p>
         
         <div class="form-group">
-            <label>PNJ Donneur de Quête</label>
-            <select id="npc-select">
-                <option value="">-- Sélectionner un PNJ --</option>
-                <?php foreach ($npcs as $npc): ?>
-                    <option value="<?= $npc['id'] ?>"><?= htmlspecialchars($npc['name']) ?></option>
-                <?php endforeach; ?>
-            </select>
-            <button onclick="assignNPC('GIVER')" class="btn">➕ Assigner comme Donneur</button>
+            <label>Ajouter un prérequis</label>
+            <div style="display: flex; gap: 0.5rem;">
+                <select id="prerequisite-select" style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="">-- Choisir une quête --</option>
+                    <?php foreach ($allQuests as $q): ?>
+                        <?php if ($q['id'] != $quest['id']): ?>
+                            <option value="<?= $q['id'] ?>"><?= htmlspecialchars($q['name']) ?> (Niveau <?= $q['min_level'] ?>)</option>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </select>
+                <button onclick="addPrerequisite()" class="btn btn-primary">➕ Ajouter</button>
+            </div>
         </div>
         
-        <h4>PNJ Assignés:</h4>
-        <ul id="assigned-npcs">
-            <?php foreach ($assignedNPCs as $npc): ?>
-                <li data-npc-id="<?= $npc['id'] ?>">
-                    <strong><?= htmlspecialchars($npc['name']) ?></strong> 
-                    <span class="badge"><?= $npc['type'] === 'GIVER' ? 'Donneur' : 'Récepteur' ?></span>
-                    <button onclick="removeNPC(<?= $npc['id'] ?>)" class="btn btn-xs btn-danger">🗑️</button>
+        <ul class="prerequisites-list">
+            <?php foreach ($prerequisites as $prereq): ?>
+                <li class="prerequisite-item">
+                    <span>✅ <?= htmlspecialchars($prereq['name']) ?></span>
+                    <button onclick="removePrerequisite(<?= $prereq['id'] ?>)" class="btn btn-xs btn-danger">🗑️</button>
                 </li>
             <?php endforeach; ?>
         </ul>
@@ -184,9 +192,40 @@ ob_start();
                 <label for="objective-count">Quantité requise</label>
                 <input type="number" id="objective-count" value="1" min="1">
             </div>
-            <div class="form-group">
+            
+            <!-- NPC Selection (for TALK_NPC) -->
+            <div class="form-group" id="objective-npc-group" style="display:none;">
+                <label for="objective-npc">PNJ à qui parler *</label>
+                <select id="objective-npc" class="form-select">
+                    <option value="">-- Sélectionner un PNJ --</option>
+                    <?php foreach ($allNPCs as $npc): ?>
+                        <option value="<?= $npc['id'] ?>">
+                            <?= htmlspecialchars($npc['name']) ?> (ID: <?= $npc['id'] ?>)
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            
+            <!-- Dialogue Tree Selection (for TALK_NPC) -->
+            <div class="form-group" id="objective-dialogue-group" style="display:none;">
+                <label for="objective-dialogue">Arbre de dialogue *</label>
+                <select id="objective-dialogue" class="form-select">
+                    <option value="">-- Sélectionner un dialogue --</option>
+                    <?php foreach ($dialogueTrees as $tree): ?>
+                        <option value="<?= $tree['id'] ?>">
+                            <?= htmlspecialchars($tree['name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <small style="color: var(--text-muted); display: block; margin-top: 0.25rem;">
+                    Le dialogue sera visible uniquement pendant cette étape
+                </small>
+            </div>
+            
+            <!-- Generic Target ID (for other types) -->
+            <div class="form-group" id="objective-target-group">
                 <label for="objective-target">ID Cible (optionnel)</label>
-                <input type="number" id="objective-target" placeholder="ID du PNJ, Item, etc.">
+                <input type="number" id="objective-target" placeholder="ID de l'item, monstre, etc.">
             </div>
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">💾 Sauvegarder</button>
@@ -414,6 +453,29 @@ function getObjectiveIcon($type) {
     padding: 0.25rem 0.5rem;
     font-size: 0.8rem;
 }
+
+.prerequisites-container {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+}
+
+.prerequisites-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 1rem;
+}
+
+.prerequisite-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background: #fff3cd;
+    border: 1px solid #ffeeba;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+}
 </style>
 
 <script>
@@ -501,26 +563,88 @@ function addObjective(stageId) {
 }
 
 function editObjective(objectiveId) {
-    // TODO: Load objective data
+    // Find objective data from the page
+    const objectives = <?= json_encode($objectives ?? []) ?>;
+    const objective = objectives.find(o => o.id == objectiveId);
+    
+    if (!objective) {
+        alert('Objectif non trouvé');
+        return;
+    }
+    
+    // Populate form fields
     document.getElementById('objective-modal-title').textContent = 'Éditer l\'Objectif';
     document.getElementById('objective-id').value = objectiveId;
+    document.getElementById('objective-stage-id').value = objective.stage_id;
+    document.getElementById('objective-type').value = objective.type;
+    document.getElementById('objective-description').value = objective.description;
+    document.getElementById('objective-count').value = objective.count_required;
+    
+    // Handle type-specific fields
+    const npcGroup = document.getElementById('objective-npc-group');
+    const dialogueGroup = document.getElementById('objective-dialogue-group');
+    const targetGroup = document.getElementById('objective-target-group');
+    
+    if (objective.type === 'TALK_NPC') {
+        // Show NPC and dialogue fields
+        npcGroup.style.display = 'block';
+        dialogueGroup.style.display = 'block';
+        targetGroup.style.display = 'none';
+        
+        // Populate NPC and dialogue
+        document.getElementById('objective-npc').value = objective.target_id || '';
+        document.getElementById('objective-dialogue').value = objective.dialogue_tree_id || '';
+    } else {
+        // Show generic target field
+        npcGroup.style.display = 'none';
+        dialogueGroup.style.display = 'none';
+        targetGroup.style.display = 'block';
+        
+        document.getElementById('objective-target').value = objective.target_id || '';
+    }
+    
     document.getElementById('objective-modal').classList.add('active');
 }
 
 function closeObjectiveModal() {
     document.getElementById('objective-modal').classList.remove('active');
+    
+    // Reset form fields
+    document.getElementById('objective-id').value = '';
+    document.getElementById('objective-type').value = 'KILL';
+    document.getElementById('objective-description').value = '';
+    document.getElementById('objective-count').value = '1';
+    document.getElementById('objective-target').value = '';
+    document.getElementById('objective-npc').value = '';
+    document.getElementById('objective-dialogue').value = '';
+    
+    // Reset visibility
+    document.getElementById('objective-npc-group').style.display = 'none';
+    document.getElementById('objective-dialogue-group').style.display = 'none';
+    document.getElementById('objective-target-group').style.display = 'block';
 }
 
 document.getElementById('objective-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     
     const objectiveId = document.getElementById('objective-id').value;
+    const objectiveType = document.getElementById('objective-type').value;
+    
+    // For TALK_NPC, use NPC dropdown value as target_id
+    let targetId = null;
+    if (objectiveType === 'TALK_NPC') {
+        targetId = document.getElementById('objective-npc').value || null;
+    } else {
+        targetId = document.getElementById('objective-target').value || null;
+    }
+    
     const data = {
         stage_id: parseInt(document.getElementById('objective-stage-id').value),
-        type: document.getElementById('objective-type').value,
+        type: objectiveType,
         description: document.getElementById('objective-description').value,
         count_required: parseInt(document.getElementById('objective-count').value),
-        target_id: document.getElementById('objective-target').value || null
+        target_id: targetId,
+        dialogue_tree_id: document.getElementById('objective-dialogue').value || null
     };
     
     const url = objectiveId ? '/admin/quests/objective/update' : '/admin/quests/objective/add';
@@ -541,6 +665,24 @@ document.getElementById('objective-form').addEventListener('submit', async (e) =
     }
 });
 
+// Show/hide fields based on objective type
+document.getElementById('objective-type').addEventListener('change', function() {
+    const type = this.value;
+    const npcGroup = document.getElementById('objective-npc-group');
+    const dialogueGroup = document.getElementById('objective-dialogue-group');
+    const targetGroup = document.getElementById('objective-target-group');
+    
+    if (type === 'TALK_NPC') {
+        npcGroup.style.display = 'block';
+        dialogueGroup.style.display = 'block';
+        targetGroup.style.display = 'none';
+    } else {
+        npcGroup.style.display = 'none';
+        dialogueGroup.style.display = 'none';
+        targetGroup.style.display = 'block';
+    }
+});
+
 async function deleteObjective(objectiveId) {
     if (!confirm('Supprimer cet objectif ?')) return;
     
@@ -556,21 +698,22 @@ async function deleteObjective(objectiveId) {
     }
 }
 
-// NPC Assignment
-async function assignNPC(type) {
-    const npcId = document.getElementById('npc-select').value;
-    if (!npcId) {
-        alert('Sélectionnez un PNJ');
+// Prerequisites
+async function addPrerequisite() {
+    const select = document.getElementById('prerequisite-select');
+    const requiredQuestId = select.value;
+    
+    if (!requiredQuestId) {
+        alert('Sélectionnez une quête');
         return;
     }
     
-    const response = await fetch('/admin/quests/assign-npc', {
+    const response = await fetch('/admin/quests/prerequisite/add', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
-            npc_id: parseInt(npcId),
             quest_id: questId,
-            type: type
+            required_quest_id: parseInt(requiredQuestId)
         })
     });
     
@@ -582,15 +725,15 @@ async function assignNPC(type) {
     }
 }
 
-async function removeNPC(npcId) {
-    if (!confirm('Retirer ce PNJ de la quête ?')) return;
+async function removePrerequisite(requiredQuestId) {
+    if (!confirm('Retirer ce prérequis ?')) return;
     
-    const response = await fetch('/admin/quests/remove-npc', {
+    const response = await fetch('/admin/quests/prerequisite/remove', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
-            npc_id: npcId,
-            quest_id: questId
+            quest_id: questId,
+            required_quest_id: requiredQuestId
         })
     });
     

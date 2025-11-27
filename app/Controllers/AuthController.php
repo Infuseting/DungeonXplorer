@@ -91,7 +91,7 @@ class AuthController
                 'path' => '/',
                 'secure' => false, // Set to true in production (HTTPS)
                 'httponly' => true,
-                'samesite' => 'Strict'
+                'samesite' => 'Lax'
             ]);
 
             // Refresh Token: 30 days (selector:token)
@@ -100,7 +100,7 @@ class AuthController
                 'path' => '/',
                 'secure' => false, // Set to true in production
                 'httponly' => true,
-                'samesite' => 'Strict'
+                'samesite' => 'Lax'
             ]);
 
             // Set session for username display (optional, but useful for UI)

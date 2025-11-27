@@ -228,4 +228,41 @@ class NPC
         $stmt->bind_param("ii", $npcId, $treeId);
         return $stmt->execute();
     }
+
+    /**
+     * Get quests assigned to NPC
+     */
+    public function getQuests($npcId)
+    {
+        $stmt = $this->db->prepare("
+            SELECT q.* 
+            FROM npc_quests nq
+            JOIN quests q ON nq.quest_id = q.id
+            WHERE nq.npc_id = ?
+        ");
+        $stmt->bind_param("i", $npcId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
+
+    /**
+     * Assign quest to NPC
+     */
+    public function assignQuest($npcId, $questId)
+    {
+        $stmt = $this->db->prepare("INSERT IGNORE INTO npc_quests (npc_id, quest_id) VALUES (?, ?)");
+        $stmt->bind_param("ii", $npcId, $questId);
+        return $stmt->execute();
+    }
+
+    /**
+     * Remove quest from NPC
+     */
+    public function removeQuest($npcId, $questId)
+    {
+        $stmt = $this->db->prepare("DELETE FROM npc_quests WHERE npc_id = ? AND quest_id = ?");
+        $stmt->bind_param("ii", $npcId, $questId);
+        return $stmt->execute();
+    }
 }

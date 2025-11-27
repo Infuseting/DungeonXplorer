@@ -271,13 +271,13 @@ class MapPoint
         return $stmt->execute();
     }
     /**
-     * Check if a point is visible for a user
+     * Check if a point is visible for a character
      * 
      * @param int $pointId
-     * @param int $userId
+     * @param int $characterId
      * @return bool
      */
-    public function isVisibleForUser($pointId, $userId)
+    public function isVisibleForCharacter($pointId, $characterId)
     {
         // Get point details
         $point = $this->findById($pointId);
@@ -286,11 +286,11 @@ class MapPoint
         // If not hidden, it's visible
         if (!$point['is_hidden']) return true;
         
-        // Check if unlocked for user
+        // Check if unlocked for character
         $stmt = $this->db->prepare(
-            "SELECT 1 FROM user_map_unlocks WHERE user_id = ? AND map_point_id = ?"
+            "SELECT 1 FROM character_map_unlocks WHERE character_id = ? AND map_point_id = ?"
         );
-        $stmt->bind_param("ii", $userId, $pointId);
+        $stmt->bind_param("ii", $characterId, $pointId);
         $stmt->execute();
         $result = $stmt->get_result();
         
@@ -298,40 +298,40 @@ class MapPoint
     }
 
     /**
-     * Unlock a point for a user
+     * Unlock a point for a character
      * 
-     * @param int $userId
+     * @param int $characterId
      * @param int $pointId
      * @return bool
      */
-    public function unlockForUser($userId, $pointId)
+    public function unlockForCharacter($characterId, $pointId)
     {
         $stmt = $this->db->prepare(
-            "INSERT IGNORE INTO user_map_unlocks (user_id, map_point_id) VALUES (?, ?)"
+            "INSERT IGNORE INTO character_map_unlocks (character_id, map_point_id) VALUES (?, ?)"
         );
-        $stmt->bind_param("ii", $userId, $pointId);
+        $stmt->bind_param("ii", $characterId, $pointId);
         
         return $stmt->execute();
     }
     
     /**
-     * Get unlocked points for user in a map
+     * Get unlocked points for character in a map
      * 
      * @param int $mapId
-     * @param int $userId
+     * @param int $characterId
      * @return array
      */
-    public function getVisiblePointsForUser($mapId, $userId)
+    public function getVisiblePointsForCharacter($mapId, $characterId)
     {
         $stmt = $this->db->prepare(
             "SELECT mp.* 
              FROM map_points mp
-             LEFT JOIN user_map_unlocks umu ON mp.id = umu.map_point_id AND umu.user_id = ?
+             LEFT JOIN character_map_unlocks cmu ON mp.id = cmu.map_point_id AND cmu.character_id = ?
              WHERE mp.map_id = ? 
-             AND (mp.is_hidden = 0 OR umu.user_id IS NOT NULL)
+             AND (mp.is_hidden = 0 OR cmu.character_id IS NOT NULL)
              ORDER BY mp.created_at DESC"
         );
-        $stmt->bind_param("ii", $userId, $mapId);
+        $stmt->bind_param("ii", $characterId, $mapId);
         $stmt->execute();
         $result = $stmt->get_result();
         

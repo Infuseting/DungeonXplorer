@@ -26,6 +26,14 @@ ob_start();
     <!-- NPC Interaction Modal -->
     <?php require __DIR__ . '/components/npc-modal.php'; ?>
 
+    <!-- Quest Journal Modal -->
+    <?php require __DIR__ . '/components/quest-journal-modal.php'; ?>
+
+    <!-- Quest Journal Button -->
+    <button id="quest-journal-toggle" class="absolute top-4 right-4 z-40 w-12 h-12 bg-amber-600 hover:bg-amber-700 text-white rounded-full shadow-lg border-2 border-amber-400 flex items-center justify-center transition-transform hover:scale-110 active:scale-95" title="Journal de Quêtes">
+        <span class="text-2xl">📜</span>
+    </button>
+
     <!-- Toast Container -->
     <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
 </div>
@@ -41,6 +49,7 @@ ob_start();
     import { initInventory } from '/js/modules/inventory.js';
     import { initSubMapControls } from '/js/modules/subMap.js';
     import { initNPCModal } from '/js/modules/npcModal.js';
+    import { openQuestJournal } from '/js/modules/questJournal.js';
 
     // Map points data from PHP
     const mapPoints = <?= json_encode($mapPoints ?? []) ?>;
@@ -64,6 +73,13 @@ ob_start();
         // Initialize NPC modal
         initNPCModal();
         console.log('NPC modal initialized');
+        
+        // Initialize Quest Journal
+        const questJournalBtn = document.getElementById('quest-journal-toggle');
+        if (questJournalBtn) {
+            questJournalBtn.addEventListener('click', openQuestJournal);
+        }
+        console.log('Quest Journal initialized');
         
         // Initialize map
         try {

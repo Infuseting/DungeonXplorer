@@ -13,8 +13,16 @@ class QuestObjective
     
     public function create($data)
     {
-        $stmt = $this->db->prepare("INSERT INTO quest_objectives (stage_id, type, target_id, count_required, description) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("isiis", $data['stage_id'], $data['type'], $data['target_id'], $data['count_required'], $data['description']);
+        $stmt = $this->db->prepare("INSERT INTO quest_objectives (stage_id, type, target_id, count_required, description, dialogue_tree_id) VALUES (?, ?, ?, ?, ?, ?)");
+        
+        $stageId = $data['stage_id'];
+        $type = $data['type'];
+        $targetId = $data['target_id'];
+        $countRequired = $data['count_required'];
+        $description = $data['description'];
+        $dialogueTreeId = $data['dialogue_tree_id'] ?? null;
+        
+        $stmt->bind_param("isiisi", $stageId, $type, $targetId, $countRequired, $description, $dialogueTreeId);
         
         if ($stmt->execute()) {
             return $this->db->insert_id;
@@ -24,8 +32,15 @@ class QuestObjective
     
     public function update($id, $data)
     {
-        $stmt = $this->db->prepare("UPDATE quest_objectives SET type = ?, target_id = ?, count_required = ?, description = ? WHERE id = ?");
-        $stmt->bind_param("siisi", $data['type'], $data['target_id'], $data['count_required'], $data['description'], $id);
+        $stmt = $this->db->prepare("UPDATE quest_objectives SET type = ?, target_id = ?, count_required = ?, description = ?, dialogue_tree_id = ? WHERE id = ?");
+        
+        $type = $data['type'];
+        $targetId = $data['target_id'];
+        $countRequired = $data['count_required'];
+        $description = $data['description'];
+        $dialogueTreeId = $data['dialogue_tree_id'] ?? null;
+        
+        $stmt->bind_param("siisii", $type, $targetId, $countRequired, $description, $dialogueTreeId, $id);
         return $stmt->execute();
     }
     

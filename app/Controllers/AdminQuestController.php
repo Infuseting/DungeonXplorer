@@ -59,7 +59,8 @@ class AdminQuestController
             $data = [
                 'name' => $_POST['name'] ?? '',
                 'description' => $_POST['description'] ?? '',
-                'min_level' => (int)($_POST['min_level'] ?? 1)
+                'min_level' => (int)($_POST['min_level'] ?? 1),
+                'intro_text' => $_POST['intro_text'] ?? ''
             ];
             
             $questId = $questModel->create($data);
@@ -90,7 +91,8 @@ class AdminQuestController
             $data = [
                 'name' => $_POST['name'] ?? '',
                 'description' => $_POST['description'] ?? '',
-                'min_level' => (int)($_POST['min_level'] ?? 1)
+                'min_level' => (int)($_POST['min_level'] ?? 1),
+                'intro_text' => $_POST['intro_text'] ?? ''
             ];
             
             $questModel->update($id, $data);
@@ -116,9 +118,6 @@ class AdminQuestController
         
         // Get map points for unlock selection
         $mapPointModel = new \App\Models\MapPoint();
-        // Assuming we want all points from all maps, or maybe just list them all
-        // For now let's get all points from map 1 (default) or implement getAll in MapPoint
-        // Let's add a getAll method to MapPoint or just query here
         $stmt = $this->db->prepare("SELECT id, name, map_id FROM map_points ORDER BY map_id, name");
         $stmt->execute();
         $allMapPoints = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -131,6 +130,18 @@ class AdminQuestController
             }
             unset($stage); // Important: destroy the reference to avoid issues
         }
+
+        // Load prerequisites
+        $prerequisites = $questModel->getPrerequisites($id);
+        $allQuests = $questModel->getAll();
+        
+        // Load dialogue trees for objective assignment
+        $dialogueModel = new \App\Models\DialogueTree();
+        $dialogueTrees = $dialogueModel->getAll();
+        
+        // Load NPCs for TALK_NPC objectives
+        $npcModel = new \App\Models\NPC();
+        $allNPCs = $npcModel->getAll();
         
         require_once __DIR__ . '/../Views/admin/quests/edit.php';
     }
@@ -256,7 +267,8 @@ class AdminQuestController
                 'type' => $data['type'],
                 'target_id' => !empty($data['target_id']) ? (int)$data['target_id'] : null,
                 'count_required' => (int)($data['count_required'] ?? 1),
-                'description' => trim($data['description'] ?? '')
+                'description' => trim($data['description'] ?? ''),
+                'dialogue_tree_id' => !empty($data['dialogue_tree_id']) ? (int)$data['dialogue_tree_id'] : null
             ]);
             
             if ($objectiveId) {
@@ -289,7 +301,8 @@ class AdminQuestController
                 'type' => $data['type'],
                 'target_id' => !empty($data['target_id']) ? (int)$data['target_id'] : null,
                 'count_required' => (int)($data['count_required'] ?? 1),
-                'description' => trim($data['description'] ?? '')
+                'description' => trim($data['description'] ?? ''),
+                'dialogue_tree_id' => !empty($data['dialogue_tree_id']) ? (int)$data['dialogue_tree_id'] : null
             ]);
             
             echo json_encode(['success' => $success]);
@@ -421,6 +434,54 @@ class AdminQuestController
             
             $stageModel = new \App\Models\QuestStage();
             $success = $stageModel->removeMapUnlock((int)$data['stage_id'], (int)$data['map_point_id']);
+            
+            echo json_encode(['success' => $success]);
+        }
+        exit;
+    }
+
+    /**
+     * Add prerequisite (API)
+     */
+    public function addPrerequisite()
+    {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true);
+            
+            if (!$data || empty($data['quest_id']) || empty($data['required_quest_id'])) {
+                echo json_encode(['success' => false, 'message' => 'Données invalides']);
+                exit;
+            }
+            
+            $questModel = new \App\Models\Quest();
+            $success = $questModel->addPrerequisite((int)$data['quest_id'], (int)$data['required_quest_id']);
+            
+            echo json_encode(['success' => $success]);
+        }
+        exit;
+    }
+
+    /**
+     * Remove prerequisite (API)
+     */
+    public function removePrerequisite()
+    {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true);
+            
+            if (!$data || empty($data['quest_id']) || empty($data['required_quest_id'])) {
+                echo json_encode(['success' => false, 'message' => 'Données invalides']);
+                exit;
+            }
+            
+            $questModel = new \App\Models\Quest();
+            $success = $questModel->removePrerequisite((int)$data['quest_id'], (int)$data['required_quest_id']);
             
             echo json_encode(['success' => $success]);
         }

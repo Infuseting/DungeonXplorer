@@ -1,7 +1,0 @@
-2025-11-26 12:33:34 - UpdateNode: {"tree_id":2,"parent_id":null,"text":"Vous avez besoin d'informations ?","is_player_choice":0,"choice_text":null,"order_index":0,"id":5}
-2025-11-26 12:34:22 - UpdateNode: {"tree_id":2,"parent_id":null,"text":"blabla","is_player_choice":1,"choice_text":"Quel est cet histoire de Minotaure ?","order_index":0,"id":6}
-2025-11-26 12:34:35 - UpdateNode: {"tree_id":2,"parent_id":null,"text":"O\u00f9 on le trouve ?","is_player_choice":1,"choice_text":"Choix 2","order_index":0,"id":7}
-2025-11-26 12:34:43 - AddNode: {"tree_id":2,"parent_id":"6","text":"Lorem Ipsum Dolor 1","is_player_choice":0,"choice_text":null,"order_index":0}
-2025-11-26 12:34:43 - NodeID: 8
-2025-11-26 12:34:52 - AddNode: {"tree_id":2,"parent_id":"7","text":"Lorem Ipsum Dolor 2","is_player_choice":0,"choice_text":null,"order_index":0}
-2025-11-26 12:34:52 - NodeID: 9

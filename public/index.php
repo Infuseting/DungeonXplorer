@@ -52,12 +52,16 @@ $router->mount('/game', function() use ($router) {
     // NPC API
     $router->get('/npc/(\d+)', 'App\Controllers\GameController@getNPC');
     $router->get('/dialogue/tree/(\d+)', 'App\Controllers\GameController@getDialogueTree');
+    $router->post('/dialogue/complete', 'App\Controllers\GameController@completeDialogue');
+
+    // Quest API
+    $router->post('/quest/accept', 'App\Controllers\GameController@acceptQuest');
+    $router->get('/quest/log', 'App\Controllers\GameController@getQuestLog');
 
     // Inventory API
     $router->post('/inventory/move', 'App\Controllers\InventoryController@move');
     $router->post('/inventory/equip', 'App\Controllers\InventoryController@equip');
     $router->post('/inventory/unequip', 'App\Controllers\InventoryController@unequip');
-
 });
 
 // Admin Routes (Protected)
@@ -81,6 +85,7 @@ $router->mount('/admin', function() use ($router) {
     $router->get('/points', 'App\Controllers\AdminMapController@managePoints');
     $router->post('/points/update-submap', 'App\Controllers\AdminMapController@updatePointSubMap');
     $router->post('/points/update-npc', 'App\Controllers\AdminMapController@updatePointNPC');
+    $router->post('/points/update-visibility', 'App\Controllers\AdminMapController@updatePointVisibility');
     
     // Items Management
     $router->get('/items', 'App\Controllers\AdminItemController@index');
@@ -120,6 +125,8 @@ $router->mount('/admin', function() use ($router) {
     $router->post('/quests/remove-npc', 'App\Controllers\AdminQuestController@removeNPC');
     $router->post('/quests/stage/add-unlock', 'App\Controllers\AdminQuestController@addMapUnlock');
     $router->post('/quests/stage/remove-unlock', 'App\Controllers\AdminQuestController@removeMapUnlock');
+    $router->post('/quests/prerequisite/add', 'App\Controllers\AdminQuestController@addPrerequisite');
+    $router->post('/quests/prerequisite/remove', 'App\Controllers\AdminQuestController@removePrerequisite');
 });
 
 $router->set404('App\Controllers\ErrorController@error404');

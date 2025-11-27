@@ -143,6 +143,32 @@ class AdminMapController
         }
         exit;
     }
+
+    public function updatePointVisibility()
+    {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $data = json_decode(file_get_contents('php://input'), true);
+            $pointId = $data['point_id'] ?? null;
+            $isHidden = isset($data['is_hidden']) ? (int)$data['is_hidden'] : 0;
+            
+            if (!$pointId) {
+                echo json_encode(['success' => false, 'message' => 'Point ID manquant']);
+                exit;
+            }
+            
+            $stmt = $this->db->prepare("UPDATE map_points SET is_hidden = ? WHERE id = ?");
+            $stmt->bind_param("ii", $isHidden, $pointId);
+            
+            if ($stmt->execute()) {
+                echo json_encode(['success' => true, 'message' => 'Visibilité mise à jour']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Erreur lors de la mise à jour']);
+            }
+        }
+        exit;
+    }
     
     public function createPoint()
     {
@@ -160,14 +186,15 @@ class AdminMapController
                 'type' => $_POST['type'] ?? 'place',
                 'target_id' => $_POST['target_id'] ?? null,
                 'icon' => $_POST['icon'] ?? null,
+                'is_hidden' => isset($_POST['is_hidden']) ? 1 : 0
             ];
             
             $stmt = $this->db->prepare("
-                INSERT INTO map_points (map_id, name, description, x, y, radius, type, target_id, icon)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO map_points (map_id, name, description, x, y, radius, type, target_id, icon, is_hidden)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->bind_param(
-                "issddisis",
+                "issddisisi",
                 $data['map_id'],
                 $data['name'],
                 $data['description'],
@@ -176,7 +203,8 @@ class AdminMapController
                 $data['radius'],
                 $data['type'],
                 $data['target_id'],
-                $data['icon']
+                $data['icon'],
+                $data['is_hidden']
             );
             
             if ($stmt->execute()) {
@@ -197,15 +225,16 @@ class AdminMapController
                 'radius' => $_POST['radius'] ?? 50,
                 'type' => $_POST['type'] ?? 'place',
                 'target_id' => $_POST['target_id'] ?? null,
+                'is_hidden' => isset($_POST['is_hidden']) ? 1 : 0
             ];
             
             $stmt = $this->db->prepare("
                 UPDATE map_points 
-                SET name = ?, description = ?, x = ?, y = ?, radius = ?, type = ?, target_id = ?
+                SET name = ?, description = ?, x = ?, y = ?, radius = ?, type = ?, target_id = ?, is_hidden = ?
                 WHERE id = ?
             ");
             $stmt->bind_param(
-                "ssddisii",
+                "ssddisiii",
                 $data['name'],
                 $data['description'],
                 $data['x'],
@@ -213,6 +242,7 @@ class AdminMapController
                 $data['radius'],
                 $data['type'],
                 $data['target_id'],
+                $data['is_hidden'],
                 $id
             );
             

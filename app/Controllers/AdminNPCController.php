@@ -6,11 +6,13 @@ class AdminNPCController
 {
     private $npcModel;
     private $dialogueModel;
+    private $questModel;
     
     public function __construct()
     {
         $this->npcModel = new \App\Models\NPC();
         $this->dialogueModel = new \App\Models\DialogueTree();
+        $this->questModel = new \App\Models\Quest();
     }
     
     /**
@@ -126,6 +128,10 @@ class AdminNPCController
             $dialogueTrees = $this->dialogueModel->getAll();
             $assignedTrees = $this->npcModel->getDialogueTrees($id);
             $merchantInventory = $this->npcModel->getMerchantInventory($id);
+            
+            // Load quests
+            $allQuests = $this->questModel->getAll();
+            $assignedQuests = $this->npcModel->getQuests($id);
 
             require_once __DIR__ . '/../Views/admin/npcs/edit.php';
             return;
@@ -194,6 +200,25 @@ class AdminNPCController
         foreach ($newIds as $nid) {
             if (!in_array($nid, $existingIds)) {
                 $this->npcModel->assignDialogueTree($id, $nid);
+            }
+        }
+
+        // Update quest assignments
+        $existingQuests = $this->npcModel->getQuests($id);
+        $existingQuestIds = array_column($existingQuests, 'id');
+        $newQuestIds = $_POST['quests'] ?? [];
+        
+        // Remove deselected quests
+        foreach ($existingQuestIds as $qid) {
+            if (!in_array($qid, $newQuestIds)) {
+                $this->npcModel->removeQuest($id, $qid);
+            }
+        }
+        
+        // Add newly selected quests
+        foreach ($newQuestIds as $qid) {
+            if (!in_array($qid, $existingQuestIds)) {
+                $this->npcModel->assignQuest($id, $qid);
             }
         }
 

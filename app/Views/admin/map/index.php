@@ -198,6 +198,13 @@ ob_start();
                     <label class="form-label">Icône (optionnel)</label>
                     <input type="text" name="icon" class="form-input" placeholder="icon.png">
                 </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+                        <input type="checkbox" name="is_hidden" value="1">
+                        Caché par défaut (nécessite déblocage)
+                    </label>
+                </div>
                 
                 <button type="submit" class="btn btn-primary w-full">
                     Créer le Point

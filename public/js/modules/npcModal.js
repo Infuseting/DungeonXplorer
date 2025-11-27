@@ -5,6 +5,8 @@
 
 let currentNPC = null;
 let currentDialogueTree = null;
+let currentDialogueTreeId = null;
+let currentQuests = [];
 
 /**
  * Open NPC modal
@@ -16,6 +18,7 @@ export function openNPCModal(npcId) {
             if (data.success) {
                 currentNPC = data.npc;
                 currentDialogueTree = data.dialogue_trees;
+                currentQuests = data.quests || [];
                 displayNPCModal();
             } else {
                 console.error('Failed to load NPC data');
@@ -52,6 +55,7 @@ function displayNPCModal() {
     actionsEl.innerHTML = '';
     choicesEl.innerHTML = '';
     choicesEl.style.display = 'none';
+    actionsEl.style.display = 'flex'; // Ensure actions are visible
 
     // Display initial greeting (support multiple roles stored as CSV)
     const npcRoles = Array.isArray(currentNPC.role) ? currentNPC.role : (String(currentNPC.role || '').split(',').map(r => r.trim()).filter(Boolean));
@@ -75,8 +79,8 @@ function displayNPCModal() {
         actionsEl.appendChild(dialogueBtn);
     }
 
-    // Add quest button if quest_giver
-    if (npcRoles.includes('quest_giver')) {
+    // Add quest button if quest_giver AND has quests
+    if (npcRoles.includes('quest_giver') && currentQuests.length > 0) {
         const questBtn = document.createElement('button');
         questBtn.className = 'npc-action-btn';
         questBtn.textContent = '⚔️ Avez-vous des quêtes ?';
@@ -87,6 +91,96 @@ function displayNPCModal() {
     // Show modal
     modal.style.display = 'flex';
     modal.classList.add('active');
+}
+
+// ... (getGreeting, startDialogue, displayDialogue, selectChoice, openMerchantShop remain same)
+
+/**
+ * Show quests
+ */
+function showQuests() {
+    const textEl = document.getElementById('npc-text');
+    const actionsEl = document.getElementById('npc-actions');
+    const choicesEl = document.getElementById('npc-choices');
+
+    actionsEl.style.display = 'none';
+    choicesEl.innerHTML = '';
+    choicesEl.style.display = 'flex';
+
+    textEl.textContent = "J'ai besoin d'aide pour quelques tâches...";
+
+    currentQuests.forEach(quest => {
+        const btn = document.createElement('button');
+        btn.className = 'npc-choice-btn';
+        btn.textContent = `📜 ${quest.name} (Niv. ${quest.min_level})`;
+        btn.onclick = () => showQuestIntro(quest);
+        choicesEl.appendChild(btn);
+    });
+
+    // Back button
+    const backBtn = document.createElement('button');
+    backBtn.className = 'npc-choice-btn';
+    backBtn.textContent = '← Retour';
+    backBtn.onclick = () => {
+        actionsEl.style.display = 'flex';
+        choicesEl.style.display = 'none';
+        displayNPCModal();
+    };
+    choicesEl.appendChild(backBtn);
+}
+
+/**
+ * Show quest intro text
+ */
+function showQuestIntro(quest) {
+    const textEl = document.getElementById('npc-text');
+    const choicesEl = document.getElementById('npc-choices');
+
+    textEl.textContent = quest.intro_text || quest.description;
+
+    choicesEl.innerHTML = '';
+
+    // Accept Button
+    const acceptBtn = document.createElement('button');
+    acceptBtn.className = 'npc-choice-btn';
+    acceptBtn.style.borderLeft = '4px solid #4caf50';
+    acceptBtn.textContent = '✅ Accepter la quête';
+    acceptBtn.onclick = () => acceptQuest(quest.id);
+    choicesEl.appendChild(acceptBtn);
+
+    // Decline Button
+    const declineBtn = document.createElement('button');
+    declineBtn.className = 'npc-choice-btn';
+    declineBtn.style.borderLeft = '4px solid #f44336';
+    declineBtn.textContent = '❌ Refuser';
+    declineBtn.onclick = () => showQuests(); // Go back to quest list
+    choicesEl.appendChild(declineBtn);
+}
+
+/**
+ * Accept quest
+ */
+function acceptQuest(questId) {
+    fetch('/game/quest/accept', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quest_id: questId })
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message using toast if available, or alert
+                if (window.showToast) {
+                    window.showToast('Quête acceptée !', 'success');
+                } else {
+                    alert('Quête acceptée !');
+                }
+                closeNPCModal();
+            } else {
+                alert(data.message || 'Erreur');
+            }
+        })
+        .catch(err => console.error(err));
 }
 
 /**
@@ -117,6 +211,7 @@ function startDialogue() {
 
     // Get first dialogue tree
     const tree = currentDialogueTree[0];
+    currentDialogueTreeId = tree.id;
 
     // Load root dialogues
     fetch(`/game/dialogue/tree/${tree.id}`)
@@ -160,7 +255,28 @@ function displayDialogue(dialogue) {
             }
         });
     } else {
-        // No more choices, show back button
+        // No more choices - dialogue has ended
+        // Call completeDialogue if this is a quest dialogue
+        if (currentDialogueTreeId) {
+            fetch('/game/dialogue/complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tree_id: currentDialogueTreeId })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.quest_updated) {
+                        if (window.showToast) {
+                            window.showToast('✅ ' + data.message, 'success');
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error completing dialogue:', error);
+                });
+        }
+        
+        // Show back button
         choicesEl.innerHTML = '';
         const backBtn = document.createElement('button');
         backBtn.className = 'npc-choice-btn';
@@ -186,13 +302,39 @@ function selectChoice(choice) {
             displayDialogue(nextDialogue);
         }
     } else {
-        // End of dialogue, go back
-        const actionsEl = document.getElementById('npc-actions');
-        const choicesEl = document.getElementById('npc-choices');
-        actionsEl.style.display = 'flex';
-        choicesEl.style.display = 'none';
-        displayNPCModal();
+        // End of dialogue - check if quest-related
+        if (currentDialogueTreeId) {
+            fetch('/game/dialogue/complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tree_id: currentDialogueTreeId })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.quest_updated) {
+                        if (window.showToast) {
+                            window.showToast('✅ ' + data.message, 'success');
+                        }
+                    }
+                    closeDialogue();
+                })
+                .catch(error => {
+                    console.error('Error completing dialogue:', error);
+                    closeDialogue();
+                });
+        } else {
+            closeDialogue();
+        }
     }
+}
+
+function closeDialogue() {
+    const actionsEl = document.getElementById('npc-actions');
+    const choicesEl = document.getElementById('npc-choices');
+    actionsEl.style.display = 'flex';
+    choicesEl.style.display = 'none';
+    currentDialogueTreeId = null;
+    displayNPCModal();
 }
 
 /**
@@ -204,14 +346,7 @@ function openMerchantShop() {
     alert('Interface marchand à venir !');
 }
 
-/**
- * Show quests
- */
-function showQuests() {
-    // TODO: Implement quest interface
-    console.log('Showing quests for NPC:', currentNPC.id);
-    alert('Interface quêtes à venir !');
-}
+
 
 /**
  * Close NPC modal

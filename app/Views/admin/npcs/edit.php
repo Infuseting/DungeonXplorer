@@ -165,7 +165,28 @@ ob_start();
                         <p style="color: var(--text-muted);">Aucun arbre de dialogue créé.</p>
                     <?php endif; ?>
                 </div>
+            </div>
+
+            <div class="form-group-full" id="quest-fields">
+                <h4 style="color: var(--text-light); margin-bottom: 1rem; font-size: 1.125rem;">
+                    📜 Configuration Quêtes
+                </h4>
                 
+                <div style="display:flex; flex-direction:column; gap:0.5rem; margin-top:0.5rem;">
+                    <?php
+                        $assignedQuestIds = array_column($assignedQuests, 'id');
+                    ?>
+                    <?php if (!empty($allQuests)): ?>
+                        <?php foreach ($allQuests as $quest): ?>
+                            <label>
+                                <input type="checkbox" name="quests[]" value="<?= $quest['id'] ?>" <?= in_array($quest['id'], $assignedQuestIds) ? 'checked' : '' ?> >
+                                <?= htmlspecialchars($quest['name']) ?> (Niveau <?= $quest['min_level'] ?>)
+                            </label>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p style="color: var(--text-muted);">Aucune quête disponible.</p>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
         
@@ -177,19 +198,24 @@ ob_start();
 </div>
 
 <script>
-// Show/hide merchant fields
+// Show/hide merchant and quest fields
 const merchantFields = document.getElementById('merchant-fields');
 const merchantSeed = document.getElementById('merchant-seed');
+const questFields = document.getElementById('quest-fields');
 const roleCheckboxes = document.querySelectorAll('[name="roles[]"]');
 
-function updateMerchantFields() {
+function updateRoleFields() {
     const isMerchant = Array.from(roleCheckboxes).some(cb => cb.value === 'merchant' && cb.checked);
+    const isQuestGiver = Array.from(roleCheckboxes).some(cb => cb.value === 'quest_giver' && cb.checked);
+    
     merchantFields.style.display = isMerchant ? 'block' : 'none';
     merchantSeed.required = isMerchant;
+    
+    questFields.style.display = isQuestGiver ? 'block' : 'none';
 }
 
-roleCheckboxes.forEach(cb => cb.addEventListener('change', updateMerchantFields));
-updateMerchantFields();
+roleCheckboxes.forEach(cb => cb.addEventListener('change', updateRoleFields));
+updateRoleFields();
 
 // Regenerate inventory
 function regenerateInventory() {

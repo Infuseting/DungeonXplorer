@@ -213,4 +213,21 @@ class DialogueTree
         $result = $stmt->get_result();
         return $result->fetch_all(MYSQLI_ASSOC);
     }
+    
+    /**
+     * Get quest objective linked to this dialogue tree
+     */
+    public function getQuestObjective($treeId)
+    {
+        $stmt = $this->db->prepare("
+            SELECT qo.*, qs.quest_id, qs.id as stage_id
+            FROM quest_objectives qo
+            JOIN quest_stages qs ON qo.stage_id = qs.id
+            WHERE qo.dialogue_tree_id = ?
+        ");
+        $stmt->bind_param("i", $treeId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_assoc();
+    }
 }

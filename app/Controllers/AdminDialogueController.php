@@ -51,6 +51,7 @@ class AdminDialogueController
         foreach ($trees as &$tree) {
             $tree['npc_count'] = count($dialogueModel->getNPCsUsingTree($tree['id']));
         }
+        unset($tree); // Destroy reference to avoid issues
         
         require_once __DIR__ . '/../Views/admin/dialogues/index.php';
     }
@@ -63,12 +64,10 @@ class AdminDialogueController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $dialogueModel = new \App\Models\DialogueTree();
             
-            $data = [
-                'name' => $_POST['name'] ?? '',
-                'description' => $_POST['description'] ?? ''
-            ];
+            $name = $_POST['name'] ?? '';
+            $description = $_POST['description'] ?? '';
             
-            $treeId = $dialogueModel->create($data);
+            $treeId = $dialogueModel->create($name, $description);
             
             if ($treeId) {
                 header('Location: /admin/dialogues/tree/' . $treeId);

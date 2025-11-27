@@ -18,6 +18,13 @@ class AuthMiddleware
 
     public function handle()
     {
+        $logFile = __DIR__ . '/../../debug_auth.log';
+        $log = function($msg) use ($logFile) {
+            file_put_contents($logFile, date('[Y-m-d H:i:s] ') . $msg . "\n", FILE_APPEND);
+        };
+
+        $log("AuthMiddleware: Handling request to " . $_SERVER['REQUEST_URI']);
+
         // Start session if not already started (for flash messages/username)
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
@@ -25,11 +32,14 @@ class AuthMiddleware
 
         // 1. Check Access Token
         if (isset($_COOKIE['access_token'])) {
+            $log("AuthMiddleware: Access token found");
             $payload = $this->tokenService->validateToken($_COOKIE['access_token']);
             if ($payload) {
+                $log("AuthMiddleware: Access token valid for user " . $payload['user_id']);
                 // Token is valid, user is authenticated
                 // Ensure session is synced (optional but good for UI)
                 if (!isset($_SESSION['user_id'])) {
+                    $log("AuthMiddleware: Syncing session from token");
                     $user = $this->userModel->findById($payload['user_id']);
                     if ($user) {
                         $_SESSION['user_id'] = $user['id'];
@@ -37,11 +47,16 @@ class AuthMiddleware
                     }
                 }
                 return;
+            } else {
+                $log("AuthMiddleware: Access token invalid");
             }
+        } else {
+            $log("AuthMiddleware: No access token");
         }
 
         // 2. Access Token Invalid/Expired -> Try Refresh Token
         if (isset($_COOKIE['refresh_token'])) {
+            $log("AuthMiddleware: Refresh token found");
             $parts = explode(':', $_COOKIE['refresh_token']);
             
             if (count($parts) === 2) {
@@ -51,6 +66,7 @@ class AuthMiddleware
                 $user = $this->userModel->findUserByToken($selector, $validator);
 
                 if ($user) {
+                    $log("AuthMiddleware: Refresh token valid for user " . $user['id']);
                     // Refresh Token is valid!
                     // Rotate Tokens: Delete old, create new
                     $this->userModel->deleteToken($selector);
@@ -86,11 +102,18 @@ class AuthMiddleware
                     $_SESSION['username'] = $user['username'];
 
                     return; // Auth successful via refresh
+                } else {
+                    $log("AuthMiddleware: Refresh token invalid (user not found)");
                 }
+            } else {
+                $log("AuthMiddleware: Refresh token format invalid");
             }
+        } else {
+            $log("AuthMiddleware: No refresh token");
         }
 
         // 3. Auth Failed
+        $log("AuthMiddleware: Auth failed, redirecting to login");
         // Clear everything
         setcookie('access_token', '', time() - 3600, '/');
         setcookie('refresh_token', '', time() - 3600, '/');

@@ -14,24 +14,42 @@ class PlayerQuest
     /**
      * Get player's active quests
      */
-    public function getActiveQuests($userId)
+    public function getActiveQuests($characterId)
     {
         $stmt = $this->db->prepare("
             SELECT pq.*, q.name, q.description 
             FROM player_quests pq
             JOIN quests q ON pq.quest_id = q.id
-            WHERE pq.user_id = ? AND pq.status = 'ACTIVE'
+            WHERE pq.character_id = ? AND pq.status = 'ACTIVE'
         ");
-        $stmt->bind_param("i", $userId);
+        $stmt->bind_param("i", $characterId);
         $stmt->execute();
         $result = $stmt->get_result();
         return $result->fetch_all(MYSQLI_ASSOC);
     }
+
+    /**
+     * Get quest status for character
+     * Returns: 'NOT_STARTED', 'ACTIVE', 'COMPLETED'
+     */
+    public function getQuestStatus($characterId, $questId)
+    {
+        $stmt = $this->db->prepare("SELECT status FROM player_quests WHERE character_id = ? AND quest_id = ?");
+        $stmt->bind_param("ii", $characterId, $questId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($row = $result->fetch_assoc()) {
+            return $row['status'];
+        }
+        
+        return 'NOT_STARTED';
+    }
     
     /**
-     * Start a quest for a player
+     * Start a quest for a player character
      */
-    public function startQuest($userId, $questId)
+    public function startQuest($characterId, $questId)
     {
         // Get first stage
         $stmt = $this->db->prepare("SELECT id FROM quest_stages WHERE quest_id = ? ORDER BY order_index ASC LIMIT 1");
@@ -43,8 +61,8 @@ class PlayerQuest
         if (!$firstStage) return false;
         
         // Create player quest
-        $stmt = $this->db->prepare("INSERT INTO player_quests (user_id, quest_id, current_stage_id, status) VALUES (?, ?, ?, 'ACTIVE')");
-        $stmt->bind_param("iii", $userId, $questId, $firstStage['id']);
+        $stmt = $this->db->prepare("INSERT INTO player_quests (character_id, quest_id, current_stage_id, status) VALUES (?, ?, ?, 'ACTIVE')");
+        $stmt->bind_param("iii", $characterId, $questId, $firstStage['id']);
         
         if ($stmt->execute()) {
             $playerQuestId = $this->db->insert_id;
@@ -147,8 +165,8 @@ class PlayerQuest
      */
     private function unlockMapPointsForStage($playerQuestId)
     {
-        // Get user_id and current_stage_id
-        $stmt = $this->db->prepare("SELECT user_id, current_stage_id FROM player_quests WHERE id = ?");
+        // Get character_id and current_stage_id
+        $stmt = $this->db->prepare("SELECT character_id, current_stage_id FROM player_quests WHERE id = ?");
         $stmt->bind_param("i", $playerQuestId);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -164,7 +182,7 @@ class PlayerQuest
         
         $mapPointModel = new MapPoint();
         foreach ($unlocks as $unlock) {
-            $mapPointModel->unlockForUser($pq['user_id'], $unlock['id']);
+            $mapPointModel->unlockForCharacter($pq['character_id'], $unlock['id']);
         }
     }
     
@@ -209,5 +227,98 @@ class PlayerQuest
             $updateStmt->bind_param("i", $playerQuestId);
             $updateStmt->execute();
         }
+    }
+    /**
+     * Get full quest log for player character
+     */
+    public function getQuestLog($characterId)
+    {
+        // 1. Get all player quests (Active & Completed)
+        $stmt = $this->db->prepare("
+            SELECT pq.*, q.name, q.description, q.min_level,
+                   qs.order_index as current_stage_order
+            FROM player_quests pq
+            JOIN quests q ON pq.quest_id = q.id
+            JOIN quest_stages qs ON pq.current_stage_id = qs.id
+            WHERE pq.character_id = ?
+            ORDER BY 
+                CASE WHEN pq.status = 'ACTIVE' THEN 1 ELSE 2 END,
+                pq.id DESC
+        ");
+        $stmt->bind_param("i", $characterId);
+        $stmt->execute();
+        $quests = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        
+        $log = [];
+        
+        foreach ($quests as $quest) {
+            $questData = [
+                'id' => $quest['quest_id'],
+                'name' => $quest['name'],
+                'description' => $quest['description'],
+                'status' => $quest['status'],
+                'stages' => []
+            ];
+            
+            // 2. Get all stages for this quest
+            $stmt = $this->db->prepare("
+                SELECT qs.* 
+                FROM quest_stages qs 
+                WHERE qs.quest_id = ? 
+                ORDER BY qs.order_index ASC
+            ");
+            $stmt->bind_param("i", $quest['quest_id']);
+            $stmt->execute();
+            $stages = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            
+            foreach ($stages as $stage) {
+                // Determine stage status relative to player progress
+                $stageStatus = 'LOCKED'; // Default hidden/future
+                
+                if ($quest['status'] === 'COMPLETED') {
+                    $stageStatus = 'COMPLETED';
+                } elseif ($stage['order_index'] < $quest['current_stage_order']) {
+                    $stageStatus = 'COMPLETED';
+                } elseif ($stage['order_index'] == $quest['current_stage_order']) {
+                    $stageStatus = 'ACTIVE';
+                }
+                
+                // Skip future stages (as requested)
+                if ($stageStatus === 'LOCKED') continue;
+                
+                $stageData = [
+                    'id' => $stage['id'],
+                    'name' => $stage['name'],
+                    'description' => $stage['description'],
+                    'status' => $stageStatus,
+                    'objectives' => []
+                ];
+                
+                // 3. Get objectives and progress if active or completed
+                if ($stageStatus === 'ACTIVE') {
+                    // Get real-time progress for active stage
+                    $stmt = $this->db->prepare("
+                        SELECT qo.*, pqp.count_current, pqp.is_completed
+                        FROM quest_objectives qo
+                        LEFT JOIN player_quest_progress pqp ON qo.id = pqp.objective_id AND pqp.player_quest_id = ?
+                        WHERE qo.stage_id = ?
+                    ");
+                    $stmt->bind_param("ii", $quest['id'], $stage['id']);
+                } else {
+                    // For completed stages, just show objectives as done
+                    $stmt = $this->db->prepare("SELECT *, count_required as count_current, 1 as is_completed FROM quest_objectives WHERE stage_id = ?");
+                    $stmt->bind_param("i", $stage['id']);
+                }
+                
+                $stmt->execute();
+                $stageData['objectives'] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                
+                $questData['stages'][] = $stageData;
+            }
+            
+            $log[] = $questData;
+        }
+        
+        return $log;
     }
 }
