@@ -40,7 +40,9 @@ $router->mount('/game', function() use ($router) {
 
     $router->post('/', 'App\Controllers\GameController@index'); // POST from character select
     $router->get('/', 'App\Controllers\GameController@index'); // GET for refresh
-
+    
+    $router->get('/combat/start/(\d+)', 'App\Controllers\CombatController@startCombat');
+    $router->post('/combat/roll-dice', 'App\Controllers\CombatController@rollDice');
     // Inventory API
     $router->post('/inventory/move', 'App\Controllers\InventoryController@move');
     $router->post('/inventory/equip', 'App\Controllers\InventoryController@equip');

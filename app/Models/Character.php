@@ -19,9 +19,8 @@ class Character
     private $inventory;
     private $id;
 
-    public function __construct($id)
+    public function __construct()
     {   
-        $this->id = $id;
         $this->db = Database::getInstance()->getConnection();
         $this->inventory = new Inventory();
     }
@@ -77,6 +76,8 @@ class Character
         $data= $stmt->get_result()->fetch_assoc();
 
         if ($data) {
+            
+            
             $this->name = $data['name'];
             $this->strength = $data['strength'];
             $this->vitality = $data['vitality'];

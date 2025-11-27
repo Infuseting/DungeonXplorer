@@ -5,30 +5,43 @@ use App\Models\Monster;
 use App\Models\Combat;
 class CombatController
 {
-    public function startCombat($characterId, $monsterId)
+    public function startCombat( $monsterId)
     {
         if (!isset($_SESSION['user_id'])) {
             header('Location: /login');
             exit;
         }
 
-        $characterModel = new Character();
-        $character = $characterModel->findById($characterId);
+        
 
-        // Verify ownership
-        if ($character['user_id'] !== $_SESSION['user_id']) {
-            header('Location: /personnage');
-            exit;
-        }
+        $characterModel = new Character();
+        $characterModel->findById($_SESSION['user_id']);
+        
+
+    
 
         $monsterModel = new Monster();
-        $monster = $monsterModel->findById($monsterId);
+        $monsterModel->findById($monsterId);
 
-        $combat = new Combat($character, $monster);
-        ob_start();
-        $combat->start();
-        $combatLog = ob_get_clean();
+        
 
-        require_once __DIR__ . '/../Views/combat/result.php';
+        require_once __DIR__ . '/../Views/game/interfaceCombat.php';
     }
+       public function rollDice() {
+        session_start();
+
+        if (isset($_POST['diceRoll'])) {
+            $_SESSION['diceRoll'] = intval($_POST['diceRoll']);
+            echo json_encode([
+                "success" => true,
+                "value" => $_SESSION['diceRoll']
+            ]);
+        } else {
+            echo json_encode([
+                "success" => false,
+                "message" => "Aucune valeur reçue"
+            ]);
+        }
+    }
+
 }

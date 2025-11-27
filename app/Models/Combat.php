@@ -1,6 +1,17 @@
 <?php
 namespace App\Models;
 
+if (isset($_POST['diceRoll'])) {
+    $_SESSION['diceRoll'] = intval($_POST['diceRoll']);
+}
+else {
+    http_response_code(400);
+    echo "Erreur : aucune valeur reçue";
+}
+
+
+
+
 class Combat
     { 
         private  $joueur;
