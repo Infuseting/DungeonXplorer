@@ -47,7 +47,7 @@ class GameController
         // Default to map ID 1 (you can make this dynamic later)
         $mapId = 1;
         $mapConfig = $mapModel->getMapConfig($mapId);
-        $mapPoints = $mapPointModel->getPointsByMapId($mapId);
+        $mapPoints = $mapPointModel->getVisiblePointsForCharacter($mapId, $characterId);
 
         require_once __DIR__ . '/../Views/game/index.php';
     }
@@ -82,7 +82,7 @@ class GameController
             exit;
         }
 
-        $points = $mapPointModel->getPointsByMapId($mapId);
+        $points = $mapPointModel->getVisiblePointsForCharacter($mapId, $_SESSION['character_id']);
 
         echo json_encode([
             'success' => true,

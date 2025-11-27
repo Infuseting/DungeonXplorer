@@ -1,0 +1,65 @@
+[2025-11-27 10:19:04] AuthMiddleware: Handling request to /game
+[2025-11-27 10:19:04] AuthMiddleware: No access token
+[2025-11-27 10:19:04] AuthMiddleware: Refresh token found
+[2025-11-27 10:19:04] AuthMiddleware: Refresh token valid for user 1
+[2025-11-27 10:19:08] AuthMiddleware: Handling request to /game/quest/log
+[2025-11-27 10:19:08] AuthMiddleware: Access token found
+[2025-11-27 10:19:08] AuthMiddleware: Access token valid for user 1
+[2025-11-27 10:19:40] AuthMiddleware: Handling request to /game/quest/log
+[2025-11-27 10:19:40] AuthMiddleware: Access token found
+[2025-11-27 10:19:40] AuthMiddleware: Access token valid for user 1
+[2025-11-27 10:21:33] AuthMiddleware: Handling request to /game/submap/load
+[2025-11-27 10:21:33] AuthMiddleware: Access token found
+[2025-11-27 10:21:33] AuthMiddleware: Access token valid for user 1
+[2025-11-27 10:21:39] AuthMiddleware: Handling request to /personnage
+[2025-11-27 10:21:39] AuthMiddleware: Access token found
+[2025-11-27 10:21:39] AuthMiddleware: Access token valid for user 1
+[2025-11-27 10:21:41] AuthMiddleware: Handling request to /personnage/create
+[2025-11-27 10:21:41] AuthMiddleware: Access token found
+[2025-11-27 10:21:41] AuthMiddleware: Access token valid for user 1
+[2025-11-27 10:21:53] AuthMiddleware: Handling request to /personnage/create
+[2025-11-27 10:21:53] AuthMiddleware: Access token found
+[2025-11-27 10:21:53] AuthMiddleware: Access token valid for user 1
+[2025-11-27 10:21:53] AuthMiddleware: Handling request to /personnage
+[2025-11-27 10:21:53] AuthMiddleware: Access token found
+[2025-11-27 10:21:53] AuthMiddleware: Access token valid for user 1
+[2025-11-27 10:21:55] AuthMiddleware: Handling request to /game
+[2025-11-27 10:21:55] AuthMiddleware: Access token found
+[2025-11-27 10:21:55] AuthMiddleware: Access token valid for user 1
+[2025-11-27 10:21:59] AuthMiddleware: Handling request to /game/quest/log
+[2025-11-27 10:21:59] AuthMiddleware: Access token found
+[2025-11-27 10:21:59] AuthMiddleware: Access token valid for user 1
+[2025-11-27 10:22:11] AuthMiddleware: Handling request to /game/submap/load
+[2025-11-27 10:22:11] AuthMiddleware: Access token found
+[2025-11-27 10:22:11] AuthMiddleware: Access token valid for user 1
+[2025-11-27 10:22:13] AuthMiddleware: Handling request to /game/npc/2
+[2025-11-27 10:22:13] AuthMiddleware: Access token found
+[2025-11-27 10:22:13] AuthMiddleware: Access token valid for user 1
+[2025-11-27 10:22:19] AuthMiddleware: Handling request to /game/npc/2
+[2025-11-27 10:22:19] AuthMiddleware: Access token found
+[2025-11-27 10:22:19] AuthMiddleware: Access token valid for user 1
+[2025-11-27 10:22:22] AuthMiddleware: Handling request to /game/npc/1
+[2025-11-27 10:22:22] AuthMiddleware: Access token found
+[2025-11-27 10:22:22] AuthMiddleware: Access token valid for user 1
+[2025-11-27 10:22:32] AuthMiddleware: Handling request to /game/submap/load
+[2025-11-27 10:22:32] AuthMiddleware: Access token found
+[2025-11-27 10:22:32] AuthMiddleware: Access token valid for user 1
+[2025-11-27 10:22:53] AuthMiddleware: Handling request to /game/npc/1
+[2025-11-27 10:22:53] AuthMiddleware: Access token found
+[2025-11-27 10:22:53] AuthMiddleware: Access token valid for user 1
+[2025-11-27 10:23:23] AuthMiddleware: Handling request to /game
+[2025-11-27 10:23:23] AuthMiddleware: Access token found
+[2025-11-27 10:23:23] AuthMiddleware: Access token valid for user 1
+[2025-11-27 10:24:55] AuthMiddleware: Handling request to /game
+[2025-11-27 10:24:55] AuthMiddleware: Access token found
+[2025-11-27 10:24:55] AuthMiddleware: Access token valid for user 1
+[2025-11-27 10:36:20] AuthMiddleware: Handling request to /game
+[2025-11-27 10:36:20] AuthMiddleware: No access token
+[2025-11-27 10:36:20] AuthMiddleware: Refresh token found
+[2025-11-27 10:36:20] AuthMiddleware: Refresh token valid for user 1
+[2025-11-27 10:36:35] AuthMiddleware: Handling request to /personnage
+[2025-11-27 10:36:35] AuthMiddleware: Access token found
+[2025-11-27 10:36:35] AuthMiddleware: Access token valid for user 1
+[2025-11-27 10:36:38] AuthMiddleware: Handling request to /game
+[2025-11-27 10:36:38] AuthMiddleware: Access token found
+[2025-11-27 10:36:38] AuthMiddleware: Access token valid for user 1
