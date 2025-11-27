@@ -39,12 +39,12 @@
 
                 </div>
                <div class="absolute bottom-7 w-64 h-64 overflow-hidden">
-                    <img src="/assets/images/minautoreAsset.png" alt="Monstre" class="object-cover w-full h-full">
+                    <img src= <?php echo $monsterModel->getImagePath()?> alt="Monstre" class="object-cover w-full h-full">
                 </div>
                 <div id="dice" class="absolute bottom-3 right-3 text-4xl font-bold text-violet-400 drop-shadow-[0_0_6px_#a78bfa]">
                     🎲 ?
                 </div>
-
+.
             </div>
 
             
@@ -88,10 +88,28 @@
                     
                 </div>
 
+                <?php
+                    $id = $characterModel->getClassName();
+                    switch ($id) {
+                        case 1:
+                            $classImage = '/assets/images/warrior.png';
+                            break;
+                        case 2:
+                            $classImage = '/assets/images/wizard.png';
+                            break;
+                        case 3:
+                            $classImage = '/assets/images/thief.png';
+                            break;
+                        default:
+                            $classImage = '/assets/images/default_class.png';
+                            break;
+                    }
+                ?>
+
                 <!-- Cercle au centre -->
                 <div class="w-full md:w-1/3 flex items-center justify-center relative mb-4 md:mb-0">
                     <div class="w-48 h-48 rounded-full border-4 border-violet-500 bg-gray-700 overflow-hidden">
-                    <img src="/assets/images/warrior.png" alt="Personnage" class="object-cover w-full h-full">
+                    <img src=<?php echo $classImage ?> alt="Personnage" class="object-cover w-full h-full">
                     </div>
                 </div>
 

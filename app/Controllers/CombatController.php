@@ -15,7 +15,7 @@ class CombatController
         
 
         $characterModel = new Character();
-        $characterModel->findById($_SESSION['user_id']);
+        $characterModel->findById($_SESSION['character_id']);
         
 
     
@@ -28,7 +28,7 @@ class CombatController
         require_once __DIR__ . '/../Views/game/interfaceCombat.php';
     }
        public function rollDice() {
-        session_start();
+        
 
         if (isset($_POST['diceRoll'])) {
             $_SESSION['diceRoll'] = intval($_POST['diceRoll']);

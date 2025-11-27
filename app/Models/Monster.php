@@ -14,6 +14,7 @@ class Monster
     private $dexterity;
     private $defense;
     private $attaque;
+    private $imagePath;
 
     public function __construct()
     {
@@ -28,6 +29,7 @@ class Monster
         $result = $stmt->get_result()->fetch_assoc();
         if ($result) {
             $this->name = $result['name'];
+            $this->imagePath = $result['image_path'];
 
             $json = $result['base_stats_json'];
             $stats = json_decode($json, true);
@@ -55,6 +57,11 @@ class Monster
     {
         return $this->name;
     }  
+
+    public function getImagePath()
+    {
+        return $this->imagePath;
+    }
 
     public function getStrength()
     {

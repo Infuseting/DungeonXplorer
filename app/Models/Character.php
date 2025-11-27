@@ -17,6 +17,7 @@ class Character
     private $intelligence;
     private $dexterity;
     private $inventory;
+    private $className;
     private $id;
 
     public function __construct()
@@ -68,7 +69,7 @@ class Character
 
     public function findById($id)
     {
-        $stmt = $this->db->prepare("SELECT c.name, c.gold, cs.level, cs.xp, cs.strength,cs.dexterity,cs.intelligence,cs.vitality  FROM characters c  Join character_stats cs on c.id=cs.character_id WHERE id = ?");
+        $stmt = $this->db->prepare("SELECT c.name, c.class_id, c.gold, cs.level, cs.xp, cs.strength,cs.dexterity,cs.intelligence,cs.vitality  FROM characters c  Join character_stats cs on c.id=cs.character_id WHERE id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
 
@@ -86,6 +87,7 @@ class Character
             $this->level = $data['level'];
             $this->xp = $data['xp'];
             $this->gold = $data['gold'];
+            $this->className = $data['class_id'];
 
         }
 
@@ -96,6 +98,7 @@ class Character
     {
         $stmt = $this->db->prepare("UPDATE characters SET last_played_at = NOW() WHERE id = ?");
         $stmt->bind_param("i", $id);
+        $_SESSION['character_id'] = $id;
         return $stmt->execute();
     }
 
@@ -147,7 +150,10 @@ class Character
     {
         $this->vitality = $vitality;
     }
-
+    public function getClassName()
+    {
+        return $this->className;
+    }
     public function getArmorClass()
     {
         return  $this->getStrength()/2 + $this->getEquippedStats(Stats::Defense);
