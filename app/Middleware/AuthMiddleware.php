@@ -32,7 +32,6 @@ class AuthMiddleware
                 // Token is valid, user is authenticated
                 // Ensure session is synced (optional but good for UI)
                 if (!isset($_SESSION['user_id'])) {
-                    $log("AuthMiddleware: Syncing session from token");
                     $user = $this->userModel->findById($payload['user_id']);
                     if ($user) {
                         $_SESSION['user_id'] = $user['id'];
