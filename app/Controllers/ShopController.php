@@ -96,16 +96,13 @@ class ShopController
         $inventoryModel = new Inventory();
 
         // 1. Verify Item exists in NPC inventory
-        // We need to check if NPC actually has this item.
-        // The getMerchantInventory returns items.
-        // NOTE: npc_merchant_inventory table links npc_id and item_id.
-        
-        $stmt = $db->prepare("SELECT quantity FROM npc_merchant_inventory WHERE npc_id = ? AND item_id = ?");
+        // We check if the NPC sells this item. Quantity is ignored as stock is unlimited.
+        $stmt = $db->prepare("SELECT 1 FROM npc_merchant_inventory WHERE npc_id = ? AND item_id = ?");
         $stmt->bind_param("ii", $npcId, $itemId);
         $stmt->execute();
         $res = $stmt->get_result()->fetch_assoc();
 
-        if (!$res || $res['quantity'] <= 0) {
+        if (!$res) {
             echo json_encode(['success' => false, 'message' => 'Item not available']);
             exit;
         }
@@ -149,18 +146,7 @@ class ShopController
         $stmt->bind_param("ii", $newGold, $_SESSION['character_id']);
         $stmt->execute();
 
-        // 6. Decrease NPC Inventory (optional, if limited stock)
-        // $newQty = $res['quantity'] - 1;
-        // $stmt = $db->prepare("UPDATE npc_merchant_inventory SET quantity = ? WHERE npc_id = ? AND item_id = ?");
-        // $stmt->bind_param("iii", $newQty, $npcId, $itemId);
-        // $stmt->execute();
-        // For now, let's assume infinite stock for standard items, or implement decrement.
-        // Let's implement decrement.
-        if ($res['quantity'] > 0) {
-             $stmt = $db->prepare("UPDATE npc_merchant_inventory SET quantity = quantity - 1 WHERE npc_id = ? AND item_id = ?");
-             $stmt->bind_param("ii", $npcId, $itemId);
-             $stmt->execute();
-        }
+        // 6. Decrease NPC Inventory - REMOVED (Unlimited Stock)
 
         echo json_encode(['success' => true, 'message' => 'Item purchased', 'new_gold' => $newGold]);
     }
@@ -214,22 +200,7 @@ class ShopController
         $stmt->bind_param("ii", $sellPrice, $_SESSION['character_id']);
         $stmt->execute();
 
-        // 5. Add to NPC Inventory (Optional)
-        // For now, items sold to NPC just disappear or go into their pool.
-        // Let's add it to their pool so you can buy it back?
-        // Check if exists
-        $stmt = $db->prepare("SELECT quantity FROM npc_merchant_inventory WHERE npc_id = ? AND item_id = ?");
-        $stmt->bind_param("ii", $npcId, $item['real_item_id']);
-        $stmt->execute();
-        if ($stmt->get_result()->num_rows > 0) {
-            $stmt = $db->prepare("UPDATE npc_merchant_inventory SET quantity = quantity + 1 WHERE npc_id = ? AND item_id = ?");
-            $stmt->bind_param("ii", $npcId, $item['real_item_id']);
-            $stmt->execute();
-        } else {
-            $stmt = $db->prepare("INSERT INTO npc_merchant_inventory (npc_id, item_id, quantity) VALUES (?, ?, 1)");
-            $stmt->bind_param("ii", $npcId, $item['real_item_id']);
-            $stmt->execute();
-        }
+        // 5. Add to NPC Inventory - REMOVED (No Buyback)
 
         echo json_encode(['success' => true, 'message' => 'Item sold', 'gold_earned' => $sellPrice]);
     }
