@@ -1,5 +1,11 @@
 <?php
 
+error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
+ini_set('display_errors', 'Off');
+ini_set('log_errors', 'On');
+ini_set('error_log', __DIR__ . '/../var/log/php_errors.log');
+
+
 require __DIR__ . '/../vendor/autoload.php';
 
 // Load environment variables
