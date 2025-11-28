@@ -275,7 +275,7 @@ function displayDialogue(dialogue) {
                     console.error('Error completing dialogue:', error);
                 });
         }
-        
+
         // Show back button
         choicesEl.innerHTML = '';
         const backBtn = document.createElement('button');
@@ -341,9 +341,11 @@ function closeDialogue() {
  * Open merchant shop
  */
 function openMerchantShop() {
-    // TODO: Implement merchant shop interface
-    console.log('Opening merchant shop for NPC:', currentNPC.id);
-    alert('Interface marchand à venir !');
+    if (currentNPC) {
+        import('./shop.js').then(module => {
+            module.openShop(currentNPC.id);
+        });
+    }
 }
 
 

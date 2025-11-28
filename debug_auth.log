@@ -63,3 +63,424 @@
 [2025-11-27 10:36:38] AuthMiddleware: Handling request to /game
 [2025-11-27 10:36:38] AuthMiddleware: Access token found
 [2025-11-27 10:36:38] AuthMiddleware: Access token valid for user 1
+[2025-11-27 15:40:28] AuthMiddleware: Handling request to /game
+[2025-11-27 15:40:28] AuthMiddleware: No access token
+[2025-11-27 15:40:28] AuthMiddleware: Refresh token found
+[2025-11-27 15:40:28] AuthMiddleware: Refresh token valid for user 1
+[2025-11-27 16:22:45] AuthMiddleware: Handling request to /game/quest/log
+[2025-11-27 16:22:45] AuthMiddleware: No access token
+[2025-11-27 16:22:45] AuthMiddleware: Refresh token found
+[2025-11-27 16:22:45] AuthMiddleware: Refresh token valid for user 1
+[2025-11-27 16:28:57] AuthMiddleware: Handling request to /game/submap/load
+[2025-11-27 16:28:57] AuthMiddleware: Access token found
+[2025-11-27 16:28:57] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:28:59] AuthMiddleware: Handling request to /game/npc/2
+[2025-11-27 16:28:59] AuthMiddleware: Access token found
+[2025-11-27 16:28:59] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:29:00] AuthMiddleware: Handling request to /game/npc/2
+[2025-11-27 16:29:00] AuthMiddleware: Access token found
+[2025-11-27 16:29:00] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:32:06] AuthMiddleware: Handling request to /game
+[2025-11-27 16:32:06] AuthMiddleware: Access token found
+[2025-11-27 16:32:06] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:32:09] AuthMiddleware: Handling request to /game/submap/load
+[2025-11-27 16:32:09] AuthMiddleware: Access token found
+[2025-11-27 16:32:09] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:32:11] AuthMiddleware: Handling request to /game/npc/2
+[2025-11-27 16:32:11] AuthMiddleware: Access token found
+[2025-11-27 16:32:11] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:32:12] AuthMiddleware: Handling request to /game/shop/2
+[2025-11-27 16:32:12] AuthMiddleware: Access token found
+[2025-11-27 16:32:12] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:32:57] AuthMiddleware: Handling request to /game/submap/load
+[2025-11-27 16:32:57] AuthMiddleware: Access token found
+[2025-11-27 16:32:57] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:32:59] AuthMiddleware: Handling request to /game/npc/2
+[2025-11-27 16:32:59] AuthMiddleware: Access token found
+[2025-11-27 16:32:59] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:33:01] AuthMiddleware: Handling request to /game/shop/2
+[2025-11-27 16:33:01] AuthMiddleware: Access token found
+[2025-11-27 16:33:01] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:34:38] AuthMiddleware: Handling request to /game
+[2025-11-27 16:34:38] AuthMiddleware: Access token found
+[2025-11-27 16:34:38] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:34:41] AuthMiddleware: Handling request to /game/submap/load
+[2025-11-27 16:34:41] AuthMiddleware: Access token found
+[2025-11-27 16:34:41] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:34:44] AuthMiddleware: Handling request to /game/npc/2
+[2025-11-27 16:34:44] AuthMiddleware: Access token found
+[2025-11-27 16:34:44] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:34:45] AuthMiddleware: Handling request to /game/shop/2
+[2025-11-27 16:34:45] AuthMiddleware: Access token found
+[2025-11-27 16:34:45] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:35:49] AuthMiddleware: Handling request to /game/npc/2
+[2025-11-27 16:35:49] AuthMiddleware: Access token found
+[2025-11-27 16:35:49] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:35:51] AuthMiddleware: Handling request to /game/shop/2
+[2025-11-27 16:35:51] AuthMiddleware: Access token found
+[2025-11-27 16:35:51] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:36:23] AuthMiddleware: Handling request to /game
+[2025-11-27 16:36:23] AuthMiddleware: Access token found
+[2025-11-27 16:36:23] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:36:25] AuthMiddleware: Handling request to /game/submap/load
+[2025-11-27 16:36:25] AuthMiddleware: Access token found
+[2025-11-27 16:36:25] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:36:28] AuthMiddleware: Handling request to /game/npc/2
+[2025-11-27 16:36:28] AuthMiddleware: Access token found
+[2025-11-27 16:36:28] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:36:29] AuthMiddleware: Handling request to /game/shop/2
+[2025-11-27 16:36:29] AuthMiddleware: Access token found
+[2025-11-27 16:36:29] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:36:32] AuthMiddleware: Handling request to /game/shop/buy
+[2025-11-27 16:36:32] AuthMiddleware: Access token found
+[2025-11-27 16:36:32] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:36:32] AuthMiddleware: Handling request to /game/shop/2
+[2025-11-27 16:36:32] AuthMiddleware: Access token found
+[2025-11-27 16:36:32] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:36:34] AuthMiddleware: Handling request to /game/shop/buy
+[2025-11-27 16:36:34] AuthMiddleware: Access token found
+[2025-11-27 16:36:34] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:36:34] AuthMiddleware: Handling request to /game/shop/2
+[2025-11-27 16:36:34] AuthMiddleware: Access token found
+[2025-11-27 16:36:34] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:36:35] AuthMiddleware: Handling request to /game/shop/buy
+[2025-11-27 16:36:35] AuthMiddleware: Access token found
+[2025-11-27 16:36:35] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:36:36] AuthMiddleware: Handling request to /game/shop/2
+[2025-11-27 16:36:36] AuthMiddleware: Access token found
+[2025-11-27 16:36:36] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:36:37] AuthMiddleware: Handling request to /game/shop/buy
+[2025-11-27 16:36:37] AuthMiddleware: Access token found
+[2025-11-27 16:36:37] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:36:37] AuthMiddleware: Handling request to /game/shop/2
+[2025-11-27 16:36:37] AuthMiddleware: Access token found
+[2025-11-27 16:36:37] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:36:38] AuthMiddleware: Handling request to /game/shop/buy
+[2025-11-27 16:36:38] AuthMiddleware: Access token found
+[2025-11-27 16:36:38] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:36:38] AuthMiddleware: Handling request to /game/shop/2
+[2025-11-27 16:36:38] AuthMiddleware: Access token found
+[2025-11-27 16:36:38] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:36:39] AuthMiddleware: Handling request to /game/shop/buy
+[2025-11-27 16:36:39] AuthMiddleware: Access token found
+[2025-11-27 16:36:39] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:36:39] AuthMiddleware: Handling request to /game/shop/2
+[2025-11-27 16:36:39] AuthMiddleware: Access token found
+[2025-11-27 16:36:39] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:36:51] AuthMiddleware: Handling request to /game/submap/load
+[2025-11-27 16:36:51] AuthMiddleware: Access token found
+[2025-11-27 16:36:51] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:36:53] AuthMiddleware: Handling request to /game/npc/2
+[2025-11-27 16:36:53] AuthMiddleware: Access token found
+[2025-11-27 16:36:53] AuthMiddleware: Access token valid for user 1
+[2025-11-27 16:36:54] AuthMiddleware: Handling request to /game/shop/2
+[2025-11-27 16:36:54] AuthMiddleware: Access token found
+[2025-11-27 16:36:54] AuthMiddleware: Access token valid for user 1
+[2025-11-27 17:10:42] AuthMiddleware: Handling request to /game
+[2025-11-27 17:10:42] AuthMiddleware: No access token
+[2025-11-27 17:10:42] AuthMiddleware: Refresh token found
+[2025-11-27 17:10:42] AuthMiddleware: Refresh token valid for user 1
+[2025-11-27 17:10:53] AuthMiddleware: Handling request to /game
+[2025-11-27 17:10:53] AuthMiddleware: Access token found
+[2025-11-27 17:10:53] AuthMiddleware: Access token valid for user 1
+[2025-11-27 17:11:53] AuthMiddleware: Handling request to /game
+[2025-11-27 17:11:53] AuthMiddleware: Access token found
+[2025-11-27 17:11:53] AuthMiddleware: Access token valid for user 1
+[2025-11-27 17:13:18] AuthMiddleware: Handling request to /game
+[2025-11-27 17:13:18] AuthMiddleware: Access token found
+[2025-11-27 17:13:18] AuthMiddleware: Access token valid for user 1
+[2025-11-27 17:13:32] AuthMiddleware: Handling request to /game
+[2025-11-27 17:13:32] AuthMiddleware: Access token found
+[2025-11-27 17:13:32] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:28:34] AuthMiddleware: Handling request to /game
+[2025-11-27 19:28:34] AuthMiddleware: No access token
+[2025-11-27 19:28:34] AuthMiddleware: Refresh token found
+[2025-11-27 19:28:34] AuthMiddleware: Refresh token valid for user 1
+[2025-11-27 19:28:43] AuthMiddleware: Handling request to /game
+[2025-11-27 19:28:43] AuthMiddleware: Access token found
+[2025-11-27 19:28:43] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:31:42] AuthMiddleware: Handling request to /game
+[2025-11-27 19:31:42] AuthMiddleware: Access token found
+[2025-11-27 19:31:42] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:31:43] AuthMiddleware: Handling request to /game/inventory
+[2025-11-27 19:31:43] AuthMiddleware: Access token found
+[2025-11-27 19:31:43] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:31:44] AuthMiddleware: Handling request to /game/inventory
+[2025-11-27 19:31:44] AuthMiddleware: Access token found
+[2025-11-27 19:31:44] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:32:58] AuthMiddleware: Handling request to /game
+[2025-11-27 19:32:58] AuthMiddleware: Access token found
+[2025-11-27 19:32:58] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:32:58] AuthMiddleware: Handling request to /game/inventory
+[2025-11-27 19:32:58] AuthMiddleware: Access token found
+[2025-11-27 19:32:58] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:32:59] AuthMiddleware: Handling request to /game/inventory
+[2025-11-27 19:32:59] AuthMiddleware: Access token found
+[2025-11-27 19:32:59] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:33:01] AuthMiddleware: Handling request to /game/inventory
+[2025-11-27 19:33:01] AuthMiddleware: Access token found
+[2025-11-27 19:33:01] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:33:02] AuthMiddleware: Handling request to /game/quest/log
+[2025-11-27 19:33:02] AuthMiddleware: Access token found
+[2025-11-27 19:33:02] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:33:36] AuthMiddleware: Handling request to /game/quest/log
+[2025-11-27 19:33:36] AuthMiddleware: Access token found
+[2025-11-27 19:33:36] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:33:39] AuthMiddleware: Handling request to /game/inventory
+[2025-11-27 19:33:39] AuthMiddleware: Access token found
+[2025-11-27 19:33:39] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:33:41] AuthMiddleware: Handling request to /game/inventory
+[2025-11-27 19:33:41] AuthMiddleware: Access token found
+[2025-11-27 19:33:41] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:37:25] AuthMiddleware: Handling request to /game
+[2025-11-27 19:37:25] AuthMiddleware: Access token found
+[2025-11-27 19:37:25] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:37:26] AuthMiddleware: Handling request to /game/inventory
+[2025-11-27 19:37:26] AuthMiddleware: Access token found
+[2025-11-27 19:37:26] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:37:27] AuthMiddleware: Handling request to /game/inventory
+[2025-11-27 19:37:27] AuthMiddleware: Access token found
+[2025-11-27 19:37:27] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:37:41] AuthMiddleware: Handling request to /game
+[2025-11-27 19:37:41] AuthMiddleware: Access token found
+[2025-11-27 19:37:41] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:37:43] AuthMiddleware: Handling request to /game/inventory
+[2025-11-27 19:37:43] AuthMiddleware: Access token found
+[2025-11-27 19:37:43] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:37:46] AuthMiddleware: Handling request to /game/inventory
+[2025-11-27 19:37:46] AuthMiddleware: Access token found
+[2025-11-27 19:37:46] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:38:34] AuthMiddleware: Handling request to /game
+[2025-11-27 19:38:34] AuthMiddleware: Access token found
+[2025-11-27 19:38:34] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:38:35] AuthMiddleware: Handling request to /game/inventory
+[2025-11-27 19:38:35] AuthMiddleware: Access token found
+[2025-11-27 19:38:35] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:38:36] AuthMiddleware: Handling request to /game/inventory
+[2025-11-27 19:38:36] AuthMiddleware: Access token found
+[2025-11-27 19:38:36] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:39:48] AuthMiddleware: Handling request to /game
+[2025-11-27 19:39:48] AuthMiddleware: Access token found
+[2025-11-27 19:39:48] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:39:49] AuthMiddleware: Handling request to /game/inventory
+[2025-11-27 19:39:49] AuthMiddleware: Access token found
+[2025-11-27 19:39:49] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:39:51] AuthMiddleware: Handling request to /game/inventory
+[2025-11-27 19:39:51] AuthMiddleware: Access token found
+[2025-11-27 19:39:51] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:40:47] AuthMiddleware: Handling request to /game
+[2025-11-27 19:40:47] AuthMiddleware: Access token found
+[2025-11-27 19:40:47] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:40:47] AuthMiddleware: Handling request to /game/inventory
+[2025-11-27 19:40:47] AuthMiddleware: Access token found
+[2025-11-27 19:40:47] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:40:50] AuthMiddleware: Handling request to /game/quest/log
+[2025-11-27 19:40:50] AuthMiddleware: Access token found
+[2025-11-27 19:40:50] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:40:53] AuthMiddleware: Handling request to /game/inventory
+[2025-11-27 19:40:53] AuthMiddleware: Access token found
+[2025-11-27 19:40:53] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:41:06] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-27 19:41:06] AuthMiddleware: Access token found
+[2025-11-27 19:41:06] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:41:07] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-27 19:41:07] AuthMiddleware: Access token found
+[2025-11-27 19:41:07] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:41:07] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-27 19:41:07] AuthMiddleware: Access token found
+[2025-11-27 19:41:07] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:41:09] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-27 19:41:09] AuthMiddleware: Access token found
+[2025-11-27 19:41:09] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:41:11] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-27 19:41:11] AuthMiddleware: Access token found
+[2025-11-27 19:41:11] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:41:16] AuthMiddleware: Handling request to /game
+[2025-11-27 19:41:16] AuthMiddleware: Access token found
+[2025-11-27 19:41:16] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:41:17] AuthMiddleware: Handling request to /game/inventory
+[2025-11-27 19:41:17] AuthMiddleware: Access token found
+[2025-11-27 19:41:17] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:41:19] AuthMiddleware: Handling request to /game/inventory
+[2025-11-27 19:41:19] AuthMiddleware: Access token found
+[2025-11-27 19:41:19] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:42:33] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-27 19:42:33] AuthMiddleware: Access token found
+[2025-11-27 19:42:33] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:42:33] AuthMiddleware: Handling request to /game/inventory
+[2025-11-27 19:42:33] AuthMiddleware: Access token found
+[2025-11-27 19:42:33] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:42:42] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-27 19:42:42] AuthMiddleware: Access token found
+[2025-11-27 19:42:42] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:42:45] AuthMiddleware: Handling request to /game
+[2025-11-27 19:42:45] AuthMiddleware: Access token found
+[2025-11-27 19:42:45] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:42:45] AuthMiddleware: Handling request to /game/inventory
+[2025-11-27 19:42:45] AuthMiddleware: Access token found
+[2025-11-27 19:42:45] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:42:46] AuthMiddleware: Handling request to /game/inventory
+[2025-11-27 19:42:46] AuthMiddleware: Access token found
+[2025-11-27 19:42:46] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:42:49] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-27 19:42:49] AuthMiddleware: Access token found
+[2025-11-27 19:42:49] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:42:52] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-27 19:42:52] AuthMiddleware: Access token found
+[2025-11-27 19:42:52] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:42:52] AuthMiddleware: Handling request to /game/inventory
+[2025-11-27 19:42:52] AuthMiddleware: Access token found
+[2025-11-27 19:42:52] AuthMiddleware: Access token valid for user 1
+[2025-11-27 19:42:55] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-27 19:42:55] AuthMiddleware: Access token found
+[2025-11-27 19:42:55] AuthMiddleware: Access token valid for user 1
+[2025-11-28 08:38:48] AuthMiddleware: Handling request to /game
+[2025-11-28 08:38:48] AuthMiddleware: No access token
+[2025-11-28 08:38:48] AuthMiddleware: Refresh token found
+[2025-11-28 08:38:48] AuthMiddleware: Refresh token valid for user 1
+[2025-11-28 08:38:54] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 08:38:54] AuthMiddleware: Access token found
+[2025-11-28 08:38:54] AuthMiddleware: Access token valid for user 1
+[2025-11-28 08:39:06] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 08:39:06] AuthMiddleware: Access token found
+[2025-11-28 08:39:06] AuthMiddleware: Access token valid for user 1
+[2025-11-28 08:39:08] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 08:39:08] AuthMiddleware: Access token found
+[2025-11-28 08:39:08] AuthMiddleware: Access token valid for user 1
+[2025-11-28 11:55:53] AuthMiddleware: Handling request to /game
+[2025-11-28 11:55:53] AuthMiddleware: No access token
+[2025-11-28 11:55:53] AuthMiddleware: Refresh token found
+[2025-11-28 11:55:53] AuthMiddleware: Refresh token valid for user 1
+[2025-11-28 11:59:55] AuthMiddleware: Handling request to /game
+[2025-11-28 11:59:55] AuthMiddleware: Access token found
+[2025-11-28 11:59:55] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:03:13] AuthMiddleware: Handling request to /game
+[2025-11-28 12:03:13] AuthMiddleware: Access token found
+[2025-11-28 12:03:13] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:03:17] AuthMiddleware: Handling request to /game/quest/log
+[2025-11-28 12:03:17] AuthMiddleware: Access token found
+[2025-11-28 12:03:17] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:03:23] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 12:03:23] AuthMiddleware: Access token found
+[2025-11-28 12:03:23] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:03:27] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 12:03:27] AuthMiddleware: Access token found
+[2025-11-28 12:03:27] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:03:29] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 12:03:29] AuthMiddleware: Access token found
+[2025-11-28 12:03:29] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:03:32] AuthMiddleware: Handling request to /game
+[2025-11-28 12:03:32] AuthMiddleware: Access token found
+[2025-11-28 12:03:32] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:03:37] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 12:03:37] AuthMiddleware: Access token found
+[2025-11-28 12:03:37] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:15:21] AuthMiddleware: Handling request to /game
+[2025-11-28 12:15:21] AuthMiddleware: No access token
+[2025-11-28 12:15:21] AuthMiddleware: Refresh token found
+[2025-11-28 12:15:21] AuthMiddleware: Refresh token valid for user 1
+[2025-11-28 12:15:29] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 12:15:29] AuthMiddleware: Access token found
+[2025-11-28 12:15:29] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:15:33] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 12:15:33] AuthMiddleware: Access token found
+[2025-11-28 12:15:33] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:15:39] AuthMiddleware: Handling request to /game
+[2025-11-28 12:15:39] AuthMiddleware: Access token found
+[2025-11-28 12:15:39] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:18:27] AuthMiddleware: Handling request to /game
+[2025-11-28 12:18:27] AuthMiddleware: Access token found
+[2025-11-28 12:18:27] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:18:30] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 12:18:30] AuthMiddleware: Access token found
+[2025-11-28 12:18:30] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:18:32] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 12:18:32] AuthMiddleware: Access token found
+[2025-11-28 12:18:32] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:18:33] AuthMiddleware: Handling request to /game
+[2025-11-28 12:18:33] AuthMiddleware: Access token found
+[2025-11-28 12:18:33] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:18:37] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 12:18:37] AuthMiddleware: Access token found
+[2025-11-28 12:18:37] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:21:25] AuthMiddleware: Handling request to /game
+[2025-11-28 12:21:25] AuthMiddleware: Access token found
+[2025-11-28 12:21:25] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:21:26] AuthMiddleware: Handling request to /game
+[2025-11-28 12:21:26] AuthMiddleware: Access token found
+[2025-11-28 12:21:26] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:21:27] AuthMiddleware: Handling request to /game
+[2025-11-28 12:21:27] AuthMiddleware: Access token found
+[2025-11-28 12:21:27] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:21:28] AuthMiddleware: Handling request to /game
+[2025-11-28 12:21:28] AuthMiddleware: Access token found
+[2025-11-28 12:21:28] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:25:16] AuthMiddleware: Handling request to /game
+[2025-11-28 12:25:16] AuthMiddleware: Access token found
+[2025-11-28 12:25:16] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:25:38] AuthMiddleware: Handling request to /game
+[2025-11-28 12:25:38] AuthMiddleware: Access token found
+[2025-11-28 12:25:38] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:25:43] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 12:25:43] AuthMiddleware: Access token found
+[2025-11-28 12:25:43] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:25:47] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 12:25:47] AuthMiddleware: Access token found
+[2025-11-28 12:25:47] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:25:48] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 12:25:48] AuthMiddleware: Access token found
+[2025-11-28 12:25:48] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:25:49] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 12:25:49] AuthMiddleware: Access token found
+[2025-11-28 12:25:49] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:25:55] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 12:25:55] AuthMiddleware: Access token found
+[2025-11-28 12:25:55] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:25:55] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 12:25:55] AuthMiddleware: Access token found
+[2025-11-28 12:25:55] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:25:57] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 12:25:57] AuthMiddleware: Access token found
+[2025-11-28 12:25:57] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:26:01] AuthMiddleware: Handling request to /game
+[2025-11-28 12:26:01] AuthMiddleware: Access token found
+[2025-11-28 12:26:01] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:26:04] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 12:26:04] AuthMiddleware: Access token found
+[2025-11-28 12:26:04] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:26:05] AuthMiddleware: Handling request to /game
+[2025-11-28 12:26:05] AuthMiddleware: Access token found
+[2025-11-28 12:26:05] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:26:08] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 12:26:08] AuthMiddleware: Access token found
+[2025-11-28 12:26:08] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:26:11] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 12:26:11] AuthMiddleware: Access token found
+[2025-11-28 12:26:11] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:26:13] AuthMiddleware: Handling request to /game
+[2025-11-28 12:26:13] AuthMiddleware: Access token found
+[2025-11-28 12:26:13] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:26:17] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 12:26:17] AuthMiddleware: Access token found
+[2025-11-28 12:26:17] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:26:18] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 12:26:18] AuthMiddleware: Access token found
+[2025-11-28 12:26:18] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:26:26] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 12:26:26] AuthMiddleware: Access token found
+[2025-11-28 12:26:26] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:26:32] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 12:26:32] AuthMiddleware: Access token found
+[2025-11-28 12:26:32] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:26:32] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 12:26:32] AuthMiddleware: Access token found
+[2025-11-28 12:26:32] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:30:09] AuthMiddleware: Handling request to /game
+[2025-11-28 12:30:09] AuthMiddleware: Access token found
+[2025-11-28 12:30:09] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:30:16] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 12:30:16] AuthMiddleware: Access token found
+[2025-11-28 12:30:16] AuthMiddleware: Access token valid for user 1
+[2025-11-28 12:30:20] AuthMiddleware: Handling request to /game/inventory/move
+[2025-11-28 12:30:20] AuthMiddleware: Access token found
+[2025-11-28 12:30:20] AuthMiddleware: Access token valid for user 1

@@ -62,6 +62,11 @@ $router->mount('/game', function() use ($router) {
     $router->post('/inventory/move', 'App\Controllers\InventoryController@move');
     $router->post('/inventory/equip', 'App\Controllers\InventoryController@equip');
     $router->post('/inventory/unequip', 'App\Controllers\InventoryController@unequip');
+
+    // Shop API
+    $router->get('/shop/(\d+)', 'App\Controllers\ShopController@getShop');
+    $router->post('/shop/buy', 'App\Controllers\ShopController@buy');
+    $router->post('/shop/sell', 'App\Controllers\ShopController@sell');
 });
 
 // Admin Routes (Protected)

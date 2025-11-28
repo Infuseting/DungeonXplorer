@@ -29,6 +29,47 @@ ob_start();
     <!-- Quest Journal Modal -->
     <?php require __DIR__ . '/components/quest-journal-modal.php'; ?>
 
+    <!-- Shop Modal -->
+    <div id="shop-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80">
+        <div class="bg-gray-900 border-2 border-yellow-600 rounded-lg p-4 w-full max-w-6xl h-5/6 flex flex-col relative shadow-2xl">
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+                <h2 class="text-2xl font-bold text-yellow-500">💰 Boutique</h2>
+                <div class="flex items-center gap-4">
+                    <div class="text-xl font-bold text-yellow-400" id="shop-player-gold">0 🪙</div>
+                    <button id="shop-close-btn" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+                </div>
+            </div>
+
+            <!-- Content (3 Columns) -->
+            <div class="flex-1 flex gap-4 overflow-hidden">
+                <!-- Left: Merchant Inventory -->
+                <div class="flex-1 bg-gray-800 rounded p-2 flex flex-col border border-gray-700">
+                    <h3 class="text-lg font-bold text-gray-300 mb-2 text-center border-b border-gray-700 pb-1">Marchand</h3>
+                    <div id="shop-merchant-list" class="flex-1 overflow-y-auto pr-1">
+                        <!-- Items populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Middle: Player Equipment -->
+                <div class="w-1/4 bg-gray-800 rounded p-2 flex flex-col border border-gray-700">
+                    <h3 class="text-lg font-bold text-gray-300 mb-2 text-center border-b border-gray-700 pb-1">Équipement</h3>
+                    <div id="shop-equipment-list" class="flex-1 overflow-y-auto pr-1">
+                        <!-- Items populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Right: Player Inventory -->
+                <div class="flex-1 bg-gray-800 rounded p-2 flex flex-col border border-gray-700">
+                    <h3 class="text-lg font-bold text-gray-300 mb-2 text-center border-b border-gray-700 pb-1">Inventaire</h3>
+                    <div id="shop-inventory-list" class="flex-1 overflow-y-auto pr-1">
+                        <!-- Items populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Quest Journal Button -->
     <button id="quest-journal-toggle" class="absolute top-4 right-4 z-40 w-12 h-12 bg-amber-600 hover:bg-amber-700 text-white rounded-full shadow-lg border-2 border-amber-400 flex items-center justify-center transition-transform hover:scale-110 active:scale-95" title="Journal de Quêtes">
         <span class="text-2xl">📜</span>
@@ -50,6 +91,7 @@ ob_start();
     import { initSubMapControls } from '/js/modules/subMap.js';
     import { initNPCModal } from '/js/modules/npcModal.js';
     import { openQuestJournal } from '/js/modules/questJournal.js';
+    import { initShop } from '/js/modules/shop.js';
 
     // Map points data from PHP
     const mapPoints = <?= json_encode($mapPoints ?? []) ?>;
@@ -80,6 +122,10 @@ ob_start();
             questJournalBtn.addEventListener('click', openQuestJournal);
         }
         console.log('Quest Journal initialized');
+        
+        // Initialize Shop
+        initShop();
+        console.log('Shop initialized');
         
         // Initialize map
         try {

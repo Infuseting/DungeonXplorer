@@ -113,6 +113,13 @@ ob_start();
                     💰 Prix de vente/achat (laisser vide si l'item n'est pas vendable)
                 </small>
             </div>
+
+            <div class="form-group">
+                <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem; height: 100%; padding-top: 1.5rem;">
+                    <input type="checkbox" name="is_purchasable" value="1">
+                    Achetable auprès des PNJs
+                </label>
+            </div>
             
             <div class="form-group" id="two-handed-group" style="display: none;">
                 <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem;">

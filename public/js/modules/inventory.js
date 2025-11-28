@@ -23,8 +23,7 @@ export function initInventory() {
 
     // Setup drop zones
     setupEquipmentSlots();
-    setupPocketSlots();
-    setupBackpackGrid();
+    setupInventoryGrid();
 
     // Setup modal controls
     setupModalControls();
@@ -262,7 +261,7 @@ function handleTwoHandedWeapon(equippedSlot, iconPath) {
 
         // Add grayed-out image
         const grayedImg = document.createElement('img');
-        grayedImg.src = '/'+ iconPath;
+        grayedImg.src = '/' + iconPath;
         grayedImg.className = 'w-full h-full object-contain p-1 opacity-30 pointer-events-none';
         grayedImg.style.filter = 'grayscale(100%)';
 
@@ -324,70 +323,40 @@ function setupEquipmentSlots() {
 }
 
 /**
- * Setup pocket slot drop zones
+ * Setup inventory grid drop zone
  */
-function setupPocketSlots() {
-    document.querySelectorAll('.slot[data-location="pockets"]').forEach(slot => {
-        slot.addEventListener('dragover', e => {
-            e.preventDefault();
-            slot.classList.add('drag-over');
-        });
+function setupInventoryGrid() {
+    const container = document.getElementById('inventory-grid'); // User requested drop zone on the wrapper
+    if (!container) return;
 
-        slot.addEventListener('dragleave', e => {
-            slot.classList.remove('drag-over');
-        });
-
-        slot.addEventListener('drop', e => {
-            e.preventDefault();
-            slot.classList.remove('drag-over');
-            if (!draggedItemData) return;
-
-            moveItem(draggedItemData.id, 'pockets', null, null, null, slot.dataset.index);
-        });
-    });
-}
-
-/**
- * Setup backpack grid drop zone
- */
-function setupBackpackGrid() {
-    const grid = document.getElementById('backpack-grid');
-
-    grid.addEventListener('dragover', e => {
+    container.addEventListener('dragover', e => {
         e.preventDefault();
         if (!draggedItemData) return;
-
-        const rect = grid.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+        container.classList.add('border-violet-500', 'bg-gray-800'); // Visual feedback
     });
 
-    grid.addEventListener('drop', e => {
+    container.addEventListener('dragleave', e => {
+        container.classList.remove('border-violet-500', 'bg-gray-800');
+    });
+
+    container.addEventListener('drop', e => {
         e.preventDefault();
+        container.classList.remove('border-violet-500', 'bg-gray-800');
         if (!draggedItemData) return;
 
-        const rect = grid.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        const gridX = Math.floor(x / CELL_SIZE);
-        const gridY = Math.floor(y / CELL_SIZE);
-
-        moveItem(draggedItemData.id, 'backpack', null, gridX, gridY);
+        // Move item to inventory
+        moveItem(draggedItemData.id, 'inventory');
     });
 }
 
 /**
  * Move an item to a new location
  * @param {string} itemId - Item ID
- * @param {string} location - Target location ('equipped', 'pockets', 'backpack')
- * @param {string|null} slot - Target slot name
- * @param {number|null} x - Grid X position
- * @param {number|null} y - Grid Y position
- * @param {number|null} pocketIndex - Pocket index
+ * @param {string} location - Target location ('equipped', 'inventory')
+ * @param {string|null} slot - Target slot name (for equipped items)
  */
-function moveItem(itemId, location, slot = null, x = null, y = null, pocketIndex = null) {
-    const targetContainer = getTargetContainer(location, slot, pocketIndex);
+function moveItem(itemId, location, slot = null) {
+    const targetContainer = getTargetContainer(location, slot);
     const itemElement = draggedItem; // Capture reference immediately
 
     fetch('/game/inventory/move', {
@@ -398,28 +367,117 @@ function moveItem(itemId, location, slot = null, x = null, y = null, pocketIndex
         body: JSON.stringify({
             itemId: itemId,
             location: location,
-            slot: slot || pocketIndex,
-            x: x,
-            y: y
+            slot: slot
         })
     })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Success: Update DOM
-                if (itemElement) {
-                    // Check if we're unequipping a two-handed weapon
-                    const wasTwoHanded = itemElement.dataset.twoHanded === '1';
-                    const fromSlot = itemElement.closest('.slot[data-slot]')?.dataset.slot;
-                    const toSlot = location === 'equipped' ? slot : null;
-                    updateItemPosition(itemElement, location, slot, x, y, pocketIndex);
+                // Success: Update DOM dynamically
+                if (itemElement && targetContainer) {
+                    const fromContainer = itemElement.closest('.slot[data-slot], #inventory-container');
 
-                    // Clean up two-handed weapon visual if unequipping
-                    if (wasTwoHanded && fromSlot && (fromSlot === 'main_hand' || fromSlot === 'off_hand')) {
-                        clearTwoHandedWeaponVisual(fromSlot);
-                    }
-                    if (data.two_handed && toSlot && (toSlot === 'main_hand' || toSlot === 'off_hand')) {
-                        handleTwoHandedWeapon(toSlot, data.icon);
+                    if (location === 'equipped') {
+                        // Moving to equipment slot
+                        // Remove from inventory
+                        const parentDiv = itemElement.closest('.slot[data-location="inventory"]');
+                        if (parentDiv) {
+                            parentDiv.remove();
+                        }
+
+                        // Add to equipment slot
+                        targetContainer.innerHTML = '';
+                        const img = document.createElement('img');
+                        img.src = itemElement.src;
+                        img.className = 'w-full h-full object-contain item-icon p-1';
+                        img.draggable = true;
+                        img.dataset.id = itemElement.dataset.id;
+                        img.dataset.slotType = itemElement.dataset.slotType;
+                        img.dataset.name = itemElement.dataset.name;
+                        img.dataset.type = itemElement.dataset.type;
+                        img.dataset.description = itemElement.dataset.description;
+                        img.dataset.stats = itemElement.dataset.stats;
+                        img.dataset.weight = itemElement.dataset.weight;
+
+                        targetContainer.appendChild(img);
+                        setupDraggable(img);
+                        setupTooltip(img);
+
+                        // Handle Two-Handed Weapons Visuals
+                        const isTwoHanded = itemElement.dataset.twoHanded === '1';
+                        if (isTwoHanded) {
+                            let otherSlotName = null;
+                            if (slot === 'main_hand') otherSlotName = 'off_hand';
+                            else if (slot === 'off_hand') otherSlotName = 'main_hand';
+
+                            if (otherSlotName) {
+                                const otherSlot = document.querySelector(`.slot[data-slot="${otherSlotName}"]`);
+                                if (otherSlot) {
+                                    // Clear other slot
+                                    otherSlot.innerHTML = '<span class="slot-label">' + otherSlot.querySelector('.slot-label')?.textContent + '</span>';
+
+                                    // Add ghost image
+                                    const ghostImg = img.cloneNode(true);
+                                    ghostImg.classList.add('opacity-30', 'pointer-events-none');
+                                    ghostImg.style.filter = 'grayscale(100%)';
+                                    ghostImg.removeAttribute('draggable');
+
+                                    const borderDiv = document.createElement('div');
+                                    borderDiv.className = 'absolute inset-0 border-2 border-red-500 rounded-lg pointer-events-none';
+
+                                    otherSlot.appendChild(ghostImg);
+                                    otherSlot.appendChild(borderDiv);
+                                }
+                            }
+                        }
+                    } else if (location === 'inventory') {
+                        // Moving to inventory
+                        // Remove from equipment slot
+                        if (fromContainer && fromContainer.classList.contains('slot')) {
+                            fromContainer.innerHTML = '<span class="slot-label">' + fromContainer.querySelector('.slot-label')?.textContent + '</span>';
+
+                            // Check if it was a two-handed weapon and clear the other slot
+                            const isTwoHanded = itemElement.dataset.twoHanded === '1';
+                            if (isTwoHanded) {
+                                const slotName = fromContainer.dataset.slot;
+                                let otherSlotName = null;
+                                if (slotName === 'main_hand') otherSlotName = 'off_hand';
+                                else if (slotName === 'off_hand') otherSlotName = 'main_hand';
+
+                                if (otherSlotName) {
+                                    const otherSlot = document.querySelector(`.slot[data-slot="${otherSlotName}"]`);
+                                    if (otherSlot) {
+                                        otherSlot.innerHTML = '<span class="slot-label">' + otherSlot.querySelector('.slot-label')?.textContent + '</span>';
+                                    }
+                                }
+                            }
+                        }
+
+                        // Add to inventory grid
+                        const inventoryContainer = document.getElementById('inventory-container');
+                        const newSlot = document.createElement('div');
+                        newSlot.className = 'w-16 h-16 slot rounded-lg flex items-center justify-center relative bg-gray-800 hover:bg-gray-700 transition-colors';
+                        newSlot.dataset.location = 'inventory';
+                        newSlot.dataset.inventoryId = itemId;
+
+                        const img = document.createElement('img');
+                        img.src = itemElement.src;
+                        img.className = 'w-12 h-12 object-contain item-icon';
+                        img.draggable = true;
+                        img.dataset.id = itemElement.dataset.id;
+                        img.dataset.slotType = itemElement.dataset.slotType;
+                        img.dataset.twoHanded = itemElement.dataset.twoHanded; // Preserve two-handed data
+                        img.dataset.name = itemElement.dataset.name;
+                        img.dataset.type = itemElement.dataset.type;
+                        img.dataset.description = itemElement.dataset.description;
+                        img.dataset.stats = itemElement.dataset.stats;
+                        img.dataset.weight = itemElement.dataset.weight;
+
+                        newSlot.appendChild(img);
+                        inventoryContainer.appendChild(newSlot);
+
+                        setupDraggable(img);
+                        setupTooltip(img);
                     }
                 }
                 showToast('Objet déplacé avec succès', 'success');
@@ -437,64 +495,18 @@ function moveItem(itemId, location, slot = null, x = null, y = null, pocketIndex
  * Get target container element
  * @param {string} location - Location type
  * @param {string|null} slot - Slot name
- * @param {number|null} pocketIndex - Pocket index
  * @returns {HTMLElement|null} Container element
  */
-function getTargetContainer(location, slot, pocketIndex) {
+function getTargetContainer(location, slot) {
     if (location === 'equipped') {
         return document.querySelector(`.slot[data-slot="${slot}"]`);
-    } else if (location === 'pockets') {
-        return document.querySelector(`.slot[data-location="pockets"][data-index="${pocketIndex}"]`);
-    } else if (location === 'backpack') {
-        return document.getElementById('backpack-grid');
+    } else if (location === 'inventory') {
+        return document.getElementById('inventory-container');
     }
     return null;
 }
 
-/**
- * Update item position in DOM
- * @param {HTMLElement} itemElement - Item element
- * @param {string} location - Location type
- * @param {string|null} slot - Slot name
- * @param {number|null} x - Grid X position
- * @param {number|null} y - Grid Y position
- * @param {number|null} pocketIndex - Pocket index
- */
-function updateItemPosition(itemElement, location, slot, x, y, pocketIndex) {
-    const targetContainer = getTargetContainer(location, slot, pocketIndex);
-    if (!targetContainer) return;
 
-    // Remove from old parent
-    if (itemElement.parentElement) {
-        itemElement.parentElement.removeChild(itemElement);
-    }
-
-    targetContainer.appendChild(itemElement);
-
-    // Reset styles
-    itemElement.style.position = '';
-    itemElement.style.left = '';
-    itemElement.style.top = '';
-    itemElement.style.width = '';
-    itemElement.style.height = '';
-
-    // Apply specific styles for Backpack Grid
-    if (location === 'backpack') {
-        itemElement.style.position = 'absolute';
-        itemElement.style.left = (x * 40) + 'px';
-        itemElement.style.top = (y * 40) + 'px';
-        itemElement.style.width = (draggedItemData.width * 40) + 'px';
-        itemElement.style.height = (draggedItemData.height * 40) + 'px';
-    }
-    // Apply styles for Pockets
-    else if (location === 'pockets') {
-        itemElement.className = 'w-12 h-12 object-contain item-icon';
-    }
-    // Apply styles for Equipped slots - fill the entire slot
-    else if (location === 'equipped') {
-        itemElement.className = 'w-full h-full object-contain item-icon p-1';
-    }
-}
 
 /**
  * Setup inventory modal controls

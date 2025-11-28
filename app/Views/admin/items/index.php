@@ -35,6 +35,8 @@ ob_start();
     .item-icon {
         width: 48px;
         height: 48px;
+        min-height: 48px;
+        min-width: 48px;    
         background: var(--bg-dark);
         border: 2px solid var(--border);
         border-radius: 0.5rem;
@@ -47,6 +49,9 @@ ob_start();
     .item-name {
         font-size: 1.125rem;
         font-weight: 600;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
         color: var(--text-light);
         margin-bottom: 0.25rem;
     }
@@ -144,7 +149,7 @@ ob_start();
                 ?>
                 <div class="item-card">
                     <div class="item-header">
-                        <div style="flex: 1;">
+                        <div style="flex: 1; min-width: 0;">
                             <div class="item-name"><?= htmlspecialchars($item['name']) ?></div>
                             <span class="item-type-badge type-<?= $item['type'] ?>">
                                 <?= $item['type'] ?>
@@ -157,7 +162,7 @@ ob_start();
                         </div>
                         <div class="item-icon">
                             <?php if (!empty($item['icon'])): ?>
-                                <img src="/<?= htmlspecialchars($item['icon']) ?>" style="width:100%;height:100%;object-fit:cover;border-radius:4px;">
+                                <img loading="lazy" src="/<?= htmlspecialchars($item['icon']) ?>" style="width:100%;height:100%;object-fit:cover;border-radius:4px;">
                             <?php else: ?>
                                 📦
                             <?php endif; ?>

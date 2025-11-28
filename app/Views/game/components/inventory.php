@@ -260,70 +260,66 @@
 
             <!-- Right Column: Inventory -->
             <div class="w-1/2 flex flex-col">
-                <h2 class="text-2xl font-bold text-white mb-6 border-b border-gray-600 pb-2 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                    </svg>
-                    Sac à Dos
-                </h2>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                        Inventaire
+                    </h2>
+                </div>
                 
-                <!-- Pockets -->
-                <div class="mb-6 bg-gray-900/50 p-4 rounded-xl border border-gray-700">
-                    <h3 class="text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider">Poches Rapides</h3>
-                    <div class="flex gap-4 justify-center">
-                        <?php for($i=0; $i<4; $i++): ?>
-                            <div class="w-16 h-16 slot rounded-lg flex items-center justify-center relative bg-gray-800" data-location="pockets" data-index="<?= $i ?>">
-                                <?php if(isset($inventory['pockets'][$i])): $item = $inventory['pockets'][$i]; ?>
-                                    <img src="/<?= $item['icon'] ?>" 
-                                         class="w-12 h-12 object-contain item-icon" 
-                                         draggable="true" 
-                                         data-id="<?= $item['id'] ?>"
-                                         data-slot-type="<?= htmlspecialchars($item['item_slot_type']) ?>"
-                                         data-name="<?= htmlspecialchars($item['name']) ?>"
-                                         data-type="<?= htmlspecialchars($item['type']) ?>"
-                                         data-description="<?= htmlspecialchars($item['description']) ?>"
-                                         data-stats='<?= htmlspecialchars($item['stats']) ?>'
-                                    >
-                                    <span class="absolute bottom-0 right-1 text-xs font-bold text-white drop-shadow-md"><?= $item['quantity'] > 1 ? $item['quantity'] : '' ?></span>
-                                <?php endif; ?>
-                            </div>
-                        <?php endfor; ?>
+                <!-- Weight Indicator -->
+                <div class="mb-4 bg-gray-900/50 p-3 rounded-xl border border-gray-700">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-medium text-gray-400">Poids</span>
+                        <span class="text-sm font-bold text-white">
+                            <span id="current-weight"><?= number_format($inventory['current_weight'] ?? 0, 1) ?></span> / 
+                            <span id="max-weight"><?= number_format($inventory['max_weight'] ?? 60, 1) ?></span> kg
+                        </span>
+                    </div>
+                    <div class="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+                        <?php 
+                            $currentWeight = $inventory['current_weight'] ?? 0;
+                            $maxWeight = $inventory['max_weight'] ?? 60;
+                            $percentage = $maxWeight > 0 ? min(($currentWeight / $maxWeight) * 100, 100) : 0;
+                            $barColor = $percentage > 90 ? 'bg-red-500' : ($percentage > 70 ? 'bg-yellow-500' : 'bg-green-500');
+                        ?>
+                        <div class="<?= $barColor ?> h-full transition-all duration-300" style="width: <?= $percentage ?>%"></div>
                     </div>
                 </div>
 
-                <!-- Backpack Grid -->
-                <div class="flex-1 flex flex-col bg-gray-900/50 p-4 rounded-xl border border-gray-700">
-                    <h3 class="text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider flex justify-between">
-                        <span>Contenu du Sac</span>
-                        <span class="text-xs text-gray-500">0 / 50 kg</span>
-                    </h3>
+                <!-- Inventory Grid -->
+                <div id="inventory-grid" class="flex-1 flex flex-col bg-gray-900/50 p-4 rounded-xl border border-gray-700 overflow-hidden">
+                    <h3 class="text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider">Contenu</h3>
                     
-                    <div class="flex-1 overflow-auto flex items-center justify-center bg-gray-900 rounded-lg border border-gray-700 p-4">
-                        <!-- Grid Container -->
-                        <div id="backpack-grid" class="grid gap-0 bg-gray-800 border border-gray-600 relative shadow-inner" 
-                             style="grid-template-columns: repeat(6, 40px); grid-template-rows: repeat(4, 40px); width: 242px; height: 162px;">
-                            <!-- Grid Cells generated by JS or PHP loop -->
-                            <?php for($y=0; $y<4; $y++): ?>
-                                <?php for($x=0; $x<6; $x++): ?>
-                                    <div class="grid-cell border-gray-700/50" data-x="<?= $x ?>" data-y="<?= $y ?>"></div>
-                                <?php endfor; ?>
-                            <?php endfor; ?>
-                            
-                            <!-- Items placed on grid -->
-                            <?php foreach($inventory['backpack'] as $item): ?>
-                                <div class="absolute bg-violet-600/30 border border-violet-500/50 flex items-center justify-center item-icon hover:bg-violet-600/50 transition-colors"
-                                     style="left: <?= $item['grid_x'] * 40 ?>px; top: <?= $item['grid_y'] * 40 ?>px; width: <?= $item['width'] * 40 ?>px; height: <?= $item['height'] * 40 ?>px;"
-                                     draggable="true" 
-                                     data-id="<?= $item['id'] ?>"
-                                     data-slot-type="<?= htmlspecialchars($item['item_slot_type']) ?>"
-                                     data-name="<?= htmlspecialchars($item['name']) ?>"
-                                     data-type="<?= htmlspecialchars($item['type']) ?>"
-                                     data-description="<?= htmlspecialchars($item['description']) ?>"
-                                     data-stats='<?= htmlspecialchars($item['stats']) ?>'
-                                >
-                                    <img src="/<?= $item['icon'] ?>" class="max-w-full max-h-full object-contain">
+                    <div class="flex-1 overflow-auto">
+                        <div id="inventory-container" class="grid grid-cols-6 gap-2">
+                            <?php if(isset($inventory['inventory']) && !empty($inventory['inventory'])): ?>
+                                <?php foreach($inventory['inventory'] as $item): ?>
+                                    <div class="w-16 h-16 slot rounded-lg flex items-center justify-center relative bg-gray-800 hover:bg-gray-700 transition-colors" 
+                                         data-location="inventory" 
+                                         data-inventory-id="<?= $item['id'] ?>">
+                                        <img src="/<?= $item['icon'] ?>" 
+                                             class="w-12 h-12 object-contain item-icon" 
+                                             draggable="true" 
+                                             data-id="<?= $item['id'] ?>"
+                                             data-slot-type="<?= htmlspecialchars($item['item_slot_type']) ?>"
+                                             data-name="<?= htmlspecialchars($item['name']) ?>"
+                                             data-type="<?= htmlspecialchars($item['type']) ?>"
+                                             data-description="<?= htmlspecialchars($item['description']) ?>"
+                                             data-stats='<?= htmlspecialchars($item['stats']) ?>'
+                                             data-weight="<?= $item['weight'] ?>">
+                                        <?php if(isset($item['quantity']) && $item['quantity'] > 1): ?>
+                                            <span class="absolute bottom-0 right-1 text-xs font-bold text-white drop-shadow-md"><?= $item['quantity'] ?></span>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <div class="col-span-6 text-center text-gray-500 italic py-8">
+                                    Inventaire vide
                                 </div>
-                            <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>

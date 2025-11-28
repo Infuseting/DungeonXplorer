@@ -107,8 +107,8 @@ class AdminItemController
         ];
         
         $stmt = $this->db->prepare("
-            INSERT INTO items (name, description, type, slot_type, two_handed, width, height, weight, icon, stat_ranges, max_stack, price)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO items (name, description, type, slot_type, two_handed, width, height, weight, icon, stat_ranges, max_stack, price, is_purchasable)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         
         $statRangesJson = json_encode($statRanges);
@@ -128,8 +128,9 @@ class AdminItemController
         $p_stat_ranges = $statRangesJson;
         $p_max_stack = (int)($_POST['max_stack'] ?? 1);
         $p_price = ($_POST['price'] === '' || !isset($_POST['price'])) ? null : $_POST['price'];
+        $p_is_purchasable = isset($_POST['is_purchasable']) ? 1 : 0;
 
-        $types = "ssssiiiissii"; // name,desc,type,slot | two_handed,width,height,weight | icon,stat_ranges,max_stack,price
+        $types = "ssssiiiissiii"; // name,desc,type,slot | two_handed,width,height,weight | icon,stat_ranges,max_stack,price,is_purchasable
         $stmt->bind_param(
             $types,
             $p_name,
@@ -143,7 +144,8 @@ class AdminItemController
             $p_icon,
             $p_stat_ranges,
             $p_max_stack,
-            $p_price
+            $p_price,
+            $p_is_purchasable
         );
         
         if ($stmt->execute()) {
@@ -222,7 +224,7 @@ class AdminItemController
         $stmt = $this->db->prepare("
             UPDATE items 
             SET name = ?, description = ?, type = ?, slot_type = ?, two_handed = ?, 
-                width = ?, height = ?, weight = ?, icon = ?, stat_ranges = ?, max_stack = ?, price = ?
+                width = ?, height = ?, weight = ?, icon = ?, stat_ranges = ?, max_stack = ?, price = ?, is_purchasable = ?
             WHERE id = ?
         ");
         
@@ -242,9 +244,10 @@ class AdminItemController
         $p_stat_ranges = $statRangesJson;
         $p_max_stack = (int)($_POST['max_stack'] ?? $item['max_stack']);
         $p_price = (isset($_POST['price']) && $_POST['price'] !== '') ? $_POST['price'] : null;
+        $p_is_purchasable = isset($_POST['is_purchasable']) ? 1 : 0;
         $p_id = (int)$id;
 
-        $types = "ssssiiiissiii"; // name,desc,type,slot | two_handed,width,height,weight | icon,stat_ranges,max_stack,price | id
+        $types = "ssssiiiissiiii"; // name,desc,type,slot | two_handed,width,height,weight | icon,stat_ranges,max_stack,price,is_purchasable | id
         $stmt->bind_param(
             $types,
             $p_name,
@@ -259,6 +262,7 @@ class AdminItemController
             $p_stat_ranges,
             $p_max_stack,
             $p_price,
+            $p_is_purchasable,
             $p_id
         );
         

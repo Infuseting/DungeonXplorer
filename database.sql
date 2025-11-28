@@ -143,6 +143,7 @@ CREATE TABLE `items` (
   `stats` json DEFAULT NULL,
   `max_stack` tinyint NOT NULL DEFAULT '1',
   `price` int DEFAULT NULL,
+  `is_purchasable` tinyint(1) NOT NULL DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `stat_ranges` json DEFAULT NULL,
   PRIMARY KEY (`id`)
