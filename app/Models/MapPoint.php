@@ -283,12 +283,15 @@ class MapPoint
         $point = $this->findById($pointId);
         if (!$point) return false;
         
+        // If locked by admin, never visible
+        if ($point['is_locked']) return false;
+        
         // If not hidden, it's visible
         if (!$point['is_hidden']) return true;
         
-        // Check if unlocked for character
+        // If hidden, check if unlocked for character
         $stmt = $this->db->prepare(
-            "SELECT 1 FROM character_map_unlocks WHERE character_id = ? AND map_point_id = ?"
+            "SELECT 1 FROM player_unlocked_points WHERE character_id = ? AND map_point_id = ?"
         );
         $stmt->bind_param("ii", $characterId, $pointId);
         $stmt->execute();
@@ -306,10 +309,22 @@ class MapPoint
      */
     public function unlockForCharacter($characterId, $pointId)
     {
+        // Get user_id from character
+        $stmt = $this->db->prepare("SELECT user_id FROM characters WHERE id = ?");
+        $stmt->bind_param("i", $characterId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $character = $result->fetch_assoc();
+        
+        if (!$character) {
+            return false;
+        }
+        
         $stmt = $this->db->prepare(
-            "INSERT IGNORE INTO character_map_unlocks (character_id, map_point_id) VALUES (?, ?)"
+            "INSERT IGNORE INTO player_unlocked_points (user_id, character_id, map_point_id, unlocked_at) 
+             VALUES (?, ?, ?, CURRENT_TIMESTAMP)"
         );
-        $stmt->bind_param("ii", $characterId, $pointId);
+        $stmt->bind_param("iii", $character['user_id'], $characterId, $pointId);
         
         return $stmt->execute();
     }
@@ -326,9 +341,10 @@ class MapPoint
         $stmt = $this->db->prepare(
             "SELECT mp.* 
              FROM map_points mp
-             LEFT JOIN character_map_unlocks cmu ON mp.id = cmu.map_point_id AND cmu.character_id = ?
+             LEFT JOIN player_unlocked_points pup ON mp.id = pup.map_point_id AND pup.character_id = ?
              WHERE mp.map_id = ? 
-             AND (mp.is_hidden = 0 OR cmu.character_id IS NOT NULL)
+             AND mp.is_locked = 0
+             AND (mp.is_hidden = 0 OR pup.character_id IS NOT NULL)
              ORDER BY mp.created_at DESC"
         );
         $stmt->bind_param("ii", $characterId, $mapId);
