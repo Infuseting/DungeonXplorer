@@ -33,7 +33,7 @@ export function initInventory() {
  * Setup tooltip for an item
  * @param {HTMLElement} item - Item element
  */
-function setupTooltip(item) {
+export function setupTooltip(item) {
     const tooltip = document.getElementById('item-tooltip');
     const nameEl = document.getElementById('tooltip-name');
     const typeEl = document.getElementById('tooltip-type');
@@ -46,7 +46,7 @@ function setupTooltip(item) {
         // Populate Data
         nameEl.textContent = item.dataset.name;
         typeEl.textContent = item.dataset.type;
-        descEl.textContent = item.dataset.description;
+        descEl.innerHTML = item.dataset.description;
 
         // Parse and display stats
         statsEl.innerHTML = '';
@@ -357,7 +357,31 @@ function setupInventoryGrid() {
  */
 function moveItem(itemId, location, slot = null) {
     const targetContainer = getTargetContainer(location, slot);
-    const itemElement = draggedItem; // Capture reference immediately
+
+    // Attempt to find the item element in the DOM to get its data
+    // We prefer the draggedItem if it matches, otherwise find any instance
+    let sourceElement = draggedItem;
+    if (!sourceElement || sourceElement.dataset.id !== itemId) {
+        sourceElement = document.querySelector(`.item-icon[data-id="${itemId}"]`);
+    }
+
+    if (!sourceElement) {
+        console.error('Could not find source element for item', itemId);
+        return;
+    }
+
+    // Capture data BEFORE any async operations or removals
+    const itemData = {
+        src: sourceElement.src,
+        id: sourceElement.dataset.id,
+        slotType: sourceElement.dataset.slotType,
+        twoHanded: sourceElement.dataset.twoHanded,
+        name: sourceElement.dataset.name,
+        type: sourceElement.dataset.type,
+        description: sourceElement.dataset.description,
+        stats: sourceElement.dataset.stats,
+        weight: sourceElement.dataset.weight
+    };
 
     fetch('/game/inventory/move', {
         method: 'POST',
@@ -374,37 +398,51 @@ function moveItem(itemId, location, slot = null) {
         .then(data => {
             if (data.success) {
                 // Success: Update DOM dynamically
-                if (itemElement && targetContainer) {
-                    const fromContainer = itemElement.closest('.slot[data-slot], #inventory-container');
-
-                    if (location === 'equipped') {
-                        // Moving to equipment slot
-                        // Remove from inventory
-                        const parentDiv = itemElement.closest('.slot[data-location="inventory"]');
-                        if (parentDiv) {
-                            parentDiv.remove();
+                if (targetContainer) {
+                    // 1. ROBUST WIPE: Remove ALL instances of this item from the DOM
+                    const allInstances = document.querySelectorAll(`.item-icon[data-id="${itemId}"]`);
+                    allInstances.forEach(item => {
+                        const parent = item.closest('.slot');
+                        if (parent) {
+                            if (parent.dataset.location === 'inventory') {
+                                // Remove inventory slot entirely
+                                parent.remove();
+                            } else if (parent.dataset.slot) {
+                                // Clear equipment slot
+                                const label = parent.querySelector('.slot-label')?.textContent || '';
+                                parent.innerHTML = '<span class="slot-label">' + label + '</span>';
+                            }
+                        } else {
+                            // Just remove the item if it's orphaned or in a weird container
+                            item.remove();
                         }
+                    });
 
-                        // Add to equipment slot
-                        targetContainer.innerHTML = '';
+                    // 2. Add to Target Location
+                    if (location === 'equipped') {
+                        // Clear target container first (just to be safe)
+                        const label = targetContainer.querySelector('.slot-label')?.textContent || '';
+                        targetContainer.innerHTML = '<span class="slot-label">' + label + '</span>';
+
                         const img = document.createElement('img');
-                        img.src = itemElement.src;
+                        img.src = itemData.src;
                         img.className = 'w-full h-full object-contain item-icon p-1';
                         img.draggable = true;
-                        img.dataset.id = itemElement.dataset.id;
-                        img.dataset.slotType = itemElement.dataset.slotType;
-                        img.dataset.name = itemElement.dataset.name;
-                        img.dataset.type = itemElement.dataset.type;
-                        img.dataset.description = itemElement.dataset.description;
-                        img.dataset.stats = itemElement.dataset.stats;
-                        img.dataset.weight = itemElement.dataset.weight;
+                        img.dataset.id = itemData.id;
+                        img.dataset.slotType = itemData.slotType;
+                        img.dataset.twoHanded = itemData.twoHanded;
+                        img.dataset.name = itemData.name;
+                        img.dataset.type = itemData.type;
+                        img.dataset.description = itemData.description;
+                        img.dataset.stats = itemData.stats;
+                        img.dataset.weight = itemData.weight;
 
                         targetContainer.appendChild(img);
                         setupDraggable(img);
                         setupTooltip(img);
 
                         // Handle Two-Handed Weapons Visuals
-                        const isTwoHanded = itemElement.dataset.twoHanded === '1';
+                        const isTwoHanded = itemData.twoHanded === '1';
                         if (isTwoHanded) {
                             let otherSlotName = null;
                             if (slot === 'main_hand') otherSlotName = 'off_hand';
@@ -421,6 +459,8 @@ function moveItem(itemId, location, slot = null) {
                                     ghostImg.classList.add('opacity-30', 'pointer-events-none');
                                     ghostImg.style.filter = 'grayscale(100%)';
                                     ghostImg.removeAttribute('draggable');
+                                    // Ensure ghost has ID so it can be wiped later
+                                    ghostImg.dataset.id = itemData.id;
 
                                     const borderDiv = document.createElement('div');
                                     borderDiv.className = 'absolute inset-0 border-2 border-red-500 rounded-lg pointer-events-none';
@@ -431,28 +471,6 @@ function moveItem(itemId, location, slot = null) {
                             }
                         }
                     } else if (location === 'inventory') {
-                        // Moving to inventory
-                        // Remove from equipment slot
-                        if (fromContainer && fromContainer.classList.contains('slot')) {
-                            fromContainer.innerHTML = '<span class="slot-label">' + fromContainer.querySelector('.slot-label')?.textContent + '</span>';
-
-                            // Check if it was a two-handed weapon and clear the other slot
-                            const isTwoHanded = itemElement.dataset.twoHanded === '1';
-                            if (isTwoHanded) {
-                                const slotName = fromContainer.dataset.slot;
-                                let otherSlotName = null;
-                                if (slotName === 'main_hand') otherSlotName = 'off_hand';
-                                else if (slotName === 'off_hand') otherSlotName = 'main_hand';
-
-                                if (otherSlotName) {
-                                    const otherSlot = document.querySelector(`.slot[data-slot="${otherSlotName}"]`);
-                                    if (otherSlot) {
-                                        otherSlot.innerHTML = '<span class="slot-label">' + otherSlot.querySelector('.slot-label')?.textContent + '</span>';
-                                    }
-                                }
-                            }
-                        }
-
                         // Add to inventory grid
                         const inventoryContainer = document.getElementById('inventory-container');
                         const newSlot = document.createElement('div');
@@ -461,17 +479,17 @@ function moveItem(itemId, location, slot = null) {
                         newSlot.dataset.inventoryId = itemId;
 
                         const img = document.createElement('img');
-                        img.src = itemElement.src;
+                        img.src = itemData.src;
                         img.className = 'w-12 h-12 object-contain item-icon';
                         img.draggable = true;
-                        img.dataset.id = itemElement.dataset.id;
-                        img.dataset.slotType = itemElement.dataset.slotType;
-                        img.dataset.twoHanded = itemElement.dataset.twoHanded; // Preserve two-handed data
-                        img.dataset.name = itemElement.dataset.name;
-                        img.dataset.type = itemElement.dataset.type;
-                        img.dataset.description = itemElement.dataset.description;
-                        img.dataset.stats = itemElement.dataset.stats;
-                        img.dataset.weight = itemElement.dataset.weight;
+                        img.dataset.id = itemData.id;
+                        img.dataset.slotType = itemData.slotType;
+                        img.dataset.twoHanded = itemData.twoHanded;
+                        img.dataset.name = itemData.name;
+                        img.dataset.type = itemData.type;
+                        img.dataset.description = itemData.description;
+                        img.dataset.stats = itemData.stats;
+                        img.dataset.weight = itemData.weight;
 
                         newSlot.appendChild(img);
                         inventoryContainer.appendChild(newSlot);

@@ -41,28 +41,20 @@ ob_start();
                 </div>
             </div>
 
-            <!-- Content (3 Columns) -->
+            <!-- Content (2 Columns) -->
             <div class="flex-1 flex gap-4 overflow-hidden">
                 <!-- Left: Merchant Inventory -->
                 <div class="flex-1 bg-gray-800 rounded p-2 flex flex-col border border-gray-700">
                     <h3 class="text-lg font-bold text-gray-300 mb-2 text-center border-b border-gray-700 pb-1">Marchand</h3>
-                    <div id="shop-merchant-list" class="flex-1 overflow-y-auto pr-1">
-                        <!-- Items populated by JS -->
-                    </div>
-                </div>
-
-                <!-- Middle: Player Equipment -->
-                <div class="w-1/4 bg-gray-800 rounded p-2 flex flex-col border border-gray-700">
-                    <h3 class="text-lg font-bold text-gray-300 mb-2 text-center border-b border-gray-700 pb-1">Équipement</h3>
-                    <div id="shop-equipment-list" class="flex-1 overflow-y-auto pr-1">
+                    <div id="shop-merchant-list" class="flex-1 overflow-y-auto pr-1 flex flex-wrap content-start gap-2">
                         <!-- Items populated by JS -->
                     </div>
                 </div>
 
                 <!-- Right: Player Inventory -->
                 <div class="flex-1 bg-gray-800 rounded p-2 flex flex-col border border-gray-700">
-                    <h3 class="text-lg font-bold text-gray-300 mb-2 text-center border-b border-gray-700 pb-1">Inventaire</h3>
-                    <div id="shop-inventory-list" class="flex-1 overflow-y-auto pr-1">
+                    <h3 class="text-lg font-bold text-gray-300 mb-2 text-center border-b border-gray-700 pb-1">Votre Inventaire</h3>
+                    <div id="shop-inventory-list" class="flex-1 overflow-y-auto pr-1 flex flex-wrap content-start gap-2">
                         <!-- Items populated by JS -->
                     </div>
                 </div>

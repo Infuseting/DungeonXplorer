@@ -4,3 +4,4 @@
 .DS_Store
 AGENT.md
 composer.lock
+debug_auth.log
