@@ -43,6 +43,7 @@ $router->mount('/game', function() use ($router) {
     
     $router->get('/combat/start/(\d+)', 'App\Controllers\CombatController@startCombat');
     $router->post('/combat/roll-dice', 'App\Controllers\CombatController@rollDice');
+    $router->post('/combat/action', 'App\Controllers\CombatController@performAction');
     // Inventory API
     $router->post('/inventory/move', 'App\Controllers\InventoryController@move');
     $router->post('/inventory/equip', 'App\Controllers\InventoryController@equip');

@@ -32,11 +32,15 @@
             <!-- Décor -->
           
             <div class="w-full md:w-[55%] h-[500px] bg-gray-700 rounded-lg flex items-center justify-center drop-shadow-[0_0_5px_#a78bfa]">
-              <img src="/assets/images/bg_combat_default.png" class="w-full h-full" alt="">
+              <img src="/assets/images/bg_combat_default.png" class="w-full h-full" id="bg" alt="">
 
-                <div class="absolute top-8">
-                    <h2 class="text-2xl md:text-3xl font-bold text-white text-center drop-shadow-lg">Infos du combat !</h2>
+                <div class="absolute top-8 flex flex-col text-justify">
+                    <h2 class="text-2xl md:text-3xl font-bold text-white text-center drop-shadow-lg mb-4">VS <?php echo $monsterModel->getName()?></h2>
+                    <div id="combat-log"></div>
 
+                </div>
+                <div class ="absolute top-25 z-50">
+                    <div id="win?"></div>
                 </div>
                <div class="absolute bottom-7 w-64 h-64 overflow-hidden">
                     <img src= <?php echo $monsterModel->getImagePath()?> alt="Monstre" class="object-cover w-full h-full">
@@ -53,34 +57,34 @@
               <div class="w-full md:w-[55%] bg-gray-800 rounded-lg flex flex-col md:flex-row relative overflow-visible p-4">
 
                 <!-- Stats à gauche -->
-                <div class="w-full md:w-1/3 flex flex-col mb-4 md:mb-0">
+                <div class="w-full md:w-1/3 flex flex-col mb-4 md:mb-0 bg-gray-900/50 rounded-lg ">
                     <?php
                     echo "<h3 class='text-violet-400 font-bold mb-2 text-center mt-2 md:text-xl'>Stats de " . htmlspecialchars($characterModel->getName()) . "</h3>";
                     ?>
                     <ul class="text-sm grid grid-cols-2 gap-6 mx-auto">
                     <li class="flex items-center gap-2  w-full">
                         <span class="material-symbols-outlined text-violet-400" title="Santé du joueur">favorite</span>
-                        <span><?php echo htmlspecialchars($characterModel->getVitality()); ?></span>
+                        <span class="text-xl font-bold" id="player-hp"><?php echo htmlspecialchars($characterModel->getVitality()); ?></span>
                     </li>
                     <li class="flex items-center gap-2 w-full">
                         <span class="material-symbols-outlined text-violet-400" title="Puissance d'attaque">swords</span>
-                        <span><?php echo htmlspecialchars($characterModel->getAttaqueClass()); ?></span>
+                        <span class="text-xl font-bold"><?php echo htmlspecialchars($characterModel->getAttaqueClass()); ?></span>
                     </li>
                     <li class="flex items-center gap-2 w-full">
                         <span class="material-symbols-outlined text-violet-400" title="Défense du joueur">shield</span>
-                        <span><?php echo htmlspecialchars($characterModel->getArmorClass()); ?></span>
+                        <span class="text-xl font-bold"><?php echo htmlspecialchars($characterModel->getArmorClass()); ?></span>
                     </li>
                     <li class="flex items-center gap-2 w-full">
                         <span class="material-symbols-outlined text-violet-400" title="Force du joueur">fitness_center</span>
-                        <span><?php echo htmlspecialchars($characterModel->getStrength()); ?></span>
+                        <span class="text-xl font-bold"><?php echo htmlspecialchars($characterModel->getStrength()); ?></span>
                     </li>
                     <li class="flex items-center gap-2 w-full">
                         <span class="material-symbols-outlined text-violet-400" title="Intelligence du joueur">psychology</span>
-                        <span><?php echo htmlspecialchars($characterModel->getIntelligence()); ?></span>
+                        <span class="text-xl font-bold"><?php echo htmlspecialchars($characterModel->getIntelligence()); ?></span>
                     </li>
                     <li class="flex items-center gap-2 w-full">
                         <span class="material-symbols-outlined text-violet-400" title="Dextérié du joueur">directions_run</span>
-                        <span><?php echo htmlspecialchars($characterModel->getDexterity()); ?></span>
+                        <span class="text-xl font-bold"><?php echo htmlspecialchars($characterModel->getDexterity()); ?></span>
                     </li>
 
 
@@ -114,36 +118,44 @@
                 </div>
 
                 <!-- Capacités à droite -->
-                <div class="w-full md:w-1/3 flex flex-col">
+                <div class="w-full md:w-1/3 flex flex-col bg-gray-900/50 rounded-lg">
                     <h3 class='text-violet-400 font-bold mb-2 text-center mt-2 md:text-xl'>Capacités de combat</h3>
                     <ul class="text-sm grid grid-cols-2 gap-2 mx-auto">
                     <li>
-                        <button class="w-full px-4 py-2 bg-gray-700 text-red-400 rounded-lg border border-violet-500/50 
+                        <button     id="btn-attack"
+                                    onclick="sendAction('attack')"
+                                    class="w-full px-4 py-2 bg-gray-700 text-red-400 rounded-lg border border-violet-500/50 
                                     hover:bg-gray-600 hover:text-white hover:scale-105 transition transform duration-200">
                         Attack
                         </button>
                     </li>
                     <li>
-                        <button class="w-full px-4 py-2 bg-gray-700 text-blue-400 rounded-lg border border-violet-500/50 
+                        <button     id="btn-defend"
+                                    onclick="sendAction('defend')"
+                                    class="w-full px-4 py-2 bg-gray-700 text-blue-400 rounded-lg border border-violet-500/50 
                                     hover:bg-gray-600 hover:text-white hover:scale-105 transition transform duration-200">
                         Shield
                         </button>
                     </li>
                     <li>
-                        <button class="w-full px-4 py-2 bg-gray-700 text-yellow-400 rounded-lg border border-violet-500/50 
+                        <button     id="btn-heal"
+                                    onclick="sendAction('usePotion')"
+                                    class="w-full px-4 py-2 bg-gray-700 text-yellow-400 rounded-lg border border-violet-500/50 
                                     hover:bg-gray-600 hover:text-white hover:scale-105 transition transform duration-200">
                         Heal
                         </button>
                     </li>
                     <li>
-                        <button class="w-full px-4 py-2 bg-gray-700 text-green-400 rounded-lg border border-violet-500/50 
+                        <button     id="btn-run"
+                                    onclick="sendAction('run')"
+                                    class="w-full px-4 py-2 bg-gray-700 text-green-400 rounded-lg border border-violet-500/50 
                                     hover:bg-gray-600 hover:text-white hover:scale-105 transition transform duration-200">
                         ...
                         </button>
                     </li>
                     </ul>
                     <div class="mt-4 text-center">
-                        <button onclick="rollDice()" class="text-violet-400 p-2 rounded-lg border  border-violet-500 hover:bg-gray-600 hover:text-white hover:scale-105 transition transform duration-200">Lancer le dés</button>
+                        <button onclick="rollDice()" id="rollBtn"class="text-violet-400 p-2 rounded-lg border  border-violet-500 hover:bg-gray-600 hover:text-white hover:scale-105 transition transform duration-200">Lancer le dés</button>
                     </div>
                 </div>
 
@@ -158,7 +170,105 @@
 
 
     <script>
+
+
+        const winOrLoss = document.getElementById('win?');
+        const bg = document.getElementById('bg');
+        const btn = document.getElementById("rollBtn");
+                // Récupération des boutons dans des constantes
+        const btnAttack = document.getElementById("btn-attack");
+        const btnDefend = document.getElementById("btn-defend");
+        const btnHeal   = document.getElementById("btn-heal");
+        const btnRun    = document.getElementById("btn-run");
+
+        // Exemple : désactiver tous les boutons pendant le tour du monstre
+        function disableActions() {
+        btnAttack.disabled = true;
+        btnDefend.disabled = true;
+        btnHeal.disabled   = true;
+        btnRun.disabled    = true;
+        }
+
+        // Exemple : réactiver tous les boutons au début du tour du joueur
+        function enableActions() {
+        btnAttack.disabled = false;
+        btnDefend.disabled = false;
+        btnHeal.disabled   = false;
+        btnRun.disabled    = false;
+        }
+
+
+   function sendAction(action) {
+    disableActions();
+    fetch("/game/combat/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "action=" + encodeURIComponent(action)
+    })
+    .then(res => res.text())
+    .then(text => {
+        try {
+            const data = JSON.parse(text);
+            const log = document.getElementById("combat-log");
+
+            // Réinitialiser le log
+            log.innerHTML = "";
+
+            if (data.player) {
+                log.innerHTML += `<p class="text-blue-400 font-semibold mb-1">
+                     ${data.player}
+                </p>`;
+                }
+
+                if (data.monster) {
+                log.innerHTML += `<p class="text-red-400 font-semibold mb-1">
+                     ${data.monster}
+                </p>`;
+                }
+
+                setTimeout(() => {
+                         if (!data.success) {
+                log.innerHTML += `<p class="text-red-600 font-bold mb-2">
+                     ${data.message}
+                </p>`;
+                }
+
+                if (data.newTurn) {
+                log.innerHTML += `<p class="text-yellow-400 font-bold animate-pulse mt-2">
+                     À vous de jouer !
+                </p>`;
+                }
+                    
+                }, 1000);
+
+           
+
+            if(data.win == false){
+                playerWin();
+            }
+
+            // Mettre à jour les HP du joueur
+            if (typeof data.playerHp !== "undefined") {
+                document.getElementById('player-hp').innerHTML = "";
+                if(data.playerHp <= 0){
+                    playerLoss();
+                    document.getElementById('player-hp').innerHTML += "<p style='color:red'>"+ data.playerHp + "</p>";
+                }
+                else document.getElementById('player-hp').textContent = data.playerHp;
+            }
+
+           
+            btn.disabled = false;
+            console.log("HP joueur:", data.playerHp);
+        } catch (e) {
+            console.error("Réponse non JSON:", text);
+        }
+    });
+}
         function rollDice() {
+            enableActions();
+
+        btn.disabled = true;
         const dice = document.getElementById("dice");
         let result = Math.floor(Math.random() * 20) + 1;
 
@@ -168,7 +278,7 @@
         setTimeout(() => {
             dice.classList.remove("animate-spin");
             dice.textContent = "🎲 " + result;
-        }, 1000);
+        }, 500);
 
         fetch("/game/combat/roll-dice", {
             method: "POST",
@@ -181,11 +291,41 @@
             return response.text();
         }).then(data => {
             console.log("Dice roll sent to server:", data);
+            
+
         }).catch(error => {
-            console.error("There was a problem with the fetch operation:", error)})
-            ;
+            console.error("There was a problem with the fetch operation:", error);
+            
+        
+        });
+            
 
 
+        }
+
+        function playerWin(){
+
+            setTimeout(() => {
+                document.getElementById('combat-log').textContent ="";
+            winOrLoss.classList.add("text-green-600", "animate-pulse");
+            bg.classList.add("brightness-125", "saturate-150", "contrast-125", "hue-rotate-30");
+
+            winOrLoss.innerHTML = '<p class ="text-4xl font-bold z-9999"> YOU WIN </p>';
+                
+            },1000);
+            
+        }
+
+        function playerLoss(){
+            setTimeout(() => {
+                document.getElementById('combat-log').textContent ="";
+            console.log('loose');
+            bg.classList.add("sepia", "saturate-200", "hue-rotate-[-50deg]", "brightness-75");
+            winOrLoss.classList.add("text-red-600", "animate-pulse");
+            winOrLoss.innerHTML = '<p class ="text-4xl font-bold z-9999"> YOU LOSS </p>';
+                
+            }, 1000);
+            
         }
 </script>
 

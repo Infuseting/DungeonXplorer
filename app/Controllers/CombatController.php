@@ -16,32 +16,97 @@ class CombatController
 
         $characterModel = new Character();
         $characterModel->findById($_SESSION['character_id']);
+        $characterModel->unsetDb();
         
 
     
-
+        $_SESSION['maxHpPlayer'] = $characterModel->getVitality();
         $monsterModel = new Monster();
         $monsterModel->findById($monsterId);
+        $monsterModel->unsetDb();
+        $combat = new Combat($characterModel, $monsterModel);
+    
+        $_SESSION['combat'] = $combat;
 
         
 
         require_once __DIR__ . '/../Views/game/interfaceCombat.php';
     }
        public function rollDice() {
-        
+    header('Content-Type: application/json');
 
-        if (isset($_POST['diceRoll'])) {
-            $_SESSION['diceRoll'] = intval($_POST['diceRoll']);
-            echo json_encode([
-                "success" => true,
-                "value" => $_SESSION['diceRoll']
-            ]);
-        } else {
-            echo json_encode([
-                "success" => false,
-                "message" => "Aucune valeur reçue"
-            ]);
-        }
+    if (isset($_POST['diceRoll'])) {
+        $_SESSION['diceRoll'] = intval($_POST['diceRoll']);
+        echo json_encode([
+            "success" => true,
+            "value" => $_SESSION['diceRoll']
+        ]);
+    } else {
+        echo json_encode([
+            "success" => false,
+            "message" => "Aucune valeur reçue"
+        ]);
     }
+}
+
+  public function performAction() {
+    header('Content-Type: application/json; charset=utf-8');
+    ob_clean(); // supprime tout ce qui aurait pu être envoyé avant
+
+
+    if (!isset($_SESSION['combat'])) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Aucun combat en cours"]);
+        return;
+    }
+
+    if (!isset($_SESSION['diceRoll'])) {
+        echo json_encode(["success" => false, "message" => "Vous devez lancer le dé avant d'agir"]);
+        return;
+    }
+
+    $action = $_POST['action'] ?? null;
+    if (!$action) {
+        echo json_encode(["success" => false, "message" => "Aucune action reçue"]);
+        return;
+    }
+
+    $combat = $_SESSION['combat'];
+
+    // Tour du joueur
+    $playerMessage = $combat->playerTurn($action);
+
+   
+
+    // Tour du monstre (si combat pas fini)
+    $monsterMessage = null;
+    if (!$combat->isEnd()) {
+        $monsterMessage = $combat->monsterTurn();
+    }
+    if (isset($_SESSION['initialDefence'])) {
+    $combat->getJoueur()->setArmorClass($_SESSION['initialDefence']);
+    unset($_SESSION['initialDefence']); // supprimer pour éviter que ça reste
+    }
+     // Consommer le dé
+    unset($_SESSION['diceRoll']);
+
+   echo json_encode([
+    "success" => true,
+    "player"  => $playerMessage,
+    "monster" => $monsterMessage,
+    "playerHp" => $combat->getPlayerHp(),
+    "win" => $combat->isMonsterAlive(),
+    "newTurn" => !$combat->isEnd()
+
+]);
+}
+
+public function endCombat() {
+    unset($_SESSION['combat']); 
+}
+
+
+
+    
 
 }

@@ -62,6 +62,9 @@ class Monster
     {
         return $this->imagePath;
     }
+    public function unsetDb(){
+        $this->db = null;
+    }
 
     public function getStrength()
     {
@@ -106,7 +109,7 @@ class Monster
 
     public function getArmorClass()
     {
-        return  $this->getStrength()/2 + $this->getDefense();
+        return  $this->getStrength()/2 + $this->getDefense()/1.5;
     }
 
     public function getAttaqueClass()
@@ -117,6 +120,10 @@ class Monster
     public function isAlive()
     {
         return $this->vitality > 0;
+    }
+     public function reduceVitality($number)
+    {
+        $this->vitality -= $number;
     }
 
 

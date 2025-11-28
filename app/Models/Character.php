@@ -18,7 +18,13 @@ class Character
     private $dexterity;
     private $inventory;
     private $className;
+    private $armor;
     private $id;
+
+     // caches
+    private array $inventoryCache = [];
+    private array $statsCache = [];
+
 
     public function __construct()
     {   
@@ -36,21 +42,31 @@ class Character
         }
         return false;
     }
-    public function getEquippedStats($statsEnum) {
-        $charInventory = $this->getInventory();
-        $stats = 0;
-        foreach ($charInventory as $item) {
-            if (is_array($item)) {
-                foreach ($item as $subItem) {
-                    if ($subItem['location'] != 'equipped') continue;
-                    
-                    $data = json_decode($subItem['stats'], true);                    
-                    $stats += $data[$statsEnum->value] ?? 0;
-                }
-            }
-        }   
-        return $stats;
+public function getEquippedStats(Stats $statsEnum): int
+{
+    // Si déjà calculé, on renvoie directement
+    if (isset($this->statsCache[$statsEnum->value])) {
+        return $this->statsCache[$statsEnum->value];
     }
+
+    $charInventory = $this->getInventory();
+    if(empty($charInventory) ) return 0;
+    $stats = 0;
+    foreach ($charInventory as $item) {
+        if (is_array($item)) {
+        foreach ($item as $subItem) {if ($subItem['location'] != 'equipped') continue;
+            $data = json_decode($subItem['stats'], true);
+            $stats += $data[$statsEnum->value] ?? 0;
+        }
+    }
+
+
+    }
+    // Mise en cache
+    $this->statsCache[$statsEnum->value] = $stats;
+    return $stats;
+}
+
 
     public function findAllByUserId($userId)
     {
@@ -65,6 +81,10 @@ class Character
         $stmt->bind_param("i", $userId);
         $stmt->execute();
         return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+
+    public function unsetDb(){
+        $this->db = null;
     }
 
     public function findById($id)
@@ -109,10 +129,23 @@ class Character
         return $stmt->execute();
     }
 
-    public function getInventory()
+     public function getInventory(): array
     {
-        return $this->inventory->getCharacterInventory($this->id);
+        // Si déjà chargé, on renvoie directement
+        if (!empty($this->inventoryCache)) {
+            return $this->inventoryCache;
+        }
+
+            
+
+            $result = $this->inventory->getCharacterInventory($this->id);
+            return is_array($result) ? $result : [];
+
+        
+
+        
     }
+
 
     public function toString()
     {
@@ -142,6 +175,11 @@ class Character
     {
         return $this->intelligence;
     }
+
+    public function setArmorClass($nArmor){
+        $this->armor = $nArmor;
+
+    }
     public function getDexterity()
     {
         return $this->dexterity;
@@ -150,13 +188,19 @@ class Character
     {
         $this->vitality = $vitality;
     }
+
+    public function reduceVitality($number)
+    {
+        $this->vitality -= $number;
+    }
     public function getClassName()
     {
         return $this->className;
     }
     public function getArmorClass()
     {
-        return  $this->getStrength()/2 + $this->getEquippedStats(Stats::Defense);
+        if($this->armor == null) $this->armor = $this->getStrength()/2 + $this->getEquippedStats(Stats::Defense);
+        return $this->armor;
     }
 
     public function isAlive()
@@ -168,4 +212,11 @@ class Character
     {
         return  $this->getStrength() + $this->getEquippedStats(Stats::Damage);
     }
+     public function resetCache(): void
+    {
+        $this->inventoryCache = [];
+        $this->statsCache = [];
+    }
+
+
 }

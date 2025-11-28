@@ -4,10 +4,6 @@ namespace App\Models;
 if (isset($_POST['diceRoll'])) {
     $_SESSION['diceRoll'] = intval($_POST['diceRoll']);
 }
-else {
-    http_response_code(400);
-    echo "Erreur : aucune valeur reçue";
-}
 
 
 
@@ -24,41 +20,7 @@ class Combat
             $this->boss = $boss;
         }
 
-        public function start()
-        {
-            while (!$this->end) {
-                echo $this->joueur->getName() . "'s turn:\n";
-                if ($this->isAttaqueSuccessfulFromPlayer()) {
-                    $damage = $this->joueur->getAttaqueClass()-$this->boss->getArmorClass()/4;
-                    $this->boss->setVitality($this->boss->getVitality() - $damage);
-                    echo $this->joueur->getName() . " hits " . $this->boss->getName() . " for " . $damage . " damage!\n";
-                } else {
-                    echo $this->joueur->getName() . " misses!\n";
-                }
-                if (!$this->boss->isAlive()) {
-                    echo $this->boss->getName() . " has been defeated!\n";
-                    $this->endCombat();
-                    break;
-                }
-                echo $this->boss->getName() . "'s turn:\n";
-                if ($this->isAttaqueSuccessfulFromMonster()) {
-                    $damage = $this->boss->getAttaqueClass()-$this->joueur->getArmorClass();
-                    $this->joueur->setVitality($this->joueur->getVitality() - $damage);
-                    echo $this->boss->getName() . " hits " . $this->joueur->getName() . " for " . $damage . " damage!\n";
-                } else {
-                    echo $this->boss->getName() . " misses!\n";
-                }
-                if (!$this->joueur->isAlive()) {
-                    echo $this->joueur->getName() . " has been defeated!\n";
-                   $this-> endCombat();
-                    break;
-                }
-                
-
-               
-
-            }
-        }
+  
 
         public function dice()
         {
@@ -68,12 +30,95 @@ class Combat
         public function isAlive($entity)
         {
             if ($entity->getVitality() <= 0) {
-                echo $entity->getName() . " has been defeated!\n";
                 $this->end = true;
                 return false;
             }
             return true;
         }
+
+       
+
+        public function playerTurn($action){
+
+          switch ($action) {
+            case 'attack':
+                if ($this->isAttaqueSuccessfulFromPlayer()) {
+                    $damage = $this->joueur->getAttaqueClass();
+                    $this->boss->reduceVitality($damage);
+                    $message = $this->joueur->getName() . " hits " . $this->boss->getName() . " for " . $damage . " damage!\n";
+                } else {
+                    $message = $this->joueur->getName() . " misses " . $this->boss->getName() . "!\n";
+                }
+                break;
+
+            case 'defend':
+                // Stocker la défense initiale
+                $_SESSION['initialDefence'] = $this->joueur->getArmorClass();
+
+                // Bonus temporaire (ici basé sur le dé)
+                $bonus = $_SESSION['diceRoll'];
+                $this->joueur->setArmorClass($_SESSION['initialDefence'] + $bonus);
+
+                $message = $this->joueur->getName() . " takes a defensive stance (+$bonus armor)!\n";
+                break;
+            case 'usePotion':
+                $health =$this->joueur->getVitality() + 5;
+                if($health > $_SESSION['maxHpPlayer']){
+                    $this->joueur->setVitality($_SESSION['maxHpPlayer']);
+                    $message = $this->joueur->getName() . " takes a heal  (max health)!\n";
+                }
+                else{
+                    $this->joueur->setVitality($health);
+                     $message = $this->joueur->getName() . " takes a heal  (+5 health)!\n";
+
+                }
+                break;
+
+            default:
+                $message = $this->joueur->getName() . " does nothing...\n";
+                break;
+        }
+
+
+
+         
+
+         
+
+         
+
+            if(!$this->isAlive($this->boss)) {
+                $message .= $this->joueur->getName() . " wins the combat!\n";
+                $this->endCombat();
+            }
+
+            return $message;
+
+            
+        }
+
+        public function monsterTurn()
+        {
+            $dice = $this->dice();
+
+            if($this->isAttaqueSuccessfulFromMonster()) {
+                $damage = $this->boss->getAttaque();
+                $this->joueur->reduceVitality($damage);
+                $message = $this->boss->getName() . " hits " . $this->joueur->getName() . " for " . $damage . " damage!\n";
+            } else {
+                $message =  $this->boss->getName() . " misses " . $this->joueur->getName() . "!\n";
+            }
+            if(!$this->isAlive($this->joueur)) {
+                $message .= $this->boss->getName() . " wins the combat!\n";
+                $this->endCombat();
+            }
+            return $message;
+        }
+
+        public function isEnd(){
+            return $this->end;
+        }
+
 
         public function getJoueur()
         {
@@ -85,24 +130,32 @@ class Combat
             return $this->boss;
         }
 
+        public function getPlayerHp(){
+            return $this->joueur->getVitality();
+        }
+
         public function isAttaqueSuccessfulFromPlayer()
         {
-            $attackRoll = $this->joueur->getAttaqueClass()+$this->getDice();
-            $defenseRoll = $this->boss->getArmorClass()+$this->getDice()/2;
+            $attackRoll = $this->joueur->getAttaqueClass()+$_SESSION['diceRoll'];
+            $defenseRoll = $this->boss->getArmorClass()+$this->dice()/3;
 
-            echo "Attack Roll: " . $attackRoll . " vs Defense Roll: " . $defenseRoll . "\n";
+            
             
             return $attackRoll >= $defenseRoll;
         }
         
         public function isAttaqueSuccessfulFromMonster()
         {
-            $attackRoll = $this->boss->getAttaqueClass()+$this->getDice()/2;
-            $defenseRoll = $this->joueur->getArmorClass()+$this->getDice();
+            $attackRoll = $this->boss->getAttaqueClass()+$this->dice()/2;
+            $defenseRoll = $this->joueur->getArmorClass()+$_SESSION['diceRoll'];
 
-            echo "Attack Roll: " . $attackRoll . " vs Defense Roll: " . $defenseRoll . "\n";
+            
             
             return $attackRoll >= $defenseRoll;
+        }
+
+        public function isMonsterAlive(){
+            return  $this->boss->isAlive();
         }
 
         public function endCombat()
@@ -110,19 +163,11 @@ class Combat
             $this->end = true;
         }
 
-        public function getDice()
-        {
-            $jet1 = $this->dice();
-            $jet2 = $this->dice();
-            if($jet1 > $jet2){
-                return $jet1;
-            } else {
-                return $jet2;
-            }
-            if($jet1 == $jet2){
-                return 20;
-            }
-        
-        }
+       
+
+        public function getActions() {
+        return ['attack', 'usePotion', 'defend', 'run'];
+    }
+
 
     }
