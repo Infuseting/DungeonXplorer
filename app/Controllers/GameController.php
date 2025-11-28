@@ -166,12 +166,51 @@ class GameController
         if (in_array('merchant', $npcRoles) && $npc['merchant_seed']) {
             $merchantInventory = $npcModel->getMerchantInventory($id);
         }
+
+        // Get Available Quests
+        $availableQuests = [];
+        if (in_array('quest_giver', $npcRoles) && isset($_SESSION['character_id'])) {
+            $allNpcQuests = $npcModel->getQuests($id);
+            $playerQuestModel = new \App\Models\PlayerQuest();
+            $questModel = new \App\Models\Quest();
+            $characterModel = new \App\Models\Character();
+            
+            $character = $characterModel->findById($_SESSION['character_id']);
+            $playerLevel = $character['level'] ?? 1;
+
+            foreach ($allNpcQuests as $quest) {
+                // 1. Must be GIVER
+                if (($quest['relation_type'] ?? 'GIVER') !== 'GIVER') continue;
+
+                // 2. Check Level
+                if ($playerLevel < $quest['min_level']) continue;
+
+                // 3. Check if already started or completed
+                $status = $playerQuestModel->getQuestStatus($_SESSION['character_id'], $quest['id']);
+                if ($status !== 'NOT_STARTED') continue;
+
+                // 4. Check Prerequisites
+                $prerequisites = $questModel->getPrerequisites($quest['id']);
+                $prereqsMet = true;
+                foreach ($prerequisites as $prereq) {
+                    $prereqStatus = $playerQuestModel->getQuestStatus($_SESSION['character_id'], $prereq['required_quest_id']);
+                    if ($prereqStatus !== 'COMPLETED') {
+                        $prereqsMet = false;
+                        break;
+                    }
+                }
+                if (!$prereqsMet) continue;
+
+                $availableQuests[] = $quest;
+            }
+        }
         
         echo json_encode([
             'success' => true,
             'npc' => $npc,
             'dialogue_trees' => $availableDialogues,
-            'merchant_inventory' => $merchantInventory
+            'merchant_inventory' => $merchantInventory,
+            'quests' => $availableQuests
         ]);
         exit;
     }
@@ -201,6 +240,46 @@ class GameController
         exit;
     }
     
+    /**
+     * Accept a quest
+     */
+    public function acceptQuest()
+    {
+        header('Content-Type: application/json');
+        
+        if (!isset($_SESSION['character_id'])) {
+            echo json_encode(['success' => false, 'message' => 'Personnage non sélectionné']);
+            exit;
+        }
+        
+        $data = json_decode(file_get_contents('php://input'), true);
+        $questId = $data['quest_id'] ?? null;
+        
+        if (!$questId) {
+            echo json_encode(['success' => false, 'message' => 'ID de quête manquant']);
+            exit;
+        }
+        
+        $playerQuestModel = new \App\Models\PlayerQuest();
+        
+        // Check if already started
+        $status = $playerQuestModel->getQuestStatus($_SESSION['character_id'], $questId);
+        if ($status !== 'NOT_STARTED') {
+            echo json_encode(['success' => false, 'message' => 'Quête déjà acceptée ou terminée']);
+            exit;
+        }
+        
+        // Start quest
+        $playerQuestId = $playerQuestModel->startQuest($_SESSION['character_id'], $questId);
+        
+        if ($playerQuestId) {
+            echo json_encode(['success' => true, 'message' => 'Quête acceptée !']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Impossible d\'accepter la quête']);
+        }
+        exit;
+    }
+
     /**
      * Get quest log for the current character
      */

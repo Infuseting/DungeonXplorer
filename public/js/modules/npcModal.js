@@ -169,12 +169,6 @@ function acceptQuest(questId) {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                // Show success message using toast if available, or alert
-                if (window.showToast) {
-                    window.showToast('Quête acceptée !', 'success');
-                } else {
-                    alert('Quête acceptée !');
-                }
                 closeNPCModal();
             } else {
                 alert(data.message || 'Erreur');

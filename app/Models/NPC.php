@@ -235,7 +235,7 @@ class NPC
     public function getQuests($npcId)
     {
         $stmt = $this->db->prepare("
-            SELECT q.* 
+            SELECT q.*, nq.type as relation_type
             FROM npc_quests nq
             JOIN quests q ON nq.quest_id = q.id
             WHERE nq.npc_id = ?
