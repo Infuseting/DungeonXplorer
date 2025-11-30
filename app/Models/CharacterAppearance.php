@@ -13,28 +13,32 @@ class CharacterAppearance
         $this->db = Database::getInstance()->getConnection();
     }
 
-    public function create($characterId, $appearance)
+    public function create($characterId, $skinColor, $hairColor, $hairStyle, $eyeColor)
     {
         $stmt = $this->db->prepare("
-            INSERT INTO character_appearance (character_id, skin_color, hair_style, hair_color, eye_color, face_style) 
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO character_appearances (character_id, skin_color, hair_color, hair_style, eye_color) 
+            VALUES (?, ?, ?, ?, ?)
         ");
-        $stmt->bind_param("isssss", 
-            $characterId, 
-            $appearance['skin_color'], 
-            $appearance['hair_style'], 
-            $appearance['hair_color'], 
-            $appearance['eye_color'], 
-            $appearance['face_style']
-        );
+        $stmt->bind_param("issss", $characterId, $skinColor, $hairColor, $hairStyle, $eyeColor);
         return $stmt->execute();
     }
 
     public function findByCharacterId($characterId)
     {
-        $stmt = $this->db->prepare("SELECT * FROM character_appearance WHERE character_id = ?");
+        $stmt = $this->db->prepare("SELECT * FROM character_appearances WHERE character_id = ?");
         $stmt->bind_param("i", $characterId);
         $stmt->execute();
         return $stmt->get_result()->fetch_assoc();
+    }
+
+    public function update($characterId, $skinColor, $hairColor, $hairStyle, $eyeColor)
+    {
+        $stmt = $this->db->prepare("
+            UPDATE character_appearances 
+            SET skin_color = ?, hair_color = ?, hair_style = ?, eye_color = ?
+            WHERE character_id = ?
+        ");
+        $stmt->bind_param("ssssi", $skinColor, $hairColor, $hairStyle, $eyeColor, $characterId);
+        return $stmt->execute();
     }
 }

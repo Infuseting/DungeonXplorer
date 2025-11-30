@@ -30,6 +30,10 @@ $router->mount('/personnage', function() use ($router) {
     $router->get('/create', 'App\Controllers\CharacterController@create');
     $router->post('/create', 'App\Controllers\CharacterController@store');
     $router->post('/delete', 'App\Controllers\CharacterController@delete');
+    
+    // Appearance routes - accepte "preview" ou un ID numérique
+    $router->get('/apparence/(preview|\d+)', 'App\Controllers\CharacterAppearanceController@index');
+    $router->post('/apparence/(preview|\d+)', 'App\Controllers\CharacterAppearanceController@update');
 });
 
 // Game Routes (Protected)

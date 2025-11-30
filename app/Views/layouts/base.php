@@ -14,5 +14,6 @@
 </head>
 <body class="<?= $bodyClass ?? '' ?>">
     <?= $content ?>
+    <script src="/assets/js/character-renderer.js"></script>
 </body>
 </html>

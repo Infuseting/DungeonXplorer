@@ -99,7 +99,7 @@ ob_start();
                            class="relative w-full bg-gray-900 border-2 border-gray-700 rounded-lg py-3 md:py-4 px-6 text-center text-xl md:text-2xl font-bold text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none transition shadow-xl">
                 </div>
                 <button type="submit" class="mt-4 md:mt-6 w-full py-3 md:py-4 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-lg shadow-lg shadow-violet-600/30 transition transform hover:-translate-y-1 uppercase tracking-wider text-base md:text-lg">
-                    Commencer l'aventure
+                    Personnaliser
                 </button>
             </div>
         </div>
