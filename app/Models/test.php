@@ -12,14 +12,14 @@ use App\Models\Stats;
 
 
 $monster = new Monster();
-$monster->findById(1);
+$monster->findById(43);
 
 $var = $monster->toString();
 echo $var;
 
 
 $char = new Character(1);
-$char->findById(19);
+$char->findById(45);
 $var2 = $char->toString();
 echo $var2;
 
@@ -29,6 +29,10 @@ $charPC = $char->getAttaqueClass();
 echo "Character Attaque Class: " . $charPC . "\n";
 
 $charInventory = $char->getInventory();
+
+$app = $char->getAppearance();
+
+var_dump($app);
 
 
 

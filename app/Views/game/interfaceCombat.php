@@ -125,12 +125,20 @@
                                     $classImage = '/assets/images/default_class.png';
                                     break;
                             }
-                        ?>
 
+                            $character =  $characterModel->toArray();
+                        ?>
+                        <!--object-cover w-full h-full -->
                         <!-- Cercle au centre -->
-                        <div class="w-full md:w-1/3 flex items-center justify-center relative mb-4 md:mb-0">
-                            <div class="w-48 h-48 rounded-full border-4 border-violet-500 bg-gray-700 overflow-hidden">
-                                <img src=<?php echo $classImage ?> alt="Personnage" class="object-cover w-full h-full">
+                       <div class="w-full md:w-1/3 flex items-center justify-center relative mb-4 md:mb-0">
+                            <div class="w-48 h-48 rounded-full border-4 border-violet-500 bg-gray-700 overflow-hidden flex items-center justify-center">
+                                <?= renderCharacter($character, [
+                                    'size' => 'full',
+                                    'showFilter' => true,
+                                    'id' => 'character-' . $character['id'],
+                                    'class' => 'object-cover w-full h-full drop-shadow-2xl hover:brightness-110 transition duration-500'
+                                ]); ?>
+
                             </div>
                         </div>
 

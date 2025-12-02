@@ -17,9 +17,11 @@ class Character
     private $intelligence;
     private $dexterity;
     private $inventory;
-    private $className;
+    private $classId;
     private $armor;
     private $id;
+    private array $appearance = [];
+    private $className;
 
      // caches
     private array $inventoryCache = [];
@@ -67,6 +69,10 @@ public function getEquippedStats(Stats $statsEnum): int
     return $stats;
 }
 
+public function getAppearance(){
+    return $this->appearance;
+}
+
 
     public function updateAppearance($id, $appearanceData)
     {
@@ -79,7 +85,7 @@ public function getEquippedStats(Stats $statsEnum): int
     public function findAllByUserId($userId)
     {
         $stmt = $this->db->prepare("
-            SELECT c.*, cl.name as class_name, cs.level 
+            SELECT c.*, cl.name as class_name, cs.level,c.appearance
             FROM characters c
             JOIN classes cl ON c.class_id = cl.id
             LEFT JOIN character_stats cs ON c.id = cs.character_id
@@ -104,7 +110,7 @@ public function getEquippedStats(Stats $statsEnum): int
 
     public function findById($id)
     {
-        $stmt = $this->db->prepare("SELECT c.id,c.name, c.class_id, c.gold, cs.level, cs.xp, cs.strength,cs.dexterity,cs.intelligence,cs.vitality  FROM characters c  Join character_stats cs on c.id=cs.character_id WHERE id = ?");
+        $stmt = $this->db->prepare("SELECT c.id,cl.name as class_name,c.name,c.appearance, c.class_id, c.gold, cs.level, cs.xp, cs.strength,cs.dexterity,cs.intelligence,cs.vitality  FROM characters c  Join character_stats cs on c.id=cs.character_id join classes cl on cl.id = c.class_id WHERE c.id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
             $data= $stmt->get_result()->fetch_assoc();
@@ -131,15 +137,31 @@ public function getEquippedStats(Stats $statsEnum): int
 
             $this->gold = $data['gold'];
 
-            $this->className = $data['class_id'];
+            $this->classId = $data['class_id'];
+
+            $this->className = $data['class_name'];
         }
         
-        if ($data && !empty($data['appearance'])) {
-            $data['appearance'] = json_decode($result['data'], true);
-        }
+                if (!empty($data['appearance'])) {
+                $this->appearance = json_decode($data['appearance'], true);
+            } else {
+                $this->appearance = []; // valeur par défaut
+            }
+
         
         return $data;
     }
+
+public function toArray(): array {
+    return [
+        'id'        => $this->id ?? 0,
+        'name'      => $this->name ?? '',
+        'class_name'=> $this->className ?? '',
+        'appearance'=> $this->appearance ?? [],
+        'class'     => ['name' => $this->className ?? ''],
+    ];
+}
+
 
     public function updateLastPlayed($id)
     {
@@ -222,6 +244,10 @@ public function getEquippedStats(Stats $statsEnum): int
     {
         $this->vitality -= $number;
     }
+
+    public function getClassId(){
+        return $this->classId;
+    }
     public function getClassName()
     {
         return $this->className;
@@ -245,6 +271,10 @@ public function getEquippedStats(Stats $statsEnum): int
     {
         $this->inventoryCache = [];
         $this->statsCache = [];
+    }
+
+    public function getId(){
+        return $this->id;
     }
 
 

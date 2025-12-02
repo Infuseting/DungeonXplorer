@@ -32,16 +32,24 @@ class CombatController
 
         require_once __DIR__ . '/../Views/game/interfaceCombat.php';
     }
-       public function rollDice() {
-    header('Content-Type: application/json');
+ public function rollDice() {
+    // Toujours démarrer la session si elle n'est pas déjà active
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
 
-    if (isset($_POST['diceRoll'])) {
-        $_SESSION['diceRoll'] = intval($_POST['diceRoll']);
+    header('Content-Type: application/json; charset=utf-8');
+
+    if (!empty($_POST['diceRoll'])) {
+        $diceRoll = (int) $_POST['diceRoll'];
+        $_SESSION['diceRoll'] = $diceRoll;
+
         echo json_encode([
             "success" => true,
-            "value" => $_SESSION['diceRoll']
+            "value"   => $diceRoll
         ]);
     } else {
+        http_response_code(400); // code HTTP explicite
         echo json_encode([
             "success" => false,
             "message" => "Aucune valeur reçue"
