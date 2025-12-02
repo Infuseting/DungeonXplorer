@@ -107,13 +107,38 @@ public function getEquippedStats(Stats $statsEnum): int
         $stmt = $this->db->prepare("SELECT c.id,c.name, c.class_id, c.gold, cs.level, cs.xp, cs.strength,cs.dexterity,cs.intelligence,cs.vitality  FROM characters c  Join character_stats cs on c.id=cs.character_id WHERE id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
-        $result = $stmt->get_result()->fetch_assoc();
-        
-        if ($result && !empty($result['appearance'])) {
-            $result['appearance'] = json_decode($result['appearance'], true);
+            $data= $stmt->get_result()->fetch_assoc();
+
+
+
+        if ($data) {
+
+            $this->id = $data['id'];
+
+            $this->name = $data['name'];
+
+            $this->strength = $data['strength'];
+
+            $this->vitality = $data['vitality'];
+
+            $this->intelligence = $data['intelligence'];
+
+            $this->dexterity = $data['dexterity'];
+
+            $this->level = $data['level'];
+
+            $this->xp = $data['xp'];
+
+            $this->gold = $data['gold'];
+
+            $this->className = $data['class_id'];
         }
         
-        return $result;
+        if ($data && !empty($data['appearance'])) {
+            $data['appearance'] = json_decode($result['data'], true);
+        }
+        
+        return $data;
     }
 
     public function updateLastPlayed($id)
