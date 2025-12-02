@@ -20,6 +20,36 @@ $router->get('/register', 'App\Controllers\AuthController@register');
 $router->post('/register', 'App\Controllers\AuthController@registerPost');
 $router->get('/logout', 'App\Controllers\AuthController@logout');
 
+// API Routes (AVANT les routes protégées pour éviter les conflits)
+$router->get('/api/character/(\d+)/render', function($characterId) {
+    if (!isset($_SESSION['user_id'])) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Unauthorized']);
+        exit;
+    }
+    
+    $characterModel = new \App\Models\Character();
+    $character = $characterModel->findById($characterId);
+    
+    if (!$character || $character['user_id'] != $_SESSION['user_id']) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Forbidden']);
+        exit;
+    }
+    
+    // Récupérer la classe
+    $classModel = new \App\Models\CharacterClass();
+    $character['class'] = $classModel->findById($character['class_id']);
+    
+    // Rendre le personnage
+    echo renderCharacter($character, [
+        'size' => 'full',
+        'showFilter' => true,
+        'id' => 'character-' . $character['id'],
+        'class' => 'max-h-full max-w-full drop-shadow-2xl hover:brightness-110 transition duration-500'
+    ]);
+});
+
 // Character Routes (Protected)
 $router->mount('/personnage', function() use ($router) {
     $router->before('GET|POST', '', function() {
