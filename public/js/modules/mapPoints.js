@@ -108,6 +108,8 @@ export function showPointDetails(point) {
 export function initMapPoints(map, points) {
     console.log('Adding markers for', points.length, 'points');
 
+    const markers = [];
+
     // Add markers for each point
     points.forEach((point, index) => {
         console.log(`Adding marker ${index + 1}:`, point);
@@ -142,9 +144,12 @@ export function initMapPoints(map, points) {
                 weight: 2
             });
         });
+
+        markers.push(marker);
     });
 
     console.log('All markers added successfully');
+    return markers;
 }
 
 /**

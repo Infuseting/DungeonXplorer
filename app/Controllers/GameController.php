@@ -96,7 +96,30 @@ class GameController
         ]);
         exit;
     }
-    
+
+    /**
+     * API endpoint to get map points for a specific map
+     */
+    public function getMapPoints($mapId)
+    {
+        header('Content-Type: application/json');
+        if (!isset($_SESSION['user_id'])) {
+            echo json_encode(['success' => false, 'message' => 'Non authentifié']);
+            exit;
+        }
+        if (!isset($_SESSION['character_id'])) {
+            echo json_encode(['success' => false, 'message' => 'Aucun personnage sélectionné']);
+            exit;
+        }
+        $mapPointModel = new \App\Models\MapPoint();
+        $points = $mapPointModel->getVisiblePointsForCharacter($mapId, $_SESSION['character_id']);
+        echo json_encode([
+            'success' => true,
+            'points' => $points
+        ]);
+        exit;
+    }
+        
     /**
      * Get NPC data for interaction
      */

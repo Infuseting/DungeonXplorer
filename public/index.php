@@ -90,7 +90,7 @@ $router->mount('/game', function() use ($router) {
 
     // Map API
     $router->post('/submap/load', 'App\Controllers\GameController@loadSubMap');
-    
+    $router->get('/map/points/(\\d+)', 'App\\Controllers\\GameController@getMapPoints');
     // NPC API
     $router->get('/npc/(\d+)', 'App\Controllers\GameController@getNPC');
     $router->get('/dialogue/tree/(\d+)', 'App\Controllers\GameController@getDialogueTree');

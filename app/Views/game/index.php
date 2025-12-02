@@ -77,16 +77,16 @@ ob_start();
 
 <!-- Game JavaScript (ES6 Modules) -->
 <script type="module">
-    import { initMap, getMap } from '/js/modules/map.js';
-    import { initMapPoints, initPanelControls } from '/js/modules/mapPoints.js';
+    import { initMap, loadMapPoints } from '/js/modules/map.js';
+    import { initPanelControls } from '/js/modules/mapPoints.js';
     import { initInventory } from '/js/modules/inventory.js';
     import { initSubMapControls } from '/js/modules/subMap.js';
     import { initNPCModal } from '/js/modules/npcModal.js';
     import { openQuestJournal } from '/js/modules/questJournal.js';
     import { initShop } from '/js/modules/shop.js';
 
-    // Map points data from PHP
-    const mapPoints = <?= json_encode($mapPoints ?? []) ?>;
+    // Make character ID available globally
+    window.characterId = <?= $character['id'] ?>;
 
     // Initialize on DOM ready
     document.addEventListener('DOMContentLoaded', async () => {
@@ -124,9 +124,9 @@ ob_start();
             const map = await initMap();
             console.log('Map initialized:', map);
             
-            // Add map points
-            initMapPoints(map, mapPoints);
-            console.log('Map points initialized');
+            // Load map points dynamically for main map (ID = 1)
+            await loadMapPoints(1, window.characterId);
+            console.log('Map points loaded');
         } catch (error) {
             console.error('Failed to initialize map:', error);
         }
