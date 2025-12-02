@@ -3,5 +3,6 @@
   "height": 3961,
   "tile_size": 1024,
   "max_zoom": 3,
-  "format": "png"
+  "format": "png",
+  "musicCategory": "town"
 }

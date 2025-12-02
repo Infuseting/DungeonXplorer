@@ -33,11 +33,31 @@ ob_start();
 
 <div class="relative z-10 min-h-screen flex flex-col">
     <!-- Header -->
-    <header class="flex justify-between items-center p-4 md:p-6 bg-gray-900/50 backdrop-blur-sm lg:bg-transparent">
+    <header class="flex justify-between items-center p-4 md:p-6 bg-gray-900/50 backdrop-blur-sm lg:bg-transparent relative z-50">
         <div class="text-xl md:text-2xl font-bold text-violet-500 tracking-wider uppercase">DungeonXplorer</div>
-        <div class="flex items-center gap-4">
-            <span class="hidden md:inline text-gray-300">Bienvenue, <span class="text-white font-semibold"><?= htmlspecialchars($_SESSION['username']) ?></span></span>
-            <a href="/logout" class="px-3 py-1 md:px-4 md:py-2 border border-red-500/50 text-red-400 rounded hover:bg-red-500/10 transition text-sm md:text-base">Déconnexion</a>
+        
+        <!-- User Menu (Top Right) -->
+        <div class="relative">
+            <button id="user-menu-button" class="w-12 h-12 bg-violet-600 hover:bg-violet-700 text-white rounded-full shadow-lg border-2 border-violet-400 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 text-xl font-bold">
+                <?= strtoupper(substr($_SESSION['username'], 0, 1)) ?>
+            </button>
+            
+            <!-- Dropdown Menu -->
+            <div id="user-dropdown" class="hidden absolute top-14 right-0 w-48 bg-gray-800 border-2 border-gray-600 rounded-lg shadow-xl overflow-hidden z-50">
+                <button id="settings-button" class="w-full px-4 py-3 text-left text-white hover:bg-gray-700 transition-colors flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Paramètres
+                </button>
+                <a href="/logout" class="block w-full px-4 py-3 text-left text-white hover:bg-gray-700 transition-colors flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Déconnexion
+                </a>
+            </div>
         </div>
     </header>
 
@@ -210,11 +230,119 @@ ob_start();
             </div>
         </div>
     </div>
+    </div>
+    
+    <!-- Settings Modal -->
+    <?php require __DIR__ . '/../game/components/settings-modal.php'; ?>
 </div>
 
 <script>
 const characters = <?= json_encode($characters) ?>;
 const classImages = <?= json_encode($classImages) ?>;
+
+// User Menu & Settings Logic
+document.addEventListener('DOMContentLoaded', async () => {
+    // User menu dropdown
+    const userMenuButton = document.getElementById('user-menu-button');
+    const userDropdown = document.getElementById('user-dropdown');
+    
+    if (userMenuButton && userDropdown) {
+        userMenuButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userDropdown.classList.toggle('hidden');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!userMenuButton.contains(e.target) && !userDropdown.contains(e.target)) {
+                userDropdown.classList.add('hidden');
+            }
+        });
+    }
+    
+    // Settings modal
+    const settingsButton = document.getElementById('settings-button');
+    const settingsModal = document.getElementById('settings-modal');
+    const settingsCloseBtn = document.getElementById('settings-close-btn');
+    const settingsSaveBtn = document.getElementById('settings-save-btn');
+    
+    if (settingsButton && settingsModal) {
+        settingsButton.addEventListener('click', async () => {
+            userDropdown.classList.add('hidden');
+            settingsModal.classList.remove('hidden');
+            
+            // Load current volumes
+            try {
+                const { getVolumes } = await import('/js/modules/soundManager.js');
+                const volumes = getVolumes();
+                document.getElementById('master-volume').value = Math.round(volumes.master * 100);
+                document.getElementById('music-volume').value = Math.round(volumes.music * 100);
+                document.getElementById('sfx-volume').value = Math.round(volumes.sfx * 100);
+                updateVolumeDisplays();
+            } catch (e) {
+                console.warn('SoundManager not loaded yet', e);
+            }
+        });
+    }
+    
+    if (settingsCloseBtn) {
+        settingsCloseBtn.addEventListener('click', () => {
+            settingsModal.classList.add('hidden');
+        });
+    }
+    
+    // Volume sliders
+    const masterVolumeSlider = document.getElementById('master-volume');
+    const musicVolumeSlider = document.getElementById('music-volume');
+    const sfxVolumeSlider = document.getElementById('sfx-volume');
+    
+    function updateVolumeDisplays() {
+        if (masterVolumeSlider) document.getElementById('master-volume-value').textContent = masterVolumeSlider.value + '%';
+        if (musicVolumeSlider) document.getElementById('music-volume-value').textContent = musicVolumeSlider.value + '%';
+        if (sfxVolumeSlider) document.getElementById('sfx-volume-value').textContent = sfxVolumeSlider.value + '%';
+    }
+    
+    if (masterVolumeSlider) masterVolumeSlider.addEventListener('input', updateVolumeDisplays);
+    if (musicVolumeSlider) musicVolumeSlider.addEventListener('input', updateVolumeDisplays);
+    if (sfxVolumeSlider) sfxVolumeSlider.addEventListener('input', updateVolumeDisplays);
+    
+    // Save settings
+    if (settingsSaveBtn) {
+        settingsSaveBtn.addEventListener('click', async () => {
+            try {
+                const { setMasterVolume, setMusicVolume, setSFXVolume } = await import('/js/modules/soundManager.js');
+                setMasterVolume(parseInt(masterVolumeSlider.value) / 100);
+                setMusicVolume(parseInt(musicVolumeSlider.value) / 100);
+                setSFXVolume(parseInt(sfxVolumeSlider.value) / 100);
+                
+                settingsModal.classList.add('hidden');
+                
+                // Show toast
+                const { showToast } = await import('/js/modules/toast.js');
+                showToast('Paramètres sauvegardés !', 'success');
+            } catch (e) {
+                console.error('Error saving settings:', e);
+            }
+        });
+    }
+
+    // Global SFX Handler
+    document.addEventListener('click', async (e) => {
+        // Check if element or parent is clickable
+        const target = e.target.closest('button, a, .character-card, .slot, .quest-item, .leaflet-interactive');
+        
+        if (target) {
+            // Don't play if sound was already played by specific handler (optional check)
+            // For now, we rely on soundManager to handle concurrency or just play it
+            try {
+                const { playSound } = await import('/js/modules/soundManager.js');
+                playSound('click');
+            } catch (err) {
+                // Sound manager might not be loaded yet
+            }
+        }
+    });
+});
 
 function toggleCharacterMenu() {
     const menu = document.getElementById('mobile-menu');

@@ -3,9 +3,21 @@
  * Handles Leaflet map initialization and configuration
  */
 
+import { changeMusicCategory } from './soundManager.js';
+
 let gameMap = null;
 let gameMapMaxZoom = null;
 let currentMarkers = [];
+
+// Navigation system - also expose on window for initialization
+let mapHistory = [];
+let currentMapData = null;
+
+// Make currentMapData accessible globally for initialization
+Object.defineProperty(window, 'currentMapData', {
+    get: () => currentMapData,
+    set: (value) => { currentMapData = value; }
+});
 
 /**
  * Initialize the Leaflet map
@@ -60,6 +72,12 @@ export async function initMap(configUrl = '/assets/map/main/map_config.json', ti
         // Store globally for access
         gameMap = map;
         gameMapMaxZoom = maxZoom;
+
+        // Change music category if specified in config
+        if (cfg.musicCategory) {
+            console.log(`[Map] Changing music to category: ${cfg.musicCategory}`);
+            changeMusicCategory(cfg.musicCategory);
+        }
 
         // Trigger event that map is ready
         window.dispatchEvent(new CustomEvent('mapReady', { detail: { containerId } }));
@@ -164,4 +182,113 @@ export function getMap() {
  */
 export function getMaxZoom() {
     return gameMapMaxZoom;
+}
+
+/**
+ * Load a map (main or submap) with navigation history
+ * @param {number} mapId - ID of the map
+ * @param {string} configUrl - URL to map_config.json
+ * @param {string} tilesPath - Path to tiles directory
+ * @param {string} mapName - Name of the map (for display)
+ */
+export async function loadMap(mapId, configUrl, tilesPath, mapName = null) {
+    console.log(`[Map] Loading map ${mapId}: ${mapName || 'Unnamed'}`);
+    console.log(`[Map] Current map data before:`, currentMapData);
+    console.log(`[Map] History before:`, mapHistory);
+
+    // Save current map to history before loading new one
+    if (currentMapData) {
+        mapHistory.push({ ...currentMapData });
+        console.log(`[Map] Saved to history. Stack size: ${mapHistory.length}`);
+    }
+
+    // Load the new map
+    await initMap(configUrl, tilesPath, 'map');
+    await loadMapPoints(mapId, window.characterId);
+
+    // Store current map data
+    currentMapData = {
+        mapId,
+        configUrl,
+        tilesPath,
+        mapName
+    };
+
+    console.log(`[Map] Current map data after:`, currentMapData);
+    console.log(`[Map] History after:`, mapHistory);
+
+    // Update back button visibility
+    updateBackButton();
+}
+
+/**
+ * Go back to the previous map in history
+ */
+export async function goBackToParentMap() {
+    if (mapHistory.length === 0) {
+        console.warn('[Map] No map in history to go back to');
+        return;
+    }
+
+    // Get previous map from history
+    const previousMap = mapHistory.pop();
+    console.log(`[Map] Going back to: ${previousMap.mapName || previousMap.mapId}`);
+
+    // Load previous map WITHOUT adding to history
+    await initMap(previousMap.configUrl, previousMap.tilesPath, 'map');
+    await loadMapPoints(previousMap.mapId, window.characterId);
+
+    // Update current map data
+    currentMapData = previousMap;
+
+    // Update back button visibility
+    updateBackButton();
+}
+
+/**
+ * Update back button visibility based on history
+ */
+function updateBackButton() {
+    const backButton = document.getElementById('back-to-parent-map');
+    if (!backButton) {
+        console.warn('[Map] Back button not found in DOM');
+        return;
+    }
+
+    console.log(`[Map] Updating back button. History length: ${mapHistory.length}`);
+
+    if (mapHistory.length > 0) {
+        backButton.classList.remove('hidden');
+        console.log('[Map] Back button shown');
+        // Update button text with parent map name if available
+        const parentMap = mapHistory[mapHistory.length - 1];
+        if (parentMap.mapName) {
+            backButton.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Retour
+            `;
+        }
+    } else {
+        backButton.classList.add('hidden');
+        console.log('[Map] Back button hidden');
+    }
+}
+
+/**
+ * Get current map ID
+ * @returns {number|null} Current map ID or null
+ */
+export function getCurrentMapId() {
+    return currentMapData ? currentMapData.mapId : null;
+}
+
+/**
+ * Clear navigation history (useful for logout/reset)
+ */
+export function clearMapHistory() {
+    mapHistory = [];
+    currentMapData = null;
+    updateBackButton();
 }
