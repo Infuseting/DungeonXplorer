@@ -53,7 +53,7 @@ class AuthController
         }
 
         if ($userModel->create($username, $email, $password)) {
-            header('Location: /login?success=registration_successful');
+            header('Location: /login?success=registered');
             exit;
         } else {
             header('Location: /register?error=registration_failed');
@@ -77,35 +77,30 @@ class AuthController
             $refreshToken = $this->tokenService->generateRefreshToken();
             
             // Store Refresh Token (hashed)
-            // Using 'selector' as a unique ID for the token (random hex)
-            // Using 'validator' as the actual secret token
             $selector = bin2hex(random_bytes(12));
             $expiresAt = date('Y-m-d H:i:s', time() + 86400 * 30); // 30 days
             
             $userModel->createRememberToken($user['id'], $selector, $refreshToken, $expiresAt);
 
             // Set Cookies
-            // Access Token: 15 min
             setcookie('access_token', $accessToken, [
                 'expires' => time() + 900,
                 'path' => '/',
-                'secure' => false, // Set to true in production (HTTPS)
+                'secure' => false,
                 'httponly' => true,
                 'samesite' => 'Lax'
             ]);
 
-            // Refresh Token: 30 days (selector:token)
             setcookie('refresh_token', $selector . ':' . $refreshToken, [
                 'expires' => time() + 86400 * 30,
                 'path' => '/',
-                'secure' => false, // Set to true in production
+                'secure' => false,
                 'httponly' => true,
                 'samesite' => 'Lax'
             ]);
 
-            // Set session for username display (optional, but useful for UI)
             $_SESSION['username'] = $user['username'];
-            $_SESSION['user_id'] = $user['id']; // Keep for legacy checks if any
+            $_SESSION['user_id'] = $user['id'];
 
             header('Location: /personnage');
             exit;
@@ -137,6 +132,47 @@ class AuthController
         exit;
     }
 
+    public function forgotPassword()
+    {
+        require __DIR__ . '/../Views/auth/forgot_password.php';
+    }
+
+    public function forgotPasswordPost()
+    {
+        $email = $_POST['email'] ?? '';
+        $code = $_POST['code'] ?? '';
+        $newPassword = $_POST['new_password'] ?? '';
+        $confirmPassword = $_POST['confirm_password'] ?? '';
+
+        if ($newPassword !== $confirmPassword) {
+            header('Location: /forgot-password?error=passwords_do_not_match');
+            exit;
+        }
+
+        $userModel = new User();
+        $user = $userModel->findByEmail($email);
+
+        if (!$user) {
+            header('Location: /forgot-password?error=invalid_email');
+            exit;
+        }
+
+        $resetModel = new \App\Models\PasswordReset();
+        $reset = $resetModel->verify($user['id'], $code);
+
+        if ($reset) {
+            if ($userModel->updatePassword($user['id'], $newPassword)) {
+                // Invalidate the code
+                $resetModel->deleteUserCodes($user['id']);
+                header('Location: /login?success=password_reset');
+                exit;
+            }
+        }
+
+        header('Location: /forgot-password?error=invalid_code');
+        exit;
+    }
+
     private function checkAuth()
     {
         // Check Access Token validity
@@ -147,8 +183,6 @@ class AuthController
         }
 
         // Check Refresh Token existence
-        // If we have a refresh token, we redirect to /personnage to let the middleware handle the refresh.
-        // If the refresh fails, the middleware will clear cookies and redirect back to /login.
         if (isset($_COOKIE['refresh_token'])) {
              $parts = explode(':', $_COOKIE['refresh_token']);
              if (count($parts) === 2) {

@@ -25,6 +25,8 @@ $router->post('/login', 'App\Controllers\AuthController@loginPost');
 $router->get('/register', 'App\Controllers\AuthController@register');
 $router->post('/register', 'App\Controllers\AuthController@registerPost');
 $router->get('/logout', 'App\Controllers\AuthController@logout');
+$router->get('/forgot-password', 'App\Controllers\AuthController@forgotPassword');
+$router->post('/forgot-password', 'App\Controllers\AuthController@forgotPasswordPost');
 
 // Character Routes (Protected)
 $router->mount('/personnage', function() use ($router) {
@@ -137,7 +139,17 @@ $router->mount('/admin', function() use ($router) {
     $router->post('/quests/stage/add-unlock', 'App\Controllers\AdminQuestController@addMapUnlock');
     $router->post('/quests/stage/remove-unlock', 'App\Controllers\AdminQuestController@removeMapUnlock');
     $router->post('/quests/prerequisite/add', 'App\Controllers\AdminQuestController@addPrerequisite');
+    $router->post('/quests/prerequisite/add', 'App\Controllers\AdminQuestController@addPrerequisite');
     $router->post('/quests/prerequisite/remove', 'App\Controllers\AdminQuestController@removePrerequisite');
+    
+    // User Management
+    $router->get('/users', 'App\Controllers\AdminUserController@index');
+    $router->post('/users/reset-password/(\d+)', 'App\Controllers\AdminUserController@resetPassword');
+    $router->post('/users/delete/(\d+)', 'App\Controllers\AdminUserController@delete');
+    
+    // Character Management
+    $router->get('/characters', 'App\Controllers\AdminCharacterController@index');
+    $router->post('/characters/delete/(\d+)', 'App\Controllers\AdminCharacterController@delete');
 });
 
 $router->set404('App\Controllers\ErrorController@error404');

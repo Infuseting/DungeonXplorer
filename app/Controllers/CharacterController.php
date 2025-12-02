@@ -5,7 +5,6 @@ namespace App\Controllers;
 use App\Models\Character;
 use App\Models\CharacterClass;
 use App\Models\CharacterStats;
-use App\Models\CharacterAppearance;
 
 class CharacterController
 {
@@ -28,10 +27,6 @@ class CharacterController
         // Get the last played character (first in the list due to ORDER BY)
         $selectedCharacter = $characters[0];
         
-        // Load appearance for the selected character
-        $appearanceModel = new CharacterAppearance();
-        $selectedCharacter['appearance'] = $appearanceModel->findByCharacterId($selectedCharacter['id']);
-
         require_once __DIR__ . '/../Views/character/index.php';
     }
 
@@ -83,18 +78,6 @@ class CharacterController
             // Create Stats
             $statsModel = new CharacterStats();
             $statsModel->create($characterId, $baseStats);
-
-            // Create Default Appearance (Since customization is removed)
-            $appearance = [
-                'skin_color' => '#ffdbac',
-                'hair_style' => 'default',
-                'hair_color' => '#000000',
-                'eye_color' => '#000000',
-                'face_style' => 'default'
-            ];
-            
-            $appearanceModel = new CharacterAppearance();
-            $appearanceModel->create($characterId, $appearance);
 
             header('Location: /personnage');
             exit;

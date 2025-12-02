@@ -82,4 +82,31 @@ class User
         $stmt->bind_param("i", $userId);
         return $stmt->execute();
     }
+
+    // Admin Methods
+    public function getAllUsers()
+    {
+        $result = $this->db->query("
+            SELECT u.*, 
+            (SELECT COUNT(*) FROM characters c WHERE c.user_id = u.id) as character_count 
+            FROM users u 
+            ORDER BY u.created_at DESC
+        ");
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
+
+    public function updatePassword($userId, $newPassword)
+    {
+        $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+        $stmt = $this->db->prepare("UPDATE users SET password = ? WHERE id = ?");
+        $stmt->bind_param("si", $hashedPassword, $userId);
+        return $stmt->execute();
+    }
+
+    public function delete($userId)
+    {
+        $stmt = $this->db->prepare("DELETE FROM users WHERE id = ?");
+        $stmt->bind_param("i", $userId);
+        return $stmt->execute();
+    }
 }

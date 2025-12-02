@@ -60,4 +60,62 @@ class Character
         $stmt->bind_param("ii", $id, $userId);
         return $stmt->execute();
     }
+
+    // Admin Methods
+    public function deleteById($id)
+    {
+        $stmt = $this->db->prepare("DELETE FROM characters WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        return $stmt->execute();
+    }
+
+    public function getAllCharacters($filters = [])
+    {
+        $sql = "
+            SELECT c.*, u.username, cl.name as class_name, s.level 
+            FROM characters c 
+            JOIN users u ON c.user_id = u.id 
+            JOIN classes cl ON c.class_id = cl.id 
+            LEFT JOIN character_stats s ON c.id = s.character_id
+            WHERE 1=1
+        ";
+        
+        $params = [];
+        $types = "";
+
+        if (!empty($filters['class_id'])) {
+            $sql .= " AND c.class_id = ?";
+            $params[] = $filters['class_id'];
+            $types .= "i";
+        }
+
+        if (!empty($filters['level'])) {
+            $sql .= " AND s.level = ?";
+            $params[] = $filters['level'];
+            $types .= "i";
+        }
+
+        if (!empty($filters['name'])) {
+            $sql .= " AND c.name LIKE ?";
+            $params[] = "%" . $filters['name'] . "%";
+            $types .= "s";
+        }
+
+        if (!empty($filters['user_id'])) {
+            $sql .= " AND c.user_id = ?";
+            $params[] = $filters['user_id'];
+            $types .= "i";
+        }
+        
+        $sql .= " ORDER BY c.created_at DESC";
+
+        $stmt = $this->db->prepare($sql);
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
 }
