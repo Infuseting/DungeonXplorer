@@ -364,6 +364,30 @@ $customStyles = '
     .edit-section {
         animation: fadeIn 0.4s ease;
     }
+    
+    .makeup-checkbox-wrapper {
+        transition: all 0.3s ease;
+    }
+    
+    .makeup-checkbox-wrapper:hover {
+        background: rgba(139, 92, 246, 0.1);
+        transform: translateX(5px);
+    }
+    
+    .makeup-checkbox-wrapper:has(input:checked) {
+        background: rgba(139, 92, 246, 0.15);
+        border-color: rgba(139, 92, 246, 0.6);
+    }
+    
+    .makeup-checkbox {
+        cursor: pointer;
+        accent-color: #8b5cf6;
+    }
+    
+    .makeup-checkbox:focus {
+        outline: 2px solid rgba(139, 92, 246, 0.5);
+        outline-offset: 2px;
+    }
 ';
 
 $className = strtolower($character['class']['name']);
@@ -394,23 +418,13 @@ ob_start();
             <!-- Character Preview -->
             <div class="character-viewer" id="characterViewer">
                 <div class="character-preview-wrapper">
-                    <div class="character-preview relative inline-block w-full h-full" data-character-id="character-edit">
+                    <div class="character-preview relative inline-block w-full h-full" data-character-id="character-edit" id="characterPreview">
                         <!-- Base Character -->
                         <img id="characterImage" src="<?= $imageBase ?>/<?= $className ?>.png" 
                              alt="<?= htmlspecialchars($character['name']) ?>" 
                              class="character-base absolute top-0 left-0 w-full h-full object-contain">
                         
-                        <!-- Eyes Layer -->
-                        <img id="eyesBlue" class="character-layer-eyes absolute top-0 left-0 w-full h-full object-contain" 
-                             src="<?= $imageBase ?>/eyes/eyes_blue.png" style="display: none;">
-                        <img id="eyesRed" class="character-layer-eyes absolute top-0 left-0 w-full h-full object-contain" 
-                             src="<?= $imageBase ?>/eyes/eyes_red.png" style="display: none;">
-                        <img id="eyesGreen" class="character-layer-eyes absolute top-0 left-0 w-full h-full object-contain" 
-                             src="<?= $imageBase ?>/eyes/eyes_green.png" style="display: none;">
-                        <img id="eyesSnake" class="character-layer-eyes absolute top-0 left-0 w-full h-full object-contain" 
-                             src="<?= $imageBase ?>/eyes/eyes_snake.png" style="display: none;">
-                        
-                        <!-- Hair Layer -->
+                        <!-- Hair Layer (toujours présent) -->
                         <img id="hairImage" src="<?= $imageBase ?>/hair.png" 
                              alt="Cheveux" 
                              class="character-layer-hair absolute top-0 left-0 w-full h-full object-contain"
@@ -418,11 +432,11 @@ ob_start();
                              data-hair-green="<?= $character['appearance']['hair']['greenMagenta'] ?? 100 ?>"
                              data-hair-blue="<?= $character['appearance']['hair']['blueYellow'] ?? 100 ?>">
                         
-                        <!-- Makeup Layer -->
-                        <img id="makeupScar" class="character-layer-makeup absolute top-0 left-0 w-full h-full object-contain" 
-                             src="<?= $imageBase ?>/makeup/cicatrice_nez.png" style="display: none;">
-                        <img id="makeupTattoo" class="character-layer-makeup absolute top-0 left-0 w-full h-full object-contain" 
-                             src="<?= $imageBase ?>/makeup/tatouage_coeur.png" style="display: none;">
+                        <!-- Eyes Layer Container (créé dynamiquement) -->
+                        <div id="eyesContainer"></div>
+                        
+                        <!-- Makeup Layers Container (créé dynamiquement) -->
+                        <div id="makeupContainer"></div>
                     </div>
                 </div>
             </div>
@@ -503,21 +517,25 @@ ob_start();
                     <!-- Makeup Section -->
                     <div class="edit-section hidden" id="makeupSection">
                         <h3 class="section-title">Maquillage et tatouages</h3>
-                        <div class="control-group">
-                            <label class="control-label">
-                                <span>Sélectionnez un style</span>
-                            </label>
-                            <div class="custom-select-wrapper">
-                                <select name="makeup_type" id="makeupTypeSelect" class="custom-select">
-                                    <option value="none" <?= ($character['appearance']['makeup']['type'] ?? 'none') === 'none' ? 'selected' : '' ?>>Aucun</option>
-                                    <?php foreach ($appearanceOptions['makeup'] as $makeupFile => $makeupLabel): ?>
-                                        <option value="<?= htmlspecialchars($makeupFile) ?>" 
-                                                <?= ($character['appearance']['makeup']['type'] ?? '') === $makeupFile ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($makeupLabel) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
+                        <p class="text-gray-400 text-sm mb-4">Vous pouvez sélectionner plusieurs options</p>
+                        <div class="space-y-3">
+                            <?php foreach ($appearanceOptions['makeup'] as $makeupFile => $makeupLabel): 
+                                $isChecked = isset($character['appearance']['makeup'][$makeupFile]) && $character['appearance']['makeup'][$makeupFile] === true;
+                            ?>
+                                <label class="makeup-checkbox-wrapper flex items-center gap-3 p-3 bg-gray-800/50 border border-gray-700 rounded-lg cursor-pointer hover:border-violet-500 transition">
+                                    <input type="checkbox" 
+                                           name="makeup[]" 
+                                           value="<?= htmlspecialchars($makeupFile) ?>" 
+                                           class="makeup-checkbox w-5 h-5 rounded border-gray-600 text-violet-600 focus:ring-violet-500 focus:ring-offset-gray-900"
+                                           <?= $isChecked ? 'checked' : '' ?>
+                                           onchange="toggleMakeup('<?= htmlspecialchars($makeupFile) ?>', this.checked)">
+                                    <span class="text-white font-medium"><?= htmlspecialchars($makeupLabel) ?></span>
+                                </label>
+                            <?php endforeach; ?>
+                            
+                            <?php if (empty($appearanceOptions['makeup'])): ?>
+                                <p class="text-gray-500 text-center py-4">Aucun maquillage disponible pour cette classe</p>
+                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -538,6 +556,10 @@ ob_start();
 <script>
 const hairImage = document.getElementById('hairImage');
 const characterViewer = document.getElementById('characterViewer');
+const characterPreview = document.getElementById('characterPreview');
+const eyesContainer = document.getElementById('eyesContainer');
+const makeupContainer = document.getElementById('makeupContainer');
+
 const redCyanSlider = document.getElementById('redCyanSlider');
 const greenMagentaSlider = document.getElementById('greenMagentaSlider');
 const blueYellowSlider = document.getElementById('blueYellowSlider');
@@ -545,7 +567,13 @@ const redCyanValue = document.getElementById('redCyanValue');
 const greenMagentaValue = document.getElementById('greenMagentaValue');
 const blueYellowValue = document.getElementById('blueYellowValue');
 const eyeColorSelect = document.getElementById('eyeColorSelect');
-const makeupTypeSelect = document.getElementById('makeupTypeSelect');
+
+const className = '<?= $className ?>';
+const imageBase = '<?= $imageBase ?>';
+
+// Options disponibles
+const eyeOptions = <?= json_encode($appearanceOptions['eyes']) ?>;
+const makeupOptions = <?= json_encode(array_keys($appearanceOptions['makeup'])) ?>;
 
 const presets = {
     original: { redCyan: 100, greenMagenta: 100, blueYellow: 100 },
@@ -557,6 +585,7 @@ const presets = {
     pink: { redCyan: 135, greenMagenta: 70, blueYellow: 90 }
 };
 
+// Gestion des cheveux
 function updateFilter() {
     if (!hairImage) return;
     
@@ -623,7 +652,61 @@ document.querySelectorAll('.preset-btn').forEach(btn => {
     });
 });
 
-// Tabs with zoom effect
+// Gestion des yeux - Création dynamique
+let currentEyeLayer = null;
+
+function setEyeColor(eyeColor) {
+    // Supprimer l'ancien layer
+    if (currentEyeLayer) {
+        currentEyeLayer.remove();
+        currentEyeLayer = null;
+    }
+    
+    // Si brown, ne rien créer
+    if (eyeColor === 'brown') return;
+    
+    // Créer le nouveau layer
+    const eyeImg = document.createElement('img');
+    eyeImg.src = `${imageBase}/eyes/eyes_${eyeColor}.png`;
+    eyeImg.alt = `Yeux ${eyeColor}`;
+    eyeImg.className = 'character-layer-eyes absolute top-0 left-0 w-full h-full object-contain';
+    eyeImg.id = `eyes-${eyeColor}`;
+    
+    eyesContainer.appendChild(eyeImg);
+    currentEyeLayer = eyeImg;
+}
+
+eyeColorSelect?.addEventListener('change', function() {
+    setEyeColor(this.value);
+});
+
+// Gestion du maquillage - Création dynamique
+const activeMakeupLayers = new Map();
+
+function toggleMakeup(makeupFile, isChecked) {
+    if (isChecked) {
+        // Créer le layer si coché
+        if (!activeMakeupLayers.has(makeupFile)) {
+            const makeupImg = document.createElement('img');
+            makeupImg.src = `${imageBase}/makeup/${makeupFile}.png`;
+            makeupImg.alt = 'Maquillage';
+            makeupImg.className = 'character-layer-makeup absolute top-0 left-0 w-full h-full object-contain';
+            makeupImg.id = `makeup-${makeupFile.replace(/[^a-zA-Z0-9]/g, '-')}`;
+            
+            makeupContainer.appendChild(makeupImg);
+            activeMakeupLayers.set(makeupFile, makeupImg);
+        }
+    } else {
+        // Supprimer le layer si décoché
+        const layer = activeMakeupLayers.get(makeupFile);
+        if (layer) {
+            layer.remove();
+            activeMakeupLayers.delete(makeupFile);
+        }
+    }
+}
+
+// Tabs avec zoom
 document.querySelectorAll('.tab-item').forEach(tab => {
     tab.addEventListener('click', () => {
         document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
@@ -632,7 +715,6 @@ document.querySelectorAll('.tab-item').forEach(tab => {
         document.querySelectorAll('.edit-section').forEach(s => s.classList.add('hidden'));
         document.getElementById(tab.dataset.tab + 'Section').classList.remove('hidden');
         
-        // Toggle zoom: zoomed for editing tabs, normal for finish
         if (tab.dataset.tab === 'finish') {
             characterViewer.classList.remove('zoomed');
         } else {
@@ -641,35 +723,29 @@ document.querySelectorAll('.tab-item').forEach(tab => {
     });
 });
 
-// Eyes dropdown
-eyeColorSelect?.addEventListener('change', function() {
-    document.querySelectorAll('.character-layer-eyes').forEach(img => img.style.display = 'none');
+// Initialisation - Charger l'apparence sauvegardée
+function initAppearance() {
+    updateFilter();
     
-    const eye = this.value;
-    if (eye !== 'brown') {
-        const eyeMap = { blue: 'eyesBlue', red: 'eyesRed', green: 'eyesGreen', snake: 'eyesSnake' };
-        const eyeImg = document.getElementById(eyeMap[eye]);
-        if (eyeImg) {
-            eyeImg.style.display = 'block';
-        }
-    }
-});
-
-// Makeup dropdown
-makeupTypeSelect?.addEventListener('change', function() {
-    document.querySelectorAll('.character-layer-makeup').forEach(img => img.style.display = 'none');
+    // Charger les yeux sauvegardés
+    const savedEyeColor = '<?= $character['appearance']['eyes']['color'] ?? 'brown' ?>';
+    setEyeColor(savedEyeColor);
     
-    const makeup = this.value;
-    if (makeup !== 'none') {
-        const makeupImg = document.getElementById('makeup' + makeup.charAt(0).toUpperCase() + makeup.slice(1));
-        if (makeupImg) {
-            makeupImg.style.display = 'block';
-        }
-    }
-});
+    // Charger les maquillages sauvegardés
+    <?php if (isset($character['appearance']['makeup']) && is_array($character['appearance']['makeup'])): ?>
+        <?php foreach ($character['appearance']['makeup'] as $makeupFile => $isActive): ?>
+            <?php if ($isActive === true): ?>
+                toggleMakeup('<?= htmlspecialchars($makeupFile) ?>', true);
+            <?php endif; ?>
+        <?php endforeach; ?>
+    <?php endif; ?>
+    
+    // Démarrer avec le zoom activé
+    characterViewer.classList.add('zoomed');
+}
 
-// Initial filter update
-updateFilter();
+// Lancer l'initialisation
+initAppearance();
 </script>
 
 <?php

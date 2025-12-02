@@ -95,11 +95,15 @@ function renderCharacter($character, $options = []) {
              data-hair-green="<?= $hairGreenMagenta ?>"
              data-hair-blue="<?= $hairBlueYellow ?>">
         
-        <!-- Makeup Layer -->
-        <?php if ($makeupType !== 'none'): ?>
-            <img src="<?= $imageBase ?>/makeup/<?= htmlspecialchars($makeupType) ?>.png" 
-                 alt="Maquillage" 
-                 class="character-layer-makeup absolute top-0 left-0 w-full h-full object-contain">
+        <!-- Makeup Layers -->
+        <?php if (isset($appearance['makeup']) && is_array($appearance['makeup'])): ?>
+            <?php foreach ($appearance['makeup'] as $makeupFile => $isActive): ?>
+                <?php if ($isActive === true): ?>
+                    <img src="<?= $imageBase ?>/makeup/<?= htmlspecialchars($makeupFile) ?>.png" 
+                         alt="Maquillage" 
+                         class="character-layer-makeup absolute top-0 left-0 w-full h-full object-contain">
+                <?php endif; ?>
+            <?php endforeach; ?>
         <?php endif; ?>
     </div>
     

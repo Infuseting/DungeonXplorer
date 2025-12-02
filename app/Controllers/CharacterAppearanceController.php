@@ -110,6 +110,15 @@ class CharacterAppearanceController
             exit;
         }
         
+        // Récupérer les maquillages cochés
+        $selectedMakeups = $_POST['makeup'] ?? [];
+        $makeupData = [];
+        
+        // Convertir le tableau en format associatif
+        foreach ($selectedMakeups as $makeupFile) {
+            $makeupData[$makeupFile] = true;
+        }
+        
         $appearance = [
             'hair' => [
                 'redCyan' => (int)($_POST['hair_red_cyan'] ?? 100),
@@ -119,9 +128,7 @@ class CharacterAppearanceController
             'eyes' => [
                 'color' => $_POST['eye_color'] ?? 'brown'
             ],
-            'makeup' => [
-                'type' => $_POST['makeup_type'] ?? 'none'
-            ]
+            'makeup' => $makeupData
         ];
         
         // Mode preview : créer le personnage maintenant
