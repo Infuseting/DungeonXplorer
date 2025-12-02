@@ -26,6 +26,7 @@ class Inventory
         $stmt->execute();
         $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
+
         $inventory = [
             'equipped' => [],
             'backpack' => [],
@@ -43,7 +44,6 @@ class Inventory
                 $inventory['pockets'][$pocketIndex] = $item;
             }
         }
-
         return $inventory;
     }
 

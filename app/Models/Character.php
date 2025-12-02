@@ -89,7 +89,7 @@ public function getEquippedStats(Stats $statsEnum): int
 
     public function findById($id)
     {
-        $stmt = $this->db->prepare("SELECT c.name, c.class_id, c.gold, cs.level, cs.xp, cs.strength,cs.dexterity,cs.intelligence,cs.vitality  FROM characters c  Join character_stats cs on c.id=cs.character_id WHERE id = ?");
+        $stmt = $this->db->prepare("SELECT c.id,c.name, c.class_id, c.gold, cs.level, cs.xp, cs.strength,cs.dexterity,cs.intelligence,cs.vitality  FROM characters c  Join character_stats cs on c.id=cs.character_id WHERE id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
 
@@ -98,7 +98,7 @@ public function getEquippedStats(Stats $statsEnum): int
 
         if ($data) {
             
-            
+            $this->id = $data['id'];
             $this->name = $data['name'];
             $this->strength = $data['strength'];
             $this->vitality = $data['vitality'];
@@ -133,12 +133,14 @@ public function getEquippedStats(Stats $statsEnum): int
     {
         // Si déjà chargé, on renvoie directement
         if (!empty($this->inventoryCache)) {
+            echo 'empty';
             return $this->inventoryCache;
         }
 
             
 
             $result = $this->inventory->getCharacterInventory($this->id);
+
             return is_array($result) ? $result : [];
 
         

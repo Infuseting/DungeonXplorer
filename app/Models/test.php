@@ -19,7 +19,7 @@ echo $var;
 
 
 $char = new Character(1);
-$char->findById(1);
+$char->findById(19);
 $var2 = $char->toString();
 echo $var2;
 
@@ -28,7 +28,8 @@ echo "Character Armor Class: " . $charAC . "\n";
 $charPC = $char->getAttaqueClass();
 echo "Character Attaque Class: " . $charPC . "\n";
 
-$combat = new Combat($char, $monster);
-$combat->start();
+$charInventory = $char->getInventory();
+
+
 
 ?>
