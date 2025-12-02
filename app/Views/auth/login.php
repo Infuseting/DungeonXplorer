@@ -29,11 +29,13 @@ ob_start();
     $errorMessages = [
         'invalid_credentials' => 'Email ou mot de passe incorrect.',
         'missing_fields' => 'Veuillez remplir tous les champs.',
+        'password_reset' => 'Mot de passe réinitialisé avec succès !',
     ];
     
     // Display success messages
     $successMessages = [
         'registered' => 'Inscription réussie ! Vous pouvez maintenant vous connecter.',
+        'password_reset' => 'Mot de passe réinitialisé avec succès !',
     ];
     
     if (isset($_GET['error']) && isset($errorMessages[$_GET['error']])):
@@ -61,22 +63,22 @@ ob_start();
 
     <div class="mt-8">
         <div class="mt-6">
-            <form action="/login" method="POST" class="space-y-6">
+            <form class="space-y-6" action="/login" method="POST">
                 <div>
                     <label for="email" class="block text-sm font-medium text-gray-700">
-                        Adresse Email
+                        Adresse email
                     </label>
                     <div class="mt-1">
-                        <input id="email" name="email" type="email" autocomplete="email" required class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition duration-200 sm:text-sm">
+                        <input id="email" name="email" type="email" autocomplete="email" required class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-violet-500 focus:border-violet-500 transition duration-200">
                     </div>
                 </div>
 
-                <div class="space-y-1">
+                <div>
                     <label for="password" class="block text-sm font-medium text-gray-700">
                         Mot de passe
                     </label>
                     <div class="mt-1">
-                        <input id="password" name="password" type="password" autocomplete="current-password" required class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition duration-200 sm:text-sm">
+                        <input id="password" name="password" type="password" autocomplete="current-password" required class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-violet-500 focus:border-violet-500 transition duration-200">
                     </div>
                 </div>
 
@@ -89,7 +91,7 @@ ob_start();
                     </div>
 
                     <div class="text-sm">
-                        <a href="#" class="font-medium text-violet-600 hover:text-violet-500 transition-colors">
+                        <a href="/forgot-password" class="font-medium text-violet-600 hover:text-violet-500 transition-colors">
                             Mot de passe oublié ?
                         </a>
                     </div>

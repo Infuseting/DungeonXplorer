@@ -16,7 +16,7 @@ class Inventory
     public function getCharacterInventory($characterId)
     {
         $stmt = $this->db->prepare("
-            SELECT ci.*, i.name, i.description, i.type, i.slot_type as item_slot_type, i.two_handed, i.width, i.height, i.weight, i.icon, i.stats, i.max_stack
+            SELECT ci.*, i.name, i.description, i.type, i.slot_type as item_slot_type, i.two_handed, i.width, i.height, i.weight, i.icon, i.stats, i.max_stack, i.price
             FROM character_inventory ci
             JOIN items i ON ci.item_id = i.id
             WHERE ci.character_id = ?
@@ -29,35 +29,63 @@ class Inventory
 
         $inventory = [
             'equipped' => [],
-            'backpack' => [],
-            'pockets' => []
+            'inventory' => []
         ];
 
+        $currentWeight = 0;
+
         foreach ($result as $item) {
+            $itemWeight = floatval($item['weight'] ?? 0);
+            $currentWeight += $itemWeight;
+
             if ($item['location'] === 'equipped') {
                 $inventory['equipped'][$item['slot_name']] = $item;
-            } elseif ($item['location'] === 'backpack') {
-                $inventory['backpack'][] = $item;
-            } elseif ($item['location'] === 'pockets') {
-                // Use grid_x as pocket slot index (0-3)
-                $pocketIndex = $item['grid_x'] ?? 0;
-                $inventory['pockets'][$pocketIndex] = $item;
+            } else {
+                // All non-equipped items (backpack/pockets) go to 'inventory'
+                $inventory['inventory'][] = $item;
             }
         }
+
+        // Calculate max weight: 60 + Strength + Backpack Capacity
+        $maxWeight = $this->calculateMaxWeight($characterId, $inventory['equipped']);
+
+        $inventory['current_weight'] = $currentWeight;
+        $inventory['max_weight'] = $maxWeight;
+
         return $inventory;
+    }
+
+    private function calculateMaxWeight($characterId, $equippedItems)
+    {
+        // Base weight
+        $baseWeight = 60;
+
+        // Get character strength
+        $stmt = $this->db->prepare("SELECT strength FROM character_stats WHERE character_id = ?");
+        $stmt->bind_param("i", $characterId);
+        $stmt->execute();
+        $stats = $stmt->get_result()->fetch_assoc();
+        $strength = $stats['strength'] ?? 0;
+
+        // Get backpack capacity if equipped
+        $backpackCapacity = 0;
+        if (isset($equippedItems['backpack'])) {
+            $backpackStats = json_decode($equippedItems['backpack']['stats'] ?? '{}', true);
+            $backpackCapacity = $backpackStats['capacity'] ?? 0;
+        }
+
+        return $baseWeight + $strength + $backpackCapacity;
     }
 
     public function moveItem($characterId, $inventoryItemId, $targetLocation, $targetSlot = null, $targetX = null, $targetY = null)
     {
-        // 1. Get the item and current inventory
+        // 1. Get the item
         $item = $this->getItemInInventory($characterId, $inventoryItemId);
         if (!$item) return ['success' => false, 'message' => 'Item not found'];
 
         // 2. Validate Target Location
-        if ($targetLocation === 'backpack') {
-            return $this->moveToBackpack($characterId, $item, $targetX, $targetY);
-        } elseif ($targetLocation === 'pockets') {
-            return $this->moveToPockets($characterId, $item, $targetSlot);
+        if ($targetLocation === 'inventory' || $targetLocation === 'backpack' || $targetLocation === 'pockets') {
+            return $this->moveToInventory($characterId, $item);
         } elseif ($targetLocation === 'equipped') {
             return $this->equipItem($characterId, $item, $targetSlot);
         }
@@ -68,7 +96,7 @@ class Inventory
     private function getItemInInventory($characterId, $inventoryItemId)
     {
         $stmt = $this->db->prepare("
-            SELECT ci.*, i.width, i.height, i.slot_type as item_slot_type, i.two_handed, i.icon
+            SELECT ci.*, i.width, i.height, i.slot_type as item_slot_type, i.two_handed, i.icon, i.weight
             FROM character_inventory ci
             JOIN items i ON ci.item_id = i.id
             WHERE ci.character_id = ? AND ci.id = ?
@@ -78,55 +106,12 @@ class Inventory
         return $stmt->get_result()->fetch_assoc();
     }
 
-    private function moveToBackpack($characterId, $item, $x, $y)
+    private function moveToInventory($characterId, $item)
     {
-        // Basic bounds check (assuming 6x4 grid for now, should be dynamic based on bag)
-        $gridWidth = 6;
-        $gridHeight = 4;
-
-        if ($x < 0 || $y < 0 || ($x + $item['width']) > $gridWidth || ($y + $item['height']) > $gridHeight) {
-            return ['success' => false, 'message' => 'Out of bounds'];
-        }
-
-        // Collision check
-        $inventory = $this->getCharacterInventory($characterId);
-        foreach ($inventory['backpack'] as $existingItem) {
-            if ($existingItem['id'] == $item['id']) continue; // Skip self
-
-            // Check rectangle overlap
-            if ($x < ($existingItem['grid_x'] + $existingItem['width']) &&
-                ($x + $item['width']) > $existingItem['grid_x'] &&
-                $y < ($existingItem['grid_y'] + $existingItem['height']) &&
-                ($y + $item['height']) > $existingItem['grid_y']) {
-                return ['success' => false, 'message' => 'Space occupied'];
-            }
-        }
-
-        // Update DB
-        $stmt = $this->db->prepare("UPDATE character_inventory SET location = 'backpack', slot_name = NULL, grid_x = ?, grid_y = ? WHERE id = ?");
-        $stmt->bind_param("iii", $x, $y, $item['id']);
+        // Simply move to inventory location (stored as 'backpack' in DB)
+        $stmt = $this->db->prepare("UPDATE character_inventory SET location = 'backpack', slot_name = NULL, grid_x = NULL, grid_y = NULL WHERE id = ?");
+        $stmt->bind_param("i", $item['id']);
         
-        return ['success' => $stmt->execute()];
-    }
-
-    private function moveToPockets($characterId, $item, $slotIndex)
-    {
-        // Validate slot index (0-3)
-        if ($slotIndex < 0 || $slotIndex > 3) {
-            return ['success' => false, 'message' => 'Invalid pocket slot'];
-        }
-
-        // Check if pocket slot is already occupied (skip if it's the same item)
-        $stmt = $this->db->prepare("SELECT id FROM character_inventory WHERE character_id = ? AND location = 'pockets' AND grid_x = ? AND id != ?");
-        $stmt->bind_param("iii", $characterId, $slotIndex, $item['id']);
-        $stmt->execute();
-        if ($stmt->get_result()->num_rows > 0) {
-            return ['success' => false, 'message' => 'Pocket slot occupied'];
-        }
-
-        // Move item to pocket slot (use grid_x as pocket index)
-        $stmt = $this->db->prepare("UPDATE character_inventory SET location = 'pockets', slot_name = NULL, grid_x = ?, grid_y = NULL WHERE id = ?");
-        $stmt->bind_param("ii", $slotIndex, $item['id']);
         return ['success' => $stmt->execute()];
     }
 
@@ -247,24 +232,41 @@ class Inventory
             return ['success' => false, 'message' => 'No item in this slot'];
         }
 
-        // Find first available pocket slot
-        $inventory = $this->getCharacterInventory($characterId);
-        $availableSlot = null;
-        for ($i = 0; $i < 4; $i++) {
-            if (!isset($inventory['pockets'][$i])) {
-                $availableSlot = $i;
-                break;
-            }
-        }
-
-        if ($availableSlot === null) {
-            return ['success' => false, 'message' => 'No available pocket slots'];
-        }
-
-        // Move to first available pocket slot
-        $stmt = $this->db->prepare("UPDATE character_inventory SET location = 'pockets', slot_name = NULL, grid_x = ?, grid_y = NULL WHERE id = ?");
-        $stmt->bind_param("ii", $availableSlot, $result['id']);
+        // Move to inventory (stored as 'backpack')
+        $stmt = $this->db->prepare("UPDATE character_inventory SET location = 'backpack', slot_name = NULL, grid_x = NULL, grid_y = NULL WHERE id = ?");
+        $stmt->bind_param("i", $result['id']);
         return ['success' => $stmt->execute()];
+    }
+
+    public function addItem($characterId, $itemId)
+    {
+        // 1. Get Item Details
+        $stmt = $this->db->prepare("SELECT width, height, max_stack, type, weight FROM items WHERE id = ?");
+        $stmt->bind_param("i", $itemId);
+        $stmt->execute();
+        $itemData = $stmt->get_result()->fetch_assoc();
+
+        if (!$itemData) {
+            return ['success' => false, 'message' => 'Item not found'];
+        }
+
+        // 2. Check weight limit
+        $inventory = $this->getCharacterInventory($characterId);
+        $itemWeight = floatval($itemData['weight'] ?? 0);
+        
+        if (($inventory['current_weight'] + $itemWeight) > $inventory['max_weight']) {
+            return ['success' => false, 'message' => 'Inventory too heavy'];
+        }
+
+        // 3. Add to inventory (stored as 'backpack')
+        $stmt = $this->db->prepare("INSERT INTO character_inventory (character_id, item_id, location) VALUES (?, ?, 'backpack')");
+        $stmt->bind_param("ii", $characterId, $itemId);
+        
+        if ($stmt->execute()) {
+            return ['success' => true, 'message' => 'Item added', 'new_item_id' => $this->db->insert_id];
+        } else {
+            return ['success' => false, 'message' => 'Database error'];
+        }
     }
 
     private function determineSlotForItem($itemSlotType)

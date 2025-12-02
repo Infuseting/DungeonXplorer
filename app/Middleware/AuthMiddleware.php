@@ -18,6 +18,8 @@ class AuthMiddleware
 
     public function handle()
     {
+      
+
         // Start session if not already started (for flash messages/username)
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
@@ -86,11 +88,11 @@ class AuthMiddleware
                     $_SESSION['username'] = $user['username'];
 
                     return; // Auth successful via refresh
+                
                 }
             }
         }
 
-        // 3. Auth Failed
         // Clear everything
         setcookie('access_token', '', time() - 3600, '/');
         setcookie('refresh_token', '', time() - 3600, '/');

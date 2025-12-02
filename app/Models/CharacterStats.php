@@ -13,20 +13,57 @@ class CharacterStats
         $this->db = Database::getInstance()->getConnection();
     }
 
-    public function create($characterId, $stats)
+    public function create($characterId, $classId)
     {
+        // Récupérer les stats de base de la classe depuis JSON
+        $stmt = $this->db->prepare("SELECT base_stats_json FROM classes WHERE id = ?");
+        $stmt->bind_param("i", $classId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $classData = $result->fetch_assoc();
+        
+        if (!$classData || empty($classData['base_stats_json'])) {
+            error_log("CharacterStats::create - Class not found or no base stats for classId: " . $classId);
+            return false;
+        }
+        
+        // Décoder le JSON
+        $baseStats = json_decode($classData['base_stats_json'], true);
+        
+        if (!$baseStats) {
+            error_log("CharacterStats::create - Invalid JSON in base_stats_json for classId: " . $classId);
+            return false;
+        }
+        
+        // Extraire les valeurs (avec valeurs par défaut si absentes)
+        $strength = (int)($baseStats['strength'] ?? 10);
+        $dexterity = (int)($baseStats['dexterity'] ?? 10);
+        $intelligence = (int)($baseStats['intelligence'] ?? 10);
+        $vitality = (int)($baseStats['vitality'] ?? 10);
+        
+        // Créer les stats du personnage
         $stmt = $this->db->prepare("
-            INSERT INTO character_stats (character_id, strength, dexterity, intelligence, vitality) 
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO character_stats 
+            (character_id, level, xp, strength, dexterity, intelligence, vitality) 
+            VALUES (?, 1, 0, ?, ?, ?, ?)
         ");
-        $stmt->bind_param("iiiii", 
+        
+        $stmt->bind_param(
+            "iiiii", 
             $characterId, 
-            $stats['strength'], 
-            $stats['dexterity'], 
-            $stats['intelligence'], 
-            $stats['vitality']
+            $strength, 
+            $dexterity, 
+            $intelligence, 
+            $vitality
         );
-        return $stmt->execute();
+        
+        $success = $stmt->execute();
+        
+        if (!$success) {
+            error_log("CharacterStats::create - SQL Error: " . $stmt->error);
+        }
+        
+        return $success;
     }
 
     public function findByCharacterId($characterId)
@@ -35,5 +72,27 @@ class CharacterStats
         $stmt->bind_param("i", $characterId);
         $stmt->execute();
         return $stmt->get_result()->fetch_assoc();
+    }
+    
+    public function update($characterId, $data)
+    {
+        $fields = [];
+        $values = [];
+        $types = '';
+        
+        foreach ($data as $key => $value) {
+            $fields[] = "$key = ?";
+            $values[] = $value;
+            $types .= is_int($value) ? 'i' : 's';
+        }
+        
+        $values[] = $characterId;
+        $types .= 'i';
+        
+        $sql = "UPDATE character_stats SET " . implode(', ', $fields) . " WHERE character_id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param($types, ...$values);
+        
+        return $stmt->execute();
     }
 }

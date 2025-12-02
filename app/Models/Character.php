@@ -68,6 +68,14 @@ public function getEquippedStats(Stats $statsEnum): int
 }
 
 
+    public function updateAppearance($id, $appearanceData)
+    {
+        $jsonAppearance = json_encode($appearanceData);
+        $stmt = $this->db->prepare("UPDATE characters SET appearance = ? WHERE id = ?");
+        $stmt->bind_param("si", $jsonAppearance, $id);
+        return $stmt->execute();
+    }
+
     public function findAllByUserId($userId)
     {
         $stmt = $this->db->prepare("
@@ -80,7 +88,14 @@ public function getEquippedStats(Stats $statsEnum): int
         ");
         $stmt->bind_param("i", $userId);
         $stmt->execute();
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $results = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+         foreach ($results as &$character) {
+            if (!empty($character['appearance'])) {
+                $character['appearance'] = json_decode($character['appearance'], true);
+            }
+        }
+        
+        return $results;
     }
 
     public function unsetDb(){
@@ -92,26 +107,13 @@ public function getEquippedStats(Stats $statsEnum): int
         $stmt = $this->db->prepare("SELECT c.id,c.name, c.class_id, c.gold, cs.level, cs.xp, cs.strength,cs.dexterity,cs.intelligence,cs.vitality  FROM characters c  Join character_stats cs on c.id=cs.character_id WHERE id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
-
-
-        $data= $stmt->get_result()->fetch_assoc();
-
-        if ($data) {
-            
-            $this->id = $data['id'];
-            $this->name = $data['name'];
-            $this->strength = $data['strength'];
-            $this->vitality = $data['vitality'];
-            $this->intelligence = $data['intelligence'];
-            $this->dexterity = $data['dexterity'];
-            $this->level = $data['level'];
-            $this->xp = $data['xp'];
-            $this->gold = $data['gold'];
-            $this->className = $data['class_id'];
-
+        $result = $stmt->get_result()->fetch_assoc();
+        
+        if ($result && !empty($result['appearance'])) {
+            $result['appearance'] = json_decode($result['appearance'], true);
         }
-
-
+        
+        return $result;
     }
 
     public function updateLastPlayed($id)
@@ -221,4 +223,62 @@ public function getEquippedStats(Stats $statsEnum): int
     }
 
 
+
+    // Admin Methods
+    public function deleteById($id)
+    {
+        $stmt = $this->db->prepare("DELETE FROM characters WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        return $stmt->execute();
+    }
+
+    public function getAllCharacters($filters = [])
+    {
+        $sql = "
+            SELECT c.*, u.username, cl.name as class_name, s.level 
+            FROM characters c 
+            JOIN users u ON c.user_id = u.id 
+            JOIN classes cl ON c.class_id = cl.id 
+            LEFT JOIN character_stats s ON c.id = s.character_id
+            WHERE 1=1
+        ";
+        
+        $params = [];
+        $types = "";
+
+        if (!empty($filters['class_id'])) {
+            $sql .= " AND c.class_id = ?";
+            $params[] = $filters['class_id'];
+            $types .= "i";
+        }
+
+        if (!empty($filters['level'])) {
+            $sql .= " AND s.level = ?";
+            $params[] = $filters['level'];
+            $types .= "i";
+        }
+
+        if (!empty($filters['name'])) {
+            $sql .= " AND c.name LIKE ?";
+            $params[] = "%" . $filters['name'] . "%";
+            $types .= "s";
+        }
+
+        if (!empty($filters['user_id'])) {
+            $sql .= " AND c.user_id = ?";
+            $params[] = $filters['user_id'];
+            $types .= "i";
+        }
+        
+        $sql .= " ORDER BY c.created_at DESC";
+
+        $stmt = $this->db->prepare($sql);
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
 }

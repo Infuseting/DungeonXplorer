@@ -53,7 +53,7 @@ class AuthController
         }
 
         if ($userModel->create($username, $email, $password)) {
-            header('Location: /login?success=registration_successful');
+            header('Location: /login?success=registered');
             exit;
         } else {
             header('Location: /register?error=registration_failed');
@@ -77,35 +77,30 @@ class AuthController
             $refreshToken = $this->tokenService->generateRefreshToken();
             
             // Store Refresh Token (hashed)
-            // Using 'selector' as a unique ID for the token (random hex)
-            // Using 'validator' as the actual secret token
             $selector = bin2hex(random_bytes(12));
             $expiresAt = date('Y-m-d H:i:s', time() + 86400 * 30); // 30 days
             
             $userModel->createRememberToken($user['id'], $selector, $refreshToken, $expiresAt);
 
             // Set Cookies
-            // Access Token: 15 min
             setcookie('access_token', $accessToken, [
                 'expires' => time() + 900,
                 'path' => '/',
-                'secure' => false, // Set to true in production (HTTPS)
+                'secure' => false,
                 'httponly' => true,
-                'samesite' => 'Strict'
+                'samesite' => 'Lax'
             ]);
 
-            // Refresh Token: 30 days (selector:token)
             setcookie('refresh_token', $selector . ':' . $refreshToken, [
                 'expires' => time() + 86400 * 30,
                 'path' => '/',
-                'secure' => false, // Set to true in production
+                'secure' => false,
                 'httponly' => true,
-                'samesite' => 'Strict'
+                'samesite' => 'Lax'
             ]);
 
-            // Set session for username display (optional, but useful for UI)
             $_SESSION['username'] = $user['username'];
-            $_SESSION['user_id'] = $user['id']; // Keep for legacy checks if any
+            $_SESSION['user_id'] = $user['id'];
 
             header('Location: /personnage');
             exit;
@@ -137,6 +132,47 @@ class AuthController
         exit;
     }
 
+    public function forgotPassword()
+    {
+        require __DIR__ . '/../Views/auth/forgot_password.php';
+    }
+
+    public function forgotPasswordPost()
+    {
+        $email = $_POST['email'] ?? '';
+        $code = $_POST['code'] ?? '';
+        $newPassword = $_POST['new_password'] ?? '';
+        $confirmPassword = $_POST['confirm_password'] ?? '';
+
+        if ($newPassword !== $confirmPassword) {
+            header('Location: /forgot-password?error=passwords_do_not_match');
+            exit;
+        }
+
+        $userModel = new User();
+        $user = $userModel->findByEmail($email);
+
+        if (!$user) {
+            header('Location: /forgot-password?error=invalid_email');
+            exit;
+        }
+
+        $resetModel = new \App\Models\PasswordReset();
+        $reset = $resetModel->verify($user['id'], $code);
+
+        if ($reset) {
+            if ($userModel->updatePassword($user['id'], $newPassword)) {
+                // Invalidate the code
+                $resetModel->deleteUserCodes($user['id']);
+                header('Location: /login?success=password_reset');
+                exit;
+            }
+        }
+
+        header('Location: /forgot-password?error=invalid_code');
+        exit;
+    }
+
     private function checkAuth()
     {
         // Check Access Token validity
@@ -146,28 +182,11 @@ class AuthController
             }
         }
 
-        // Check Refresh Token validity (simplified check, just existence isn't enough but full validation might be heavy here, 
-        // ideally we trust the middleware to handle refresh, but for redirection from login page, we want to be sure)
-        // If access token is invalid but refresh token exists, we let them go to /personnage where middleware will handle the refresh.
-        // BUT, if middleware fails refresh, it redirects back to login.
-        // So here, we should only redirect if we are reasonably sure they are logged in.
-        
-        // Actually, the safest bet to avoid loops is: 
-        // If we are on login page, only redirect if Access Token is VALID.
-        // If Access Token is invalid/missing, stay on login page (even if Refresh Token exists).
-        // Why? Because if Refresh Token is valid, the user can just click "Login" (or we could auto-login, but that's complex).
-        // Wait, if Refresh Token is valid, they ARE logged in.
-        
-        // Let's try to validate the refresh token too if access token fails.
+        // Check Refresh Token existence
         if (isset($_COOKIE['refresh_token'])) {
              $parts = explode(':', $_COOKIE['refresh_token']);
              if (count($parts) === 2) {
-                 // We can't easily validate against DB here without duplicating logic or making a DB call.
-                 // To break the loop, let's assume if Access Token is invalid, we are NOT authenticated for the purpose of the Login page redirection.
-                 // This means if your access token expired, you see the login page. 
-                 // BUT, if you try to go to /personnage, the middleware will refresh it and let you in.
-                 // This is a better UX failure mode than a loop.
-                 return false;
+                 return true;
              }
         }
 
