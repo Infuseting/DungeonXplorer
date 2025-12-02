@@ -16,13 +16,6 @@ $customStyles = '
     }
 ';
 
-// Image mapping
-$classImages = [
-    'Guerrier' => 'warrior.png',
-    'Mage' => 'wizard.png',
-    'Voleur' => 'thief.png'
-];
-
 ob_start();
 ?>
 
@@ -55,14 +48,17 @@ ob_start();
             
             <div class="flex lg:flex-col gap-4 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0">
                 <?php foreach ($classes as $class): 
-                    $bigImage = $classImages[$class['name']] ?? 'warrior.png';
+                    $className = strtolower($class['name']);
                 ?>
                     <label class="class-card flex-shrink-0 w-64 lg:w-full block cursor-pointer border border-gray-700 rounded-lg p-3 md:p-4 relative group">
-                        <input type="radio" name="class_id" value="<?= $class['id'] ?>" class="peer sr-only" required onchange="updateClassPreview(this, '<?= $bigImage ?>', '<?= htmlspecialchars($class['description']) ?>')">
+                        <input type="radio" name="class_id" value="<?= $class['id'] ?>" class="peer sr-only" required 
+                               onchange="updateClassPreview(this, '<?= $className ?>')">
                         
                         <div class="flex items-center gap-4">
                             <div class="w-12 h-12 md:w-16 md:h-16 rounded bg-gray-800 border border-gray-600 flex items-center justify-center group-hover:border-violet-500 transition overflow-hidden flex-shrink-0">
-                                <img src="/assets/images/class_<?= strtolower($class['name']) ?>.png" alt="<?= $class['name'] ?>" class="w-10 h-10 md:w-12 md:h-12 object-contain">
+                                <img src="/assets/images/<?= $className ?>/icon_<?= $className ?>.png" 
+                                     alt="<?= $class['name'] ?>" 
+                                     class="w-full h-full object-contain">
                             </div>
                             <div>
                                 <div class="font-bold text-lg md:text-xl text-white group-hover:text-violet-300 transition"><?= $class['name'] ?></div>
@@ -99,7 +95,7 @@ ob_start();
                            class="relative w-full bg-gray-900 border-2 border-gray-700 rounded-lg py-3 md:py-4 px-6 text-center text-xl md:text-2xl font-bold text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none transition shadow-xl">
                 </div>
                 <button type="submit" class="mt-4 md:mt-6 w-full py-3 md:py-4 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-lg shadow-lg shadow-violet-600/30 transition transform hover:-translate-y-1 uppercase tracking-wider text-base md:text-lg">
-                    Commencer l'aventure
+                    Personnaliser
                 </button>
             </div>
         </div>
@@ -108,12 +104,12 @@ ob_start();
 </div>
 
 <script>
-function updateClassPreview(input, imageName, desc) {
+function updateClassPreview(input, className, desc) {
     const previewImage = document.getElementById('preview-image');
     const placeholder = document.getElementById('preview-placeholder');
     
-    // Update image source
-    previewImage.src = '/assets/images/' + imageName;
+    // Update image source avec le bon chemin
+    previewImage.src = '/assets/images/' + className + '/' + className + '.png';
     previewImage.classList.remove('brightness-0', 'invert', 'opacity-20');
     placeholder.style.display = 'none';
 }

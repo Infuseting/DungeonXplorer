@@ -24,6 +24,14 @@ class Character
         return false;
     }
 
+    public function updateAppearance($id, $appearanceData)
+    {
+        $jsonAppearance = json_encode($appearanceData);
+        $stmt = $this->db->prepare("UPDATE characters SET appearance = ? WHERE id = ?");
+        $stmt->bind_param("si", $jsonAppearance, $id);
+        return $stmt->execute();
+    }
+
     public function findAllByUserId($userId)
     {
         $stmt = $this->db->prepare("
@@ -36,7 +44,15 @@ class Character
         ");
         $stmt->bind_param("i", $userId);
         $stmt->execute();
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $results = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        
+        foreach ($results as &$character) {
+            if (!empty($character['appearance'])) {
+                $character['appearance'] = json_decode($character['appearance'], true);
+            }
+        }
+        
+        return $results;
     }
 
     public function findById($id)
@@ -44,7 +60,13 @@ class Character
         $stmt = $this->db->prepare("SELECT * FROM characters WHERE id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
-        return $stmt->get_result()->fetch_assoc();
+        $result = $stmt->get_result()->fetch_assoc();
+        
+        if ($result && !empty($result['appearance'])) {
+            $result['appearance'] = json_decode($result['appearance'], true);
+        }
+        
+        return $result;
     }
 
     public function updateLastPlayed($id)

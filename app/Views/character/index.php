@@ -128,15 +128,18 @@ ob_start();
                 <!-- Pedestal Effect -->
                 <div class="absolute bottom-0 w-full h-1/4 bg-gradient-to-t from-violet-900/20 to-transparent rounded-full blur-3xl"></div>
                 
-                <!-- Character Model -->
-                <div class="relative z-10 h-full w-full flex items-center justify-center pb-8 md:pb-12">
-                    <img id="character-image" src="/assets/images/<?= $classImages[$selectedCharacter['class_name']] ?? 'class_warrior.png' ?>" 
-                         alt="<?= $selectedCharacter['class_name'] ?>" 
-                         class="max-h-full max-w-full object-contain drop-shadow-2xl filter hover:brightness-110 transition duration-500">
+                <!-- Character Model avec le helper -->
+                <div class="relative z-10 h-full w-full flex items-center justify-center pb-8 md:pb-12" id="character-container">
+                    <?= renderCharacter($selectedCharacter, [
+                        'size' => 'full',
+                        'showFilter' => true,
+                        'id' => 'character-' . $selectedCharacter['id'],
+                        'class' => 'max-h-full max-w-full drop-shadow-2xl hover:brightness-110 transition duration-500'
+                    ]) ?>
                 </div>
 
                 <!-- Selected Character Info -->
-                <div class="absolute bottom-0 text-center   ">
+                <div class="absolute bottom-0 text-center">
                     <h1 id="character-name" class="text-4xl md:text-5xl font-bold text-white mb-1 md:mb-2 text-shadow-lg"><?= htmlspecialchars($selectedCharacter['name']) ?></h1>
                     <p id="character-details" class="text-lg md:text-xl text-violet-400 font-medium tracking-wide">
                         Niveau <?= $selectedCharacter['level'] ?> <?= $selectedCharacter['class_name'] ?>
@@ -144,16 +147,19 @@ ob_start();
                 </div>
             </div>
 
-            <!-- Desktop Character List (Hidden on Mobile) -->
+            <!-- Desktop Character List -->
             <div class="hidden lg:block lg:col-span-3 space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar lg:order-1">
                 <h2 class="text-xl text-gray-400 font-medium mb-6 border-b border-gray-700 pb-2">Vos Héros</h2>
-                <?php foreach ($characters as $char): 
-                    $image = $classImages[$char['class_name']] ?? 'class_warrior.png';
-                ?>
+                <?php foreach ($characters as $char): ?>
                     <div class="character-card char-card-<?= $char['id'] ?> cursor-pointer bg-gray-800/80 backdrop-blur border border-gray-700 p-4 rounded-lg flex items-center gap-4 <?= ($char['id'] === $selectedCharacter['id']) ? 'border-violet-500 ring-1 ring-violet-500 bg-gray-800' : 'hover:border-gray-500' ?>"
                          onclick="selectCharacter(<?= $char['id'] ?>)">
                         <div class="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden border border-gray-600">
-                            <img src="/assets/images/<?= $image ?>" alt="<?= $char['class_name'] ?>" class="w-full h-full object-cover">
+                            <?= renderCharacter($char, [
+                                'size' => 'small',
+                                'showFilter' => true,
+                                'id' => 'card-char-' . $char['id'],
+                                'class' => 'w-full h-full object-cover'
+                            ]) ?>
                         </div>
                         <div>
                             <div class="text-white font-bold"><?= htmlspecialchars($char['name']) ?></div>
@@ -215,15 +221,13 @@ function toggleCharacterMenu() {
     const overlay = document.getElementById('mobile-menu-overlay');
     
     if (menu.classList.contains('-translate-x-full')) {
-        // Open
         menu.classList.remove('-translate-x-full');
         overlay.classList.remove('hidden');
-        setTimeout(() => overlay.classList.remove('opacity-0'), 10); // Fade in
+        setTimeout(() => overlay.classList.remove('opacity-0'), 10);
     } else {
-        // Close
         menu.classList.add('-translate-x-full');
         overlay.classList.add('opacity-0');
-        setTimeout(() => overlay.classList.add('hidden'), 300); // Wait for fade out
+        setTimeout(() => overlay.classList.add('hidden'), 300);
     }
 }
 
@@ -237,11 +241,24 @@ function selectCharacter(id) {
     document.getElementById('stat-intelligence').textContent = char.intelligence || 10;
     document.getElementById('stat-vitality').textContent = char.vitality || 10;
 
-    // Update Image
-    const imagePath = '/assets/images/' + (classImages[char.class_name] || 'class_warrior.png');
-    const imgElement = document.getElementById('character-image');
-    imgElement.src = imagePath;
-    imgElement.alt = char.class_name;
+    // Recharger le personnage avec le helper (via AJAX)
+    fetch(`/api/character/${id}/render`)
+        .then(response => response.text())
+        .then(html => {
+            const container = document.getElementById('character-container');
+            container.innerHTML = html;
+            
+            // Réappliquer les filtres de cheveux
+            if (window.CharacterRenderer) {
+                const renderer = new CharacterRenderer();
+                renderer.initAll();
+            }
+        })
+        .catch(error => {
+            console.error('Erreur de chargement du personnage:', error);
+            // Fallback sur l'ancienne méthode
+            updateCharacterFallback(char);
+        });
 
     // Update Info
     document.getElementById('character-name').textContent = char.name;
@@ -250,11 +267,10 @@ function selectCharacter(id) {
     // Update Hidden Input
     document.getElementById('selected-character-id').value = char.id;
 
-    // Update Selection Visuals (Desktop & Mobile)
+    // Update Selection Visuals
     document.querySelectorAll('.character-card').forEach(card => {
         card.classList.remove('border-violet-500', 'ring-1', 'ring-violet-500', 'bg-gray-800');
         card.classList.add('hover:border-gray-500');
-        // Reset background for desktop list if needed, though 'bg-gray-800/80' is default
     });
 
     const selectedCards = document.querySelectorAll(`.char-card-${id}`);
@@ -267,6 +283,15 @@ function selectCharacter(id) {
     const menu = document.getElementById('mobile-menu');
     if (!menu.classList.contains('-translate-x-full')) {
         toggleCharacterMenu();
+    }
+}
+
+function updateCharacterFallback(char) {
+    const imagePath = '/assets/images/' + (classImages[char.class_name] || 'class_warrior.png');
+    const imgElement = document.querySelector('#character-container img');
+    if (imgElement) {
+        imgElement.src = imagePath;
+        imgElement.alt = char.class_name;
     }
 }
 

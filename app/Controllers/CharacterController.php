@@ -59,7 +59,7 @@ class CharacterController
             exit;
         }
 
-        // Get class base stats
+        // Get class info
         $classModel = new CharacterClass();
         $class = $classModel->findById($classId);
         
@@ -68,23 +68,29 @@ class CharacterController
             exit;
         }
 
-        $baseStats = json_decode($class['base_stats_json'], true);
+        // Store character data in session temporarily (pas encore en BDD)
+        $_SESSION['temp_character'] = [
+            'name' => $name,
+            'class_id' => $classId,
+            'class' => $class,
+            'appearance' => [
+                'hair' => [
+                    'redCyan' => 100,
+                    'greenMagenta' => 100,
+                    'blueYellow' => 100
+                ],
+                'eyes' => [
+                    'color' => 'brown'
+                ],
+                'makeup' => [
+                    'type' => 'none'
+                ]
+            ]
+        ];
 
-        // Create Character
-        $characterModel = new Character();
-        $characterId = $characterModel->create($_SESSION['user_id'], $classId, $name);
-
-        if ($characterId) {
-            // Create Stats
-            $statsModel = new CharacterStats();
-            $statsModel->create($characterId, $baseStats);
-
-            header('Location: /personnage');
-            exit;
-        } else {
-            header('Location: /personnage/create?error=creation_failed');
-            exit;
-        }
+        // Redirect to appearance customization
+        header('Location: /personnage/apparence/preview');
+        exit;
     }
 
     public function delete()
