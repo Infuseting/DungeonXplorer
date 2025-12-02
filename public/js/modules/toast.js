@@ -3,6 +3,8 @@
  * Handles toast notifications display
  */
 
+import { playSound } from './soundManager.js';
+
 /**
  * Show a toast notification
  * @param {string} message - Message to display
@@ -11,6 +13,9 @@
 export function showToast(message, type = 'info') {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
+
+    // Play notification sound
+    playSound('notification');
 
     // Colors based on type
     let bgClass = 'bg-gray-800';

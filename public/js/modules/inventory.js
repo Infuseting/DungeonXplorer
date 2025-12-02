@@ -4,6 +4,7 @@
  */
 
 import { showToast } from './toast.js';
+import { playSound } from './soundManager.js';
 
 // State
 let draggedItem = null;
@@ -117,6 +118,9 @@ function setupDraggable(item) {
         e.dataTransfer.setData('text/plain', e.target.dataset.id);
         e.dataTransfer.effectAllowed = 'move';
         setTimeout(() => e.target.classList.add('opacity-50'), 0);
+
+        // Play pickup sound
+        playSound('itemPickup');
 
         // Highlight valid drop zones
         highlightValidSlots(draggedItemData.slotType);
@@ -498,6 +502,7 @@ function moveItem(itemId, location, slot = null) {
                         setupTooltip(img);
                     }
                 }
+                playSound('itemPickup');
                 showToast('Objet déplacé avec succès', 'success');
             } else {
                 showToast(data.message || 'Impossible de déplacer l\'objet', 'error');
@@ -538,8 +543,10 @@ function setupModalControls() {
         const isHidden = inventoryModal.classList.contains('hidden');
         if (isHidden) {
             inventoryModal.classList.remove('hidden');
+            playSound('open');
         } else {
             inventoryModal.classList.add('hidden');
+            playSound('close');
         }
     }
 

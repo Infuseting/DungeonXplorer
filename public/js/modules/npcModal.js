@@ -3,6 +3,8 @@
  * Handles NPC interactions with visual novel style interface
  */
 
+import { playSound } from './soundManager.js';
+
 let currentNPC = null;
 let currentDialogueTree = null;
 let currentDialogueTreeId = null;
@@ -91,6 +93,7 @@ function displayNPCModal() {
     // Show modal
     modal.style.display = 'flex';
     modal.classList.add('active');
+    playSound('open');
 }
 
 // ... (getGreeting, startDialogue, displayDialogue, selectChoice, openMerchantShop remain same)
@@ -244,7 +247,10 @@ function displayDialogue(dialogue) {
                 const btn = document.createElement('button');
                 btn.className = 'npc-choice-btn';
                 btn.textContent = choice.choice_text || choice.text;
-                btn.onclick = () => selectChoice(choice);
+                btn.onclick = () => {
+                    playSound('click');
+                    selectChoice(choice);
+                };
                 choicesEl.appendChild(btn);
             }
         });
@@ -353,6 +359,7 @@ export function closeNPCModal() {
     modal.classList.remove('active');
     currentNPC = null;
     currentDialogueTree = null;
+    playSound('close');
 }
 
 /**

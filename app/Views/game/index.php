@@ -84,6 +84,7 @@ ob_start();
     import { initNPCModal } from '/js/modules/npcModal.js';
     import { openQuestJournal } from '/js/modules/questJournal.js';
     import { initShop } from '/js/modules/shop.js';
+    import { initSoundManager, playSound } from '/js/modules/soundManager.js';
 
     // Make character ID available globally
     window.characterId = <?= $character['id'] ?>;
@@ -91,6 +92,10 @@ ob_start();
     // Initialize on DOM ready
     document.addEventListener('DOMContentLoaded', async () => {
         console.log('Initializing game...');
+        
+        // Initialize sound manager first
+        await initSoundManager();
+        console.log('Sound manager initialized');
         
         // Initialize inventory system
         initInventory();
@@ -111,13 +116,24 @@ ob_start();
         // Initialize Quest Journal
         const questJournalBtn = document.getElementById('quest-journal-toggle');
         if (questJournalBtn) {
-            questJournalBtn.addEventListener('click', openQuestJournal);
+            questJournalBtn.addEventListener('click', () => {
+                playSound('click');
+                openQuestJournal();
+            });
         }
         console.log('Quest Journal initialized');
         
         // Initialize Shop
         initShop();
         console.log('Shop initialized');
+        
+        // Add sound to inventory toggle button
+        const inventoryToggle = document.getElementById('inventory-toggle');
+        if (inventoryToggle) {
+            inventoryToggle.addEventListener('click', () => {
+                playSound('click');
+            });
+        }
         
         // Initialize map
         try {

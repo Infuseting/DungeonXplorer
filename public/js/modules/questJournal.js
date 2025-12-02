@@ -3,6 +3,8 @@
  * Handles display and interaction with the player's quest log
  */
 
+import { playSound } from './soundManager.js';
+
 let questLog = [];
 let currentFilter = 'all'; // 'all', 'active', 'completed'
 
@@ -15,6 +17,7 @@ export function openQuestJournal() {
 
     modal.style.display = 'flex';
     modal.classList.add('active');
+    playSound('open');
 
     // Fetch quest log
     fetch('/game/quest/log')
@@ -39,6 +42,7 @@ export function closeQuestJournal() {
     if (modal) {
         modal.style.display = 'none';
         modal.classList.remove('active');
+        playSound('close');
     }
 }
 
