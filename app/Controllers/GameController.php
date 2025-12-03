@@ -296,7 +296,14 @@ class GameController
         $playerQuestId = $playerQuestModel->startQuest($_SESSION['character_id'], $questId);
         
         if ($playerQuestId) {
-            echo json_encode(['success' => true, 'message' => 'Quête acceptée !']);
+            $questModel = new \App\Models\Quest();
+            $quest = $questModel->findById($questId);
+            
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Quête acceptée !',
+                'quest_name' => $quest['name']
+            ]);
         } else {
             echo json_encode(['success' => false, 'message' => 'Impossible d\'accepter la quête']);
         }
@@ -390,13 +397,20 @@ class GameController
             if ($playerQuest) {
                 // Update the objective progress
                 error_log("Calling updateProgress({$playerQuest['id']}, {$objective['id']}, 1)");
-                $playerQuestModel->updateProgress($playerQuest['id'], $objective['id'], 1);
+                $events = $playerQuestModel->updateProgress($playerQuest['id'], $objective['id'], 1);
                 
                 error_log("SUCCESS: Quest updated");
                 echo json_encode([
                     'success' => true,
                     'quest_updated' => true,
-                    'message' => 'Objectif de quête complété !'
+                    'message' => 'Objectif de quête complété !',
+                    'quest_update' => [
+                        'quest_name' => $events['quest_name'],
+                        'objective_description' => $events['objective_description'],
+                        'objective_completed' => $events['objective_completed'],
+                        'quest_completed' => $events['quest_completed'],
+                        'unlocked_points' => $events['unlocked_points']
+                    ]
                 ]);
             } else {
                 error_log("WARNING: Player doesn't have this quest active");

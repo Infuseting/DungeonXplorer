@@ -170,11 +170,18 @@ function acceptQuest(questId) {
         body: JSON.stringify({ quest_id: questId })
     })
         .then(res => res.json())
-        .then(data => {
+        .then(async data => {
             if (data.success) {
+                const { showToast } = await import('./toast.js');
+                const { playSound } = await import('./soundManager.js');
+
+                playSound('notification');
+                showToast(`Quête acceptée : ${data.quest_name}`, 'quest');
+
                 closeNPCModal();
             } else {
-                alert(data.message || 'Erreur');
+                const { showToast } = await import('./toast.js');
+                showToast(data.message || 'Erreur', 'error');
             }
         })
         .catch(err => console.error(err));
@@ -264,16 +271,62 @@ function displayDialogue(dialogue) {
                 body: JSON.stringify({ tree_id: currentDialogueTreeId })
             })
                 .then(res => res.json())
-                .then(data => {
+                .then(async data => {
                     if (data.success && data.quest_updated) {
-                        if (window.showToast) {
-                            window.showToast('✅ ' + data.message, 'success');
+                        try {
+                            const { showToast } = await import('/js/modules/toast.js');
+                            const { playSound } = await import('/js/modules/soundManager.js');
+
+                            const update = data.quest_update;
+
+                            if (update) {
+                                // 1. Objective Updated / Completed
+                                if (update.objective_completed) {
+                                    playSound('notification');
+                                    showToast(
+                                        `<strong>${update.quest_name}</strong><br>Objectif validé : ${update.objective_description}`,
+                                        'quest'
+                                    );
+                                }
+
+                                // 2. Quest Completed
+                                if (update.quest_completed) {
+                                    setTimeout(() => {
+                                        playSound('notification'); // Or a specific quest complete sound
+                                        showToast(
+                                            `<strong>${update.quest_name}</strong><br>Quête terminée !`,
+                                            'quest'
+                                        );
+                                    }, 1000); // Delay slightly
+                                }
+
+                                // 3. Map Points Unlocked
+                                if (update.unlocked_points && update.unlocked_points.length > 0) {
+                                    update.unlocked_points.forEach((pointName, index) => {
+                                        setTimeout(() => {
+                                            playSound('notification');
+                                            showToast(
+                                                `<strong>Nouveau lieu découvert</strong><br>${pointName}`,
+                                                'success'
+                                            );
+                                        }, 2000 + (index * 1000));
+                                    });
+
+                                    // Refresh map points if on map
+                                    // We might need to trigger a map refresh event or call a global function
+                                    if (window.loadMapPoints) {
+                                        window.loadMapPoints();
+                                    }
+                                }
+                            } else {
+                                // Fallback for legacy response
+                                showToast('✅ ' + data.message, 'success');
+                            }
+                        } catch (e) {
+                            console.error('Error showing quest toast:', e);
                         }
                     }
                 })
-                .catch(error => {
-                    console.error('Error completing dialogue:', error);
-                });
         }
 
         // Show back button
