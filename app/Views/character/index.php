@@ -233,6 +233,7 @@ function toggleCharacterMenu() {
 
 function selectCharacter(id) {
     const char = characters.find(c => c.id == id);
+    console.log('Selected Character:', char);
     if (!char) return;
 
     // Update Stats
