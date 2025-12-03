@@ -1,6 +1,6 @@
 <?php
 $title = 'Personnalisation - DungeonXplorer';
-$bodyClass = 'bg-black min-h-screen';
+$bodyClass = 'bg-black min-h-screen overflow-hidden';
 $customStyles = '
     .character-container {
         background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
@@ -24,7 +24,6 @@ $customStyles = '
         height: 700px;
         margin: 0 auto;
         transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        overflow: hidden;
     }
     
     .character-viewer.zoomed .character-preview-wrapper {

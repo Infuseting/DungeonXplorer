@@ -15,7 +15,7 @@ class CharacterClass
 
     public function findAll()
     {
-        $stmt = $this->db->query("SELECT id, name, description, base_stats_json FROM classes ORDER BY name");
+        $stmt = $this->db->query("SELECT id, name, description, base_stats_json FROM classes ORDER BY id ASC");
         return $stmt->fetch_all(MYSQLI_ASSOC);
     }
 
