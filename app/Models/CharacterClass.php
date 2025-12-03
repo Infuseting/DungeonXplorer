@@ -15,15 +15,22 @@ class CharacterClass
 
     public function findAll()
     {
-        $result = $this->db->query("SELECT * FROM classes");
-        return $result->fetch_all(MYSQLI_ASSOC);
+        $stmt = $this->db->query("SELECT id, name, description, base_stats_json FROM classes ORDER BY name");
+        return $stmt->fetch_all(MYSQLI_ASSOC);
     }
 
     public function findById($id)
     {
-        $stmt = $this->db->prepare("SELECT * FROM classes WHERE id = ?");
+        $stmt = $this->db->prepare("SELECT id, name, description, base_stats_json FROM classes WHERE id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
-        return $stmt->get_result()->fetch_assoc();
+        $result = $stmt->get_result()->fetch_assoc();
+        
+        // Décoder le JSON pour faciliter l'accès
+        if ($result && !empty($result['base_stats_json'])) {
+            $result['base_stats'] = json_decode($result['base_stats_json'], true);
+        }
+        
+        return $result;
     }
 }

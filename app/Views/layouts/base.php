@@ -13,6 +13,6 @@
 <body class="<?= $bodyClass ?? '' ?>">
     <?= $content ?>
     <!-- Character Renderer Script -->
-    <script src="/assets/js/character-renderer.js"></script>
+    <script src="/js/character-renderer.js"></script>
 </body>
 </html>

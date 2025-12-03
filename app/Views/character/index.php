@@ -232,8 +232,7 @@ function toggleCharacterMenu() {
 }
 
 function selectCharacter(id) {
-    const char = characters.find(c => c.id == id);
-    console.log('Selected Character:', char);
+    const char = characters.find(c => c.id === id);
     if (!char) return;
 
     // Update Stats
@@ -244,7 +243,10 @@ function selectCharacter(id) {
 
     // Recharger le personnage avec le helper (via AJAX)
     fetch(`/api/character/${id}/render`)
-        .then(response => response.text())
+        .then(response => {
+            if (!response.ok) throw new Error('HTTP error ' + response.status);
+            return response.text();
+        })
         .then(html => {
             const container = document.getElementById('character-container');
             container.innerHTML = html;

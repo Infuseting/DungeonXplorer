@@ -20,7 +20,7 @@ $router->get('/register', 'App\Controllers\AuthController@register');
 $router->post('/register', 'App\Controllers\AuthController@registerPost');
 $router->get('/logout', 'App\Controllers\AuthController@logout');
 
-// API Routes (AVANT les routes protégées pour éviter les conflits)
+// API Routes
 $router->get('/api/character/(\d+)/render', function($characterId) {
     if (!isset($_SESSION['user_id'])) {
         http_response_code(401);
@@ -37,9 +37,13 @@ $router->get('/api/character/(\d+)/render', function($characterId) {
         exit;
     }
     
-    // Récupérer la classe
+    // Récupérer la classe complète
     $classModel = new \App\Models\CharacterClass();
     $character['class'] = $classModel->findById($character['class_id']);
+    
+    // Récupérer les stats
+    $statsModel = new \App\Models\CharacterStats();
+    $character['stats'] = $statsModel->findByCharacterId($characterId);
     
     // Rendre le personnage
     echo renderCharacter($character, [
