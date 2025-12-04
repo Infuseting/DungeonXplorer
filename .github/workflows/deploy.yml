@@ -54,39 +54,9 @@ jobs:
       - name: Pull and Restart Docker Container
         shell: bash {0}
         run: |
-          echo "=== Starting deployment ==="
-          echo "Current directory: $(pwd)"
-          
-          echo "=== Step 1: Changing to docker directory ==="
-          cd /home/infuseting/docker/
-          if [ $? -ne 0 ]; then
-            echo "ERROR: Failed to change directory"
-            exit 1
-          fi
-          echo "Success! Now in: $(pwd)"
-          
-          echo "=== Step 2: Logging into GHCR ==="
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-          if [ $? -ne 0 ]; then
-            echo "ERROR: Docker login failed"
-            exit 1
-          fi
-          echo "Success! Logged into GHCR"
-          
-          echo "=== Step 3: Pulling latest image ==="
-          docker compose pull dungeonxplorer
-          if [ $? -ne 0 ]; then
-            echo "ERROR: Docker compose pull failed"
-            exit 1
-          fi
-          echo "Success! Image pulled"
-          
-          echo "=== Step 4: Restarting container ==="
-          docker compose up -d dungeonxplorer
-          if [ $? -ne 0 ]; then
-            echo "ERROR: Docker compose up failed"
-            exit 1
-          fi
-          echo "Success! Container restarted"
-          
-          echo "=== Deployment completed successfully! ==="
+          echo "TEST: Script started"
+          echo "TEST: Current directory is $(pwd)"
+          echo "TEST: User is $(whoami)"
+          echo "TEST: Listing /home/infuseting/docker/"
+          ls -la /home/infuseting/docker/ || echo "ERROR: Cannot list directory"
+          echo "TEST: Script completed"
