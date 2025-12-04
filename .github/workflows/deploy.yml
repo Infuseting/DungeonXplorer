@@ -52,15 +52,7 @@ jobs:
     steps:
       - name: Pull and Restart Docker Container
         run: |
-          # Navigate to the directory containing docker-compose.yml
-          # Adjust the path if necessary
           cd /home/infuseting/docker/
-
-          # Login to GHCR
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-          
-          # Pull the latest image
           docker compose pull dungeonxplorer
-          
-          # Restart the service
           docker compose up -d dungeonxplorer
