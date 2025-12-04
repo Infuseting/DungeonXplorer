@@ -54,11 +54,10 @@ jobs:
       - name: Pull and Restart Docker Container
         run: |
           echo "=== Starting deployment ==="
-          cd /home/infuseting/docker/
           echo "=== Logging into GHCR ==="
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
           echo "=== Pulling latest image ==="
-          docker-compose pull dungeonxplorer
-          echo "=== Restarting container ==="
-          docker-compose up -d dungeonxplorer
+          docker pull ghcr.io/infuseting/dungeonxplorer:latest
+          echo "=== Restarting container with docker-compose ==="
+          cd /home/infuseting/docker && docker compose up -d dungeonxplorer --force-recreate
           echo "=== Deployment completed successfully! ==="
