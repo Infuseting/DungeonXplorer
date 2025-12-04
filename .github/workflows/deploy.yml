@@ -47,7 +47,8 @@ jobs:
   deploy:
     needs: build-and-push
     runs-on: self-hosted
-    # This job runs directly on your server via the Self-Hosted Runner
+    permissions:
+      packages: read
     
     steps:
       - name: Pull and Restart Docker Container
