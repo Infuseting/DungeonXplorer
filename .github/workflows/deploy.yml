@@ -52,11 +52,17 @@ jobs:
     
     steps:
       - name: Pull and Restart Docker Container
-        shell: bash {0}
         run: |
-          echo "TEST: Script started"
-          echo "TEST: Current directory is $(pwd)"
-          echo "TEST: User is $(whoami)"
-          echo "TEST: Listing /home/infuseting/docker/"
-          ls -la /home/infuseting/docker/ || echo "ERROR: Cannot list directory"
-          echo "TEST: Script completed"
+          echo "=== Starting deployment ==="
+          cd /home/infuseting/docker/
+          
+          echo "=== Logging into GHCR ==="
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          
+          echo "=== Pulling latest image ==="
+          docker compose pull dungeonxplorer
+          
+          echo "=== Restarting container ==="
+          docker compose up -d dungeonxplorer
+          
+          echo "=== Deployment completed successfully! ==="
