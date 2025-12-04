@@ -58,21 +58,14 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
+            # Navigate to the directory containing docker-compose.yml
+            cd /home/${{ secrets.SSH_USER }}/docker/
+
             # Login to GHCR on the server
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
-            # Pull the latest image
-            docker pull ghcr.io/${{ env.IMAGE_NAME }}:latest
+            # Pull the latest image defined in docker-compose.yml
+            docker compose pull dungeonxplorer
             
-            # Stop and remove the old container (assuming container name is 'dungeon-xplorer')
-            # Adjust the container name and run command as needed for your specific setup
-            docker stop dungeon-xplorer || true
-            docker rm dungeon-xplorer || true
-            
-            # Run the new container
-            # Note: You might want to use docker-compose instead for better management
-            docker run -d \
-              --name dungeon-xplorer \
-              --restart unless-stopped \
-              -p 80:80 \
-              ghcr.io/${{ env.IMAGE_NAME }}:latest
+            # Restart the specific service
+            docker compose up -d dungeonxplorer
