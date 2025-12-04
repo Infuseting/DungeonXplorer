@@ -46,26 +46,21 @@ jobs:
 
   deploy:
     needs: build-and-push
-    runs-on: ubuntu-latest
-    # Only run this job if the secrets are available
-    if: ${{ secrets.SSH_HOST != '' && secrets.SSH_USER != '' && secrets.SSH_KEY != '' }}
+    runs-on: self-hosted
+    # This job runs directly on your server via the Self-Hosted Runner
     
     steps:
-      - name: Deploy to Server via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          script: |
-            # Navigate to the directory containing docker-compose.yml
-            cd /home/${{ secrets.SSH_USER }}/docker/
+      - name: Pull and Restart Docker Container
+        run: |
+          # Navigate to the directory containing docker-compose.yml
+          # Adjust the path if necessary
+          cd /home/infuseting/docker/
 
-            # Login to GHCR on the server
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            
-            # Pull the latest image defined in docker-compose.yml
-            docker compose pull dungeonxplorer
-            
-            # Restart the specific service
-            docker compose up -d dungeonxplorer
+          # Login to GHCR
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          
+          # Pull the latest image
+          docker compose pull dungeonxplorer
+          
+          # Restart the service
+          docker compose up -d dungeonxplorer
