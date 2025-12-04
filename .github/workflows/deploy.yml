@@ -52,6 +52,7 @@ jobs:
     
     steps:
       - name: Pull and Restart Docker Container
+        shell: bash {0}
         run: |
           echo "=== Starting deployment ==="
           echo "Current directory: $(pwd)"
