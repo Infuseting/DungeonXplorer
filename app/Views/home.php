@@ -77,7 +77,7 @@ ob_start();
 
         <div class="mt-16">
             <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-                <!-- Feature 1 -->
+                
                 <div class="pt-6">
                     <div class="flow-root bg-white rounded-2xl px-6 pb-8 shadow-lg hover:shadow-xl transition duration-300 h-full border border-gray-100">
                         <div class="-mt-6">
@@ -94,7 +94,6 @@ ob_start();
                     </div>
                 </div>
 
-                <!-- Feature 2 -->
                 <div class="pt-6">
                     <div class="flow-root bg-white rounded-2xl px-6 pb-8 shadow-lg hover:shadow-xl transition duration-300 h-full border border-gray-100">
                         <div class="-mt-6">
@@ -111,7 +110,6 @@ ob_start();
                     </div>
                 </div>
 
-                <!-- Feature 3 -->
                 <div class="pt-6">
                     <div class="flow-root bg-white rounded-2xl px-6 pb-8 shadow-lg hover:shadow-xl transition duration-300 h-full border border-gray-100">
                         <div class="-mt-6">
@@ -128,7 +126,6 @@ ob_start();
                     </div>
                 </div>
 
-                <!-- Feature 4 -->
                 <div class="pt-6">
                     <div class="flow-root bg-white rounded-2xl px-6 pb-8 shadow-lg hover:shadow-xl transition duration-300 h-full border border-gray-100">
                         <div class="-mt-6">
@@ -145,7 +142,6 @@ ob_start();
                     </div>
                 </div>
 
-                <!-- Feature 5 -->
                 <div class="pt-6">
                     <div class="flow-root bg-white rounded-2xl px-6 pb-8 shadow-lg hover:shadow-xl transition duration-300 h-full border border-gray-100">
                         <div class="-mt-6">
@@ -162,7 +158,6 @@ ob_start();
                     </div>
                 </div>
 
-                <!-- Feature 6 -->
                 <div class="pt-6">
                     <div class="flow-root bg-white rounded-2xl px-6 pb-8 shadow-lg hover:shadow-xl transition duration-300 h-full border border-gray-100">
                         <div class="-mt-6">
@@ -179,7 +174,6 @@ ob_start();
                     </div>
                 </div>
 
-                <!-- Feature 7 -->
                 <div class="pt-6">
                     <div class="flow-root bg-white rounded-2xl px-6 pb-8 shadow-lg hover:shadow-xl transition duration-300 h-full border border-gray-100">
                         <div class="-mt-6">
@@ -196,7 +190,6 @@ ob_start();
                     </div>
                 </div>
 
-                <!-- Feature 8 -->
                 <div class="pt-6">
                     <div class="flow-root bg-white rounded-2xl px-6 pb-8 shadow-lg hover:shadow-xl transition duration-300 h-full border border-gray-100">
                         <div class="-mt-6">
