@@ -13,7 +13,7 @@ try {
     $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
     $dotenv->load();
 } catch (Exception $e) {
-    error_log('Failed to load environment variables from .env file: ' . $e->getMessage());
+    //error_log('Failed to load environment variables from .env file: ' . $e->getMessage());
 }
 
 // Load helper functions
