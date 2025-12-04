@@ -53,7 +53,19 @@ jobs:
     steps:
       - name: Pull and Restart Docker Container
         run: |
-          cd /home/infuseting/docker/
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-          docker compose pull dungeonxplorer
-          docker compose up -d dungeonxplorer
+          set -x
+          echo "Current directory: $(pwd)"
+          echo "Changing to docker directory..."
+          cd /home/infuseting/docker/ || { echo "Failed to cd"; exit 1; }
+          echo "Current directory after cd: $(pwd)"
+          
+          echo "Logging into GHCR..."
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin || { echo "Docker login failed"; exit 1; }
+          
+          echo "Pulling image..."
+          docker compose pull dungeonxplorer || { echo "Docker compose pull failed"; exit 1; }
+          
+          echo "Restarting container..."
+          docker compose up -d dungeonxplorer || { echo "Docker compose up failed"; exit 1; }
+          
+          echo "Deployment successful!"
