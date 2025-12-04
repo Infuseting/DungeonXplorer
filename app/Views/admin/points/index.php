@@ -202,8 +202,10 @@ ob_start();
                     <th>Type</th>
                     <th>Carte</th>
                     <th>Visibilité</th>
+                    <th>Coordonnées</th>
                     <th>Sous-Carte</th>
                     <th>PNJ Associé</th>
+                    <th>Histoire/Donjon</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -294,6 +296,34 @@ ob_start();
                                 <?php endif; ?>
                             </td>
                             <td>
+                                <?php if ($point['type'] === 'story' || $point['type'] === 'dungeon'): ?>
+                                    <select 
+                                        class="submap-select" 
+                                        onchange="updateStory(<?= $point['id'] ?>, this.value)"
+                                    >
+                                        <option value="">Aucune histoire</option>
+                                        <?php foreach ($stories as $story): ?>
+                                            <option 
+                                                value="<?= $story['id'] ?>" 
+                                                <?= $point['story_id'] == $story['id'] ? 'selected' : '' ?>
+                                            >
+                                                <?= htmlspecialchars($story['name']) ?>
+                                                <?= $story['is_procedural'] ? ' (Procédural)' : ' (Manuel)' ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <?php if ($point['story_id']): ?>
+                                        <a href="/admin/stories/<?= $point['story_id'] ?>/nodes" 
+                                           class="btn btn-sm btn-primary" 
+                                           style="margin-top: 0.5rem; display: inline-block;">
+                                            🗺️ Gérer Donjon
+                                        </a>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    <span style="color: var(--text-muted);">-</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
                                 <button 
                                     class="btn btn-sm btn-danger" 
                                     onclick="deletePoint(<?= $point['id'] ?>)"
@@ -305,7 +335,7 @@ ob_start();
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                        <td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-muted);">
                             Aucun point trouvé
                         </td>
                     </tr>
@@ -419,6 +449,33 @@ function updateNPC(pointId, npcId) {
         body: JSON.stringify({
             point_id: pointId,
             npc_id: npcId || null
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Erreur de communication avec le serveur', 'error');
+    });
+}
+
+// Update Story assignment
+function updateStory(pointId, storyId) {
+    fetch('/admin/points/update-story', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            point_id: pointId,
+            story_id: storyId || null
         })
     })
     .then(response => response.json())

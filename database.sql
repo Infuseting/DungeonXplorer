@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: mysql:3306
--- Generation Time: Dec 03, 2025 at 08:58 AM
+-- Generation Time: Dec 04, 2025 at 04:31 PM
 -- Server version: 8.0.44
 -- PHP Version: 8.3.26
 
@@ -20,26 +20,6 @@ SET time_zone = "+00:00";
 --
 -- Database: `dungeon_xplorer`
 --
-
--- --------------------------------------------------------
-
---
--- Table structure for table `chapters`
---
-
-CREATE TABLE `chapters` (
-  `chapter_id` int NOT NULL,
-  `name` varchar(150) DEFAULT NULL,
-  `description` varchar(1000) DEFAULT NULL,
-  `history_id` int NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `chapters`
---
-
-INSERT INTO `chapters` (`chapter_id`, `name`, `description`, `history_id`) VALUES
-(1, 'Le premier choix', 'La première pièce est sombre est humide. Une atmosphère glaçante s\'en dégage. Vous avez la chair de poule.', 1);
 
 -- --------------------------------------------------------
 
@@ -63,13 +43,15 @@ CREATE TABLE `characters` (
 --
 
 INSERT INTO `characters` (`id`, `user_id`, `class_id`, `name`, `appearance`, `created_at`, `last_played_at`, `gold`) VALUES
-(26, 3, 4, 'brrr patapim', NULL, '2025-12-02 09:00:40', '2025-12-02 09:00:40', 0.00),
 (43, 4, 2, 'Langlois', '{\"hair\":{\"redCyan\":140,\"greenMagenta\":80,\"blueYellow\":120},\"eyes\":{\"color\":\"brown\"},\"makeup\":[]}', '2025-12-02 10:30:59', '2025-12-02 10:30:59', 0.00),
 (44, 1, 3, 'Rachel', '{\"hair\":{\"redCyan\":200,\"greenMagenta\":0,\"blueYellow\":0},\"eyes\":{\"color\":\"blue\"},\"makeup\":{\"cicatrice_nez\":true,\"tatouage_coeur\":true}}', '2025-12-02 10:40:57', '2025-12-02 10:40:57', 0.00),
 (45, 4, 4, 'Adolf', '{\"hair\":{\"redCyan\":200,\"greenMagenta\":200,\"blueYellow\":200},\"eyes\":{\"color\":\"brown\"},\"makeup\":[]}', '2025-12-02 11:56:07', '2025-12-02 11:56:07', 0.00),
 (46, 1, 4, 'GROK', '{\"hair\":{\"redCyan\":200,\"greenMagenta\":0,\"blueYellow\":0},\"eyes\":{\"color\":\"brown\"},\"makeup\":[]}', '2025-12-02 12:11:45', '2025-12-02 12:11:45', 0.00),
 (47, 16, 3, 'Lenny', '{\"hair\":{\"redCyan\":100,\"greenMagenta\":100,\"blueYellow\":100},\"eyes\":{\"color\":\"red\"},\"makeup\":{\"cicatrice_nez\":true,\"tatouage_coeur\":true}}', '2025-12-02 12:30:01', '2025-12-02 12:30:01', 0.00),
-(49, 4, 3, 'Khalamite', '{\"hair\":{\"redCyan\":39,\"greenMagenta\":149,\"blueYellow\":200},\"eyes\":{\"color\":\"blue\"},\"makeup\":{\"tatouage_coeur\":true}}', '2025-12-02 22:54:13', '2025-12-02 22:54:13', 0.00);
+(49, 4, 3, 'Khalamite', '{\"hair\":{\"redCyan\":39,\"greenMagenta\":149,\"blueYellow\":200},\"eyes\":{\"color\":\"blue\"},\"makeup\":{\"tatouage_coeur\":true}}', '2025-12-02 22:54:13', '2025-12-02 22:54:13', 0.00),
+(50, 7, 6, 'Rémy', '{\"hair\":{\"redCyan\":18,\"greenMagenta\":100,\"blueYellow\":100},\"eyes\":{\"color\":\"brown\"},\"makeup\":[]}', '2025-12-03 09:30:19', '2025-12-03 09:30:19', 0.00),
+(51, 7, 1, 'remynder', '{\"hair\":{\"redCyan\":183,\"greenMagenta\":107,\"blueYellow\":200},\"eyes\":{\"color\":\"brown\"},\"makeup\":[]}', '2025-12-03 09:30:49', '2025-12-03 09:30:49', 0.00),
+(52, 3, 4, 'tralalero tralalala', '{\"hair\":{\"redCyan\":49,\"greenMagenta\":107,\"blueYellow\":197},\"eyes\":{\"color\":\"brown\"},\"makeup\":[]}', '2025-12-04 10:52:21', '2025-12-04 10:52:21', 0.00);
 
 -- --------------------------------------------------------
 
@@ -102,6 +84,13 @@ CREATE TABLE `character_map_unlocks` (
   `unlocked_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+--
+-- Dumping data for table `character_map_unlocks`
+--
+
+INSERT INTO `character_map_unlocks` (`character_id`, `map_point_id`, `unlocked_at`) VALUES
+(46, 3, '2025-12-03 09:36:14');
+
 -- --------------------------------------------------------
 
 --
@@ -123,13 +112,15 @@ CREATE TABLE `character_stats` (
 --
 
 INSERT INTO `character_stats` (`character_id`, `level`, `xp`, `strength`, `dexterity`, `intelligence`, `vitality`) VALUES
-(26, 1, 0, 20, 5, 5, 20),
 (43, 1, 0, 5, 10, 15, 10),
 (44, 1, 0, 15, 10, 5, 15),
 (45, 1, 0, 20, 5, 5, 20),
 (46, 1, 0, 20, 5, 5, 20),
 (47, 1, 0, 15, 10, 5, 15),
-(49, 1, 0, 15, 10, 5, 15);
+(49, 1, 0, 15, 10, 5, 15),
+(50, 1, 0, 25, 20, 15, 10),
+(51, 1, 0, 15, 5, 20, 15),
+(52, 1, 0, 20, 5, 5, 20);
 
 -- --------------------------------------------------------
 
@@ -224,44 +215,6 @@ CREATE TABLE `dialogue_trees` (
 INSERT INTO `dialogue_trees` (`id`, `name`, `description`, `created_at`, `updated_at`) VALUES
 (2, 'Quels est cet histoire de Minotaure ?', '', '2025-11-26 09:20:07', '2025-11-26 09:21:59'),
 (3, 'Savez-vous où est la Princesse ?', 'Liée a la quête de la princesse kidnappé', '2025-11-26 21:49:53', '2025-11-26 22:26:36');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `history`
---
-
-CREATE TABLE `history` (
-  `history_id` int NOT NULL,
-  `history_type_id` int NOT NULL,
-  `name` varchar(100) DEFAULT NULL,
-  `description` varchar(1000) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `history`
---
-
-INSERT INTO `history` (`history_id`, `history_type_id`, `name`, `description`) VALUES
-(1, 1, 'Labyrinthe du Minotaure', '');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `history_types`
---
-
-CREATE TABLE `history_types` (
-  `history_type_id` int NOT NULL,
-  `name` varchar(250) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `history_types`
---
-
-INSERT INTO `history_types` (`history_type_id`, `name`) VALUES
-(1, 'Histoire');
 
 -- --------------------------------------------------------
 
@@ -1567,19 +1520,20 @@ CREATE TABLE `monsters` (
   `level_min` int DEFAULT '1',
   `level_max` int DEFAULT '100',
   `base_stats_json` json DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `salle_path` varchar(128) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `monsters`
 --
 
-INSERT INTO `monsters` (`id`, `name`, `image_path`, `level_min`, `level_max`, `base_stats_json`, `created_at`) VALUES
-(1, 'EL MINAUTORE', '/assets/images/monsters/minautoreAsset.png', 1, 100, '{\"attaque\": 10, \"defense\": 30, \"strength\": 20, \"vitality\": 50, \"dexterity\": 11, \"intelligence\": 10}', '2025-11-25 13:45:38'),
-(2, 'CuistotEco+', '/assets/images/monsters/cuistoteco.png', 1, 100, '{\"attaque\": 10, \"defense\": 30, \"strength\": 20, \"vitality\": 50, \"dexterity\": 11, \"intelligence\": 10}', '2025-11-27 15:36:25'),
-(3, 'Fury', '/assets/images/monsters/fury.png', 1, 100, '{\"attaque\": 10, \"defense\": 30, \"strength\": 20, \"vitality\": 50, \"dexterity\": 11, \"intelligence\": 10}', '2025-11-27 15:48:11'),
-(4, 'Brocanteur', '/assets/images/monsters/brocanteur.png', 1, 100, '{\"attaque\": 10, \"defense\": 30, \"strength\": 20, \"vitality\": 50, \"dexterity\": 11, \"intelligence\": 10}', '2025-11-27 15:51:05'),
-(5, 'Le Jumeaux Maléfique', '/assets/images/monsters/jumeaux.png', 1, 100, '{\"attaque\": 10, \"defense\": 30, \"strength\": 20, \"vitality\": 50, \"dexterity\": 11, \"intelligence\": 10}', '2025-11-27 18:02:13');
+INSERT INTO `monsters` (`id`, `name`, `image_path`, `level_min`, `level_max`, `base_stats_json`, `created_at`, `salle_path`) VALUES
+(1, 'EL MINAUTORE', '/assets/images/monsters/minautoreAsset.png', 1, 100, '{\"attaque\": 10, \"defense\": 30, \"strength\": 20, \"vitality\": 50, \"dexterity\": 11, \"intelligence\": 10}', '2025-11-25 13:45:38', '/assets/images/monsters/salle_minautore.png'),
+(2, 'CuistotEco+', '/assets/images/monsters/cuistoteco.png', 1, 100, '{\"attaque\": 10, \"defense\": 30, \"strength\": 20, \"vitality\": 50, \"dexterity\": 11, \"intelligence\": 10}', '2025-11-27 15:36:25', '/assets/images/monsters/salle_cuistot.png'),
+(3, 'Fury', '/assets/images/monsters/fury.png', 1, 100, '{\"attaque\": 10, \"defense\": 30, \"strength\": 20, \"vitality\": 50, \"dexterity\": 11, \"intelligence\": 10}', '2025-11-27 15:48:11', '/assets/images/monsters/salle_fury.png'),
+(4, 'Brocanteur', '/assets/images/monsters/brocanteur.png', 1, 100, '{\"attaque\": 10, \"defense\": 30, \"strength\": 20, \"vitality\": 50, \"dexterity\": 11, \"intelligence\": 10}', '2025-11-27 15:51:05', '/assets/images/monsters/sallebrocante.png'),
+(5, 'Le Jumeaux Maléfique', '/assets/images/monsters/jumeaux.png', 1, 100, '{\"attaque\": 10, \"defense\": 30, \"strength\": 20, \"vitality\": 50, \"dexterity\": 11, \"intelligence\": 10}', '2025-11-27 18:02:13', NULL);
 
 -- --------------------------------------------------------
 
@@ -1722,7 +1676,8 @@ INSERT INTO `player_quests` (`id`, `character_id`, `quest_id`, `current_stage_id
 (10, 44, 1, 4, 'ACTIVE', '2025-12-02 10:44:04', NULL),
 (11, 43, 1, 4, 'ACTIVE', '2025-12-02 11:53:02', NULL),
 (13, 47, 1, 4, 'ACTIVE', '2025-12-02 12:31:03', NULL),
-(14, 46, 1, 4, 'ACTIVE', '2025-12-03 07:52:04', NULL);
+(16, 46, 1, 4, 'ACTIVE', '2025-12-03 09:36:06', NULL),
+(17, 52, 1, 4, 'ACTIVE', '2025-12-04 10:54:39', NULL);
 
 -- --------------------------------------------------------
 
@@ -1752,9 +1707,12 @@ INSERT INTO `player_quest_progress` (`id`, `player_quest_id`, `objective_id`, `c
 (34, 13, 7, 1, 1),
 (35, 13, 4, 0, 0),
 (36, 13, 5, 0, 0),
-(37, 14, 7, 1, 1),
-(38, 14, 4, 0, 0),
-(39, 14, 5, 0, 0);
+(43, 16, 7, 1, 1),
+(44, 16, 4, 0, 0),
+(45, 16, 5, 0, 0),
+(46, 17, 7, 1, 1),
+(47, 17, 4, 0, 0),
+(48, 17, 5, 0, 0);
 
 --
 -- Triggers `player_quest_progress`
@@ -1855,7 +1813,8 @@ CREATE TABLE `player_unlocked_points` (
 INSERT INTO `player_unlocked_points` (`id`, `user_id`, `character_id`, `map_point_id`, `unlocked_at`) VALUES
 (9, 1, 44, 3, '2025-12-02 10:44:17'),
 (11, 4, 43, 3, '2025-12-02 11:53:29'),
-(15, 16, 47, 3, '2025-12-02 12:31:29');
+(15, 16, 47, 3, '2025-12-02 12:31:29'),
+(22, 3, 52, 3, '2025-12-04 10:55:27');
 
 -- --------------------------------------------------------
 
@@ -1994,7 +1953,8 @@ INSERT INTO `users` (`id`, `username`, `email`, `password`, `role`, `created_at`
 (11, 'Tgb', 'tristangrossin@gmail.com', '$2y$10$J4zpxnI1hs.O9onMO7AYOOov/P8unjDXnZ7RNqCrm94j1bvq6NzeW', NULL, '2025-11-25 09:04:24', '2025-11-25 09:04:24'),
 (12, 'gorkem', 'zzzzzzzzzz@gmail.com', '$2y$10$Ncdu8VDKPXqLUQnd0ZxlK.ggIn6HGojBd4lOk9SlIo.FQkG.66G6q', NULL, '2025-11-25 12:52:29', '2025-11-25 12:52:29'),
 (13, 'arthur', 'arthur.langlois@gmail.com', '$2y$10$UM0/zHyWVdmnOmioFKKhC.OQ/n5M81jAN6UQzJNMskjm.RJZBOXeK', 'admin', '2025-11-26 14:57:22', '2025-11-26 14:57:54'),
-(16, 'Lenny', 'quesnel.lenny2@gmail.com', '$2y$10$EteAwSmBtTEYlROBHhcUZewIjVt0IGYHKCzPfMYse1ie3E1QH13mC', NULL, '2025-12-02 12:28:57', '2025-12-02 12:28:57');
+(16, 'Lenny', 'quesnel.lenny2@gmail.com', '$2y$10$EteAwSmBtTEYlROBHhcUZewIjVt0IGYHKCzPfMYse1ie3E1QH13mC', NULL, '2025-12-02 12:28:57', '2025-12-02 12:28:57'),
+(17, 'Pyramide2chiasse', 'albansery27@gmail.com', '$2y$10$kg1PzwPekOP5JAM5F3vesukXGALRLphLi0N6vx5wiSMablddsnxSO', NULL, '2025-12-04 11:55:31', '2025-12-04 11:55:31');
 
 -- --------------------------------------------------------
 
@@ -2076,12 +2036,10 @@ INSERT INTO `user_tokens` (`id`, `user_id`, `selector`, `hashed_validator`, `exp
 (131, 1, '40b2742878056905f7322ecb', 'd3476c81a773f684f27fbc695e1bd19ed89afad80e2de02f2444d3d64e096b81', '2025-12-27 09:28:09', '2025-11-27 09:28:09'),
 (137, 4, '724e24c20f12d30ab9166f11', '38d21f1fb56b99951ff72366fb0142ade5bd943285f3bb9ee8cc5c483b2df45c', '2025-12-27 15:27:48', '2025-11-27 15:27:46'),
 (141, 8, 'c82130c3c8edb027a07a0a25', '0fc6a5358ec3c2b200ce7f1e2a7ddf85f77f02bf0f3783e672adbe79a258b4a0', '2025-12-27 19:12:10', '2025-11-27 19:12:10'),
-(143, 1, '80af465686f69ac908dee0a6', 'c7c041df216824b6c4d502e6e724762f304fe5244602b672906ffc565d1e6890', '2025-12-27 21:22:01', '2025-11-27 21:22:01'),
 (144, 4, 'b0dc48224265ac7d2a832932', '6f5ce2c348c9f79eeb61900b7cf8a0bd2ab8ee56640575297e5237a23ecd2d4b', '2025-12-27 23:58:37', '2025-11-27 23:58:34'),
 (150, 1, 'f216d0e6d1db4aa7c9578ec0', 'fb1ae95dfa2bc5338c6de43cf51465f6372c8715f3043f95d7d25602a426b04b', '2025-12-28 12:55:53', '2025-11-28 12:55:53'),
 (156, 3, 'cf38c08b6e6f2a4cbd9f4283', '4b92ef7d8bfd42d5519cb4eb835a6e1aeae933bf3e4aaf35e942e6d2fbcf68de', '2025-12-28 14:16:56', '2025-11-28 14:16:56'),
 (162, 1, '2bd7cf1c4e28218ed0988876', '5aa1be6086711cc179935385565fd4e30a24f56ea5aae03538c24e69494a5469', '2025-12-28 15:11:59', '2025-11-28 15:11:59'),
-(165, 1, '8e8e5d895a95f58f5973ad82', '3ede5ad41983bad50b4c2a2d1068aff924f1f53915f6ab8a455b303d8050cd6d', '2025-12-28 15:50:57', '2025-11-28 15:50:57'),
 (167, 4, '0552b012c9c28317b7f2aff5', '73b3df7d4f69e29626e215698d35dd901aa7d48cd1f36973820c413e880086d1', '2025-12-28 18:12:35', '2025-11-28 18:12:35'),
 (170, 3, 'ac3a0943f238cb8023afa658', 'c60ac28720c985a4fd14c6002d29f4d617c8a3665b1f0fae94d7343671a85633', '2025-12-28 23:24:11', '2025-11-28 23:24:11'),
 (171, 3, '61b99e962edb6adef6c4032a', 'b2d6f28ff0a9eb575a9d6dd804f4820b5859e4396be40d874d24a81685020013', '2025-12-29 10:43:37', '2025-11-29 10:43:37'),
@@ -2090,28 +2048,26 @@ INSERT INTO `user_tokens` (`id`, `user_id`, `selector`, `hashed_validator`, `exp
 (177, 8, '1542966014888e4e52e6596c', 'a517e3ba14221cbe1b7ebc61428c0517fe7c1a419d4042bac5df52c57bb0f41e', '2026-01-01 07:38:28', '2025-12-02 07:38:28'),
 (180, 3, '6a356a96b92f761869fd3527', 'b6facbc9aec41eef3345d344ecc47306abffe17f7e1773a8736bb81d02926587', '2026-01-01 09:00:11', '2025-12-02 09:00:11'),
 (185, 1, '7bc9b9d52438276f3fc4374f', 'a824291a48834a796e57eca39e10ac018ba52799c020321aab679c4da9bd7967', '2026-01-01 09:47:36', '2025-12-02 09:47:39'),
-(188, 7, '367883fd01f92bdc360c1e4f', '73bea3ebb9994f2ea04d5dad1e84c63b0ed6ff78b2eff0042f32499344ca3817', '2026-01-01 09:56:49', '2025-12-02 09:56:49'),
 (190, 3, '7fcfdd77e9e4cd51135b3e7a', '5a270f45d133680481e0ece57bb48fbdd847da117999d42b1d66390f34e5205c', '2026-01-01 10:17:55', '2025-12-02 10:17:55'),
 (193, 1, '9d2046feb88b41cef1313400', 'ff6d5711237a025c956f3d3448309a9cf9772125149904c77b96f991730e3774', '2026-01-01 10:33:17', '2025-12-02 10:33:20'),
 (196, 4, '9a31c27e0708d9b8594be1ff', '1d91ea26a238f232866b101828e047cfb19afc9bfe8b96ba676b57078a8aceac', '2026-01-01 11:52:43', '2025-12-02 11:52:43'),
 (197, 1, '3c2d3c70a5a0a53edbd98b0c', 'd7949866f9147a1590f196ac443f39a94988058285d6fc7fe593395e59096eed', '2026-01-01 12:11:07', '2025-12-02 12:11:07'),
 (198, 16, '1c46e10a28dbe06427b53416', '77a0781d9bdd7af94ceb6792e0b841dd70f49a96954ecf6dee074e69d654a368', '2026-01-01 12:29:08', '2025-12-02 12:29:08'),
-(201, 7, '3081427a7939f5e17aff2525', '7fe6de29c1f0ae30228f542dd7c8f38969477c757880b61af95754e3913b68c7', '2026-01-01 14:05:07', '2025-12-02 14:05:02'),
 (206, 1, 'e3477b4f348c9c9f83a03000', 'bd41a71d48562f04973f2b1033e01d46a980eb9f013ece24fe3e3179bf8b872a', '2026-01-01 17:39:45', '2025-12-02 17:39:45'),
 (210, 4, '49cf320e76367eb44768e3bd', '56ae3904e95194902249973785f841491b8c57d141bf3eaaa8da44909ab588ea', '2026-01-01 20:42:30', '2025-12-02 20:42:29'),
-(214, 4, 'ffdb47d86eabbc5b70110edb', 'e8f60fc9d15c423c699d1e5c00127805ee2567fa3d21e09383bf7469ad3f630f', '2026-01-02 07:01:55', '2025-12-03 07:01:55'),
-(215, 1, 'e26ffdec05b01279abcdd620', 'a64b28f4760d5d12cd5b3f2d14b20c61dca2511be5d8b03bd1eae094329f743b', '2026-01-02 07:50:06', '2025-12-03 07:50:07');
+(216, 7, 'c450a7c7c88064ec96dd5aa2', 'fb944980b172915542ea2a27c5cc3d13cc9bc131ab1964b87bfb35d0d3209dce', '2026-01-02 08:49:33', '2025-12-03 08:49:33'),
+(221, 1, 'c6544e507ca823ddd32c7a09', 'bf78e066c40cc18bd70f84bb413350f6f10bd0dcf8aa4c06f8817f49335eea1a', '2026-01-02 13:22:00', '2025-12-03 13:22:00'),
+(223, 7, '92f57ea549eedc00ab90f76b', '2ec44f92a4cc689bc4fed2ea2329a81d2974a80c7e030ba4f8344e1ece05db89', '2026-01-02 21:35:02', '2025-12-03 21:35:01'),
+(224, 7, '8f205391f3b5ebfd93927285', '062623744cbf8b2bb5a03722b4e9f2dfb0c3ebc89e176361611f59d838deb777', '2026-01-02 21:35:49', '2025-12-03 21:35:49'),
+(226, 1, '7293d5e4f63b9559edb37200', '91766cdd0c4722844825d213d8a72f3e0a7bb0af835e56839d4a5723be94fa24', '2026-01-03 09:19:57', '2025-12-04 09:19:57'),
+(231, 1, '1cbe50b2a16e28bb35b1034f', '166e380c74ca2a191929a39d34ede419f5113147d432c36c5c0b0e0c6ede9cb0', '2026-01-03 10:01:32', '2025-12-04 10:01:32'),
+(234, 4, 'a0f34d067a8c624510448bdc', '8aeb45fe6c5e0900896e7eb4de3f7327779762a9bd20089c3aea8eaf02bdb76e', '2026-01-03 11:51:50', '2025-12-04 11:51:49'),
+(235, 17, '29f771bff87f4c40497a6498', '6f075061efb25082833ebcc23efe6622062815d4e791b9b612c24fbc12244a72', '2026-01-03 11:55:57', '2025-12-04 11:55:57'),
+(236, 3, '5180bca3b4efb4ad92501204', 'a2dbb3934e67244b4195ed5a07c282ca2f725b8fa04dd22aebcf7647129105e7', '2026-01-03 15:16:56', '2025-12-04 15:16:56');
 
 --
 -- Indexes for dumped tables
 --
-
---
--- Indexes for table `chapters`
---
-ALTER TABLE `chapters`
-  ADD PRIMARY KEY (`chapter_id`),
-  ADD KEY `fk_chapters_history` (`history_id`);
 
 --
 -- Indexes for table `characters`
@@ -2162,19 +2118,6 @@ ALTER TABLE `dialogues`
 --
 ALTER TABLE `dialogue_trees`
   ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `history`
---
-ALTER TABLE `history`
-  ADD PRIMARY KEY (`history_id`),
-  ADD KEY `fk_history_history_type` (`history_type_id`);
-
---
--- Indexes for table `history_types`
---
-ALTER TABLE `history_types`
-  ADD PRIMARY KEY (`history_type_id`);
 
 --
 -- Indexes for table `items`
@@ -2329,7 +2272,7 @@ ALTER TABLE `user_tokens`
 -- AUTO_INCREMENT for table `characters`
 --
 ALTER TABLE `characters`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
 
 --
 -- AUTO_INCREMENT for table `character_inventory`
@@ -2401,19 +2344,19 @@ ALTER TABLE `password_resets`
 -- AUTO_INCREMENT for table `player_quests`
 --
 ALTER TABLE `player_quests`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `player_quest_progress`
 --
 ALTER TABLE `player_quest_progress`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
 
 --
 -- AUTO_INCREMENT for table `player_unlocked_points`
 --
 ALTER TABLE `player_unlocked_points`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `quests`
@@ -2443,23 +2386,17 @@ ALTER TABLE `quest_stage_unlocks`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `user_tokens`
 --
 ALTER TABLE `user_tokens`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=216;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=237;
 
 --
 -- Constraints for dumped tables
 --
-
---
--- Constraints for table `chapters`
---
-ALTER TABLE `chapters`
-  ADD CONSTRAINT `fk_chapters_history` FOREIGN KEY (`history_id`) REFERENCES `history` (`history_id`);
 
 --
 -- Constraints for table `characters`
@@ -2494,12 +2431,6 @@ ALTER TABLE `character_stats`
 ALTER TABLE `dialogues`
   ADD CONSTRAINT `dialogues_ibfk_1` FOREIGN KEY (`tree_id`) REFERENCES `dialogue_trees` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `dialogues_ibfk_2` FOREIGN KEY (`parent_id`) REFERENCES `dialogues` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `history`
---
-ALTER TABLE `history`
-  ADD CONSTRAINT `fk_history_history_type` FOREIGN KEY (`history_type_id`) REFERENCES `history_types` (`history_type_id`);
 
 --
 -- Constraints for table `maps`

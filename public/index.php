@@ -113,6 +113,20 @@ $router->mount('/game', function() use ($router) {
     $router->get('/shop/(\d+)', 'App\Controllers\ShopController@getShop');
     $router->post('/shop/buy', 'App\Controllers\ShopController@buy');
     $router->post('/shop/sell', 'App\Controllers\ShopController@sell');
+
+});
+
+// Story Routes (Protected)
+$router->mount('/story', function() use ($router) {
+    $router->before('GET|POST', '.*', function() {
+        (new \App\Middleware\AuthMiddleware())->handle();
+    });
+
+    $router->get('/enter/(\d+)', 'App\Controllers\StoryController@enterStory');
+    $router->get('/current', 'App\Controllers\StoryController@getCurrentNode');
+    $router->post('/move', 'App\Controllers\StoryController@moveToNode');
+    $router->post('/loot', 'App\Controllers\StoryController@collectLoot');
+    $router->post('/exit', 'App\Controllers\StoryController@exitStory');
 });
 
 // Admin Routes (Protected)
@@ -137,6 +151,7 @@ $router->mount('/admin', function() use ($router) {
     $router->post('/points/update-submap', 'App\Controllers\AdminMapController@updatePointSubMap');
     $router->post('/points/update-npc', 'App\Controllers\AdminMapController@updatePointNPC');
     $router->post('/points/update-visibility', 'App\Controllers\AdminMapController@updatePointVisibility');
+    $router->post('/points/update-story', 'App\Controllers\AdminMapController@updatePointStory');
     
     // Items Management
     $router->get('/items', 'App\Controllers\AdminItemController@index');
@@ -188,6 +203,37 @@ $router->mount('/admin', function() use ($router) {
     // Character Management
     $router->get('/characters', 'App\Controllers\AdminCharacterController@index');
     $router->post('/characters/delete/(\d+)', 'App\Controllers\AdminCharacterController@delete');
+
+    // Story Management
+    $router->get('/stories', 'App\Controllers\AdminStoryController@index');
+    $router->match('GET|POST', '/stories/create', 'App\Controllers\AdminStoryController@create');
+    $router->match('GET|POST', '/stories/edit/(\d+)', 'App\Controllers\AdminStoryController@edit');
+    $router->post('/stories/delete/(\d+)', 'App\Controllers\AdminStoryController@delete');
+    
+    // Story Nodes Management
+    $router->get('/stories/(\d+)/nodes', 'App\Controllers\AdminStoryController@manageNodes');
+    $router->post('/stories/(\d+)/nodes/create', 'App\Controllers\AdminStoryController@createNode');
+    $router->post('/stories/nodes/(\d+)/edit', 'App\Controllers\AdminStoryController@updateNode');
+    $router->post('/stories/nodes/(\d+)/delete', 'App\Controllers\AdminStoryController@deleteNode');
+    $router->post('/stories/nodes/upload-image', 'App\Controllers\AdminStoryController@uploadNodeImage');
+    $router->post('/stories/connections/create', 'App\Controllers\AdminStoryController@createConnection');
+    $router->post('/stories/connections/(\d+)/edit', 'App\Controllers\AdminStoryController@updateConnection');
+    $router->post('/stories/connections/(\d+)/delete', 'App\Controllers\AdminStoryController@deleteConnection');
+
+    // Procedural Management
+    $router->get('/procedural', 'App\Controllers\AdminProceduralController@index');
+    $router->match('GET|POST', '/procedural/create', 'App\Controllers\AdminProceduralController@create');
+    $router->match('GET|POST', '/procedural/edit/(\d+)', 'App\Controllers\AdminProceduralController@edit');
+    $router->post('/procedural/delete/(\d+)', 'App\Controllers\AdminProceduralController@delete');
+
+    // Procedural Pools
+    $router->get('/procedural/(\d+)/monsters', 'App\Controllers\AdminProceduralController@monsterPools');
+    $router->post('/procedural/(\d+)/monsters/add', 'App\Controllers\AdminProceduralController@addMonsterPool');
+    $router->post('/procedural/monsters/delete/(\d+)', 'App\Controllers\AdminProceduralController@deleteMonsterPool');
+    
+    $router->get('/procedural/(\d+)/loot', 'App\Controllers\AdminProceduralController@lootPools');
+    $router->post('/procedural/(\d+)/loot/add', 'App\Controllers\AdminProceduralController@addLootPool');
+    $router->post('/procedural/loot/delete/(\d+)', 'App\Controllers\AdminProceduralController@deleteLootPool');
 });
 
 $router->set404('App\Controllers\ErrorController@error404');

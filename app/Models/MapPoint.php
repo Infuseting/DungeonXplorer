@@ -328,9 +328,14 @@ class MapPoint
     public function getVisiblePointsForCharacter($mapId, $characterId)
     {
         $stmt = $this->db->prepare(
-            "SELECT mp.* 
+            "SELECT mp.*, 
+                    s.name as story_name, 
+                    s.description as story_description, 
+                    s.min_level as story_min_level, 
+                    s.difficulty_level as story_difficulty
              FROM map_points mp
              LEFT JOIN character_map_unlocks pup ON mp.id = pup.map_point_id AND pup.character_id = ?
+             LEFT JOIN stories s ON mp.story_id = s.id
              WHERE mp.map_id = ? 
              AND mp.is_locked = 0
              AND (mp.is_hidden = 0 OR pup.character_id IS NOT NULL)

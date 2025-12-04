@@ -1,0 +1,130 @@
+#editor-container {
+    cursor: grab;
+    user-select: none;
+}
+
+#editor-container:active {
+    cursor: grabbing;
+}
+
+#canvas-grid {
+    background-image:
+        linear-gradient(to right, #334155 1px, transparent 1px),
+        linear-gradient(to bottom, #334155 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+.story-node {
+    position: absolute;
+    width: 180px;
+    background: #1e293b;
+    /* slate-800 */
+    border: 2px solid #475569;
+    /* slate-600 */
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    z-index: 10;
+    pointer-events: auto;
+    will-change: transform;
+}
+
+.story-node:hover {
+    border-color: #6366f1;
+    /* indigo-500 */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+    z-index: 20;
+}
+
+.story-node.selected {
+    border-color: #818cf8;
+    /* indigo-400 */
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5);
+    z-index: 30;
+}
+
+.story-node.start-node {
+    border-top: 4px solid #22c55e;
+    /* green-500 */
+}
+
+.story-node.end-node {
+    border-bottom: 4px solid #ef4444;
+    /* red-500 */
+}
+
+.node-header {
+    font-weight: bold;
+    color: #f1f5f9;
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.node-preview {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.node-handle {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: #475569;
+    border-radius: 50%;
+    border: 2px solid #1e293b;
+    cursor: crosshair;
+    z-index: 40;
+}
+
+.node-handle:hover {
+    background: #6366f1;
+    transform: scale(1.2);
+}
+
+.handle-out {
+    right: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.handle-in {
+    left: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Connections */
+path.connection {
+    fill: none;
+    stroke: #64748b;
+    /* slate-500 */
+    stroke-width: 2;
+    pointer-events: stroke;
+    cursor: pointer;
+}
+
+path.connection:hover {
+    stroke: #818cf8;
+    stroke-width: 3;
+}
+
+path.connection.selected {
+    stroke: #6366f1;
+    stroke-width: 3;
+}
+
+/* Dragging connection line */
+path.drag-line {
+    fill: none;
+    stroke: #94a3b8;
+    stroke-width: 2;
+    stroke-dasharray: 5, 5;
+    pointer-events: none;
+}

@@ -54,10 +54,39 @@ export function showPointDetails(point) {
     }
 
     const pointPanel = document.getElementById('point-panel');
+    const extraDetails = document.getElementById('point-extra-details');
 
-    // Update panel content
-    document.getElementById('point-title').textContent = point.name;
-    document.getElementById('point-description').textContent = point.description || 'Aucune description disponible.';
+    // Reset extra details
+    if (extraDetails) {
+        extraDetails.innerHTML = '';
+        extraDetails.classList.add('hidden');
+    }
+
+    // Update panel content based on type
+    if (point.story_id) {
+        document.getElementById('point-title').textContent = point.story_name || point.name;
+        document.getElementById('point-description').textContent = point.story_description || point.description || 'Aucune description disponible.';
+
+        if (extraDetails) {
+            extraDetails.classList.remove('hidden');
+            extraDetails.innerHTML = `
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-gray-900/50 rounded-lg p-3 text-center border border-gray-700">
+                        <div class="text-xs text-gray-400 uppercase mb-1">Niveau Requis</div>
+                        <div class="text-xl font-bold text-violet-400">${point.story_min_level || 1}</div>
+                    </div>
+                    <div class="bg-gray-900/50 rounded-lg p-3 text-center border border-gray-700">
+                        <div class="text-xs text-gray-400 uppercase mb-1">Difficulté</div>
+                        <div class="text-xl font-bold text-red-400">${point.story_difficulty || 1}/5</div>
+                    </div>
+                </div>
+            `;
+        }
+    } else {
+        document.getElementById('point-title').textContent = point.name;
+        document.getElementById('point-description').textContent = point.description || 'Aucune description disponible.';
+    }
+
     document.getElementById('point-coords').textContent = `Lat: ${parseFloat(point.y).toFixed(6)}, Lng: ${parseFloat(point.x).toFixed(6)}`;
 
     // Update type badge
@@ -76,25 +105,37 @@ export function showPointDetails(point) {
 
     switch (point.type) {
         case 'story':
-            actionBtn.textContent = '📖 Lire l\'histoire';
+        case 'dungeon':
+            actionBtn.textContent = '⚔️ Entrer dans le donjon';
+            if (point.story_id) {
+                actionBtn.addEventListener('click', () => {
+                    window.location.href = `/story/enter/${point.story_id}`;
+                });
+            } else {
+                actionBtn.disabled = true;
+                actionBtn.textContent = '⛔ Donjon non configuré';
+                actionBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
             break;
         case 'place':
             actionBtn.textContent = '🚪 Entrer';
-            break;
-        case 'dungeon':
-            actionBtn.textContent = '⚔️ Entrer dans le donjon';
+            actionBtn.addEventListener('click', () => {
+                showToast(`Fonctionnalité "${getTypeLabel(point.type)}" à venir !`, 'info');
+            });
             break;
         case 'npc':
             actionBtn.textContent = '💬 Parler';
+            actionBtn.addEventListener('click', () => {
+                showToast(`Fonctionnalité "${getTypeLabel(point.type)}" à venir !`, 'info');
+            });
             break;
         case 'quest':
             actionBtn.textContent = '📜 Accepter la quête';
+            actionBtn.addEventListener('click', () => {
+                showToast(`Fonctionnalité "${getTypeLabel(point.type)}" à venir !`, 'info');
+            });
             break;
     }
-
-    actionBtn.addEventListener('click', () => {
-        showToast(`Fonctionnalité "${getTypeLabel(point.type)}" à venir !`, 'info');
-    });
 
     actionsDiv.appendChild(actionBtn);
 

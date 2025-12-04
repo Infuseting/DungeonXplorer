@@ -40,6 +40,15 @@ class GameController
         $inventoryModel = new Inventory();
         $inventory = $inventoryModel->getCharacterInventory($characterId);
         
+        // Check if character is in a dungeon
+        $storyProgressModel = new \App\Models\StoryProgress();
+        $activeStory = $storyProgressModel->getActiveStory($characterId);
+        
+        if ($activeStory) {
+            header('Location: /story/enter/' . $activeStory['story_id']);
+            exit;
+        }
+
         // Load map configuration and points using models
         $mapModel = new Map();
         $mapPointModel = new MapPoint();
