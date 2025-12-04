@@ -9,8 +9,12 @@ ini_set('error_log', __DIR__ . '/../var/log/php_errors.log');
 require __DIR__ . '/../vendor/autoload.php';
 
 // Load environment variables
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
-$dotenv->load();
+try {
+    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
+    $dotenv->load();
+} catch (Exception $e) {
+    error_log('Failed to load environment variables from .env file: ' . $e->getMessage());
+}
 
 // Load helper functions
 require_once __DIR__ . '/../app/helpers.php';
