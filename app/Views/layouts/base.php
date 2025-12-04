@@ -5,6 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $title ?? 'DungeonXplorer' ?></title>
     <meta name="description" content="<?= $description ?? 'Plongez dans un RPG textuel immersif' ?>">
+
+    <!-- Social Media Meta Tags -->
+    <?php
+    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $baseUrl = $protocol . '://' . $host;
+    $ogImage = $baseUrl . '/assets/images/auth_bg.png';
+    $currentUrl = $baseUrl . ($_SERVER['REQUEST_URI'] ?? '');
+    ?>
+    <meta property="og:title" content="<?= $title ?? 'DungeonXplorer' ?>">
+    <meta property="og:description" content="<?= $description ?? 'Plongez dans un RPG textuel immersif' ?>">
+    <meta property="og:image" content="<?= $ogImage ?>">
+    <meta property="og:url" content="<?= $currentUrl ?>">
+    <meta property="og:type" content="website">
+    
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<?= $title ?? 'DungeonXplorer' ?>">
+    <meta name="twitter:description" content="<?= $description ?? 'Plongez dans un RPG textuel immersif' ?>">
+    <meta name="twitter:image" content="<?= $ogImage ?>">
     <script src="https://cdn.tailwindcss.com"></script>
     <?php if (isset($customStyles)): ?>
     <style><?= $customStyles ?></style>
