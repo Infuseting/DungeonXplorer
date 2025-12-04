@@ -53,19 +53,39 @@ jobs:
     steps:
       - name: Pull and Restart Docker Container
         run: |
-          set -x
+          echo "=== Starting deployment ==="
           echo "Current directory: $(pwd)"
-          echo "Changing to docker directory..."
-          cd /home/infuseting/docker/ || { echo "Failed to cd"; exit 1; }
-          echo "Current directory after cd: $(pwd)"
           
-          echo "Logging into GHCR..."
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin || { echo "Docker login failed"; exit 1; }
+          echo "=== Step 1: Changing to docker directory ==="
+          cd /home/infuseting/docker/
+          if [ $? -ne 0 ]; then
+            echo "ERROR: Failed to change directory"
+            exit 1
+          fi
+          echo "Success! Now in: $(pwd)"
           
-          echo "Pulling image..."
-          docker compose pull dungeonxplorer || { echo "Docker compose pull failed"; exit 1; }
+          echo "=== Step 2: Logging into GHCR ==="
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          if [ $? -ne 0 ]; then
+            echo "ERROR: Docker login failed"
+            exit 1
+          fi
+          echo "Success! Logged into GHCR"
           
-          echo "Restarting container..."
-          docker compose up -d dungeonxplorer || { echo "Docker compose up failed"; exit 1; }
+          echo "=== Step 3: Pulling latest image ==="
+          docker compose pull dungeonxplorer
+          if [ $? -ne 0 ]; then
+            echo "ERROR: Docker compose pull failed"
+            exit 1
+          fi
+          echo "Success! Image pulled"
           
-          echo "Deployment successful!"
+          echo "=== Step 4: Restarting container ==="
+          docker compose up -d dungeonxplorer
+          if [ $? -ne 0 ]; then
+            echo "ERROR: Docker compose up failed"
+            exit 1
+          fi
+          echo "Success! Container restarted"
+          
+          echo "=== Deployment completed successfully! ==="
