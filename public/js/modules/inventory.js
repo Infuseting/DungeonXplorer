@@ -9,8 +9,18 @@ import { playSound } from './soundManager.js';
 // State
 let draggedItem = null;
 let draggedItemData = null;
+let selectedItem = null; // For mobile click-based interaction
+let longPressTimer = null;
 
 const CELL_SIZE = 40;
+const LONG_PRESS_DURATION = 500; // ms
+
+/**
+ * Check if device is mobile
+ */
+function isMobile() {
+    return window.innerWidth < 1024;
+}
 
 /**
  * Initialize the inventory system
@@ -18,13 +28,21 @@ const CELL_SIZE = 40;
 export function initInventory() {
     // Initialize all item icons
     document.querySelectorAll('.item-icon').forEach(item => {
-        setupDraggable(item);
-        setupTooltip(item);
+        if (isMobile()) {
+            setupMobileInteraction(item);
+        } else {
+            setupDraggable(item);
+            setupTooltip(item);
+        }
     });
 
-    // Setup drop zones
-    setupEquipmentSlots();
-    setupInventoryGrid();
+    // Setup drop zones (desktop only)
+    if (!isMobile()) {
+        setupEquipmentSlots();
+        setupInventoryGrid();
+    } else {
+        setupMobileSlotInteraction();
+    }
 
     // Setup modal controls
     setupModalControls();
@@ -91,6 +109,117 @@ export function setupTooltip(item) {
     item.addEventListener('mouseleave', () => {
         tooltip.classList.add('hidden');
     });
+}
+
+/**
+ * Setup mobile interaction for an item (click-based)
+ * @param {HTMLElement} item - Item element
+ */
+function setupMobileInteraction(item) {
+    // Long press for tooltip
+    item.addEventListener('touchstart', (e) => {
+        longPressTimer = setTimeout(() => {
+            showMobileTooltip(item, e.touches[0]);
+        }, LONG_PRESS_DURATION);
+    });
+
+    item.addEventListener('touchend', (e) => {
+        clearTimeout(longPressTimer);
+
+        // If it was a quick tap (not long press), handle selection
+        if (!document.getElementById('item-tooltip').classList.contains('hidden')) {
+            // Tooltip is showing, hide it
+            document.getElementById('item-tooltip').classList.add('hidden');
+        } else {
+            // Handle item selection/deselection
+            handleMobileItemClick(item);
+        }
+    });
+
+    item.addEventListener('touchmove', () => {
+        clearTimeout(longPressTimer);
+    });
+
+    // Also support regular click for testing on desktop
+    item.addEventListener('click', (e) => {
+        if (isMobile()) {
+            e.preventDefault();
+            handleMobileItemClick(item);
+        }
+    });
+}
+
+/**
+ * Show tooltip on mobile (long press)
+ * @param {HTMLElement} item - Item element
+ * @param {Touch} touch - Touch object
+ */
+function showMobileTooltip(item, touch) {
+    const tooltip = document.getElementById('item-tooltip');
+    const nameEl = document.getElementById('tooltip-name');
+    const typeEl = document.getElementById('tooltip-type');
+    const statsEl = document.getElementById('tooltip-stats');
+    const descEl = document.getElementById('tooltip-desc');
+
+    // Populate Data
+    nameEl.textContent = item.dataset.name;
+    typeEl.textContent = item.dataset.type;
+    descEl.innerHTML = item.dataset.description;
+
+    // Parse and display stats
+    statsEl.innerHTML = '';
+    try {
+        const stats = JSON.parse(item.dataset.stats);
+        for (const [key, value] of Object.entries(stats)) {
+            const statRow = document.createElement('div');
+            statRow.className = 'tooltip-stat';
+            const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            statRow.innerHTML = `<span>${label}</span><span>${value}</span>`;
+            statsEl.appendChild(statRow);
+        }
+    } catch (e) {
+        console.error('Error parsing stats', e);
+    }
+
+    // Position tooltip
+    const offset = 15;
+    let left = touch.clientX + offset;
+    let top = touch.clientY + offset;
+
+    // Boundary checks
+    if (left + tooltip.offsetWidth > window.innerWidth) {
+        left = touch.clientX - tooltip.offsetWidth - offset;
+    }
+    if (top + tooltip.offsetHeight > window.innerHeight) {
+        top = touch.clientY - tooltip.offsetHeight - offset;
+    }
+
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = top + 'px';
+    tooltip.classList.remove('hidden');
+
+    playSound('click');
+}
+
+/**
+ * Handle mobile item click (selection)
+ * @param {HTMLElement} item - Item element
+ */
+function handleMobileItemClick(item) {
+    if (selectedItem === item) {
+        // Deselect
+        selectedItem.classList.remove('selected');
+        selectedItem = null;
+        playSound('click');
+    } else {
+        // Select
+        if (selectedItem) {
+            selectedItem.classList.remove('selected');
+        }
+        selectedItem = item;
+        item.classList.add('selected');
+        playSound('click');
+    }
 }
 
 /**
@@ -295,6 +424,54 @@ function clearTwoHandedWeaponVisual(fromSlot) {
         // Remove red borders
         const redBorders = oppositeContainer.querySelectorAll('.border-red-500');
         redBorders.forEach(border => border.remove());
+    }
+}
+
+/**
+ * Setup mobile slot interaction (click to equip/unequip)
+ */
+function setupMobileSlotInteraction() {
+    // Equipment slots
+    document.querySelectorAll('.slot[data-slot]').forEach(slot => {
+        slot.addEventListener('click', (e) => {
+            e.preventDefault();
+            handleMobileSlotClick(slot);
+        });
+    });
+
+    // Inventory grid - click to unequip
+    const inventoryGrid = document.getElementById('inventory-grid');
+    if (inventoryGrid) {
+        inventoryGrid.addEventListener('click', (e) => {
+            // If an item is selected and user clicks on empty inventory space, unequip it
+            if (selectedItem && !e.target.closest('.item-icon')) {
+                const itemId = selectedItem.dataset.id;
+                moveItem(itemId, 'inventory');
+                selectedItem.classList.remove('selected');
+                selectedItem = null;
+            }
+        });
+    }
+}
+
+/**
+ * Handle mobile slot click (equip or unequip)
+ * @param {HTMLElement} slot - Slot element
+ */
+function handleMobileSlotClick(slot) {
+    const slotName = slot.dataset.slot;
+    const equippedItem = slot.querySelector('.item-icon');
+
+    if (selectedItem) {
+        // Equip the selected item
+        const itemId = selectedItem.dataset.id;
+        moveItem(itemId, 'equipped', slotName);
+        selectedItem.classList.remove('selected');
+        selectedItem = null;
+    } else if (equippedItem) {
+        // Unequip the item
+        const itemId = equippedItem.dataset.id;
+        moveItem(itemId, 'inventory');
     }
 }
 
@@ -538,6 +715,7 @@ function setupModalControls() {
     const inventoryModal = document.getElementById('inventory-modal');
     const inventoryToggleBtn = document.getElementById('inventory-toggle');
     const inventoryBackdrop = document.getElementById('inventory-backdrop');
+    const inventoryCloseBtn = document.getElementById('inventory-close-btn');
 
     function toggleInventory() {
         const isHidden = inventoryModal.classList.contains('hidden');
@@ -547,11 +725,21 @@ function setupModalControls() {
         } else {
             inventoryModal.classList.add('hidden');
             playSound('close');
+            // Clear selection on close
+            if (selectedItem) {
+                selectedItem.classList.remove('selected');
+                selectedItem = null;
+            }
         }
     }
 
     inventoryToggleBtn.addEventListener('click', toggleInventory);
     inventoryBackdrop.addEventListener('click', toggleInventory);
+
+    // Mobile close button
+    if (inventoryCloseBtn) {
+        inventoryCloseBtn.addEventListener('click', toggleInventory);
+    }
 
     // Close on Escape key
     document.addEventListener('keydown', (e) => {
@@ -566,7 +754,11 @@ function setupModalControls() {
  */
 export function refreshInventory() {
     document.querySelectorAll('.item-icon').forEach(item => {
-        setupDraggable(item);
-        setupTooltip(item);
+        if (isMobile()) {
+            setupMobileInteraction(item);
+        } else {
+            setupDraggable(item);
+            setupTooltip(item);
+        }
     });
 }
