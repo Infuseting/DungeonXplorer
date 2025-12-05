@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Admin Panel - DungeonXplorer</title>
     <meta name="description" content="Administration panel for DungeonXplorer">
 
@@ -28,6 +28,11 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+    </style>
 </head>
 <body class="bg-slate-950 text-slate-200 font-sans">
     <div class="flex min-h-screen">

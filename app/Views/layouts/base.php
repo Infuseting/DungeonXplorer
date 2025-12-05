@@ -2,7 +2,7 @@
 <html lang="fr" class="<?= $htmlClass ?? '' ?>">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title><?= $title ?? 'DungeonXplorer' ?></title>
     <meta name="description" content="<?= $description ?? 'Plongez dans un RPG textuel immersif' ?>">
 
@@ -26,7 +26,12 @@
     <meta name="twitter:image" content="<?= $ogImage ?>">
     <script src="https://cdn.tailwindcss.com"></script>
     <?php if (isset($customStyles)): ?>
-    <style><?= $customStyles ?></style>
+    <style>
+        body {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        <?= $customStyles ?>
+    </style>
     <?php endif; ?>
 </head>
 <body class="<?= $bodyClass ?? '' ?>">

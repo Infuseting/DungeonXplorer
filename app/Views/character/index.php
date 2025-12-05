@@ -135,7 +135,7 @@ ob_start();
             </div>
 
             <!-- Mobile Action Buttons (Fixed Bottom) -->
-            <div class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-lg border-t border-gray-800 p-4 safe-area-bottom">
+            <div class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-lg border-t border-gray-800 p-4" style="padding-bottom: calc(1rem + env(safe-area-inset-bottom));">
                 <div class="flex flex-col gap-3 max-w-md mx-auto">
                     <form action="/game" method="POST">
                         <input type="hidden" class="mobile-character-id" name="character_id" value="<?= $selectedCharacter['id'] ?>">

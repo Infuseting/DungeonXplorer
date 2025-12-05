@@ -127,7 +127,7 @@ ob_start();
         </div>
 
         <!-- Mobile Name Input - Fixed at Bottom -->
-        <div class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-lg border-t border-gray-800 p-4">
+        <div class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-lg border-t border-gray-800 p-4" style="padding-bottom: calc(1rem + env(safe-area-inset-bottom));">
             <div class="max-w-md mx-auto">
                 <div class="relative group">
                     <div class="absolute -inset-1 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-lg blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
