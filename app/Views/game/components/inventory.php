@@ -1,3 +1,49 @@
+<style>
+/* Inventory Slot Styles */
+.slot {
+    background-color: rgba(17, 24, 39, 0.8);
+    border: 2px solid #374151;
+    transition: all 0.2s;
+}
+
+.slot:hover {
+    border-color: #8b5cf6;
+}
+
+.slot.drag-over {
+    background-color: rgba(139, 92, 246, 0.2);
+    border-color: #8b5cf6;
+}
+
+/* Item Icon Styles */
+.item-icon {
+    cursor: grab;
+}
+
+.item-icon:active {
+    cursor: grabbing;
+}
+
+/* Slot labels */
+.slot-label {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    font-size: 8px;
+    color: #9ca3af;
+    text-transform: uppercase;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Valid drop zone highlight */
+.valid-drop-zone {
+    border-color: #10b981 !important;
+    background-color: rgba(16, 185, 129, 0.1);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+</style>
+
 <!-- Inventory Modal -->
 <div id="inventory-modal" class="fixed inset-0 z-50 hidden">
     <!-- Backdrop -->
@@ -6,7 +52,6 @@
     <!-- Modal Content -->
     <div class="relative z-10 w-full h-full flex items-center justify-center p-8 pointer-events-none">
         <div class="bg-gray-800/90 border border-gray-600 rounded-2xl shadow-2xl flex gap-8 p-8 max-w-6xl w-full pointer-events-auto transform transition-all scale-100">
-            
             <div class="w-1/2 flex flex-col">
                 <h2 class="text-2xl font-bold text-white mb-6 border-b border-gray-600 pb-2 flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -50,7 +50,7 @@
     <!-- Room Description Banner (Top) -->
     <div id="room-description" class="fixed top-0 left-0 right-0 z-40 bg-gray-900/95 border-b border-yellow-600/30 backdrop-blur-md shadow-lg hidden">
         <div class="max-w-7xl mx-auto px-8 py-6">
-            <p id="room-desc" class="text-gray-300 font-bold text-lg mx-auto leading-relaxed"></p>
+            <p id="room-desc" class="text-gray-300 font-bold text-lg mx-auto leading-relaxed text-center"></p>
         </div>
     </div>
 
