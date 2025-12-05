@@ -47,6 +47,13 @@
         </div>
     </div>
 
+    <!-- Room Description Banner (Top) -->
+    <div id="room-description" class="fixed top-0 left-0 right-0 z-40 bg-gray-900/95 border-b border-yellow-600/30 backdrop-blur-md shadow-lg hidden">
+        <div class="max-w-7xl mx-auto px-8 py-6">
+            <p id="room-desc" class="text-gray-300 font-bold text-lg mx-auto leading-relaxed"></p>
+        </div>
+    </div>
+
     <!-- Bottom Right: Inventory, Quests & Exit -->
     <div class="fixed bottom-8 right-8 z-50 flex flex-col gap-4">
         <!-- Exit Dungeon Button (Conditional) -->
@@ -72,7 +79,7 @@
     </div>
 
     <!-- Main Content Area -->
-    <div class="flex-1 flex overflow-hidden relative">
+    <div class="flex-1 flex overflow-hidden relative" style="padding-top: 0;">
         
         <!-- Background Image Layer -->
         <div id="story-background" class="absolute inset-0 bg-cover bg-center transition-all duration-500 z-0 bg-[url('/assets/images/placeholder_dungeon.jpg')]">

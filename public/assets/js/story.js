@@ -41,12 +41,17 @@ function renderNode() {
     const node = storyState.currentNode;
     if (!node) return;
 
-    // Update Text (Safeguarded)
-    const nameEl = document.getElementById('node-name');
-    if (nameEl) nameEl.textContent = node.name;
+    // Update Room Description
+    const roomNameEl = document.getElementById('room-name');
+    if (roomNameEl) roomNameEl.textContent = node.name;
 
-    const descEl = document.getElementById('node-description');
-    if (descEl) descEl.textContent = node.description;
+    const roomDescEl = document.getElementById('room-desc');
+    if (roomDescEl) roomDescEl.textContent = node.description;
+
+    // Always show room description banner
+    const roomDescriptionBanner = document.getElementById('room-description');
+    if (roomDescriptionBanner) roomDescriptionBanner.classList.remove('hidden');
+
 
     // Update Background
     const bg = document.getElementById('story-background');
@@ -75,7 +80,6 @@ function renderNode() {
 
 function renderInteractions(node) {
     const area = document.getElementById('interaction-area');
-    const mainContainer = document.getElementById('main-content-container');
     const monstersContainer = document.getElementById('monsters-container');
     const monstersList = document.getElementById('monsters-list');
     const lootContainer = document.getElementById('loot-container');
@@ -146,11 +150,14 @@ function renderInteractions(node) {
 
     if (hasInteractions) {
         area.classList.remove('hidden');
+        const mainContainer = document.getElementById('main-content-container');
         if (mainContainer) mainContainer.classList.remove('hidden');
     } else {
         area.classList.add('hidden');
+        const mainContainer = document.getElementById('main-content-container');
         if (mainContainer) mainContainer.classList.add('hidden');
     }
+
 }
 
 function renderChoices(node) {
