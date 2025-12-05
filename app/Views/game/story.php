@@ -5,75 +5,10 @@
     <title><?= htmlspecialchars($story['name']) ?> - DungeonXplorer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Inventory Slot Styles */
-        .slot {
-            background: rgba(31, 41, 55, 0.8);
-            border: 2px solid #4b5563;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-center;
-            transition: all 0.2s;
-        }
-        
-        .slot:hover {
-            border-color: #6b7280;
-            background: rgba(55, 65, 81, 0.9);
-        }
-        
-        .slot.drag-over {
-            border-color: #8b5cf6;
-            background: rgba(139, 92, 246, 0.2);
-        }
-        
-        .slot-label {
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            font-size: 0.625rem;
-            color: #9ca3af;
-            pointer-events: none;
-            text-transform: uppercase;
-            font-weight: 600;
-        }
-        
-        .item-icon {
-            cursor: grab;
-        }
-        
-        .item-icon:active {
-            cursor: grabbing;
-        }
-        
-        /* Toast Animations */
-        .toast {
-            animation: slideIn 0.3s ease-out;
-        }
-        
-        .toast.hiding {
-            animation: fadeOut 0.3s ease-out forwards;
-        }
-        
-        @keyframes slideIn {
-            from {
-                transform: translateX(-100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        
-        @keyframes fadeOut {
-            from {
-                opacity: 1;
-            }
-            to {
-                opacity: 0;
-                transform: translateX(-100%);
-            }
-        }
+        @keyframes slideIn { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; transform: translateX(-100%); } }
+        .animate-slideIn { animation: slideIn 0.3s ease-out; }
+        .animate-fadeOut { animation: fadeOut 0.3s ease-out forwards; }
     </style>
 </head>
 <body class="bg-black text-white h-screen flex flex-col overflow-hidden font-sans select-none">
@@ -140,7 +75,7 @@
     <div class="flex-1 flex overflow-hidden relative">
         
         <!-- Background Image Layer -->
-        <div id="story-background" class="absolute inset-0 bg-cover bg-center transition-all duration-500 z-0" style="background-image: url('/assets/images/placeholder_dungeon.jpg');">
+        <div id="story-background" class="absolute inset-0 bg-cover bg-center transition-all duration-500 z-0 bg-[url('/assets/images/placeholder_dungeon.jpg')]">
             <div class="absolute inset-0 bg-black/30"></div>
         </div>
 
@@ -410,34 +345,7 @@
 
 <script type="module" src="/assets/js/story.js"></script>
 
-<style>
-    .choice-btn {
-        background: linear-gradient(to bottom, #374151, #1f2937);
-        border: 1px solid #4b5563;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        color: #e5e7eb;
-        text-align: left;
-        transition: all 0.2s;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-    .choice-btn:hover:not(:disabled) {
-        background: linear-gradient(to bottom, #4b5563, #374151);
-        border-color: #6b7280;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
-    }
-    .choice-btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        filter: grayscale(1);
-    }
-    .choice-icon {
-        font-size: 1.5rem;
-    }
-</style>
+
 
 </body>
 </html>

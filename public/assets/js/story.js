@@ -175,7 +175,7 @@ function renderChoices(node) {
 
     node.connections.forEach(conn => {
         const btn = document.createElement('button');
-        btn.className = 'choice-btn group';
+        btn.className = 'w-full bg-gradient-to-b from-gray-700 to-gray-800 border border-gray-600 p-4 rounded-lg text-gray-200 text-left transition-all duration-200 flex items-center gap-3 hover:not-disabled:from-gray-600 hover:not-disabled:to-gray-700 hover:not-disabled:border-gray-500 hover:not-disabled:-translate-y-0.5 hover:not-disabled:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale group';
 
         // Determine icon based on direction text (simple heuristic)
         let icon = '➡️';
@@ -189,7 +189,7 @@ function renderChoices(node) {
         if (conn.is_return || text.includes('retour') || text.includes('rebrousser')) icon = '↩️';
 
         btn.innerHTML = `
-            <span class="choice-icon group-hover:scale-110 transition-transform">${icon}</span>
+            <span class="text-2xl group-hover:scale-110 transition-transform">${icon}</span>
             <span class="font-medium">${conn.direction_text}</span>
         `;
 

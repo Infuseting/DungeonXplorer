@@ -4,210 +4,98 @@ ob_start();
 ?>
 
 <style>
-    .search-bar {
-        display: flex;
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-        flex-wrap: wrap;
-    }
-    
-    .search-input {
-        flex: 1;
-        min-width: 250px;
-        padding: 0.625rem;
-        background: var(--bg-darker);
-        border: 1px solid var(--border);
-        border-radius: 0.5rem;
-        color: var(--text-light);
-    }
-    
-    .filter-select {
-        padding: 0.625rem;
-        background: var(--bg-darker);
-        border: 1px solid var(--border);
-        border-radius: 0.5rem;
-        color: var(--text-light);
-        min-width: 150px;
-    }
-    
-    .points-table {
-        width: 100%;
-        border-collapse: collapse;
-        background: var(--bg-darker);
-        border-radius: 0.75rem;
-        overflow: hidden;
-    }
-    
-    .points-table thead {
-        background: rgba(99, 102, 241, 0.1);
-    }
-    
-    .points-table th {
-        padding: 1rem;
-        text-align: left;
-        color: var(--text-light);
-        font-weight: 600;
-        border-bottom: 1px solid var(--border);
-    }
-    
-    .points-table td {
-        padding: 1rem;
-        border-bottom: 1px solid var(--border);
-        color: var(--text-muted);
-    }
-    
-    .points-table tr:hover {
-        background: rgba(99, 102, 241, 0.05);
-    }
-    
-    .type-badge {
-        padding: 0.25rem 0.75rem;
-        border-radius: 0.25rem;
-        font-size: 0.75rem;
-        font-weight: 500;
-        text-transform: uppercase;
-        display: inline-block;
-    }
-    
-    .type-story { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; }
-    .type-place { background: rgba(34, 197, 94, 0.2); color: #86efac; }
-    .type-dungeon { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
-    .type-npc { background: rgba(251, 191, 36, 0.2); color: #fde047; }
-    .type-quest { background: rgba(168, 85, 247, 0.2); color: #d8b4fe; }
-    
-    .submap-select {
-        padding: 0.5rem;
-        background: var(--bg-dark);
-        border: 1px solid var(--border);
-        border-radius: 0.375rem;
-        color: var(--text-light);
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    
-    .submap-select:hover {
-        border-color: var(--primary);
-    }
-    
-    .submap-select:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-    
-    .toast {
-        position: fixed;
-        bottom: 2rem;
-        right: 2rem;
-        padding: 1rem 1.5rem;
-        background: var(--bg-darker);
-        border: 1px solid var(--border);
-        border-radius: 0.5rem;
-        color: var(--text-light);
-        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        animation: slideIn 0.3s ease-out;
-        z-index: 1000;
-    }
-    
-    @keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
-    
-    .toast.success { border-color: #22c55e; }
-    .toast.error { border-color: #ef4444; }
-
-    /* Toggle Switch */
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 40px;
-      height: 20px;
-      vertical-align: middle;
-    }
-    .switch input { 
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #4b5563;
-      transition: .4s;
-      border-radius: 20px;
-    }
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 16px;
-      width: 16px;
-      left: 2px;
-      bottom: 2px;
-      background-color: white;
-      transition: .4s;
-      border-radius: 50%;
-    }
-    input:checked + .slider {
-      background-color: #6366f1;
-    }
-    input:checked + .slider:before {
-      transform: translateX(20px);
-    }
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
 </style>
 
 <div class="card">
     <h3 class="card-header">Gestion des Points de Carte</h3>
     
     <!-- Search and Filters -->
-    <div class="search-bar">
-        <input 
-            type="text" 
-            id="search-input" 
-            class="search-input" 
-            placeholder="🔍 Rechercher par nom..."
-            value="<?= htmlspecialchars($search ?? '') ?>"
-        >
+    <div class="flex gap-4 mb-6 flex-wrap items-center">
+        <!-- Search Input with Icon -->
+        <div class="relative flex-1 min-w-[250px]">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+            <input 
+                type="text" 
+                id="search-input" 
+                class="w-full pl-10 pr-4 py-2.5 bg-gray-800 border-2 border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all" 
+                placeholder="Rechercher par nom..."
+                value="<?= htmlspecialchars($search ?? '') ?>"
+            >
+        </div>
         
-        <select id="type-filter" class="filter-select">
-            <option value="">Tous les types</option>
-            <option value="story" <?= ($typeFilter ?? '') === 'story' ? 'selected' : '' ?>>Histoire</option>
-            <option value="place" <?= ($typeFilter ?? '') === 'place' ? 'selected' : '' ?>>Lieu</option>
-            <option value="dungeon" <?= ($typeFilter ?? '') === 'dungeon' ? 'selected' : '' ?>>Donjon</option>
-            <option value="npc" <?= ($typeFilter ?? '') === 'npc' ? 'selected' : '' ?>>PNJ</option>
-            <option value="quest" <?= ($typeFilter ?? '') === 'quest' ? 'selected' : '' ?>>Quête</option>
-        </select>
+        <!-- Type Filter with Icon -->
+        <div class="relative min-w-[180px]">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                </svg>
+            </div>
+            <select id="type-filter" class="w-full pl-10 pr-4 py-2.5 bg-gray-800 border-2 border-gray-600 rounded-lg text-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all appearance-none cursor-pointer">
+                <option value="">Tous les types</option>
+                <option value="story" <?= ($typeFilter ?? '') === 'story' ? 'selected' : '' ?>>📖 Histoire</option>
+                <option value="place" <?= ($typeFilter ?? '') === 'place' ? 'selected' : '' ?>>🏛️ Lieu</option>
+                <option value="dungeon" <?= ($typeFilter ?? '') === 'dungeon' ? 'selected' : '' ?>>⚔️ Donjon</option>
+                <option value="npc" <?= ($typeFilter ?? '') === 'npc' ? 'selected' : '' ?>>👤 PNJ</option>
+                <option value="quest" <?= ($typeFilter ?? '') === 'quest' ? 'selected' : '' ?>>📜 Quête</option>
+            </select>
+            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </div>
+        </div>
         
-        <select id="map-filter" class="filter-select">
-            <option value="">Toutes les cartes</option>
-            <?php foreach ($maps as $map): ?>
-                <option value="<?= $map['id'] ?>" <?= ($mapFilter ?? '') == $map['id'] ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($map['name']) ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
+        <!-- Map Filter with Icon -->
+        <div class="relative min-w-[180px]">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+                </svg>
+            </div>
+            <select id="map-filter" class="w-full pl-10 pr-4 py-2.5 bg-gray-800 border-2 border-gray-600 rounded-lg text-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all appearance-none cursor-pointer">
+                <option value="">Toutes les cartes</option>
+                <?php foreach ($maps as $map): ?>
+                    <option value="<?= $map['id'] ?>" <?= ($mapFilter ?? '') == $map['id'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($map['name']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </div>
+        </div>
         
-        <button class="btn btn-secondary" onclick="resetFilters()">Réinitialiser</button>
+        <button class="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors flex items-center gap-2" onclick="resetFilters()">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            Réinitialiser
+        </button>
     </div>
     
     <!-- Points Table -->
-    <div style="overflow-x: auto;">
-        <table class="points-table">
-            <thead>
+    <div class="overflow-x-auto">
+        <table class="w-full border-collapse bg-gray-900 rounded-xl overflow-hidden">
+            <thead class="bg-indigo-500/10">
                 <tr>
-                    <th>Nom</th>
-                    <th>Type</th>
-                    <th>Carte</th>
-                    <th>Visibilité</th>
-                    <th>Coordonnées</th>
-                    <th>Sous-Carte</th>
-                    <th>PNJ Associé</th>
-                    <th>Histoire/Donjon</th>
-                    <th>Actions</th>
-                </tr>
+                    <th class="p-4 text-left text-gray-100 font-semibold border-b border-gray-700">Nom</th>
+                    <th class="p-4 text-left text-gray-100 font-semibold border-b border-gray-700">Type</th>
+                    <th class="p-4 text-left text-gray-100 font-semibold border-b border-gray-700">Carte</th>
+                    <th class="p-4 text-left text-gray-100 font-semibold border-b border-gray-700">Visibilité</th>
+                    <th class="p-4 text-left text-gray-100 font-semibold border-b border-gray-700">Sous-Carte</th>
+                    <th class="p-4 text-left text-gray-100 font-semibold border-b border-gray-700">PNJ Associé</th>
+                    <th class="p-4 text-left text-gray-100 font-semibold border-b border-gray-700">Actions</th>
+                    </tr>
             </thead>
             <tbody>
                 <?php if (!empty($points)): ?>
@@ -226,32 +114,42 @@ ob_start();
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <span class="type-badge type-<?= $point['type'] ?>">
+                                <?php 
+                                $typeClasses = [
+                                    'npc' => 'bg-amber-500/30 text-amber-200 border border-amber-400/30',
+                                    'quest' => 'bg-purple-500/30 text-purple-200 border border-purple-400/30',
+                                    'place' => 'bg-blue-500/30 text-blue-200 border border-blue-400/30',
+                                    'story' => 'bg-red-500/30 text-red-200 border border-red-400/30'
+                                ];
+                                $typeClass = $typeClasses[$point['type']] ?? 'bg-gray-500/20 text-gray-300';
+                                ?>
+                                <span class="px-3 py-1 rounded text-xs font-medium uppercase inline-block <?= $typeClass ?>">
                                     <?= $point['type'] ?>
                                 </span>
                             </td>
-                            <td><?= htmlspecialchars($point['map_name'] ?? 'N/A') ?></td>
-                            <td>
-                                <label class="switch" title="Visible par défaut ?">
+                            <td class="p-4 border-b border-gray-700 text-gray-200"><?= htmlspecialchars($point['map_name'] ?? 'N/A') ?></td>
+                            <td class="p-4 border-b border-gray-700">
+                                <label class="relative inline-block w-10 h-5 align-middle" title="Visible par défaut ?">
                                     <input type="checkbox" 
+                                           class="opacity-0 w-0 h-0 peer"
                                            onchange="toggleVisibility(<?= $point['id'] ?>, !this.checked)"
                                            <?= empty($point['is_hidden']) ? 'checked' : '' ?>>
-                                    <span class="slider round"></span>
+                                    <span class="absolute cursor-pointer inset-0 bg-gray-600 transition-[.4s] rounded-[20px] before:absolute before:content-[''] before:h-4 before:w-4 before:left-0.5 before:bottom-0.5 before:bg-white before:transition-[.4s] before:rounded-full peer-checked:bg-indigo-500 peer-checked:before:translate-x-5"></span>
                                 </label>
-                                <small style="display:block; color:var(--text-muted); margin-top:0.25rem;">
-                                    <?= empty($point['is_hidden']) ? 'Visible' : 'Caché' ?>
+                                <small class="block text-gray-300 mt-1 font-medium">
+                                    <?= empty($point['is_hidden']) ? '✓ Visible' : '✗ Caché' ?>
                                 </small>
                             </td>
-                            <td>
-                                <small>
-                                    X: <?= number_format($point['x'], 2) ?><br>
-                                    Y: <?= number_format($point['y'], 2) ?>
+                            <td class="p-4 border-b border-gray-700">
+                                <small class="text-gray-300">
+                                    <span class="font-mono">X: <?= number_format($point['x'], 2) ?></span><br>
+                                    <span class="font-mono">Y: <?= number_format($point['y'], 2) ?></span>
                                 </small>
                             </td>
-                            <td>
+                            <td class="p-4 border-b border-gray-700">
                                 <?php if ($point['type'] === 'place'): ?>
                                     <select 
-                                        class="submap-select" 
+                                        class="p-2 bg-gray-800 border border-gray-700 rounded-md text-gray-100 cursor-pointer transition-all duration-200 hover:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed" 
                                         onchange="updateSubMap(<?= $point['id'] ?>, this.value)"
                                     >
                                         <option value="">Aucune sous-carte</option>
@@ -265,13 +163,13 @@ ob_start();
                                         <?php endforeach; ?>
                                     </select>
                                 <?php else: ?>
-                                    <span style="color: var(--text-muted);">-</span>
+                                    <span class="text-gray-400">-</span>
                                 <?php endif; ?>
                             </td>
-                            <td>
+                            <td class="p-4 border-b border-gray-700 text-gray-400">
                                 <?php if ($point['type'] === 'npc'): ?>
                                     <select 
-                                        class="submap-select" 
+                                        class="p-2 bg-gray-800 border border-gray-700 rounded-md text-gray-100 cursor-pointer transition-all duration-200 hover:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed" 
                                         onchange="updateNPC(<?= $point['id'] ?>, this.value)"
                                     >
                                         <option value="">Aucun PNJ</option>
@@ -286,44 +184,15 @@ ob_start();
                                     </select>
                                     <?php if ($point['target_id']): ?>
                                         <a href="/admin/npcs/edit/<?= $point['target_id'] ?>" 
-                                           class="btn btn-sm btn-primary" 
-                                           style="margin-top: 0.5rem; display: inline-block;">
+                                           class="btn btn-sm btn-primary mt-2 inline-block">
                                             👤 Gérer PNJ
                                         </a>
                                     <?php endif; ?>
                                 <?php else: ?>
-                                    <span style="color: var(--text-muted);">-</span>
+                                    <span class="text-gray-400">-</span>
                                 <?php endif; ?>
                             </td>
-                            <td>
-                                <?php if ($point['type'] === 'story' || $point['type'] === 'dungeon'): ?>
-                                    <select 
-                                        class="submap-select" 
-                                        onchange="updateStory(<?= $point['id'] ?>, this.value)"
-                                    >
-                                        <option value="">Aucune histoire</option>
-                                        <?php foreach ($stories as $story): ?>
-                                            <option 
-                                                value="<?= $story['id'] ?>" 
-                                                <?= $point['story_id'] == $story['id'] ? 'selected' : '' ?>
-                                            >
-                                                <?= htmlspecialchars($story['name']) ?>
-                                                <?= $story['is_procedural'] ? ' (Procédural)' : ' (Manuel)' ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                    <?php if ($point['story_id']): ?>
-                                        <a href="/admin/stories/<?= $point['story_id'] ?>/nodes" 
-                                           class="btn btn-sm btn-primary" 
-                                           style="margin-top: 0.5rem; display: inline-block;">
-                                            🗺️ Gérer Donjon
-                                        </a>
-                                    <?php endif; ?>
-                                <?php else: ?>
-                                    <span style="color: var(--text-muted);">-</span>
-                                <?php endif; ?>
-                            </td>
-                            <td>
+                            <td class="p-4 border-b border-gray-700 text-gray-400">
                                 <button 
                                     class="btn btn-sm btn-danger" 
                                     onclick="deletePoint(<?= $point['id'] ?>)"
@@ -335,7 +204,7 @@ ob_start();
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                        <td colspan="7" class="text-center p-12 text-gray-400">
                             Aucun point trouvé
                         </td>
                     </tr>
@@ -466,33 +335,6 @@ function updateNPC(pointId, npcId) {
     });
 }
 
-// Update Story assignment
-function updateStory(pointId, storyId) {
-    fetch('/admin/points/update-story', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            point_id: pointId,
-            story_id: storyId || null
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast(data.message, 'success');
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            showToast(data.message, 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showToast('Erreur de communication avec le serveur', 'error');
-    });
-}
-
 // Delete point
 function deletePoint(id) {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce point ?')) return;
@@ -507,7 +349,7 @@ function deletePoint(id) {
 // Toast notification
 function showToast(message, type = 'success') {
     const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
+    toast.className = `fixed bottom-8 right-8 px-6 py-4 bg-gray-900 border rounded-lg text-gray-100 shadow-[0_10px_25px_rgba(0,0,0,0.3)] animate-[slideIn_0.3s_ease-out] z-[1000] ${type === 'success' ? 'border-green-500' : 'border-red-500'}`;
     toast.textContent = message;
     document.body.appendChild(toast);
     

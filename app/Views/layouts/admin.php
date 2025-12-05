@@ -75,11 +75,11 @@
                     <span class="mr-3 text-xl">📜</span>
                     Gestion des Quêtes
                 </a>
-                <a href="/admin/procedural" class="flex items-center px-6 py-3.5 text-slate-400 hover:bg-indigo-500/10 hover:text-slate-200 border-l-3 border-transparent hover:border-indigo-500 transition-all <?= strpos($_SERVER['REQUEST_URI'], '/admin/quests') === 0 ? 'bg-indigo-500/15 text-indigo-400 border-indigo-500' : '' ?>">
+                <a href="/admin/procedural" class="flex items-center px-6 py-3.5 text-slate-400 hover:bg-indigo-500/10 hover:text-slate-200 border-l-3 border-transparent hover:border-indigo-500 transition-all <?= strpos($_SERVER['REQUEST_URI'], '/admin/procedural') === 0 ? 'bg-indigo-500/15 text-indigo-400 border-indigo-500' : '' ?>">
                     <span class="mr-3 text-xl">📜</span>
                     Gestion des Histoires Procedurales
                 </a>
-                <a href="/admin/stories" class="flex items-center px-6 py-3.5 text-slate-400 hover:bg-indigo-500/10 hover:text-slate-200 border-l-3 border-transparent hover:border-indigo-500 transition-all <?= strpos($_SERVER['REQUEST_URI'], '/admin/quests') === 0 ? 'bg-indigo-500/15 text-indigo-400 border-indigo-500' : '' ?>">
+                <a href="/admin/stories" class="flex items-center px-6 py-3.5 text-slate-400 hover:bg-indigo-500/10 hover:text-slate-200 border-l-3 border-transparent hover:border-indigo-500 transition-all <?= strpos($_SERVER['REQUEST_URI'], '/admin/stories') === 0 ? 'bg-indigo-500/15 text-indigo-400 border-indigo-500' : '' ?>">
                     <span class="mr-3 text-xl">📜</span>
                     Gestion des Histoires
                 </a>

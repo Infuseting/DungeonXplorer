@@ -7,7 +7,6 @@
     <div class="relative z-10 w-full h-full flex items-center justify-center p-8 pointer-events-none">
         <div class="bg-gray-800/90 border border-gray-600 rounded-2xl shadow-2xl flex gap-8 p-8 max-w-6xl w-full pointer-events-auto transform transition-all scale-100">
             
-            <!-- Left Column: Character & Equipment -->
             <div class="w-1/2 flex flex-col">
                 <h2 class="text-2xl font-bold text-white mb-6 border-b border-gray-600 pb-2 flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -285,7 +284,7 @@
                             $percentage = $maxWeight > 0 ? min(($currentWeight / $maxWeight) * 100, 100) : 0;
                             $barColor = $percentage > 90 ? 'bg-red-500' : ($percentage > 70 ? 'bg-yellow-500' : 'bg-green-500');
                         ?>
-                        <div class="<?= $barColor ?> h-full transition-all duration-300" style="width: <?= $percentage ?>%"></div>
+                        <div class="<?= $barColor ?> h-full transition-all duration-300 w-[<?= $percentage ?>%]"></div>
                     </div>
                 </div>
 
@@ -297,11 +296,11 @@
                         <div id="inventory-container" class="grid grid-cols-6 gap-2">
                             <?php if(isset($inventory['inventory']) && !empty($inventory['inventory'])): ?>
                                 <?php foreach($inventory['inventory'] as $item): ?>
-                                    <div class="w-16 h-16 slot rounded-lg flex items-center justify-center relative bg-gray-800 hover:bg-gray-700 transition-colors" 
+                                    <div class="w-16 h-16 bg-gray-800/80 border-2 border-gray-600 relative flex items-center justify-center transition-all duration-200 hover:border-gray-500 hover:bg-gray-700/90 [&.drag-over]:border-violet-500 [&.drag-over]:bg-violet-500/20 rounded-lg flex items-center justify-center relative bg-gray-800 hover:bg-gray-700 transition-colors" 
                                          data-location="inventory" 
                                          data-inventory-id="<?= $item['id'] ?>">
                                         <img src="/<?= $item['icon'] ?>" 
-                                             class="w-12 h-12 object-contain item-icon" 
+                                             class="w-12 h-12 object-contain cursor-grab active:cursor-grabbing" 
                                              draggable="true" 
                                              data-id="<?= $item['id'] ?>"
                                              data-slot-type="<?= htmlspecialchars($item['item_slot_type']) ?>"

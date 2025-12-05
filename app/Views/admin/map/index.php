@@ -4,120 +4,6 @@ ob_start();
 ?>
 
 <style>
-    #admin-map {
-        height: 600px;
-        border-radius: 0.75rem;
-        overflow: hidden;
-        border: 1px solid var(--border);
-    }
-    
-    .form-group {
-        margin-bottom: 1rem;
-    }
-    
-    .form-label {
-        display: block;
-        color: var(--text-light);
-        font-weight: 500;
-        margin-bottom: 0.5rem;
-    }
-    
-    .form-input, .form-select, .form-textarea {
-        width: 100%;
-        padding: 0.625rem;
-        background: var(--bg-darker);
-        border: 1px solid var(--border);
-        border-radius: 0.5rem;
-        color: var(--text-light);
-        font-size: 0.875rem;
-    }
-    
-    .form-input:focus, .form-select:focus, .form-textarea:focus {
-        outline: none;
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-    }
-    
-    .form-textarea {
-        resize: vertical;
-        min-height: 80px;
-    }
-    
-    .points-list {
-        max-height: 400px;
-        overflow-y: auto;
-    }
-    
-    .point-item {
-        background: var(--bg-darker);
-        border: 1px solid var(--border);
-        border-radius: 0.5rem;
-        padding: 1rem;
-        margin-bottom: 0.75rem;
-        transition: all 0.2s;
-    }
-    
-    .point-item:hover {
-        border-color: var(--primary);
-        transform: translateX(4px);
-    }
-    
-    .point-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.5rem;
-    }
-    
-    .point-name {
-        font-weight: 600;
-        color: var(--text-light);
-    }
-    
-    .point-type {
-        padding: 0.25rem 0.75rem;
-        border-radius: 0.25rem;
-        font-size: 0.75rem;
-        font-weight: 500;
-        text-transform: uppercase;
-    }
-    
-    .type-story { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; }
-    .type-place { background: rgba(34, 197, 94, 0.2); color: #86efac; }
-    .type-dungeon { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
-    .type-npc { background: rgba(251, 191, 36, 0.2); color: #fde047; }
-    .type-quest { background: rgba(168, 85, 247, 0.2); color: #d8b4fe; }
-    
-    .point-coords {
-        color: var(--text-muted);
-        font-size: 0.75rem;
-    }
-    
-    .btn-sm {
-        padding: 0.375rem 0.75rem;
-        font-size: 0.875rem;
-    }
-    
-    .btn-danger {
-        background: #dc2626;
-        color: white;
-    }
-    
-    .btn-danger:hover {
-        background: #b91c1c;
-    }
-    
-    .leaflet-container {
-        background: transparent;
-    }
-    
-    .temp-marker {
-        background: rgba(99, 102, 241, 0.3);
-        border: 2px solid var(--primary);
-        border-radius: 50%;
-        animation: pulse 1.5s ease-in-out infinite;
-    }
-    
     @keyframes pulse {
         0%, 100% { transform: scale(1); opacity: 0.7; }
         50% { transform: scale(1.1); opacity: 1; }
@@ -128,11 +14,11 @@ ob_start();
     <!-- Left: Map -->
     <div class="card">
         <div class="flex items-center justify-between mb-4">
-            <h3 class="card-header" style="margin-bottom: 0;">Carte Interactive</h3>
+            <h3 class="card-header mb-0">Carte Interactive</h3>
             
             <!-- Map Selector Dropdown -->
-            <div style="min-width: 250px;">
-                <select id="map-selector" class="form-select" onchange="changeMap(this.value)">
+            <div class="min-w-[250px]">
+                <select id="map-selector" class="w-full p-2.5 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10" onchange="changeMap(this.value)">
                     <?php foreach ($maps as $map): ?>
                         <option value="<?= $map['id'] ?>" <?= $map['id'] == $selectedMap['id'] ? 'selected' : '' ?>>
                             <?= htmlspecialchars($map['name']) ?> (ID: <?= $map['id'] ?>)
@@ -142,10 +28,10 @@ ob_start();
             </div>
         </div>
         
-        <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.875rem;">
+        <p class="text-gray-400 mb-4 text-sm">
             Cliquez sur la carte pour placer un nouveau point
         </p>
-        <div id="admin-map"></div>
+        <div id="admin-map" class="h-[600px] rounded-xl overflow-hidden border border-gray-700"></div>
     </div>
     
     <!-- Right: Form & Points List -->
@@ -156,31 +42,31 @@ ob_start();
             <form id="point-form" method="POST" action="/admin/map/create">
                 <input type="hidden" name="map_id" id="form-map-id" value="<?= $selectedMap['id'] ?>">
                 
-                <div class="form-group">
-                    <label class="form-label">Nom du Point</label>
-                    <input type="text" name="name" class="form-input" required>
+                <div class="mb-4">
+                    <label class="block text-gray-200 font-medium mb-2">Nom du Point</label>
+                    <input type="text" name="name" class="w-full p-2.5 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10" required>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="form-group">
-                        <label class="form-label">Longitude (X)</label>
-                        <input type="number" step="0.00000001" name="x" id="input-x" class="form-input" required readonly>
+                    <div class="mb-4">
+                        <label class="block text-gray-200 font-medium mb-2">Longitude (X)</label>
+                        <input type="number" step="0.00000001" name="x" id="input-x" class="w-full p-2.5 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10" required readonly>
                     </div>
                     
-                    <div class="form-group">
-                        <label class="form-label">Latitude (Y)</label>
-                        <input type="number" step="0.00000001" name="y" id="input-y" class="form-input" required readonly>
+                    <div class="mb-4">
+                        <label class="block text-gray-200 font-medium mb-2">Latitude (Y)</label>
+                        <input type="number" step="0.00000001" name="y" id="input-y" class="w-full p-2.5 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10" required readonly>
                     </div>
                 </div>
                 
-                <div class="form-group">
-                    <label class="form-label">Rayon de Cliquabilité (pixels)</label>
-                    <input type="number" name="radius" id="input-radius" class="form-input" value="50" min="10" max="200">
+                <div class="mb-4">
+                    <label class="block text-gray-200 font-medium mb-2">Rayon de Cliquabilité (pixels)</label>
+                    <input type="number" name="radius" id="input-radius" class="w-full p-2.5 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10" value="50" min="10" max="200">
                 </div>
                 
-                <div class="form-group">
-                    <label class="form-label">Type</label>
-                    <select name="type" class="form-select" required>
+                <div class="mb-4">
+                    <label class="block text-gray-200 font-medium mb-2">Type</label>
+                    <select name="type" class="w-full p-2.5 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10" required>
                         <option value="story">Histoire</option>
                         <option value="place">Lieu</option>
                         <option value="dungeon">Donjon</option>
@@ -189,18 +75,18 @@ ob_start();
                     </select>
                 </div>
                 
-                <div class="form-group">
-                    <label class="form-label">Description</label>
-                    <textarea name="description" class="form-textarea"></textarea>
+                <div class="mb-4">
+                    <label class="block text-gray-200 font-medium mb-2">Description</label>
+                    <textarea name="description" class="w-full p-2.5 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 resize-y min-h-[80px]"></textarea>
                 </div>
                 
-                <div class="form-group">
-                    <label class="form-label">Icône (optionnel)</label>
-                    <input type="text" name="icon" class="form-input" placeholder="icon.png">
+                <div class="mb-4">
+                    <label class="block text-gray-200 font-medium mb-2">Icône (optionnel)</label>
+                    <input type="text" name="icon" class="w-full p-2.5 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10" placeholder="icon.png">
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+                <div class="mb-4">
+                    <label class="block text-gray-200 font-medium mb-2 flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" name="is_hidden" value="1">
                         Caché par défaut (nécessite déblocage)
                     </label>
@@ -215,34 +101,44 @@ ob_start();
         <!-- Points List -->
         <div class="card">
             <h3 class="card-header">Points Existants</h3>
-            <div class="points-list">
+            <div class="max-h-[400px] overflow-y-auto">
                 <?php if (!empty($mapPoints)): ?>
                     <?php foreach ($mapPoints as $point): ?>
-                        <div class="point-item">
-                            <div class="point-header">
-                                <span class="point-name"><?= htmlspecialchars($point['name']) ?></span>
-                                <span class="point-type type-<?= $point['type'] ?>">
+                        <div class="bg-gray-900 border border-gray-700 rounded-lg p-4 mb-3 transition-all duration-200 hover:border-indigo-500 hover:translate-x-1">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-semibold text-gray-200"><?= htmlspecialchars($point['name']) ?></span>
+                                <?php
+                                    $typeClass = match($point['type']) {
+                                        'story' => 'bg-indigo-500/20 text-indigo-300',
+                                        'place' => 'bg-green-500/20 text-green-300',
+                                        'dungeon' => 'bg-red-500/20 text-red-300',
+                                        'npc' => 'bg-yellow-500/20 text-yellow-300',
+                                        'quest' => 'bg-purple-500/20 text-purple-300',
+                                        default => 'bg-gray-700 text-gray-300'
+                                    };
+                                ?>
+                                <span class="px-3 py-1 rounded text-xs font-medium uppercase <?= $typeClass ?>">
                                     <?= $point['type'] ?>
                                 </span>
                             </div>
-                            <div class="point-coords">
+                            <div class="text-gray-400 text-xs">
                                 📍 (<?= number_format($point['x'], 6) ?>, <?= number_format($point['y'], 6) ?>) 
                                 • Rayon: <?= $point['radius'] ?>px
                             </div>
                             <?php if ($point['description']): ?>
-                                <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.5rem;">
+                                <p class="text-gray-400 text-sm mt-2">
                                     <?= htmlspecialchars($point['description']) ?>
                                 </p>
                             <?php endif; ?>
-                            <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem;">
-                                <button class="btn btn-sm btn-danger" onclick="deletePoint(<?= $point['id'] ?>)">
+                            <div class="mt-3 flex gap-2">
+                                <button class="px-3 py-1.5 text-sm bg-red-600 text-white hover:bg-red-700 rounded" onclick="deletePoint(<?= $point['id'] ?>)">
                                     Supprimer
                                 </button>
                             </div>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <p style="color: var(--text-muted); text-align: center; padding: 2rem;">
+                    <p class="text-gray-400 text-center py-8">
                         Aucun point sur la carte
                     </p>
                 <?php endif; ?>
@@ -350,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <?php endif; ?>
     }).catch(err => {
         console.error('Impossible de charger map_config.json', err);
-        document.getElementById('admin-map').innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #ef4444;">Erreur de chargement de la carte</div>';
+        document.getElementById('admin-map').innerHTML = '<div class="flex items-center justify-center h-full text-red-500">Erreur de chargement de la carte</div>';
     });
 });
 
