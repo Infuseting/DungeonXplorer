@@ -18,7 +18,7 @@ $customStyles = '
     /* Responsive character preview image sizing */
     .character-preview-img {
         max-width: min(90vw, 350px);
-        max-height: min(40vh, 350px);
+        max-height: min(35vh, 350px);
         width: auto;
         height: auto;
         object-fit: contain;
@@ -67,7 +67,7 @@ ob_start();
         
         <!-- Left Panel: Class Selection (Top on Mobile) -->
         <div class="w-full lg:w-1/3 p-4 md:p-6 overflow-y-auto custom-scrollbar bg-gray-900/80 backdrop-blur border-b lg:border-b-0 lg:border-r border-gray-800 max-h-[30vh] lg:max-h-full order-1">
-            <h2 class="text-lg font-medium text-violet-400 mb-4 md:mb-6 uppercase tracking-wider">Choisissez votre Destinée</h2>
+            <h2 class="text-lg font-medium text-violet-400 mb-4 md:mb-6 uppercase tracking-wider hidden md:block">Choisissez votre Destinée</h2>
             
             <div class="flex lg:flex-col gap-4 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0">
                 <?php foreach ($classes as $class): 
@@ -111,14 +111,30 @@ ob_start();
                 </div>
             </div>
 
-            <!-- Name Input - Always visible at bottom -->
-            <div class="flex-shrink-0 w-full max-w-md mx-auto px-4 md:px-6 pb-4 pt-2">
+            <!-- Name Input - Desktop Only (Hidden on Mobile) -->
+            <div class="hidden lg:flex flex-shrink-0 w-full max-w-md mx-auto px-4 md:px-6 pb-4 pt-2">
+                <div class="w-full">
+                    <div class="relative group">
+                        <div class="absolute -inset-1 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-lg blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
+                        <input type="text" id="desktop-name-input" placeholder="Nom de votre Héros" 
+                               class="relative w-full bg-gray-900 border-2 border-gray-700 rounded-lg py-2 md:py-3 px-4 md:px-6 text-center text-base md:text-lg font-bold text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none transition shadow-xl">
+                    </div>
+                    <button type="button" onclick="submitWithDesktopName()" class="mt-2 md:mt-3 w-full py-2 md:py-3 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-lg shadow-lg shadow-violet-600/30 transition active:scale-95 uppercase tracking-wider text-sm md:text-base">
+                        Personnaliser
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Name Input - Fixed at Bottom -->
+        <div class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-lg border-t border-gray-800 p-4">
+            <div class="max-w-md mx-auto">
                 <div class="relative group">
                     <div class="absolute -inset-1 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-lg blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
                     <input type="text" name="name" required placeholder="Nom de votre Héros" 
-                           class="relative w-full bg-gray-900 border-2 border-gray-700 rounded-lg py-2 md:py-3 px-4 md:px-6 text-center text-base md:text-lg font-bold text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none transition shadow-xl">
+                           class="relative w-full bg-gray-900 border-2 border-gray-700 rounded-lg py-2 px-4 text-center text-base font-bold text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none transition shadow-xl">
                 </div>
-                <button type="submit" class="mt-2 md:mt-3 w-full py-2 md:py-3 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-lg shadow-lg shadow-violet-600/30 transition active:scale-95 uppercase tracking-wider text-sm md:text-base">
+                <button type="submit" class="mt-2 w-full py-2 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-lg shadow-lg shadow-violet-600/30 transition active:scale-95 uppercase tracking-wider text-sm">
                     Personnaliser
                 </button>
             </div>
@@ -139,6 +155,20 @@ function updateClassPreview(input, className, desc) {
     previewImage.src = imagePath;
     previewImage.classList.remove('brightness-0', 'invert', 'opacity-20');
     placeholder.style.display = 'none';
+}
+
+function submitWithDesktopName() {
+    const desktopInput = document.getElementById('desktop-name-input');
+    const mobileInput = document.querySelector('input[name="name"]');
+    const form = document.querySelector('form');
+    
+    // Copier la valeur de l'input desktop vers mobile
+    if (desktopInput.value.trim()) {
+        mobileInput.value = desktopInput.value;
+        form.submit();
+    } else {
+        desktopInput.focus();
+    }
 }
 </script>
 
