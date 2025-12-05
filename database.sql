@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: mysql:3306
--- Generation Time: Dec 04, 2025 at 04:31 PM
+-- Generation Time: Dec 05, 2025 at 03:01 PM
 -- Server version: 8.0.44
 -- PHP Version: 8.3.26
 
@@ -51,7 +51,9 @@ INSERT INTO `characters` (`id`, `user_id`, `class_id`, `name`, `appearance`, `cr
 (49, 4, 3, 'Khalamite', '{\"hair\":{\"redCyan\":39,\"greenMagenta\":149,\"blueYellow\":200},\"eyes\":{\"color\":\"blue\"},\"makeup\":{\"tatouage_coeur\":true}}', '2025-12-02 22:54:13', '2025-12-02 22:54:13', 0.00),
 (50, 7, 6, 'Rémy', '{\"hair\":{\"redCyan\":18,\"greenMagenta\":100,\"blueYellow\":100},\"eyes\":{\"color\":\"brown\"},\"makeup\":[]}', '2025-12-03 09:30:19', '2025-12-03 09:30:19', 0.00),
 (51, 7, 1, 'remynder', '{\"hair\":{\"redCyan\":183,\"greenMagenta\":107,\"blueYellow\":200},\"eyes\":{\"color\":\"brown\"},\"makeup\":[]}', '2025-12-03 09:30:49', '2025-12-03 09:30:49', 0.00),
-(52, 3, 4, 'tralalero tralalala', '{\"hair\":{\"redCyan\":49,\"greenMagenta\":107,\"blueYellow\":197},\"eyes\":{\"color\":\"brown\"},\"makeup\":[]}', '2025-12-04 10:52:21', '2025-12-04 10:52:21', 0.00);
+(52, 3, 4, 'tralalero tralalala', '{\"hair\":{\"redCyan\":49,\"greenMagenta\":107,\"blueYellow\":197},\"eyes\":{\"color\":\"brown\"},\"makeup\":[]}', '2025-12-04 10:52:21', '2025-12-04 10:52:21', 0.00),
+(53, 18, 8, 'Nécrose', '{\"hair\":{\"redCyan\":0,\"greenMagenta\":200,\"blueYellow\":200},\"eyes\":{\"color\":\"brown\"},\"makeup\":[]}', '2025-12-04 21:27:50', '2025-12-04 21:27:50', 0.00),
+(54, 19, 1, 'BAYHAR', '{\"hair\":{\"redCyan\":100,\"greenMagenta\":100,\"blueYellow\":100},\"eyes\":{\"color\":\"brown\"},\"makeup\":[]}', '2025-12-04 21:28:42', '2025-12-04 21:28:42', 0.00);
 
 -- --------------------------------------------------------
 
@@ -89,7 +91,14 @@ CREATE TABLE `character_map_unlocks` (
 --
 
 INSERT INTO `character_map_unlocks` (`character_id`, `map_point_id`, `unlocked_at`) VALUES
-(46, 3, '2025-12-03 09:36:14');
+(43, 3, '2025-12-02 10:53:29'),
+(44, 3, '2025-12-02 09:44:17'),
+(46, 3, '2025-12-03 08:36:14'),
+(47, 3, '2025-12-02 11:31:29'),
+(49, 3, '2025-12-03 08:36:14'),
+(52, 3, '2025-12-04 09:55:27'),
+(53, 3, '2025-12-04 20:33:03'),
+(54, 3, '2025-12-04 20:30:53');
 
 -- --------------------------------------------------------
 
@@ -117,10 +126,84 @@ INSERT INTO `character_stats` (`character_id`, `level`, `xp`, `strength`, `dexte
 (45, 1, 0, 20, 5, 5, 20),
 (46, 1, 0, 20, 5, 5, 20),
 (47, 1, 0, 15, 10, 5, 15),
-(49, 1, 0, 15, 10, 5, 15),
+(49, 1, 0, 30, 10, 5, 15),
 (50, 1, 0, 25, 20, 15, 10),
 (51, 1, 0, 15, 5, 20, 15),
-(52, 1, 0, 20, 5, 5, 20);
+(52, 1, 0, 20, 5, 5, 20),
+(53, 1, 0, 15, 15, 20, 10),
+(54, 1, 0, 15, 5, 20, 15);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `character_story_loots_collected`
+--
+
+CREATE TABLE `character_story_loots_collected` (
+  `id` int NOT NULL,
+  `character_id` int NOT NULL,
+  `node_id` int NOT NULL,
+  `loot_id` int NOT NULL,
+  `collected_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `character_story_node_status`
+--
+
+CREATE TABLE `character_story_node_status` (
+  `id` int NOT NULL,
+  `character_id` int NOT NULL,
+  `node_id` int NOT NULL,
+  `is_visited` tinyint(1) DEFAULT '0',
+  `monsters_cleared` tinyint(1) DEFAULT '0',
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `character_story_node_status`
+--
+
+INSERT INTO `character_story_node_status` (`id`, `character_id`, `node_id`, `is_visited`, `monsters_cleared`, `updated_at`) VALUES
+(1, 46, 1, 1, 0, '2025-12-04 19:42:32'),
+(2, 46, 2, 1, 0, '2025-12-04 20:50:05'),
+(3, 46, 3, 1, 0, '2025-12-04 21:04:35'),
+(5, 46, 17, 1, 0, '2025-12-05 12:27:32'),
+(6, 46, 18, 1, 0, '2025-12-05 12:27:34'),
+(7, 46, 19, 1, 0, '2025-12-05 12:27:38'),
+(8, 46, 20, 1, 0, '2025-12-05 12:27:41'),
+(9, 49, 1, 1, 0, '2025-12-05 13:58:16'),
+(10, 49, 3, 1, 0, '2025-12-05 13:58:23'),
+(11, 49, 6, 1, 0, '2025-12-05 13:58:37'),
+(12, 49, 11, 1, 0, '2025-12-05 13:58:45');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `character_story_progress`
+--
+
+CREATE TABLE `character_story_progress` (
+  `id` int NOT NULL,
+  `character_id` int NOT NULL,
+  `story_id` int NOT NULL,
+  `current_node_id` int NOT NULL,
+  `started_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `last_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `completed` tinyint(1) DEFAULT '0',
+  `completed_at` timestamp NULL DEFAULT NULL,
+  `in_dungeon` tinyint(1) DEFAULT '1'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `character_story_progress`
+--
+
+INSERT INTO `character_story_progress` (`id`, `character_id`, `story_id`, `current_node_id`, `started_at`, `last_updated`, `completed`, `completed_at`, `in_dungeon`) VALUES
+(2, 46, 1, 20, '2025-12-05 11:38:43', '2025-12-05 12:27:41', 0, NULL, 1),
+(3, 49, 1, 11, '2025-12-05 13:58:16', '2025-12-05 13:58:45', 0, NULL, 1);
 
 -- --------------------------------------------------------
 
@@ -1486,6 +1569,7 @@ CREATE TABLE `map_points` (
   `type` enum('story','place','dungeon','npc','quest') NOT NULL,
   `target_id` int DEFAULT NULL,
   `sub_map_id` int DEFAULT NULL,
+  `story_id` int DEFAULT NULL,
   `icon` varchar(255) DEFAULT NULL,
   `is_locked` tinyint(1) DEFAULT '0',
   `unlock_quest_id` int DEFAULT NULL,
@@ -1501,11 +1585,11 @@ CREATE TABLE `map_points` (
 -- Dumping data for table `map_points`
 --
 
-INSERT INTO `map_points` (`id`, `map_id`, `name`, `x`, `y`, `type`, `target_id`, `sub_map_id`, `icon`, `is_locked`, `unlock_quest_id`, `unlock_condition_json`, `created_at`, `radius`, `label`, `description`, `is_hidden`) VALUES
-(3, 1, 'Labyrinthe du Minotaure', 60, -102, 'story', NULL, NULL, '', 0, NULL, NULL, '2025-11-24 23:46:12', 20, NULL, '', 1),
-(4, 1, 'Ville d\'Ege', 47, -114, 'place', NULL, 2, '', 0, NULL, NULL, '2025-11-24 23:48:01', 20, NULL, '', 0),
-(5, 2, 'Chateau', 257, -386, 'npc', 1, NULL, '', 0, NULL, NULL, '2025-11-25 14:15:58', 200, NULL, '', 0),
-(6, 2, 'Forge de l\'Aube d\'Acier', 247, -199, 'npc', 2, NULL, '', 0, NULL, NULL, '2025-11-26 07:48:45', 50, NULL, '', 0);
+INSERT INTO `map_points` (`id`, `map_id`, `name`, `x`, `y`, `type`, `target_id`, `sub_map_id`, `story_id`, `icon`, `is_locked`, `unlock_quest_id`, `unlock_condition_json`, `created_at`, `radius`, `label`, `description`, `is_hidden`) VALUES
+(3, 1, 'Labyrinthe du Minotaure', 60, -102, 'story', NULL, NULL, 1, '', 0, NULL, NULL, '2025-11-24 23:46:12', 20, NULL, '', 1),
+(4, 1, 'Ville d\'Ege', 47, -114, 'place', NULL, 2, NULL, '', 0, NULL, NULL, '2025-11-24 23:48:01', 20, NULL, '', 0),
+(5, 2, 'Chateau', 257, -386, 'npc', 1, NULL, NULL, '', 0, NULL, NULL, '2025-11-25 14:15:58', 200, NULL, '', 0),
+(6, 2, 'Forge de l\'Aube d\'Acier', 247, -199, 'npc', 2, NULL, NULL, '', 0, NULL, NULL, '2025-11-26 07:48:45', 50, NULL, '', 0);
 
 -- --------------------------------------------------------
 
@@ -1677,7 +1761,10 @@ INSERT INTO `player_quests` (`id`, `character_id`, `quest_id`, `current_stage_id
 (11, 43, 1, 4, 'ACTIVE', '2025-12-02 11:53:02', NULL),
 (13, 47, 1, 4, 'ACTIVE', '2025-12-02 12:31:03', NULL),
 (16, 46, 1, 4, 'ACTIVE', '2025-12-03 09:36:06', NULL),
-(17, 52, 1, 4, 'ACTIVE', '2025-12-04 10:54:39', NULL);
+(17, 52, 1, 4, 'ACTIVE', '2025-12-04 10:54:39', NULL),
+(18, 54, 1, 4, 'ACTIVE', '2025-12-04 21:30:11', NULL),
+(19, 53, 1, 4, 'ACTIVE', '2025-12-04 21:32:18', NULL),
+(20, 49, 1, 4, 'ACTIVE', '2025-12-04 23:38:27', NULL);
 
 -- --------------------------------------------------------
 
@@ -1712,7 +1799,16 @@ INSERT INTO `player_quest_progress` (`id`, `player_quest_id`, `objective_id`, `c
 (45, 16, 5, 0, 0),
 (46, 17, 7, 1, 1),
 (47, 17, 4, 0, 0),
-(48, 17, 5, 0, 0);
+(48, 17, 5, 0, 0),
+(49, 18, 7, 1, 1),
+(50, 18, 4, 0, 0),
+(51, 18, 5, 0, 0),
+(52, 19, 7, 1, 1),
+(53, 19, 4, 0, 0),
+(54, 19, 5, 0, 0),
+(55, 20, 7, 1, 1),
+(56, 20, 4, 0, 0),
+(57, 20, 5, 0, 0);
 
 --
 -- Triggers `player_quest_progress`
@@ -1776,10 +1872,10 @@ CREATE TRIGGER `after_quest_progress_update` AFTER UPDATE ON `player_quest_progr
                 END IF;
                 
                 -- Insert unlock record if it doesn't exist
-                INSERT IGNORE INTO player_unlocked_points 
-                    (user_id, character_id, map_point_id, unlocked_at)
+                INSERT IGNORE INTO character_map_unlocks 
+                    (character_id, map_point_id, unlocked_at)
                 VALUES 
-                    (v_user_id, v_character_id, v_map_point_id, CURRENT_TIMESTAMP);
+                    (v_character_id, v_map_point_id, CURRENT_TIMESTAMP);
                     
             END LOOP;
             
@@ -1795,26 +1891,80 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Table structure for table `player_unlocked_points`
+-- Table structure for table `procedural_dungeon_templates`
 --
 
-CREATE TABLE `player_unlocked_points` (
+CREATE TABLE `procedural_dungeon_templates` (
   `id` int NOT NULL,
-  `user_id` int NOT NULL,
-  `character_id` int NOT NULL,
-  `map_point_id` int NOT NULL,
-  `unlocked_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `name` varchar(255) NOT NULL,
+  `description` text,
+  `min_rooms` int DEFAULT '5',
+  `max_rooms` int DEFAULT '15',
+  `connection_density` float DEFAULT '0.3' COMMENT 'Pourcentage de connexions supplémentaires (0.0 à 1.0)',
+  `allow_loops` tinyint(1) DEFAULT '1' COMMENT 'Autoriser les boucles dans le graphe',
+  `allow_backtrack` tinyint(1) DEFAULT '1' COMMENT 'Autoriser le retour en arrière',
+  `direction_types` json DEFAULT NULL COMMENT 'Types de directions possibles: ["north","south","east","west","up","down","custom"]',
+  `room_themes` json DEFAULT NULL COMMENT 'Thèmes de pièces possibles avec probabilités',
+  `difficulty_scaling` enum('fixed','linear','exponential') DEFAULT 'linear',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
 
 --
--- Dumping data for table `player_unlocked_points`
+-- Table structure for table `procedural_loot_pools`
 --
 
-INSERT INTO `player_unlocked_points` (`id`, `user_id`, `character_id`, `map_point_id`, `unlocked_at`) VALUES
-(9, 1, 44, 3, '2025-12-02 10:44:17'),
-(11, 4, 43, 3, '2025-12-02 11:53:29'),
-(15, 16, 47, 3, '2025-12-02 12:31:29'),
-(22, 3, 52, 3, '2025-12-04 10:55:27');
+CREATE TABLE `procedural_loot_pools` (
+  `id` int NOT NULL,
+  `template_id` int NOT NULL,
+  `item_id` int NOT NULL,
+  `drop_weight` int DEFAULT '100' COMMENT 'Poids de drop (plus élevé = plus fréquent)',
+  `min_quantity` int DEFAULT '1',
+  `max_quantity` int DEFAULT '1',
+  `rarity` enum('common','uncommon','rare','epic','legendary') DEFAULT 'common',
+  `boss_loot_only` tinyint(1) DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `procedural_monster_pools`
+--
+
+CREATE TABLE `procedural_monster_pools` (
+  `id` int NOT NULL,
+  `template_id` int NOT NULL,
+  `monster_name` varchar(255) NOT NULL,
+  `min_level` int NOT NULL,
+  `max_level` int NOT NULL,
+  `spawn_weight` int DEFAULT '100' COMMENT 'Poids de spawn (plus élevé = plus fréquent)',
+  `min_quantity` int DEFAULT '1',
+  `max_quantity` int DEFAULT '3',
+  `is_boss` tinyint(1) DEFAULT '0',
+  `boss_room_only` tinyint(1) DEFAULT '0' COMMENT 'Spawn uniquement dans les salles boss',
+  `monster_stats_base` json DEFAULT NULL COMMENT 'Stats de base du monstre',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `procedural_room_images`
+--
+
+CREATE TABLE `procedural_room_images` (
+  `id` int NOT NULL,
+  `template_id` int NOT NULL,
+  `theme` varchar(100) DEFAULT NULL COMMENT 'Thème de la pièce (cave, dungeon, temple, etc.)',
+  `image_path` varchar(500) NOT NULL,
+  `is_boss_room` tinyint(1) DEFAULT '0',
+  `is_start_room` tinyint(1) DEFAULT '0',
+  `is_end_room` tinyint(1) DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -1923,6 +2073,195 @@ INSERT INTO `quest_stage_unlocks` (`id`, `quest_stage_id`, `map_point_id`) VALUE
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `stories`
+--
+
+CREATE TABLE `stories` (
+  `id` int NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `description` text,
+  `type` enum('manual','procedural') NOT NULL DEFAULT 'manual',
+  `difficulty_level` int DEFAULT '1',
+  `min_level` int DEFAULT '1',
+  `procedural_template_id` int DEFAULT NULL COMMENT 'ID du template si type=procedural',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `stories`
+--
+
+INSERT INTO `stories` (`id`, `name`, `description`, `type`, `difficulty_level`, `min_level`, `procedural_template_id`, `created_at`, `updated_at`) VALUES
+(1, 'Labyrinthe du Minotaure', 'Vous venez d’arriver sur la petite île de Crète et, devant vous, se dresse l’imposant labyrinthe dans lequel le Minotaure s’est retranché.  Vous tenez entre vos mains le destin d’une jeune femme, idole de tout un pays. Votre pas devient lourd et s’enfonce dans le sol, à la mesure de l’ampleur de la tâche qui vous est confiée.\r\nUne fois calmés, vous pénétrez à l’intérieur du labyrinthe.', 'manual', 2, 1, NULL, '2025-12-04 17:53:58', '2025-12-04 18:22:42');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `story_instances`
+--
+
+CREATE TABLE `story_instances` (
+  `id` int NOT NULL,
+  `story_id` int NOT NULL,
+  `seed` bigint NOT NULL COMMENT 'Seed de génération pour reproductibilité',
+  `instance_type` enum('shared','character') DEFAULT 'shared' COMMENT 'shared=tous les joueurs, character=unique par joueur',
+  `character_id` int DEFAULT NULL COMMENT 'NULL si shared, ID du personnage si character',
+  `generated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `expires_at` timestamp NULL DEFAULT NULL COMMENT 'Date d''expiration (défaut +48h)'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `story_nodes`
+--
+
+CREATE TABLE `story_nodes` (
+  `id` int NOT NULL,
+  `story_id` int NOT NULL,
+  `story_instance_id` int DEFAULT NULL COMMENT 'NULL pour donjons manuels, ID instance pour procéduraux',
+  `name` varchar(255) NOT NULL,
+  `description` text NOT NULL,
+  `image_path` varchar(500) DEFAULT NULL,
+  `is_start_node` tinyint(1) DEFAULT '0',
+  `is_end_node` tinyint(1) DEFAULT '0',
+  `can_exit` tinyint(1) DEFAULT '0',
+  `node_x` int DEFAULT '0' COMMENT 'Position X pour affichage graphique',
+  `node_y` int DEFAULT '0' COMMENT 'Position Y pour affichage graphique',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `story_nodes`
+--
+
+INSERT INTO `story_nodes` (`id`, `story_id`, `story_instance_id`, `name`, `description`, `image_path`, `is_start_node`, `is_end_node`, `can_exit`, `node_x`, `node_y`, `created_at`, `updated_at`) VALUES
+(1, 1, NULL, 'Entrée', 'La première pièce est sombre est humide. Une atmosphère glaçante s’en dégage . Vous avez la chaire de poule.', '/assets/story-images/story_6932ca243d71c.png', 1, 0, 0, 0, 0, '2025-12-04 18:11:45', '2025-12-05 12:03:49'),
+(2, 1, NULL, 'Clairière', 'L’atmosphère se réchauffe. Vous arrivez dans un espace ouvert et lumineux, où s’étend une petite clairière.\r\nVous avancez ; le chant des oiseaux remplit l’air et vous rassure. Au centre de la clairière se trouve un plastron (à adapter selon la classe). Deux choix s’offrent alors à vous : continuer dans ce décor, ou emprunter un chemin plus sombre qui s’enfonce dans les entrailles de la terre.', '/assets/story-images/story_6932ca3296d50.png', 0, 0, 0, 0, 0, '2025-12-04 18:40:17', '2025-12-05 12:04:03'),
+(3, 1, NULL, 'Gameboy', ' Vous pénétrez dans un couloir étroit, empli d’une substance trouble et gluante dégoulinant sur les murs, telle de la confiture séchée au soleil. Elle borde une mare d’apparence cristalline, aux eaux légèrement troubles, mais tout de même agitées par quelques esprits qui hantent les lieux. Pourtant, plus vous avancez dans ce tunnel, plus l’obscurité s’épaissit. Soudain, une lueur vous interpelle.\r\n\r\nLà, posé sous l’un des rares rayons de soleil capables d’atteindre cet endroit, se trouve un objet incroyable : la cassette originale de Mario 64, édition GameBoy.\r\n\r\nSur votre gauche, une porte attire votre attention.\r\n', '/assets/story-images/story_6932ca2b6bee2.png', 0, 0, 0, 0, 0, '2025-12-04 19:13:24', '2025-12-05 12:03:56'),
+(5, 1, NULL, 'Brocante', 'Une salle remplie de tables s’ouvre devant vous. Sur chacune d’elles reposent des dizaines de cassettes de jeux, toutes différentes. Au milieu de la pièce se tient un homme plutôt grand, barbu, et surtout d’apparence négligée. Soudain, il se retourne et se précipite vers vous, vous demandant immédiatement si « vous l’avez ».\r\nNe comprenant pas de quoi il parle, vous vous mettez sur la défensive. Il mentionne une certaine cassette dont il aurait absolument besoin.\r\nRefusant de céder à ses caprices, vous engagez le combat.', '', 0, 0, 0, 314, 68, '2025-12-05 09:53:33', '2025-12-05 11:59:53'),
+(6, 1, NULL, 'Croisement', 'Votre aventure se poursuit le long du couloir et vous vous rapprochez de la fin. Devant vous, un croisement se dessine avec deux entrées.', '/assets/story-images/story_6932ca4624942.png', 0, 0, 0, 0, 0, '2025-12-05 09:55:36', '2025-12-05 12:04:23'),
+(7, 1, NULL, 'Tresor du Brocanteur', 'Vous venez de vaincre le brocanteur et sa collection infinie de jeux vidéo. Avec un peu de chance, il vous a laissé un objet d’une valeur inestimable : une épée en or. Dès que vous l’aurez équipée, elle vous permettra de vous protéger contre les autres créatures qui hantent ces lieux.\r\nCette épée possède des statistiques défiant les armes des plus grands héros', '/assets/story-images/story_6932ca4090b9e.png', 0, 0, 0, 0, 0, '2025-12-05 09:58:45', '2025-12-05 12:04:17'),
+(8, 1, NULL, 'Point d\'eau', 'Vous arrivez dans une salle étrangement calme.  Des rayons de lumière filtrent par des fissures dans le plafond, éclairant un petit bassin aux eaux parfaitement immobiles.\r\nSur le bord, quelqu’un a laissé une petite boîte ovale.  En l’ouvrant, vous découvrez une récompense inattendue. Vous prenez un instant pour vous reposer ; l’ambiance vous y invite presque.  Mais un hurlement lointain vous rappelle la raison de votre présence ici…\r\nVous reprenez la route, déterminé.', '/assets/story-images/story_6932cac33a740.png', 0, 0, 0, 0, 0, '2025-12-05 10:00:26', '2025-12-05 12:06:28'),
+(9, 1, NULL, 'Fontaine Bis', 'Vous débouchez dans une petite salle calme, presque apaisante.  Ici, l’air est moins lourd, et le silence semble avoir été posé comme une couverture protectrice. Une fontaine en pierre trône au centre, son eau limpide coulant dans un murmure régulier. La lumière provenant du plafond — ou peut-être d’une magie inconnue — donne à la pièce une douce teinte dorée. \r\nL’endroit semble si tranquille que vous sentez vos muscles se détendre malgré vous. Rien ne bouge, rien ne menace… comme si la salle existait uniquement pour offrir un bref répit aux voyageurs audacieux.', '/assets/story-images/story_6932cabcf0d3f.png', 0, 0, 0, 0, 0, '2025-12-05 10:02:48', '2025-12-05 12:06:22'),
+(10, 1, NULL, 'Statue', 'Un couloir étroit vous conduit vers une petite pièce baignée d’une lueur dorée. Au centre, une statue représentant un ancien héros de Crète lève une arme vers le ciel.\r\nÀ ses pieds, un simple mot est gravé :\r\n« Que celui qui poursuit la justice reçoive ce qu’il mérite. »\r\nUn compartiment s’ouvre soudain dans la base de la statue. Vous y trouvez un objet soigneusement enroulé dans un tissu rouge.\r\nUne fois l’objet en main, la lumière s’éteint comme si la statue venait d’accomplir son dernier devoir.', '/assets/story-images/story_6932cab716272.png', 0, 0, 0, 0, 0, '2025-12-05 10:05:03', '2025-12-05 12:06:16'),
+(11, 1, NULL, 'Cuisine du Logis', 'Cette décision vous mène dans ce qui pourrait s’apparenter à la cuisine du logis. Un grand panel d’ingrédients est disposé sur la table, tandis que des rats et toutes sortes de petits insectes de bas niveau rodent le long des grandes poutres qui soutiennent la toiture.\r\nDevant la table se tient probablement le cuisinier. Vous l’ayant surpris par votre présence, il se retourne et lance : « Voilà un insecte qui pourrait me servir de repas, cela change des cafards habituels. ».\r\nComprenant que votre viande l’intéresse, vous vous empressez d’engager le combat. Le cuisinier, mage noir depuis les débuts de l’humanité, lance son sort : « Le sérano est très salé, Johan ! ». \r\n', '', 0, 0, 0, 643, 175, '2025-12-05 10:07:59', '2025-12-05 11:59:57'),
+(12, 1, NULL, 'Salle Brumeuse', 'Vous entrez dans une salle légèrement brumeuse. L’air y est tiède, presque agréable, et un écho discret résonne à vos pas, comme si la pièce tentait de retenir chaque son. Sur les murs, des gravures anciennes représentent diverses scènes du labyrinthe : des héros perdus, des monstres oubliés, et au centre, l’ombre imposante du Minotaure. De petites lanternes suspendues au plafond fournissent une lumière tamisée, dansante, créant un jeu d’ombres presque hypnotique.\r\nAu fond de la pièce se trouvent deux ouvertures :\r\nl’une part vers un corridor plongeant dans l’obscurité,\r\nl’autre mène vers un passage plus lumineux.', '/assets/story-images/story_6932ca86d0038.png', 0, 0, 0, 0, 0, '2025-12-05 10:14:22', '2025-12-05 12:05:28'),
+(13, 1, NULL, 'Miroir', 'Vous pénétrez dans une longue galerie où les murs sont si polis qu’ils reflètent votre silhouette. Au début, cela vous rassure… Puis, après quelques pas, un détail vous saute aux yeux : votre reflet ne marche plus comme vous.\r\nVotre reflet sort alors de la paroi comme s’il traversait une flaque d’eau. Une copie exacte de vous, mais aux yeux éteints et à l’aura sombre.\r\n« Enfin… je te rencontre. Le roi voulait un héros. Moi, je préfère un cadavre. »\r\nLe combat est inévitable. Le reflet reproduce vos gestes, vos attaques… mais les tord, les amplifie, les pervertit.', '', 0, 0, 0, 926, 313, '2025-12-05 10:16:59', '2025-12-05 12:00:06'),
+(14, 1, NULL, 'Salle ornée', 'Ce couloir a été façonné différemment du reste du labyrinthe. Le sol est recouvert de grandes dalles parfaitement alignées, et les murs sont ornés de motifs géométriques rouges et noirs. Un souffle chaud traverse l’espace, comme si l’air extérieur parvenait à pénétrer dans ces lieux.\r\nVous vous retrouvez face à un mur bouché, sûrement une ancienne entrée rebouchée de peur de laisser les abominations du labyrinthe s’échapper.', '/assets/story-images/story_6932ca9f19d5c.png', 0, 0, 0, 0, 0, '2025-12-05 10:18:32', '2025-12-05 12:05:53'),
+(15, 1, NULL, 'Coussin Rose', 'Une salle remplie de coussins roses s’ouvre à vous : tout est coloré et doux. La pièce rappelle les plus grands salons arabes.  Dans l’ombre d’un coin, un mouvement se dessine et se propage dans toute la pièce en un rien de temps. Sous le sol, une créature bondit. C’est le Fury, une espèce mi-homme, mi-renard, avec une queue aussi longue qu’un humain.\r\nVoulant jouer avec vous, il se prépare à bondir.  « Un conseil : défendez-vous ! »\r\n', '', 0, 0, 0, 492, 533, '2025-12-05 10:23:15', '2025-12-05 12:00:00'),
+(16, 1, NULL, 'Salle Rocheuse', 'Le couloir débouche sur une salle creusée grossièrement dans la roche. L’air y est plus lourd, plus chaud, comme si vous descendiez lentement vers le cœur de la terre.\r\nAu sol, un squelette parfaitement aligné repose sur une dalle de marbre. À côté de lui, un sac de toile intact, miraculeusement préservé par le temps.\r\nVous ressentez un grondement sourd venant du fond du couloir. Le Minotaure n’est plus très loin…', '/assets/story-images/story_6932ca66276bc.png', 0, 0, 0, 0, 0, '2025-12-05 10:25:13', '2025-12-05 12:04:55'),
+(17, 1, NULL, 'Ancien Charactere Salle', 'Vous avancez dans un couloir aux murs recouverts d’anciens caractères inconnus encore aujourd’hui. Certaines inscriptions s’animent brièvement, comme si une force résiduelle tentait de vous attirer dans leurs univers reniés. Un brouillard bleuâtre envahit peu à peu la pièce suivante. Au centre, une colonne en pierre renferme des milliers de pierres scintillantes.', '/assets/story-images/story_6932ca51c3046.png', 0, 0, 0, 0, 0, '2025-12-05 10:26:57', '2025-12-05 12:04:34'),
+(18, 1, NULL, 'Salle Circulaire', 'Vous vous engagez dans une petite salle circulaire. Au centre, posé sur un autel en pierre fissurée, repose un petit coffre en bois vermoulu. Il semble banal… trop banal, même.\r\nLorsque vous l’ouvrez, un léger souffle de poussière s’en échappe, accompagné d’un couinement strident, comme si le coffre n’appréciait pas d’être réveillé après plusieurs siècles d’oubli.\r\nÀ l’intérieur, un objet scintille faiblement.', '/assets/story-images/story_6932ca5cc8cca.png', 0, 0, 0, 0, 0, '2025-12-05 10:28:26', '2025-12-05 12:04:46'),
+(19, 1, NULL, 'Dedale Sinueux', 'Le couloir dans lequel vous progressez devient de plus en plus sinueux. Les murs se resserrent légèrement, formant par endroits des passages où vous devez vous décaler de côté pour avancer. Une faible lueur verte émane du sol : une mousse lumineuse recouvre la pierre comme une fine couche de poussière magique.\r\nUne odeur d’herbes sèches flotte dans l’air, contrastant avec l’humidité des salles précédentes. Vous sentez que vous vous enfoncez davantage dans les entrailles du labyrinthe.', '/assets/story-images/story_6932ca79ebf3e.png', 0, 0, 0, 0, 0, '2025-12-05 10:30:04', '2025-12-05 12:05:15'),
+(20, 1, NULL, 'Piece du minothaure', 'Vous poussez la dernière porte du labyrinthe. Une chaleur écrasante vous frappe instantanément. Devant vous s’étend une immense salle circulaire, éclairée par des torches dont les flammes bleuâtres vibrent au rythme d’un grondement sourd.\r\nAu centre, enchaînée à une colonne de pierre… La princesse Kazokouni.\r\nElle lève la tête en entendant vos pas.\r\n« Vous… vous êtes venu ? J’avais commencé à perdre espoir… »\r\nAvant que vous puissiez répondre, le sol tremble violemment. Une silhouette herculéenne émerge de l’ombre, cornée, massive, menaçante.\r\nLe Minotaure. Il avance, chacun de ses pas faisant vibrer les dalles comme si la salle elle-même craignait sa présence.\r\nIl vous fixe, redresse sa hache énorme et grogne :\r\n« De tous les insectes qui se sont aventurés ici… tu es le seul assez stupide pour atteindre mon antre. »\r\nSa voix grave résonne dans la pièce entière.\r\n« Tu viens pour la princesse, n’est-ce pas ? Une faible humaine qui hurlait au début… puis qui s’est résignée. Elle est à moi désormais. »\r\nLa princesse s’insurge aussitôt :\r\n« À toi ?! Je t’ai juste demandé de me lâcher, énorme steak sur pattes ! Et arrête de renifler mes cheveux, c’est gênant ! »\r\nLe Minotaure grogne, vexé.\r\n« Silence, offrande ! »\r\nIl pointe sa hache vers vous, les yeux rougeoyant d’une fureur ancienne.\r\n« Tu penses pouvoir me vaincre ? Moi, gardien du Labyrinthe, maître de ces murs, terreur des royaumes ? J’ai écrasé des héros plus grands que toi. Certains ont encore leurs bottes coincées entre mes dents. »\r\nIl claque sa mâchoire dans un bruit sec, juste pour vous provoquer.\r\nLa princesse crie :\r\n« Ne l’écoute pas ! Il est juste gros, poilu et il sent le fromage fort ! Tu peux le faire ! »\r\nLe Minotaure se tourne vers elle, outré :\r\n« Je ne sens pas le fromage.\r\nJe suis le fromage. Le lait de la destruction. Le goût affiné de la mort. »\r\nIl se retourne vers vous, arrogant :\r\n« Approche, misérable. Viens me montrer comment un humain croit défier une légende. Je t’attends. »', '', 0, 1, 0, 1252, 722, '2025-12-05 10:32:37', '2025-12-05 12:00:14');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `story_node_connections`
+--
+
+CREATE TABLE `story_node_connections` (
+  `id` int NOT NULL,
+  `from_node_id` int NOT NULL,
+  `to_node_id` int NOT NULL,
+  `direction_text` varchar(255) NOT NULL COMMENT 'Texte affiché pour cette direction',
+  `order_index` int DEFAULT '0' COMMENT 'Ordre d''affichage des directions',
+  `condition_type` enum('none','item','quest_active','quest_completed','quest_stage','monster_killed','level') DEFAULT 'none',
+  `condition_value` varchar(255) DEFAULT NULL COMMENT 'ID de l''item, quest, ou niveau requis',
+  `allow_return` tinyint(1) DEFAULT '0',
+  `return_text` varchar(100) DEFAULT '',
+  `return_condition_type` enum('none','item','level','quest_active','quest_completed','quest_stage','monster_killed') DEFAULT 'none',
+  `return_condition_value` varchar(255) DEFAULT '',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `story_node_connections`
+--
+
+INSERT INTO `story_node_connections` (`id`, `from_node_id`, `to_node_id`, `direction_text`, `order_index`, `condition_type`, `condition_value`, `allow_return`, `return_text`, `return_condition_type`, `return_condition_value`, `created_at`) VALUES
+(7, 5, 6, 'Se diriger vers le croisements', 0, 'none', '', 1, 'Prendre le chemin derrière vous', 'none', '', '2025-12-05 09:58:10'),
+(8, 5, 7, 'Continuer vers la porte du fond', 0, 'none', '', 0, '', 'none', '', '2025-12-05 09:59:50'),
+(9, 7, 8, 'Continuer tout droit', 0, 'none', '', 1, 'Rebrousser chemin', 'none', '', '2025-12-05 10:01:31'),
+(10, 8, 9, 'Avancer tout droit', 0, 'none', '', 0, '', 'none', '', '2025-12-05 10:03:02'),
+(11, 9, 10, 'Avancer tout droit', 0, 'none', '', 1, 'Revenir en arrière', 'none', '', '2025-12-05 10:05:12'),
+(12, 6, 11, 'Prendre le chemin de gauche', 0, 'none', '', 1, 'Se diriger vers le croisement', 'none', '', '2025-12-05 10:08:34'),
+(14, 11, 8, 'S\'engager a gauche', 0, 'none', '', 0, '', 'none', '', '2025-12-05 10:10:51'),
+(15, 11, 9, 'S\'engager a droite', 0, 'none', '', 0, '', 'none', '', '2025-12-05 10:11:38'),
+(16, 6, 12, 'Prendre le chemin de droite', 0, 'none', '', 0, '', 'none', '', '2025-12-05 10:14:26'),
+(17, 12, 9, 'Aller a gauche', 0, 'none', '', 1, 'Se diriger vers la brume', 'none', '', '2025-12-05 10:15:18'),
+(19, 13, 14, 'Aller tout droit', 0, 'none', '', 1, 'Revenir en arrière', 'none', '', '2025-12-05 10:19:58'),
+(20, 1, 3, 'Suivre le tunnel de Gauche', 0, 'none', '', 1, 'Rebrousser Chemin', 'none', '', '2025-12-05 10:21:55'),
+(21, 3, 5, 'Ouvrir la porte  a gauche et suivre le chemin', 0, 'none', '', 0, '', 'none', '', '2025-12-05 10:21:58'),
+(22, 3, 6, 'Diriger vous vers la droite', 0, 'none', '', 0, '', 'none', '', '2025-12-05 10:22:01'),
+(23, 1, 2, 'Monter les escaliers a gauche', 0, 'none', '', 0, '', 'none', '', '2025-12-05 10:22:06'),
+(25, 12, 13, 'Aller tout droit', 0, 'none', '', 0, '', 'none', '', '2025-12-05 10:22:41'),
+(26, 2, 15, 'Se diriger vers la galerie sombre', 0, 'none', '', 0, '', 'none', '', '2025-12-05 10:23:21'),
+(27, 15, 12, 'Se diriger vers la brume', 0, 'none', '', 0, '', 'none', '', '2025-12-05 10:23:27'),
+(28, 15, 16, 'Se diriger vers la grotte', 0, 'none', '', 0, '', 'none', '', '2025-12-05 10:26:05'),
+(29, 16, 13, 'Suivre le chemin de gauche', 0, 'none', '', 1, 'Se diriger dans la grotte', 'none', '', '2025-12-05 10:26:12'),
+(30, 2, 17, 'Suivre le chemin lumineux', 0, 'none', '', 0, '', 'none', '', '2025-12-05 10:28:12'),
+(31, 17, 18, 'Prendre la porte derrière la colonne', 0, 'none', '', 0, '', 'none', '', '2025-12-05 10:29:09'),
+(32, 18, 19, 'Se diriger vers le dedale', 0, 'none', '', 0, '', 'none', '', '2025-12-05 10:30:29'),
+(33, 19, 16, 'Prendre le chemin des grottes a droite', 0, 'none', '', 1, 'Aller vers le dedale', 'none', '', '2025-12-05 10:32:17'),
+(34, 19, 20, 'Traverser le pont', 0, 'none', '', 0, '', 'none', '', '2025-12-05 10:32:51'),
+(35, 18, 16, 'Prendre le chemin vers la grotte', 0, 'none', '', 0, '', 'none', '', '2025-12-05 11:34:56');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `story_node_loots`
+--
+
+CREATE TABLE `story_node_loots` (
+  `id` int NOT NULL,
+  `node_id` int NOT NULL,
+  `item_id` int NOT NULL,
+  `quantity` int DEFAULT '1',
+  `drop_chance` float DEFAULT '1' COMMENT 'Probabilité de drop (0.0 à 1.0)',
+  `is_guaranteed` tinyint(1) DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `story_node_monsters`
+--
+
+CREATE TABLE `story_node_monsters` (
+  `id` int NOT NULL,
+  `node_id` int NOT NULL,
+  `monster_name` varchar(255) NOT NULL,
+  `monster_level` int NOT NULL,
+  `monster_stats` json DEFAULT NULL COMMENT 'Stats du monstre (HP, ATK, DEF, etc.)',
+  `quantity` int DEFAULT '1',
+  `is_boss` tinyint(1) DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `story_node_npcs`
+--
+
+CREATE TABLE `story_node_npcs` (
+  `id` int NOT NULL,
+  `node_id` int NOT NULL,
+  `npc_id` int NOT NULL,
+  `position_x` float DEFAULT '0',
+  `position_y` float DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `users`
 --
 
@@ -1954,7 +2293,9 @@ INSERT INTO `users` (`id`, `username`, `email`, `password`, `role`, `created_at`
 (12, 'gorkem', 'zzzzzzzzzz@gmail.com', '$2y$10$Ncdu8VDKPXqLUQnd0ZxlK.ggIn6HGojBd4lOk9SlIo.FQkG.66G6q', NULL, '2025-11-25 12:52:29', '2025-11-25 12:52:29'),
 (13, 'arthur', 'arthur.langlois@gmail.com', '$2y$10$UM0/zHyWVdmnOmioFKKhC.OQ/n5M81jAN6UQzJNMskjm.RJZBOXeK', 'admin', '2025-11-26 14:57:22', '2025-11-26 14:57:54'),
 (16, 'Lenny', 'quesnel.lenny2@gmail.com', '$2y$10$EteAwSmBtTEYlROBHhcUZewIjVt0IGYHKCzPfMYse1ie3E1QH13mC', NULL, '2025-12-02 12:28:57', '2025-12-02 12:28:57'),
-(17, 'Pyramide2chiasse', 'albansery27@gmail.com', '$2y$10$kg1PzwPekOP5JAM5F3vesukXGALRLphLi0N6vx5wiSMablddsnxSO', NULL, '2025-12-04 11:55:31', '2025-12-04 11:55:31');
+(17, 'Pyramide2chiasse', 'albansery27@gmail.com', '$2y$10$kg1PzwPekOP5JAM5F3vesukXGALRLphLi0N6vx5wiSMablddsnxSO', NULL, '2025-12-04 11:55:31', '2025-12-04 11:55:31'),
+(18, 'Eckolevrai', 'buzzylintz@gmail.com', '$2y$10$MvO9.TXgw3yh./bGoWdZ9OsoiNf5r0oy3t3KqwV8VQXLK2wxFF20e', NULL, '2025-12-04 21:24:50', '2025-12-04 21:24:50'),
+(19, 'bayhar', 'cyrpauand@yahoo.fr', '$2y$10$rHEv95zUx8G2KWRrdOiQhOlbqhfaAMU7py9kKpf8VxrrVKGOsLt.C', NULL, '2025-12-04 21:26:35', '2025-12-04 21:26:35');
 
 -- --------------------------------------------------------
 
@@ -1977,7 +2318,6 @@ CREATE TABLE `user_tokens` (
 
 INSERT INTO `user_tokens` (`id`, `user_id`, `selector`, `hashed_validator`, `expires_at`, `created_at`) VALUES
 (1, 1, '382ac0d2f5162ccfebe70fa7', '0f234cc7eaa111b16acf91ecf222ee9a1ef52ab4452b019bb05b3db41ba7a11f', '2025-12-22 15:01:33', '2025-11-22 15:01:33'),
-(5, 3, 'ab078b7356a8b5f503c878ee', '2da4c389cc642f50f085b915bc43750f3d03a85c02306d00002bacfc5db52c15', '2025-12-22 15:33:52', '2025-11-22 15:33:52'),
 (6, 3, '47377d57dcc882bd6d6f71a6', '6a943037aacefeb1f248a0bfa1eadc36aca02d72c95d30a752643e47a840c193', '2025-12-22 15:34:15', '2025-11-22 15:34:15'),
 (7, 3, 'dd3ca441952ec5d994b0ee7a', '068e54728e68ae220b5d73adf98cc5b756ac9331e697d3f18319c37854b78f63', '2025-12-22 15:37:00', '2025-11-22 15:37:00'),
 (9, 4, 'eff1b64219d554c52de77d5b', '1161be25029e36210eaad8e7ccbbcdb5544c0b8c9399859e66d6fe200184b123', '2025-12-22 15:57:21', '2025-11-22 15:57:21'),
@@ -2033,7 +2373,6 @@ INSERT INTO `user_tokens` (`id`, `user_id`, `selector`, `hashed_validator`, `exp
 (109, 3, '4678be28cd4d94332bff6d89', '20a6d51adf28c6928b7011b302d2b50cd43ca98d0eff60f5a12f4053ecd15242', '2025-12-26 21:26:28', '2025-11-26 21:26:28'),
 (114, 4, 'af378adce0b4fe50fde2c686', 'c63e49716a1073b88f59a5b4fe094be8420a163698a7b3cbecf7dabf825d2525', '2025-12-26 21:52:35', '2025-11-26 21:52:35'),
 (119, 1, 'ab1d53e71b5502799c689394', '43e2622a974f2f98ec87962dbc6319465af2bda9c66bef2800d9a49ac26fe60b', '2025-12-26 23:36:49', '2025-11-26 23:36:49'),
-(131, 1, '40b2742878056905f7322ecb', 'd3476c81a773f684f27fbc695e1bd19ed89afad80e2de02f2444d3d64e096b81', '2025-12-27 09:28:09', '2025-11-27 09:28:09'),
 (137, 4, '724e24c20f12d30ab9166f11', '38d21f1fb56b99951ff72366fb0142ade5bd943285f3bb9ee8cc5c483b2df45c', '2025-12-27 15:27:48', '2025-11-27 15:27:46'),
 (141, 8, 'c82130c3c8edb027a07a0a25', '0fc6a5358ec3c2b200ce7f1e2a7ddf85f77f02bf0f3783e672adbe79a258b4a0', '2025-12-27 19:12:10', '2025-11-27 19:12:10'),
 (144, 4, 'b0dc48224265ac7d2a832932', '6f5ce2c348c9f79eeb61900b7cf8a0bd2ab8ee56640575297e5237a23ecd2d4b', '2025-12-27 23:58:37', '2025-11-27 23:58:34'),
@@ -2046,24 +2385,36 @@ INSERT INTO `user_tokens` (`id`, `user_id`, `selector`, `hashed_validator`, `exp
 (173, 3, 'e127cc8a82f4361a8f4127f8', '3bf5cc07361fe486c9f9f4a15cd0201b462224d91dc5465c2edcef2268f4a6da', '2025-12-29 21:40:08', '2025-11-29 21:40:08'),
 (175, 7, 'b7086d77159d85484ed99108', '5c6e371bced674167094bb7e2b571482e720749aa70c8789cbecf826172ae73a', '2025-12-30 18:32:15', '2025-11-30 18:32:15'),
 (177, 8, '1542966014888e4e52e6596c', 'a517e3ba14221cbe1b7ebc61428c0517fe7c1a419d4042bac5df52c57bb0f41e', '2026-01-01 07:38:28', '2025-12-02 07:38:28'),
-(180, 3, '6a356a96b92f761869fd3527', 'b6facbc9aec41eef3345d344ecc47306abffe17f7e1773a8736bb81d02926587', '2026-01-01 09:00:11', '2025-12-02 09:00:11'),
 (185, 1, '7bc9b9d52438276f3fc4374f', 'a824291a48834a796e57eca39e10ac018ba52799c020321aab679c4da9bd7967', '2026-01-01 09:47:36', '2025-12-02 09:47:39'),
 (190, 3, '7fcfdd77e9e4cd51135b3e7a', '5a270f45d133680481e0ece57bb48fbdd847da117999d42b1d66390f34e5205c', '2026-01-01 10:17:55', '2025-12-02 10:17:55'),
 (193, 1, '9d2046feb88b41cef1313400', 'ff6d5711237a025c956f3d3448309a9cf9772125149904c77b96f991730e3774', '2026-01-01 10:33:17', '2025-12-02 10:33:20'),
 (196, 4, '9a31c27e0708d9b8594be1ff', '1d91ea26a238f232866b101828e047cfb19afc9bfe8b96ba676b57078a8aceac', '2026-01-01 11:52:43', '2025-12-02 11:52:43'),
 (197, 1, '3c2d3c70a5a0a53edbd98b0c', 'd7949866f9147a1590f196ac443f39a94988058285d6fc7fe593395e59096eed', '2026-01-01 12:11:07', '2025-12-02 12:11:07'),
 (198, 16, '1c46e10a28dbe06427b53416', '77a0781d9bdd7af94ceb6792e0b841dd70f49a96954ecf6dee074e69d654a368', '2026-01-01 12:29:08', '2025-12-02 12:29:08'),
-(206, 1, 'e3477b4f348c9c9f83a03000', 'bd41a71d48562f04973f2b1033e01d46a980eb9f013ece24fe3e3179bf8b872a', '2026-01-01 17:39:45', '2025-12-02 17:39:45'),
 (210, 4, '49cf320e76367eb44768e3bd', '56ae3904e95194902249973785f841491b8c57d141bf3eaaa8da44909ab588ea', '2026-01-01 20:42:30', '2025-12-02 20:42:29'),
 (216, 7, 'c450a7c7c88064ec96dd5aa2', 'fb944980b172915542ea2a27c5cc3d13cc9bc131ab1964b87bfb35d0d3209dce', '2026-01-02 08:49:33', '2025-12-03 08:49:33'),
 (221, 1, 'c6544e507ca823ddd32c7a09', 'bf78e066c40cc18bd70f84bb413350f6f10bd0dcf8aa4c06f8817f49335eea1a', '2026-01-02 13:22:00', '2025-12-03 13:22:00'),
 (223, 7, '92f57ea549eedc00ab90f76b', '2ec44f92a4cc689bc4fed2ea2329a81d2974a80c7e030ba4f8344e1ece05db89', '2026-01-02 21:35:02', '2025-12-03 21:35:01'),
 (224, 7, '8f205391f3b5ebfd93927285', '062623744cbf8b2bb5a03722b4e9f2dfb0c3ebc89e176361611f59d838deb777', '2026-01-02 21:35:49', '2025-12-03 21:35:49'),
-(226, 1, '7293d5e4f63b9559edb37200', '91766cdd0c4722844825d213d8a72f3e0a7bb0af835e56839d4a5723be94fa24', '2026-01-03 09:19:57', '2025-12-04 09:19:57'),
-(231, 1, '1cbe50b2a16e28bb35b1034f', '166e380c74ca2a191929a39d34ede419f5113147d432c36c5c0b0e0c6ede9cb0', '2026-01-03 10:01:32', '2025-12-04 10:01:32'),
-(234, 4, 'a0f34d067a8c624510448bdc', '8aeb45fe6c5e0900896e7eb4de3f7327779762a9bd20089c3aea8eaf02bdb76e', '2026-01-03 11:51:50', '2025-12-04 11:51:49'),
 (235, 17, '29f771bff87f4c40497a6498', '6f075061efb25082833ebcc23efe6622062815d4e791b9b612c24fbc12244a72', '2026-01-03 11:55:57', '2025-12-04 11:55:57'),
-(236, 3, '5180bca3b4efb4ad92501204', 'a2dbb3934e67244b4195ed5a07c282ca2f725b8fa04dd22aebcf7647129105e7', '2026-01-03 15:16:56', '2025-12-04 15:16:56');
+(244, 1, 'fac2ab0fe9849d859b376ec5', '4683c60a95d3bb55f73b65526ceb284ba55ecd496a3310534523cd851e77e876', '2026-01-03 21:04:30', '2025-12-04 21:04:31'),
+(245, 3, 'cb4166ebdfcc66d2d940b4bf', '912cd0d07b5d5ccb167a948035e1cc9b33276237696fba0434c3507db0a8ce22', '2026-01-03 21:17:12', '2025-12-04 21:17:12'),
+(246, 3, 'f673de0ed96b441fee97c991', '848d1262985e1de101a18ea576d8cf65e0c451aa223c48bdd0af8b8c065bf11f', '2026-01-03 21:17:50', '2025-12-04 21:17:50'),
+(247, 1, '4a89bf89c12911f86d5694ef', 'a036bb3b588473da3875b1bf64d44bff52560684a3bcbce3daa62b8dbb2194df', '2026-01-03 21:18:37', '2025-12-04 21:18:37'),
+(248, 18, 'd6f9b8ec921c10926d1170b3', '0f3bbf72235b598452a04c52024fda066b4ce3a5c366d295336bcd54d7eb8fb1', '2026-01-03 21:25:00', '2025-12-04 21:25:00'),
+(249, 19, '01555097cb30a679d1096ea8', 'bf7f535dfa325db822b235bc517fd490ba8898f7c74004bc2f40cba54fb73c14', '2026-01-03 21:27:01', '2025-12-04 21:27:01'),
+(250, 7, 'ea29dca746587a8edce36ea1', '96f21f2597fa2155c20fd6b4f5a901c9058aeec03203a5078a5a57f5daef9c24', '2026-01-03 21:29:33', '2025-12-04 21:29:33'),
+(253, 4, '082ce4c64d1875d37c6a3636', '4bb8131a3700838ead461fdd82fefbc44bc4e887973e9c0260e5511149421c7e', '2026-01-03 23:52:56', '2025-12-04 23:52:54'),
+(255, 3, 'f6b26c66eecfe2dd1e16c507', '72f0c8a50d10c24f0e964893e09a85c70cebf3a4ab8b33e7deaf4430384fa1da', '2026-01-04 07:08:32', '2025-12-05 07:08:32'),
+(261, 4, '68896711f35277df98eaef82', 'e4eff73c123093ed88df76be740e69b209b616ffac1ccce15020e3f6819a43fa', '2026-01-04 09:19:29', '2025-12-05 09:19:29'),
+(265, 3, '818aff3cb02de452a8744d10', '9a5f03fc1df8ebc18df44cdb1bb4b97709d437f3c1f1c45be5e9cd9a71a4e1bf', '2026-01-04 11:02:29', '2025-12-05 11:02:29'),
+(270, 1, 'dcc9295869353b7e0e77c112', 'd8b6a949fe6a38e0b89d79474c9f19ff30d7067a2e14237ba7f07f47dc1d5e0f', '2026-01-04 11:43:24', '2025-12-05 11:43:24'),
+(276, 1, 'f2ba39f4aae2db22b7b7c002', 'b75284de72dad399caf896886973fb8fa3dbe035fd29de9d0af9f1fcaa0bf93c', '2026-01-04 12:14:18', '2025-12-05 12:14:18'),
+(277, 1, '090a68eb0d448b448ca5bbf5', '7531eb0bf77b2651e6590a7da7acbf4a72468e33ab93bbde360a4063f596b5af', '2026-01-04 12:18:32', '2025-12-05 12:18:32'),
+(280, 1, '538eaa648e200de2338dbd59', 'ef1b9f691ef156f5c81d70e63236e465b76873b3461eab7b4653b78fdfc161b4', '2026-01-04 12:48:09', '2025-12-05 12:48:09'),
+(281, 4, '0a53260336a897bb4d99631c', 'be2730192682893f071f3f9d1038306928330b2491242368b632a9d6757d02f1', '2026-01-04 13:48:13', '2025-12-05 13:48:13'),
+(282, 4, '56caae4b78ae147125469e39', '9428e8dd229398d601171cfe6f86ccef379eca632a8125fd00709d0cc6169137', '2026-01-04 13:57:51', '2025-12-05 13:57:51'),
+(283, 4, '85e4f9d94a7fbcdb25545d82', 'b37ab8d730f98ea32ed0b034e88e12bccfdf95ba1f84b858a56d9278d70ab0da', '2026-01-04 13:59:17', '2025-12-05 13:59:15');
 
 --
 -- Indexes for dumped tables
@@ -2089,7 +2440,7 @@ ALTER TABLE `character_inventory`
 -- Indexes for table `character_map_unlocks`
 --
 ALTER TABLE `character_map_unlocks`
-  ADD PRIMARY KEY (`map_point_id`),
+  ADD PRIMARY KEY (`map_point_id`,`character_id`),
   ADD KEY `character_id` (`character_id`);
 
 --
@@ -2097,6 +2448,35 @@ ALTER TABLE `character_map_unlocks`
 --
 ALTER TABLE `character_stats`
   ADD PRIMARY KEY (`character_id`);
+
+--
+-- Indexes for table `character_story_loots_collected`
+--
+ALTER TABLE `character_story_loots_collected`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_character_node_loot` (`character_id`,`node_id`,`loot_id`),
+  ADD KEY `node_id` (`node_id`),
+  ADD KEY `loot_id` (`loot_id`),
+  ADD KEY `idx_character_id` (`character_id`);
+
+--
+-- Indexes for table `character_story_node_status`
+--
+ALTER TABLE `character_story_node_status`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_character_node` (`character_id`,`node_id`),
+  ADD KEY `node_id` (`node_id`),
+  ADD KEY `idx_character_id` (`character_id`);
+
+--
+-- Indexes for table `character_story_progress`
+--
+ALTER TABLE `character_story_progress`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_character_story` (`character_id`,`story_id`),
+  ADD KEY `story_id` (`story_id`),
+  ADD KEY `current_node_id` (`current_node_id`),
+  ADD KEY `idx_character_id` (`character_id`);
 
 --
 -- Indexes for table `classes`
@@ -2144,7 +2524,8 @@ ALTER TABLE `maps`
 ALTER TABLE `map_points`
   ADD PRIMARY KEY (`id`),
   ADD KEY `map_id` (`map_id`),
-  ADD KEY `sub_map_id` (`sub_map_id`);
+  ADD KEY `sub_map_id` (`sub_map_id`),
+  ADD KEY `story_id` (`story_id`);
 
 --
 -- Indexes for table `monsters`
@@ -2205,13 +2586,32 @@ ALTER TABLE `player_quest_progress`
   ADD KEY `idx_pqp_objective` (`objective_id`);
 
 --
--- Indexes for table `player_unlocked_points`
+-- Indexes for table `procedural_dungeon_templates`
 --
-ALTER TABLE `player_unlocked_points`
+ALTER TABLE `procedural_dungeon_templates`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `procedural_loot_pools`
+--
+ALTER TABLE `procedural_loot_pools`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `unique_user_point` (`user_id`,`map_point_id`),
-  ADD KEY `map_point_id` (`map_point_id`),
-  ADD KEY `character_id` (`character_id`);
+  ADD KEY `item_id` (`item_id`),
+  ADD KEY `idx_template_id` (`template_id`);
+
+--
+-- Indexes for table `procedural_monster_pools`
+--
+ALTER TABLE `procedural_monster_pools`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_template_id` (`template_id`);
+
+--
+-- Indexes for table `procedural_room_images`
+--
+ALTER TABLE `procedural_room_images`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_template_theme` (`template_id`,`theme`);
 
 --
 -- Indexes for table `quests`
@@ -2250,6 +2650,61 @@ ALTER TABLE `quest_stage_unlocks`
   ADD KEY `idx_qsu_point` (`map_point_id`);
 
 --
+-- Indexes for table `stories`
+--
+ALTER TABLE `stories`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_type` (`type`);
+
+--
+-- Indexes for table `story_instances`
+--
+ALTER TABLE `story_instances`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_character_instance` (`story_id`,`character_id`),
+  ADD KEY `character_id` (`character_id`),
+  ADD KEY `idx_story_id` (`story_id`);
+
+--
+-- Indexes for table `story_nodes`
+--
+ALTER TABLE `story_nodes`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_story_id` (`story_id`),
+  ADD KEY `idx_instance_id` (`story_instance_id`);
+
+--
+-- Indexes for table `story_node_connections`
+--
+ALTER TABLE `story_node_connections`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `to_node_id` (`to_node_id`),
+  ADD KEY `idx_from_node` (`from_node_id`);
+
+--
+-- Indexes for table `story_node_loots`
+--
+ALTER TABLE `story_node_loots`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `item_id` (`item_id`),
+  ADD KEY `idx_node_id` (`node_id`);
+
+--
+-- Indexes for table `story_node_monsters`
+--
+ALTER TABLE `story_node_monsters`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_node_id` (`node_id`);
+
+--
+-- Indexes for table `story_node_npcs`
+--
+ALTER TABLE `story_node_npcs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `npc_id` (`npc_id`),
+  ADD KEY `idx_node_id` (`node_id`);
+
+--
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
@@ -2272,13 +2727,31 @@ ALTER TABLE `user_tokens`
 -- AUTO_INCREMENT for table `characters`
 --
 ALTER TABLE `characters`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
 
 --
 -- AUTO_INCREMENT for table `character_inventory`
 --
 ALTER TABLE `character_inventory`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
+
+--
+-- AUTO_INCREMENT for table `character_story_loots_collected`
+--
+ALTER TABLE `character_story_loots_collected`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `character_story_node_status`
+--
+ALTER TABLE `character_story_node_status`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
+-- AUTO_INCREMENT for table `character_story_progress`
+--
+ALTER TABLE `character_story_progress`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `classes`
@@ -2344,19 +2817,37 @@ ALTER TABLE `password_resets`
 -- AUTO_INCREMENT for table `player_quests`
 --
 ALTER TABLE `player_quests`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `player_quest_progress`
 --
 ALTER TABLE `player_quest_progress`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
 
 --
--- AUTO_INCREMENT for table `player_unlocked_points`
+-- AUTO_INCREMENT for table `procedural_dungeon_templates`
 --
-ALTER TABLE `player_unlocked_points`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+ALTER TABLE `procedural_dungeon_templates`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `procedural_loot_pools`
+--
+ALTER TABLE `procedural_loot_pools`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `procedural_monster_pools`
+--
+ALTER TABLE `procedural_monster_pools`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `procedural_room_images`
+--
+ALTER TABLE `procedural_room_images`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `quests`
@@ -2383,16 +2874,58 @@ ALTER TABLE `quest_stage_unlocks`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
+-- AUTO_INCREMENT for table `stories`
+--
+ALTER TABLE `stories`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `story_instances`
+--
+ALTER TABLE `story_instances`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `story_nodes`
+--
+ALTER TABLE `story_nodes`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+
+--
+-- AUTO_INCREMENT for table `story_node_connections`
+--
+ALTER TABLE `story_node_connections`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+
+--
+-- AUTO_INCREMENT for table `story_node_loots`
+--
+ALTER TABLE `story_node_loots`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `story_node_monsters`
+--
+ALTER TABLE `story_node_monsters`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `story_node_npcs`
+--
+ALTER TABLE `story_node_npcs`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT for table `user_tokens`
 --
 ALTER TABLE `user_tokens`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=237;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=284;
 
 --
 -- Constraints for dumped tables
@@ -2426,6 +2959,29 @@ ALTER TABLE `character_stats`
   ADD CONSTRAINT `character_stats_ibfk_1` FOREIGN KEY (`character_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `character_story_loots_collected`
+--
+ALTER TABLE `character_story_loots_collected`
+  ADD CONSTRAINT `character_story_loots_collected_ibfk_1` FOREIGN KEY (`character_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `character_story_loots_collected_ibfk_2` FOREIGN KEY (`node_id`) REFERENCES `story_nodes` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `character_story_loots_collected_ibfk_3` FOREIGN KEY (`loot_id`) REFERENCES `story_node_loots` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `character_story_node_status`
+--
+ALTER TABLE `character_story_node_status`
+  ADD CONSTRAINT `character_story_node_status_ibfk_1` FOREIGN KEY (`character_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `character_story_node_status_ibfk_2` FOREIGN KEY (`node_id`) REFERENCES `story_nodes` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `character_story_progress`
+--
+ALTER TABLE `character_story_progress`
+  ADD CONSTRAINT `character_story_progress_ibfk_1` FOREIGN KEY (`character_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `character_story_progress_ibfk_2` FOREIGN KEY (`story_id`) REFERENCES `stories` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `character_story_progress_ibfk_3` FOREIGN KEY (`current_node_id`) REFERENCES `story_nodes` (`id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `dialogues`
 --
 ALTER TABLE `dialogues`
@@ -2443,7 +2999,8 @@ ALTER TABLE `maps`
 --
 ALTER TABLE `map_points`
   ADD CONSTRAINT `map_points_ibfk_1` FOREIGN KEY (`map_id`) REFERENCES `maps` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `map_points_ibfk_2` FOREIGN KEY (`sub_map_id`) REFERENCES `maps` (`id`) ON DELETE SET NULL;
+  ADD CONSTRAINT `map_points_ibfk_2` FOREIGN KEY (`sub_map_id`) REFERENCES `maps` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `map_points_ibfk_3` FOREIGN KEY (`story_id`) REFERENCES `stories` (`id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `npc_dialogue_trees`
@@ -2488,12 +3045,23 @@ ALTER TABLE `player_quest_progress`
   ADD CONSTRAINT `player_quest_progress_ibfk_2` FOREIGN KEY (`objective_id`) REFERENCES `quest_objectives` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `player_unlocked_points`
+-- Constraints for table `procedural_loot_pools`
 --
-ALTER TABLE `player_unlocked_points`
-  ADD CONSTRAINT `fk_player_unlocked_points_character` FOREIGN KEY (`character_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `player_unlocked_points_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `player_unlocked_points_ibfk_2` FOREIGN KEY (`map_point_id`) REFERENCES `map_points` (`id`) ON DELETE CASCADE;
+ALTER TABLE `procedural_loot_pools`
+  ADD CONSTRAINT `procedural_loot_pools_ibfk_1` FOREIGN KEY (`template_id`) REFERENCES `procedural_dungeon_templates` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `procedural_loot_pools_ibfk_2` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `procedural_monster_pools`
+--
+ALTER TABLE `procedural_monster_pools`
+  ADD CONSTRAINT `procedural_monster_pools_ibfk_1` FOREIGN KEY (`template_id`) REFERENCES `procedural_dungeon_templates` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `procedural_room_images`
+--
+ALTER TABLE `procedural_room_images`
+  ADD CONSTRAINT `procedural_room_images_ibfk_1` FOREIGN KEY (`template_id`) REFERENCES `procedural_dungeon_templates` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `quest_objectives`
@@ -2521,6 +3089,46 @@ ALTER TABLE `quest_stages`
 ALTER TABLE `quest_stage_unlocks`
   ADD CONSTRAINT `quest_stage_unlocks_ibfk_1` FOREIGN KEY (`quest_stage_id`) REFERENCES `quest_stages` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `quest_stage_unlocks_ibfk_2` FOREIGN KEY (`map_point_id`) REFERENCES `map_points` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `story_instances`
+--
+ALTER TABLE `story_instances`
+  ADD CONSTRAINT `story_instances_ibfk_1` FOREIGN KEY (`story_id`) REFERENCES `stories` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `story_instances_ibfk_2` FOREIGN KEY (`character_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `story_nodes`
+--
+ALTER TABLE `story_nodes`
+  ADD CONSTRAINT `story_nodes_ibfk_1` FOREIGN KEY (`story_id`) REFERENCES `stories` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `story_node_connections`
+--
+ALTER TABLE `story_node_connections`
+  ADD CONSTRAINT `story_node_connections_ibfk_1` FOREIGN KEY (`from_node_id`) REFERENCES `story_nodes` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `story_node_connections_ibfk_2` FOREIGN KEY (`to_node_id`) REFERENCES `story_nodes` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `story_node_loots`
+--
+ALTER TABLE `story_node_loots`
+  ADD CONSTRAINT `story_node_loots_ibfk_1` FOREIGN KEY (`node_id`) REFERENCES `story_nodes` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `story_node_loots_ibfk_2` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `story_node_monsters`
+--
+ALTER TABLE `story_node_monsters`
+  ADD CONSTRAINT `story_node_monsters_ibfk_1` FOREIGN KEY (`node_id`) REFERENCES `story_nodes` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `story_node_npcs`
+--
+ALTER TABLE `story_node_npcs`
+  ADD CONSTRAINT `story_node_npcs_ibfk_1` FOREIGN KEY (`node_id`) REFERENCES `story_nodes` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `story_node_npcs_ibfk_2` FOREIGN KEY (`npc_id`) REFERENCES `npcs` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `user_tokens`
