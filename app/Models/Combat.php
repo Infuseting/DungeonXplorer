@@ -39,10 +39,12 @@ class Combat
        
 
         public function playerTurn($action){
+            $bool = false;
 
           switch ($action) {
             case 'attack':
                 if ($this->isAttaqueSuccessfulFromPlayer()) {
+                    $bool = true;
                     $damage = $this->joueur->getAttaqueClass();
                     $this->boss->reduceVitality($damage);
                     $message = $this->joueur->getName() . " hits " . $this->boss->getName() . " for " . $damage . " damage!\n";
@@ -79,20 +81,12 @@ class Combat
                 break;
         }
 
-
-
-         
-
-         
-
-         
-
             if(!$this->isAlive($this->boss)) {
                 $message .= $this->joueur->getName() . " wins the combat!\n";
                 $this->endCombat();
             }
 
-            return $message;
+            return [$message,$bool];
 
             
         }
@@ -100,19 +94,30 @@ class Combat
         public function monsterTurn()
         {
             $dice = $this->dice();
+            $bool = false;
 
-            if($this->isAttaqueSuccessfulFromMonster()) {
-                $damage = $this->boss->getAttaque();
-                $this->joueur->reduceVitality($damage);
-                $message = $this->boss->getName() . " hits " . $this->joueur->getName() . " for " . $damage . " damage!\n";
-            } else {
-                $message =  $this->boss->getName() . " misses " . $this->joueur->getName() . "!\n";
+            if($this->isMonsterAlive()){
+                if($this->isAttaqueSuccessfulFromMonster()) {
+                    $bool = true;
+                
+                    $damage = $this->boss->getAttaque();
+                    $this->joueur->reduceVitality($damage);
+                    $message = $this->boss->getName() . " hits " . $this->joueur->getName() . " for " . $damage . " damage!\n";
+                    } else {
+                        $message =  $this->boss->getName() . " misses " . $this->joueur->getName() . "!\n";
+                    }
+                    if(!$this->isAlive($this->joueur)) {
+                        $message .= $this->boss->getName() . " wins the combat!\n";
+                        $this->endCombat();
+                }
+                
+            }else{
+                $message = $this->boss->getName()." a été vaincu ! ";
             }
-            if(!$this->isAlive($this->joueur)) {
-                $message .= $this->boss->getName() . " wins the combat!\n";
-                $this->endCombat();
-            }
-            return $message;
+            
+
+         
+            return [$message,$bool];
         }
 
         public function isEnd(){

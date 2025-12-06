@@ -100,11 +100,13 @@ class CombatController
 
    echo json_encode([
     "success" => true,
-    "player"  => $playerMessage,
-    "monster" => $monsterMessage,
+    "player"  => $playerMessage[0],
+    "monster" => $monsterMessage[0],
     "playerHp" => $combat->getPlayerHp(),
-    "win" => $combat->isMonsterAlive(),
-    "newTurn" => !$combat->isEnd()
+    "win" => !$combat->isMonsterAlive(),
+    "newTurn" => !$combat->isEnd(),
+    "damageM" => $playerMessage[1],
+    "damageJ" => $monsterMessage[1]
 
 ]);
 }

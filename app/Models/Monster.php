@@ -15,6 +15,7 @@ class Monster
     private $defense;
     private $attaque;
     private $imagePath;
+    private $sallePath;
 
     public function __construct()
     {
@@ -30,6 +31,7 @@ class Monster
         if ($result) {
             $this->name = $result['name'];
             $this->imagePath = $result['image_path'];
+            $this->sallePath = $result['salle_path'];
 
             $json = $result['base_stats_json'];
             $stats = json_decode($json, true);
@@ -39,6 +41,7 @@ class Monster
             $this->dexterity = $stats['dexterity'];
             $this->defense = $stats['defense'];
             $this->attaque = $stats['attaque'];
+            
 
            
         }
@@ -57,6 +60,10 @@ class Monster
     {
         return $this->name;
     }  
+
+    public function getSallePath(){
+        return $this->sallePath;
+    }
 
     public function getImagePath()
     {
