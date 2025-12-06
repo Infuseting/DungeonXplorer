@@ -249,6 +249,10 @@ function getObjectiveIcon($type) {
 ?>
 
 <style>
+
+#tab-stages, #tab-prerequisites, #tab-general input, #tab-general textarea{
+    color: black;
+}
 .tabs {
     display: flex;
     gap: 0.5rem;

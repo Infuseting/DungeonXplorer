@@ -14,13 +14,6 @@ $customStyles = '
     }
 ';
 
-// Image mapping
-$classImages = [
-    'Guerrier' => 'warrior.png',
-    'Mage' => 'wizard.png',
-    'Voleur' => 'thief.png'
-];
-
 ob_start();
 ?>
 
@@ -33,31 +26,48 @@ ob_start();
 
 <div class="relative z-10 min-h-screen flex flex-col">
     <!-- Header -->
-    <header class="flex justify-between items-center p-4 md:p-6 bg-gray-900/50 backdrop-blur-sm lg:bg-transparent">
-        <div class="text-xl md:text-2xl font-bold text-violet-500 tracking-wider uppercase">DungeonXplorer</div>
-        <div class="flex items-center gap-4">
-            <span class="hidden md:inline text-gray-300">Bienvenue, <span class="text-white font-semibold"><?= htmlspecialchars($_SESSION['username']) ?></span></span>
-            <a href="/logout" class="px-3 py-1 md:px-4 md:py-2 border border-red-500/50 text-red-400 rounded hover:bg-red-500/10 transition text-sm md:text-base">Déconnexion</a>
+    <header class="flex justify-between items-center p-4 md:p-6 bg-gray-900/50 backdrop-blur-sm lg:bg-transparent relative z-50">
+        <!-- Mobile: Character Menu Button / Desktop: Title -->
+        <button onclick="toggleCharacterMenu()" class="lg:hidden flex items-center gap-2 px-4 py-2 bg-gray-800/90 border border-gray-700 rounded-lg text-white shadow-lg backdrop-blur">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
+            </svg>
+            <span>Changer de Héros</span>
+        </button>
+        <div class="hidden lg:block text-xl md:text-2xl font-bold text-violet-500 tracking-wider uppercase">DungeonXplorer</div>
+        
+        <!-- User Menu (Top Right) -->
+        <div class="relative">
+            <button id="user-menu-button" class="w-12 h-12 bg-violet-600 hover:bg-violet-700 text-white rounded-full shadow-lg border-2 border-violet-400 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 text-xl font-bold">
+                <?= strtoupper(substr($_SESSION['username'], 0, 1)) ?>
+            </button>
+            
+            <!-- Dropdown Menu -->
+            <div id="user-dropdown" class="hidden absolute top-14 right-0 w-48 bg-gray-800 border-2 border-gray-600 rounded-lg shadow-xl overflow-hidden z-50">
+                <button id="settings-button" class="w-full px-4 py-3 text-left text-white hover:bg-gray-700 transition-colors flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Paramètres
+                </button>
+                <a href="/logout" class="block w-full px-4 py-3 text-left text-white hover:bg-gray-700 transition-colors flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Déconnexion
+                </a>
+            </div>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="flex-1 flex items-center justify-center px-4 py-8 md:py-0 relative overflow-hidden">
+    <main class="flex-1 flex items-center justify-center px-4 py-8 md:py-0 pb-32 lg:pb-0 relative overflow-hidden">
         <div class="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center h-full">
             
-            <!-- Mobile: Change Character Button -->
-            <div class="lg:hidden absolute top-4 left-4 z-20">
-                <button onclick="toggleCharacterMenu()" class="flex items-center gap-2 px-4 py-2 bg-gray-800/90 border border-gray-700 rounded-lg text-white shadow-lg backdrop-blur">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
-                    </svg>
-                    <span>Changer de Héros</span>
-                </button>
-            </div>
-
             <!-- Mobile Drawer Menu (Character List) -->
             <div id="mobile-menu-overlay" class="fixed inset-0 bg-black/50 z-30 hidden lg:hidden transition-opacity duration-300" onclick="toggleCharacterMenu()"></div>
-            <div id="mobile-menu" class="fixed inset-y-0 left-0 w-80 bg-gray-900 border-r border-gray-800 z-40 transform -translate-x-full transition-transform duration-300 lg:hidden flex flex-col">
+            <div id="mobile-menu" class="fixed inset-y-0 left-0 w-80 bg-gray-900 border-r border-gray-800 z-[60] transform -translate-x-full transition-transform duration-300 lg:hidden flex flex-col">
                 <div class="p-6 border-b border-gray-800 flex justify-between items-center">
                     <h2 class="text-xl font-bold text-white">Vos Héros</h2>
                     <button onclick="toggleCharacterMenu()" class="text-gray-400 hover:text-white">
@@ -88,10 +98,10 @@ ob_start();
                     </a>
                 </div>
             </div>
-            <!-- Stats / Actions (Right on Desktop, Bottom on Mobile) -->
-            <div class="order-3 lg:order-3 lg:col-span-3 bg-gray-800/80 backdrop-blur p-4 md:p-6 rounded-xl border border-gray-700 w-full max-w-md mx-auto lg:max-w-none">
-                <!-- Stats Hidden on Mobile -->
-                <div class="hidden md:block space-y-3 mb-6 md:mb-8">
+            <!-- Stats / Actions (Right on Desktop, Fixed Bottom on Mobile) -->
+            <div class="hidden lg:block lg:order-3 lg:col-span-3 bg-gray-800/80 backdrop-blur p-4 md:p-6 rounded-xl border border-gray-700">
+                <!-- Stats -->
+                <div class="space-y-3 mb-6 md:mb-8">
                     <h3 class="text-lg font-medium text-white mb-4 border-b border-gray-700 pb-2">Statistiques</h3>
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-400">Force</span>
@@ -123,25 +133,40 @@ ob_start();
                     </button>
                 </div>
             </div>
+
+            <!-- Mobile Action Buttons (Fixed Bottom) -->
+            <div class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-lg border-t border-gray-800 p-4" style="padding-bottom: calc(1rem + env(safe-area-inset-bottom));">
+                <div class="flex flex-col gap-3 max-w-md mx-auto">
+                    <form action="/game" method="POST">
+                        <input type="hidden" class="mobile-character-id" name="character_id" value="<?= $selectedCharacter['id'] ?>">
+                        <button type="submit" class="w-full py-3 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-lg shadow-lg shadow-violet-600/30 transition active:scale-95 uppercase tracking-wider text-base">
+                            Jouer
+                        </button>
+                    </form>
+                    <button onclick="openDeleteModal()" class="w-full py-2 border border-gray-600 text-gray-300 hover:bg-gray-700 rounded-lg transition text-sm active:scale-95">
+                        Supprimer
+                    </button>
+                </div>
+            </div>
             <!-- Character Preview (Center) -->
-            <div class="order-1 lg:order-2 lg:col-span-6 flex flex-col items-center justify-center relative h-[60vh] lg:h-[60vh]">
+            <div class="order-1 lg:order-2 lg:col-span-6 flex flex-col items-center justify-between relative h-[50vh] lg:h-[70vh] py-4">
                 <!-- Pedestal Effect -->
                 <div class="absolute bottom-0 w-full h-1/4 bg-gradient-to-t from-violet-900/20 to-transparent rounded-full blur-3xl"></div>
                 
                 <!-- Character Model avec le helper -->
-                <div class="relative z-10 h-full w-full flex items-center justify-center pb-8 md:pb-12" id="character-container">
+                <div class="relative z-10 flex-1 w-full flex items-end justify-center pb-4" id="character-container" style="max-height: calc(100% - 120px);">
                     <?= renderCharacter($selectedCharacter, [
                         'size' => 'full',
                         'showFilter' => true,
                         'id' => 'character-' . $selectedCharacter['id'],
-                        'class' => 'max-h-full max-w-full drop-shadow-2xl hover:brightness-110 transition duration-500'
+                        'class' => 'h-full w-auto max-w-full object-contain drop-shadow-2xl hover:brightness-110 transition duration-500'
                     ]) ?>
                 </div>
 
                 <!-- Selected Character Info -->
-                <div class="absolute bottom-0 text-center">
-                    <h1 id="character-name" class="text-4xl md:text-5xl font-bold text-white mb-1 md:mb-2 text-shadow-lg"><?= htmlspecialchars($selectedCharacter['name']) ?></h1>
-                    <p id="character-details" class="text-lg md:text-xl text-violet-400 font-medium tracking-wide">
+                <div class="relative z-10 text-center pb-2" style="min-height: 100px;">
+                    <h1 id="character-name" class="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-1 md:mb-2 text-shadow-lg"><?= htmlspecialchars($selectedCharacter['name']) ?></h1>
+                    <p id="character-details" class="text-base md:text-lg lg:text-xl text-violet-400 font-medium tracking-wide">
                         Niveau <?= $selectedCharacter['level'] ?> <?= $selectedCharacter['class_name'] ?>
                     </p>
                 </div>
@@ -168,7 +193,7 @@ ob_start();
                     </div>
                 <?php endforeach; ?>
                 <a href="/personnage/create" class="block w-full py-4 border-2 border-dashed border-gray-700 text-gray-500 rounded-lg text-center hover:border-violet-500 hover:text-violet-400 transition group">
-                    <span class="text-2xl block mb-1 group-hover:scale-110 transition-transform">+</span>
+                    <span class="text-2xl block mb-1">+</span>
                     Créer un nouveau héros
                 </a>
             </div>
@@ -210,11 +235,119 @@ ob_start();
             </div>
         </div>
     </div>
+    </div>
+    
+    <!-- Settings Modal -->
+    <?php require __DIR__ . '/../game/components/settings-modal.php'; ?>
 </div>
 
 <script>
 const characters = <?= json_encode($characters) ?>;
 const classImages = <?= json_encode($classImages) ?>;
+
+// User Menu & Settings Logic
+document.addEventListener('DOMContentLoaded', async () => {
+    // User menu dropdown
+    const userMenuButton = document.getElementById('user-menu-button');
+    const userDropdown = document.getElementById('user-dropdown');
+    
+    if (userMenuButton && userDropdown) {
+        userMenuButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userDropdown.classList.toggle('hidden');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!userMenuButton.contains(e.target) && !userDropdown.contains(e.target)) {
+                userDropdown.classList.add('hidden');
+            }
+        });
+    }
+    
+    // Settings modal
+    const settingsButton = document.getElementById('settings-button');
+    const settingsModal = document.getElementById('settings-modal');
+    const settingsCloseBtn = document.getElementById('settings-close-btn');
+    const settingsSaveBtn = document.getElementById('settings-save-btn');
+    
+    if (settingsButton && settingsModal) {
+        settingsButton.addEventListener('click', async () => {
+            userDropdown.classList.add('hidden');
+            settingsModal.classList.remove('hidden');
+            
+            // Load current volumes
+            try {
+                const { getVolumes } = await import('/js/modules/soundManager.js');
+                const volumes = getVolumes();
+                document.getElementById('master-volume').value = Math.round(volumes.master * 100);
+                document.getElementById('music-volume').value = Math.round(volumes.music * 100);
+                document.getElementById('sfx-volume').value = Math.round(volumes.sfx * 100);
+                updateVolumeDisplays();
+            } catch (e) {
+                console.warn('SoundManager not loaded yet', e);
+            }
+        });
+    }
+    
+    if (settingsCloseBtn) {
+        settingsCloseBtn.addEventListener('click', () => {
+            settingsModal.classList.add('hidden');
+        });
+    }
+    
+    // Volume sliders
+    const masterVolumeSlider = document.getElementById('master-volume');
+    const musicVolumeSlider = document.getElementById('music-volume');
+    const sfxVolumeSlider = document.getElementById('sfx-volume');
+    
+    function updateVolumeDisplays() {
+        if (masterVolumeSlider) document.getElementById('master-volume-value').textContent = masterVolumeSlider.value + '%';
+        if (musicVolumeSlider) document.getElementById('music-volume-value').textContent = musicVolumeSlider.value + '%';
+        if (sfxVolumeSlider) document.getElementById('sfx-volume-value').textContent = sfxVolumeSlider.value + '%';
+    }
+    
+    if (masterVolumeSlider) masterVolumeSlider.addEventListener('input', updateVolumeDisplays);
+    if (musicVolumeSlider) musicVolumeSlider.addEventListener('input', updateVolumeDisplays);
+    if (sfxVolumeSlider) sfxVolumeSlider.addEventListener('input', updateVolumeDisplays);
+    
+    // Save settings
+    if (settingsSaveBtn) {
+        settingsSaveBtn.addEventListener('click', async () => {
+            try {
+                const { setMasterVolume, setMusicVolume, setSFXVolume } = await import('/js/modules/soundManager.js');
+                setMasterVolume(parseInt(masterVolumeSlider.value) / 100);
+                setMusicVolume(parseInt(musicVolumeSlider.value) / 100);
+                setSFXVolume(parseInt(sfxVolumeSlider.value) / 100);
+                
+                settingsModal.classList.add('hidden');
+                
+                // Show toast
+                const { showToast } = await import('/js/modules/toast.js');
+                showToast('Paramètres sauvegardés !', 'success');
+            } catch (e) {
+                console.error('Error saving settings:', e);
+            }
+        });
+    }
+
+    // Global SFX Handler
+    document.addEventListener('click', async (e) => {
+        // Check if element or parent is clickable
+        const target = e.target.closest('button, a, .character-card, .slot, .quest-item, .leaflet-interactive');
+        
+        if (target) {
+            // Don't play if sound was already played by specific handler (optional check)
+            // For now, we rely on soundManager to handle concurrency or just play it
+            try {
+                const { playSound } = await import('/js/modules/soundManager.js');
+                playSound('click');
+            } catch (err) {
+                // Sound manager might not be loaded yet
+            }
+        }
+    });
+});
 
 function toggleCharacterMenu() {
     const menu = document.getElementById('mobile-menu');
@@ -264,8 +397,10 @@ function selectCharacter(id) {
     document.getElementById('character-name').textContent = char.name;
     document.getElementById('character-details').textContent = `Niveau ${char.level} ${char.class_name}`;
     
-    // Update Hidden Input
+    // Update Hidden Inputs (Desktop and Mobile)
     document.getElementById('selected-character-id').value = char.id;
+    const mobileInputs = document.querySelectorAll('.mobile-character-id');
+    mobileInputs.forEach(input => input.value = char.id);
 
     // Update Selection Visuals
     document.querySelectorAll('.character-card').forEach(card => {

@@ -3,170 +3,58 @@ $pageTitle = 'Dashboard';
 ob_start();
 ?>
 
-<style>
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-    }
-    
-    .stat-card {
-        background: linear-gradient(135deg, var(--bg-dark) 0%, rgba(99, 102, 241, 0.1) 100%);
-        border: 1px solid var(--border);
-        border-radius: 0.75rem;
-        padding: 1.5rem;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .stat-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 4px;
-        height: 100%;
-        background: linear-gradient(180deg, var(--primary), #a855f7);
-    }
-    
-    .stat-label {
-        color: var(--text-muted);
-        font-size: 0.875rem;
-        margin-bottom: 0.5rem;
-    }
-    
-    .stat-value {
-        font-size: 2.5rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, var(--primary), #a855f7);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-    
-    .stat-icon {
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-        font-size: 2.5rem;
-        opacity: 0.2;
-    }
-    
-    .charts-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-    }
-    
-    .chart-card {
-        background: var(--bg-dark);
-        border: 1px solid var(--border);
-        border-radius: 0.75rem;
-        padding: 1.5rem;
-    }
-    
-    .chart-title {
-        font-size: 1.125rem;
-        font-weight: 600;
-        margin-bottom: 1rem;
-    }
-    
-    .recent-activity {
-        background: var(--bg-dark);
-        border: 1px solid var(--border);
-        border-radius: 0.75rem;
-        padding: 1.5rem;
-    }
-    
-    .activity-item {
-        display: flex;
-        align-items: center;
-        padding: 1rem;
-        border-bottom: 1px solid var(--border);
-    }
-    
-    .activity-item:last-child {
-        border-bottom: none;
-    }
-    
-    .activity-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: rgba(99, 102, 241, 0.2);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 1rem;
-    }
-    
-    .activity-details {
-        flex: 1;
-    }
-    
-    .activity-title {
-        font-weight: 500;
-        margin-bottom: 0.25rem;
-    }
-    
-    .activity-time {
-        color: var(--text-muted);
-        font-size: 0.875rem;
-    }
-</style>
 
-<div class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-icon">👥</div>
-        <div class="stat-label">Total Utilisateurs</div>
-        <div class="stat-value"><?= $stats['total_users'] ?? 0 ?></div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-gradient-to-br from-gray-900 to-indigo-500/10 border border-gray-700 rounded-xl p-6 relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:w-1 before:h-full before:bg-gradient-to-b before:from-indigo-500 before:to-purple-500">
+        <div class="absolute top-4 right-4 text-4xl opacity-20">👥</div>
+        <div class="text-gray-400 text-sm mb-2">Total Utilisateurs</div>
+        <div class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-indigo-500 to-purple-500"><?= $stats['total_users'] ?? 0 ?></div>
     </div>
     
-    <div class="stat-card">
-        <div class="stat-icon">⚔️</div>
-        <div class="stat-label">Total Personnages</div>
-        <div class="stat-value"><?= $stats['total_characters'] ?? 0 ?></div>
+    <div class="bg-gradient-to-br from-gray-900 to-indigo-500/10 border border-gray-700 rounded-xl p-6 relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:w-1 before:h-full before:bg-gradient-to-b before:from-indigo-500 before:to-purple-500">
+        <div class="absolute top-4 right-4 text-4xl opacity-20">⚔️</div>
+        <div class="text-gray-400 text-sm mb-2">Total Personnages</div>
+        <div class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-indigo-500 to-purple-500"><?= $stats['total_characters'] ?? 0 ?></div>
     </div>
     
-    <div class="stat-card">
-        <div class="stat-icon">🗺️</div>
-        <div class="stat-label">Total Cartes</div>
-        <div class="stat-value"><?= $stats['total_maps'] ?? 0 ?></div>
+    <div class="bg-gradient-to-br from-gray-900 to-indigo-500/10 border border-gray-700 rounded-xl p-6 relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:w-1 before:h-full before:bg-gradient-to-b before:from-indigo-500 before:to-purple-500">
+        <div class="absolute top-4 right-4 text-4xl opacity-20">🗺️</div>
+        <div class="text-gray-400 text-sm mb-2">Total Cartes</div>
+        <div class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-indigo-500 to-purple-500"><?= $stats['total_maps'] ?? 0 ?></div>
     </div>
     
-    <div class="stat-card">
-        <div class="stat-icon">📜</div>
-        <div class="stat-label">Total Quêtes</div>
-        <div class="stat-value"><?= $stats['total_quests'] ?? 0 ?></div>
+    <div class="bg-gradient-to-br from-gray-900 to-indigo-500/10 border border-gray-700 rounded-xl p-6 relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:w-1 before:h-full before:bg-gradient-to-b before:from-indigo-500 before:to-purple-500">
+        <div class="absolute top-4 right-4 text-4xl opacity-20">📜</div>
+        <div class="text-gray-400 text-sm mb-2">Total Quêtes</div>
+        <div class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-indigo-500 to-purple-500"><?= $stats['total_quests'] ?? 0 ?></div>
     </div>
 </div>
 
-<div class="charts-grid">
-    <div class="chart-card">
-        <h3 class="chart-title">Personnages par Classe</h3>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div class="bg-gray-900 border border-gray-700 rounded-xl p-6">
+        <h3 class="text-lg font-semibold mb-4">Personnages par Classe</h3>
         <canvas id="classChart"></canvas>
     </div>
     
-    <div class="chart-card">
-        <h3 class="chart-title">Activité des 7 derniers jours</h3>
+    <div class="bg-gray-900 border border-gray-700 rounded-xl p-6">
+        <h3 class="text-lg font-semibold mb-4">Activité des 7 derniers jours</h3>
         <canvas id="activityChart"></canvas>
     </div>
 </div>
 
-<div class="recent-activity">
-    <h3 class="chart-title">Personnages Récents</h3>
+<div class="bg-gray-900 border border-gray-700 rounded-xl p-6">
+    <h3 class="text-lg font-semibold mb-4">Personnages Récents</h3>
     <?php if (!empty($recentCharacters)): ?>
         <?php foreach ($recentCharacters as $character): ?>
-            <div class="activity-item">
-                <div class="activity-icon">⚔️</div>
-                <div class="activity-details">
-                    <div class="activity-title">
+            <div class="flex items-center p-4 border-b border-gray-700 last:border-0">
+                <div class="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center mr-4">⚔️</div>
+                <div class="flex-1">
+                    <div class="font-medium mb-1">
                         <?= htmlspecialchars($character['name']) ?> 
                         (<?= htmlspecialchars($character['class_name']) ?>)
                     </div>
-                    <div class="activity-time">
+                    <div class="text-gray-400 text-sm">
                         Par <?= htmlspecialchars($character['username']) ?> - 
                         <?= date('d/m/Y H:i', strtotime($character['created_at'])) ?>
                     </div>
@@ -174,7 +62,7 @@ ob_start();
             </div>
         <?php endforeach; ?>
     <?php else: ?>
-        <p style="color: var(--text-muted); text-align: center; padding: 2rem;">
+        <p class="text-gray-400 text-center py-8">
             Aucun personnage récent
         </p>
     <?php endif; ?>

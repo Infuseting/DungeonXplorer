@@ -3,6 +3,8 @@
  * Handles NPC interactions with visual novel style interface
  */
 
+import { playSound } from './soundManager.js';
+
 let currentNPC = null;
 let currentDialogueTree = null;
 let currentDialogueTreeId = null;
@@ -46,16 +48,20 @@ function displayNPCModal() {
     // Set portrait
     if (currentNPC.texture) {
         portraitEl.src = '/' + currentNPC.texture;
-        portraitEl.style.display = 'block';
+        portraitEl.classList.remove('hidden');
+        portraitEl.classList.add('block');
     } else {
-        portraitEl.style.display = 'none';
+        portraitEl.classList.remove('block');
+        portraitEl.classList.add('hidden');
     }
 
     // Clear previous content
     actionsEl.innerHTML = '';
     choicesEl.innerHTML = '';
-    choicesEl.style.display = 'none';
-    actionsEl.style.display = 'flex'; // Ensure actions are visible
+    choicesEl.classList.remove('flex');
+    choicesEl.classList.add('hidden');
+    actionsEl.classList.remove('hidden');
+    actionsEl.classList.add('flex'); // Ensure actions are visible
 
     // Display initial greeting (support multiple roles stored as CSV)
     const npcRoles = Array.isArray(currentNPC.role) ? currentNPC.role : (String(currentNPC.role || '').split(',').map(r => r.trim()).filter(Boolean));
@@ -64,7 +70,7 @@ function displayNPCModal() {
     // Add action buttons based on roles
     if (npcRoles.includes('merchant')) {
         const merchantBtn = document.createElement('button');
-        merchantBtn.className = 'npc-action-btn';
+        merchantBtn.className = 'bg-gradient-to-br from-amber-400 to-amber-500 border-none text-[#1a1a2e] px-8 py-4 rounded-lg text-base font-semibold cursor-pointer transition-all duration-300 shadow-[0_4px_15px_rgba(251,191,36,0.3)] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(251,191,36,0.5)]';
         merchantBtn.textContent = '💰 Vous vendez ou rachetez des trucs ?';
         merchantBtn.onclick = () => openMerchantShop();
         actionsEl.appendChild(merchantBtn);
@@ -73,7 +79,7 @@ function displayNPCModal() {
     // Add dialogue button if dialogues exist
     if (currentDialogueTree && currentDialogueTree.length > 0) {
         const dialogueBtn = document.createElement('button');
-        dialogueBtn.className = 'npc-action-btn secondary';
+        dialogueBtn.className = 'bg-gradient-to-br from-indigo-500/30 to-purple-500/30 text-gray-200 border-2 border-indigo-500/50 px-8 py-4 rounded-lg text-base font-semibold cursor-pointer transition-all duration-300 shadow-[0_4px_15px_rgba(251,191,36,0.3)] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(251,191,36,0.5)]';
         dialogueBtn.textContent = '💬 Parler';
         dialogueBtn.onclick = () => startDialogue();
         actionsEl.appendChild(dialogueBtn);
@@ -82,15 +88,17 @@ function displayNPCModal() {
     // Add quest button if quest_giver AND has quests
     if (npcRoles.includes('quest_giver') && currentQuests.length > 0) {
         const questBtn = document.createElement('button');
-        questBtn.className = 'npc-action-btn';
+        questBtn.className = 'bg-gradient-to-br from-amber-400 to-amber-500 border-none text-[#1a1a2e] px-8 py-4 rounded-lg text-base font-semibold cursor-pointer transition-all duration-300 shadow-[0_4px_15px_rgba(251,191,36,0.3)] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(251,191,36,0.5)]';
         questBtn.textContent = '⚔️ Avez-vous des quêtes ?';
         questBtn.onclick = () => showQuests();
         actionsEl.appendChild(questBtn);
     }
 
     // Show modal
-    modal.style.display = 'flex';
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
     modal.classList.add('active');
+    playSound('open');
 }
 
 // ... (getGreeting, startDialogue, displayDialogue, selectChoice, openMerchantShop remain same)
@@ -103,15 +111,17 @@ function showQuests() {
     const actionsEl = document.getElementById('npc-actions');
     const choicesEl = document.getElementById('npc-choices');
 
-    actionsEl.style.display = 'none';
+    actionsEl.classList.remove('flex');
+    actionsEl.classList.add('hidden');
     choicesEl.innerHTML = '';
-    choicesEl.style.display = 'flex';
+    choicesEl.classList.remove('hidden');
+    choicesEl.classList.add('flex');
 
     textEl.textContent = "J'ai besoin d'aide pour quelques tâches...";
 
     currentQuests.forEach(quest => {
         const btn = document.createElement('button');
-        btn.className = 'npc-choice-btn';
+        btn.className = 'bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border-2 border-indigo-500/50 text-gray-200 p-4 rounded-lg text-base cursor-pointer transition-all duration-300 text-left hover:from-indigo-500/40 hover:to-purple-500/40 hover:border-indigo-500 hover:translate-x-2.5';
         btn.textContent = `📜 ${quest.name} (Niv. ${quest.min_level})`;
         btn.onclick = () => showQuestIntro(quest);
         choicesEl.appendChild(btn);
@@ -119,11 +129,13 @@ function showQuests() {
 
     // Back button
     const backBtn = document.createElement('button');
-    backBtn.className = 'npc-choice-btn';
+    backBtn.className = 'bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border-2 border-indigo-500/50 text-gray-200 p-4 rounded-lg text-base cursor-pointer transition-all duration-300 text-left hover:from-indigo-500/40 hover:to-purple-500/40 hover:border-indigo-500 hover:translate-x-2.5';
     backBtn.textContent = '← Retour';
     backBtn.onclick = () => {
-        actionsEl.style.display = 'flex';
-        choicesEl.style.display = 'none';
+        actionsEl.classList.remove('hidden');
+        actionsEl.classList.add('flex');
+        choicesEl.classList.remove('flex');
+        choicesEl.classList.add('hidden');
         displayNPCModal();
     };
     choicesEl.appendChild(backBtn);
@@ -142,16 +154,14 @@ function showQuestIntro(quest) {
 
     // Accept Button
     const acceptBtn = document.createElement('button');
-    acceptBtn.className = 'npc-choice-btn';
-    acceptBtn.style.borderLeft = '4px solid #4caf50';
+    acceptBtn.className = 'bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border-2 border-indigo-500/50 text-gray-200 p-4 rounded-lg text-base cursor-pointer transition-all duration-300 text-left hover:from-indigo-500/40 hover:to-purple-500/40 hover:border-indigo-500 hover:translate-x-2.5 border-l-4 border-l-green-500';
     acceptBtn.textContent = '✅ Accepter la quête';
     acceptBtn.onclick = () => acceptQuest(quest.id);
     choicesEl.appendChild(acceptBtn);
 
     // Decline Button
     const declineBtn = document.createElement('button');
-    declineBtn.className = 'npc-choice-btn';
-    declineBtn.style.borderLeft = '4px solid #f44336';
+    declineBtn.className = 'bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border-2 border-indigo-500/50 text-gray-200 p-4 rounded-lg text-base cursor-pointer transition-all duration-300 text-left hover:from-indigo-500/40 hover:to-purple-500/40 hover:border-indigo-500 hover:translate-x-2.5 border-l-4 border-l-red-500';
     declineBtn.textContent = '❌ Refuser';
     declineBtn.onclick = () => showQuests(); // Go back to quest list
     choicesEl.appendChild(declineBtn);
@@ -167,11 +177,18 @@ function acceptQuest(questId) {
         body: JSON.stringify({ quest_id: questId })
     })
         .then(res => res.json())
-        .then(data => {
+        .then(async data => {
             if (data.success) {
+                const { showToast } = await import('./toast.js');
+                const { playSound } = await import('./soundManager.js');
+
+                playSound('notification');
+                showToast(`Quête acceptée : ${data.quest_name}`, 'quest');
+
                 closeNPCModal();
             } else {
-                alert(data.message || 'Erreur');
+                const { showToast } = await import('./toast.js');
+                showToast(data.message || 'Erreur', 'error');
             }
         })
         .catch(err => console.error(err));
@@ -229,7 +246,8 @@ function displayDialogue(dialogue) {
     const actionsEl = document.getElementById('npc-actions');
 
     // Hide actions
-    actionsEl.style.display = 'none';
+    actionsEl.classList.remove('flex');
+    actionsEl.classList.add('hidden');
 
     // Display dialogue text
     textEl.textContent = dialogue.text;
@@ -237,14 +255,18 @@ function displayDialogue(dialogue) {
     // Display choices if available
     if (dialogue.children && dialogue.children.length > 0) {
         choicesEl.innerHTML = '';
-        choicesEl.style.display = 'flex';
+        choicesEl.classList.remove('hidden');
+        choicesEl.classList.add('flex');
 
         dialogue.children.forEach(choice => {
             if (choice.is_player_choice) {
                 const btn = document.createElement('button');
-                btn.className = 'npc-choice-btn';
+                btn.className = 'bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border-2 border-indigo-500/50 text-gray-200 p-4 rounded-lg text-base cursor-pointer transition-all duration-300 text-left hover:from-indigo-500/40 hover:to-purple-500/40 hover:border-indigo-500 hover:translate-x-2.5';
                 btn.textContent = choice.choice_text || choice.text;
-                btn.onclick = () => selectChoice(choice);
+                btn.onclick = () => {
+                    playSound('click');
+                    selectChoice(choice);
+                };
                 choicesEl.appendChild(btn);
             }
         });
@@ -258,30 +280,79 @@ function displayDialogue(dialogue) {
                 body: JSON.stringify({ tree_id: currentDialogueTreeId })
             })
                 .then(res => res.json())
-                .then(data => {
+                .then(async data => {
                     if (data.success && data.quest_updated) {
-                        if (window.showToast) {
-                            window.showToast('✅ ' + data.message, 'success');
+                        try {
+                            const { showToast } = await import('/js/modules/toast.js');
+                            const { playSound } = await import('/js/modules/soundManager.js');
+
+                            const update = data.quest_update;
+
+                            if (update) {
+                                // 1. Objective Updated / Completed
+                                if (update.objective_completed) {
+                                    playSound('notification');
+                                    showToast(
+                                        `<strong>${update.quest_name}</strong><br>Objectif validé : ${update.objective_description}`,
+                                        'quest'
+                                    );
+                                }
+
+                                // 2. Quest Completed
+                                if (update.quest_completed) {
+                                    setTimeout(() => {
+                                        playSound('notification'); // Or a specific quest complete sound
+                                        showToast(
+                                            `<strong>${update.quest_name}</strong><br>Quête terminée !`,
+                                            'quest'
+                                        );
+                                    }, 1000); // Delay slightly
+                                }
+
+                                // 3. Map Points Unlocked
+                                if (update.unlocked_points && update.unlocked_points.length > 0) {
+                                    update.unlocked_points.forEach((pointName, index) => {
+                                        setTimeout(() => {
+                                            playSound('notification');
+                                            showToast(
+                                                `<strong>Nouveau lieu découvert</strong><br>${pointName}`,
+                                                'success'
+                                            );
+                                        }, 2000 + (index * 1000));
+                                    });
+
+                                    // Refresh map points if on map
+                                    // We might need to trigger a map refresh event or call a global function
+                                    if (window.loadMapPoints) {
+                                        window.loadMapPoints();
+                                    }
+                                }
+                            } else {
+                                // Fallback for legacy response
+                                showToast('✅ ' + data.message, 'success');
+                            }
+                        } catch (e) {
+                            console.error('Error showing quest toast:', e);
                         }
                     }
                 })
-                .catch(error => {
-                    console.error('Error completing dialogue:', error);
-                });
         }
 
         // Show back button
         choicesEl.innerHTML = '';
         const backBtn = document.createElement('button');
-        backBtn.className = 'npc-choice-btn';
+        backBtn.className = 'bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border-2 border-indigo-500/50 text-gray-200 p-4 rounded-lg text-base cursor-pointer transition-all duration-300 text-left hover:from-indigo-500/40 hover:to-purple-500/40 hover:border-indigo-500 hover:translate-x-2.5';
         backBtn.textContent = '← Retour';
         backBtn.onclick = () => {
-            actionsEl.style.display = 'flex';
-            choicesEl.style.display = 'none';
+            actionsEl.classList.remove('hidden');
+            actionsEl.classList.add('flex');
+            choicesEl.classList.remove('flex');
+            choicesEl.classList.add('hidden');
             displayNPCModal();
         };
         choicesEl.appendChild(backBtn);
-        choicesEl.style.display = 'flex';
+        choicesEl.classList.remove('hidden');
+        choicesEl.classList.add('flex');
     }
 }
 
@@ -325,8 +396,10 @@ function selectChoice(choice) {
 function closeDialogue() {
     const actionsEl = document.getElementById('npc-actions');
     const choicesEl = document.getElementById('npc-choices');
-    actionsEl.style.display = 'flex';
-    choicesEl.style.display = 'none';
+    actionsEl.classList.remove('hidden');
+    actionsEl.classList.add('flex');
+    choicesEl.classList.remove('flex');
+    choicesEl.classList.add('hidden');
     currentDialogueTreeId = null;
     displayNPCModal();
 }
@@ -349,10 +422,12 @@ function openMerchantShop() {
  */
 export function closeNPCModal() {
     const modal = document.getElementById('npc-modal');
-    modal.style.display = 'none';
+    modal.classList.remove('flex');
+    modal.classList.add('hidden');
     modal.classList.remove('active');
     currentNPC = null;
     currentDialogueTree = null;
+    playSound('close');
 }
 
 /**
@@ -367,7 +442,7 @@ export function initNPCModal() {
 
     // Close on ESC key
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && document.getElementById('npc-modal').style.display === 'flex') {
+        if (e.key === 'Escape' && !document.getElementById('npc-modal').classList.contains('hidden')) {
             closeNPCModal();
         }
     });

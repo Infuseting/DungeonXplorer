@@ -3,51 +3,18 @@ $pageTitle = 'Modifier le PNJ';
 ob_start();
 ?>
 
-<style>
-    .form-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1.5rem;
-    }
-    
-    .form-group-full {
-        grid-column: 1 / -1;
-    }
-    
-    #merchant-fields {
-        display: none;
-        background: var(--bg-darker);
-        padding: 1.5rem;
-        border-radius: 0.75rem;
-        border: 1px solid var(--border);
-    }
-    
-    .inventory-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 0.75rem;
-        margin-top: 1rem;
-    }
-    
-    .inventory-item {
-        background: var(--bg-dark);
-        padding: 0.75rem;
-        border-radius: 0.5rem;
-        border: 1px solid var(--border);
-        font-size: 0.875rem;
-    }
-</style>
+
 
 <div class="card">
     <div class="flex items-center justify-between mb-6">
-        <h3 class="card-header" style="margin-bottom: 0;">Modifier: <?= htmlspecialchars($npc['name']) ?></h3>
+        <h3 class="card-header mb-0">Modifier: <?= htmlspecialchars($npc['name']) ?></h3>
         <a href="/admin/npcs" class="btn btn-secondary">
             ← Retour
         </a>
     </div>
     
     <form method="POST" action="/admin/npcs/edit/<?= $npc['id'] ?>" enctype="multipart/form-data">
-        <div class="form-grid">
+        <div class="grid grid-cols-2 gap-6">
             <!-- Basic Info -->
             <div class="form-group">
                 <label class="form-label">Nom du PNJ *</label>
@@ -56,7 +23,7 @@ ob_start();
             
             <div class="form-group">
                 <label class="form-label">Rôles</label>
-                <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+                <div class="flex gap-4 flex-wrap">
                     <?php
                         $npcRoles = array_map('trim', explode(',', $npc['role'] ?? ''));
                     ?>
@@ -68,47 +35,47 @@ ob_start();
             </div>
             
             <!-- Texture Upload -->
-            <div class="form-group-full">
+            <div class="col-span-2">
                 <label class="form-label">Texture du PNJ</label>
-                <div style="display: flex; gap: 1rem; align-items: start;">
-                    <div style="flex: 1;">
+                <div class="flex gap-4 items-start">
+                    <div class="flex-1">
                         <input type="file" name="texture" id="texture-input" class="form-input" accept="image/*">
-                        <small style="color: var(--text-muted); display: block; margin-top: 0.5rem;">
+                        <small class="text-gray-400 block mt-2">
                             Formats acceptés: PNG, JPG, GIF. Taille recommandée: 64x64px
                         </small>
                         <?php if ($npc['texture']): ?>
-                            <small style="color: var(--text-light); display: block; margin-top: 0.25rem;">
+                            <small class="text-gray-200 block mt-1">
                                 Texture actuelle: <?= htmlspecialchars($npc['texture']) ?>
                             </small>
                         <?php endif; ?>
                     </div>
-                    <div id="texture-preview" style="width: 64px; height: 64px; border: 2px dashed var(--border); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; background: var(--bg-dark); overflow: hidden;">
+                    <div id="texture-preview" class="w-16 h-16 border-2 border-dashed border-gray-700 rounded-lg flex items-center justify-center bg-gray-900 overflow-hidden">
                         <?php if ($npc['texture']): ?>
-                            <img src="/<?= htmlspecialchars($npc['texture']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                            <img src="/<?= htmlspecialchars($npc['texture']) ?>" class="w-full h-full object-cover">
                         <?php else: ?>
-                            <span style="color: var(--text-muted); font-size: 0.75rem;">Aperçu</span>
+                            <span class="text-gray-400 text-xs">Aperçu</span>
                         <?php endif; ?>
                     </div>
                 </div>
             </div>
             
             <!-- Merchant Fields -->
-            <div class="form-group-full" id="merchant-fields">
-                <h4 style="color: var(--text-light); margin-bottom: 1rem; font-size: 1.125rem;">
+            <div class="col-span-2 hidden bg-gray-900 p-6 rounded-xl border border-gray-700" id="merchant-fields">
+                <h4 class="text-gray-200 mb-4 text-lg">
                     💰 Configuration Marchand
                 </h4>
                 
-                <div class="form-grid">
+                <div class="grid grid-cols-2 gap-6">
                     <div class="form-group">
                         <label class="form-label">SEED Inventaire *</label>
                         <input type="number" name="merchant_seed" id="merchant-seed" class="form-input" value="<?= $npc['merchant_seed'] ?? '' ?>">
-                        <small style="color: var(--text-muted); display: block; margin-top: 0.25rem;">
+                        <small class="text-gray-400 block mt-1">
                             Même SEED = même inventaire
                         </small>
                     </div>
                     
                     <div class="form-group">
-                        <button type="button" class="btn btn-secondary" onclick="regenerateInventory()" style="margin-top: 1.75rem;">
+                        <button type="button" class="btn btn-secondary mt-7" onclick="regenerateInventory()">
                             🔄 Régénérer Inventaire
                         </button>
                     </div>
@@ -126,17 +93,17 @@ ob_start();
                 
                 <!-- Current Inventory -->
                 <?php if (!empty($merchantInventory)): ?>
-                    <div style="margin-top: 1.5rem;">
-                        <h5 style="color: var(--text-light); margin-bottom: 0.75rem;">
+                    <div class="mt-6">
+                        <h5 class="text-gray-200 mb-3">
                             Inventaire Actuel (<?= count($merchantInventory) ?> items)
                         </h5>
-                        <div class="inventory-grid">
+                        <div class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-3 mt-4">
                             <?php foreach ($merchantInventory as $item): ?>
-                                <div class="inventory-item">
-                                    <div style="font-weight: 600; color: var(--text-light);">
+                                <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 text-sm">
+                                    <div class="font-semibold text-gray-200">
                                         <?= htmlspecialchars($item['name']) ?>
                                     </div>
-                                    <div style="color: #fbbf24; margin-top: 0.25rem;">
+                                    <div class="text-yellow-400 mt-1">
                                         💰 <?= number_format($item['price']) ?> pièces
                                     </div>
                                 </div>
@@ -145,12 +112,12 @@ ob_start();
                     </div>
                 <?php endif; ?>
             </div>
-            <div class="form-group-full" id="dialogue-fields">
-                <h4 style="color: var(--text-light); margin-bottom: 1rem; font-size: 1.125rem;">
+            <div class="col-span-2" id="dialogue-fields">
+                <h4 class="text-gray-200 mb-4 text-lg">
                     Configuration Dialogues
                 </h4>
                 
-                <div style="display:flex; flex-direction:column; gap:0.5rem; margin-top:0.5rem;">
+                <div class="flex flex-col gap-2 mt-2">
                     <?php
                         $assignedIds = array_column($assignedTrees, 'id');
                     ?>
@@ -162,17 +129,17 @@ ob_start();
                             </label>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <p style="color: var(--text-muted);">Aucun arbre de dialogue créé.</p>
+                        <p class="text-gray-400">Aucun arbre de dialogue créé.</p>
                     <?php endif; ?>
                 </div>
             </div>
 
-            <div class="form-group-full" id="quest-fields">
-                <h4 style="color: var(--text-light); margin-bottom: 1rem; font-size: 1.125rem;">
+            <div class="col-span-2" id="quest-fields">
+                <h4 class="text-gray-200 mb-4 text-lg">
                     📜 Configuration Quêtes
                 </h4>
                 
-                <div style="display:flex; flex-direction:column; gap:0.5rem; margin-top:0.5rem;">
+                <div class="flex flex-col gap-2 mt-2">
                     <?php
                         $assignedQuestIds = array_column($assignedQuests, 'id');
                     ?>
@@ -184,13 +151,13 @@ ob_start();
                             </label>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <p style="color: var(--text-muted);">Aucune quête disponible.</p>
+                        <p class="text-gray-400">Aucune quête disponible.</p>
                     <?php endif; ?>
                 </div>
             </div>
         </div>
         
-        <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+        <div class="mt-8 flex gap-4 justify-end">
             <a href="/admin/npcs" class="btn btn-secondary">Annuler</a>
             <button type="submit" class="btn btn-primary">💾 Sauvegarder</button>
         </div>
@@ -237,7 +204,7 @@ textureInput.addEventListener('change', function(e) {
     if (file) {
         const reader = new FileReader();
         reader.onload = function(e) {
-            texturePreview.innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;">`;
+            texturePreview.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
         };
         reader.readAsDataURL(file);
     }

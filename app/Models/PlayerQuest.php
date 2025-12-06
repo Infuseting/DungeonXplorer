@@ -106,11 +106,41 @@ class PlayerQuest
         $stmt->bind_param("iii", $increment, $playerQuestId, $objectiveId);
         $stmt->execute();
         
-        // Check if objective is completed
-        $this->checkObjectiveCompletion($playerQuestId, $objectiveId);
+        $events = [
+            'objective_completed' => false,
+            'quest_completed' => false,
+            'unlocked_points' => [],
+            'quest_name' => '',
+            'objective_description' => ''
+        ];
+
+        // Get Quest Name and Objective Description
+        $stmt = $this->db->prepare("
+            SELECT q.name as quest_name, qo.description as objective_description
+            FROM player_quests pq
+            JOIN quests q ON pq.quest_id = q.id
+            JOIN quest_objectives qo ON qo.id = ?
+            WHERE pq.id = ?
+        ");
+        $stmt->bind_param("ii", $objectiveId, $playerQuestId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($row = $result->fetch_assoc()) {
+            $events['quest_name'] = $row['quest_name'];
+            $events['objective_description'] = $row['objective_description'];
+        }
         
-        // Check if stage is completed
-        $this->checkStageCompletion($playerQuestId);
+        // Check if objective is completed
+        if ($this->checkObjectiveCompletion($playerQuestId, $objectiveId)) {
+            $events['objective_completed'] = true;
+            
+            // Check if stage is completed
+            $stageEvents = $this->checkStageCompletion($playerQuestId);
+            $events['quest_completed'] = $stageEvents['quest_completed'];
+            $events['unlocked_points'] = $stageEvents['unlocked_points'];
+        }
+        
+        return $events;
     }
     
     /**
@@ -133,7 +163,9 @@ class PlayerQuest
             $updateStmt = $this->db->prepare("UPDATE player_quest_progress SET is_completed = 1 WHERE player_quest_id = ? AND objective_id = ?");
             $updateStmt->bind_param("ii", $playerQuestId, $objectiveId);
             $updateStmt->execute();
+            return true;
         }
+        return false;
     }
     
     /**
@@ -141,6 +173,11 @@ class PlayerQuest
      */
     private function checkStageCompletion($playerQuestId)
     {
+        $events = [
+            'quest_completed' => false,
+            'unlocked_points' => []
+        ];
+
         $stmt = $this->db->prepare("
             SELECT COUNT(*) as total, SUM(is_completed) as completed
             FROM player_quest_progress
@@ -153,11 +190,13 @@ class PlayerQuest
         
         if ($data['total'] == $data['completed']) {
             // Unlock map points for this stage
-            $this->unlockMapPointsForStage($playerQuestId);
+            $events['unlocked_points'] = $this->unlockMapPointsForStage($playerQuestId);
             
             // Move to next stage or complete quest
-            $this->advanceToNextStage($playerQuestId);
+            $events['quest_completed'] = $this->advanceToNextStage($playerQuestId);
         }
+        
+        return $events;
     }
 
     /**
@@ -165,6 +204,8 @@ class PlayerQuest
      */
     private function unlockMapPointsForStage($playerQuestId)
     {
+        $unlockedPoints = [];
+
         // Get character_id and current_stage_id
         $stmt = $this->db->prepare("SELECT character_id, current_stage_id FROM player_quests WHERE id = ?");
         $stmt->bind_param("i", $playerQuestId);
@@ -172,18 +213,22 @@ class PlayerQuest
         $result = $stmt->get_result();
         $pq = $result->fetch_assoc();
         
-        if (!$pq || !$pq['current_stage_id']) return;
+        if (!$pq || !$pq['current_stage_id']) return [];
         
         // Get unlocks for this stage
         $questStageModel = new QuestStage();
         $unlocks = $questStageModel->getMapUnlocks($pq['current_stage_id']);
         
-        if (empty($unlocks)) return;
+        if (empty($unlocks)) return [];
         
         $mapPointModel = new MapPoint();
         foreach ($unlocks as $unlock) {
-            $mapPointModel->unlockForCharacter($pq['character_id'], $unlock['id']);
+            if ($mapPointModel->unlockForCharacter($pq['character_id'], $unlock['id'])) {
+                $unlockedPoints[] = $unlock['name'];
+            }
         }
+        
+        return $unlockedPoints;
     }
     
     /**
@@ -221,11 +266,13 @@ class PlayerQuest
             
             // Initialize progress for new stage
             $this->initializeStageProgress($playerQuestId, $nextStage['id']);
+            return false;
         } else {
             // Complete quest
             $updateStmt = $this->db->prepare("UPDATE player_quests SET status = 'COMPLETED', completed_at = NOW() WHERE id = ?");
             $updateStmt->bind_param("i", $playerQuestId);
             $updateStmt->execute();
+            return true;
         }
     }
     /**

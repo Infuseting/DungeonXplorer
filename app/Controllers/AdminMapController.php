@@ -50,6 +50,10 @@ class AdminMapController
         $npcModel = new \App\Models\NPC();
         $npcs = $npcModel->getAll();
         
+        // Get all stories for assignment dropdown
+        $storyModel = new \App\Models\Story();
+        $stories = $storyModel->getAll();
+        
         // Build query with filters
         $query = "SELECT mp.*, m.name as map_name FROM map_points mp 
                   LEFT JOIN maps m ON mp.map_id = m.id WHERE 1=1";
@@ -163,6 +167,33 @@ class AdminMapController
             
             if ($stmt->execute()) {
                 echo json_encode(['success' => true, 'message' => 'Visibilité mise à jour']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Erreur lors de la mise à jour']);
+            }
+        }
+        exit;
+    }
+    
+    public function updatePointStory()
+    {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $data = json_decode(file_get_contents('php://input'), true);
+            $pointId = $data['point_id'] ?? null;
+            $storyId = $data['story_id'] ?? null;
+            
+            if (!$pointId) {
+                echo json_encode(['success' => false, 'message' => 'Point ID manquant']);
+                exit;
+            }
+            
+            // Allow null for story_id (to unassign)
+            $stmt = $this->db->prepare("UPDATE map_points SET story_id = ? WHERE id = ?");
+            $stmt->bind_param("ii", $storyId, $pointId);
+            
+            if ($stmt->execute()) {
+                echo json_encode(['success' => true, 'message' => 'Histoire/Donjon mis à jour']);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Erreur lors de la mise à jour']);
             }

@@ -291,7 +291,7 @@ class MapPoint
         
         // If hidden, check if unlocked for character
         $stmt = $this->db->prepare(
-            "SELECT 1 FROM player_unlocked_points WHERE character_id = ? AND map_point_id = ?"
+            "SELECT 1 FROM character_map_unlocks WHERE character_id = ? AND map_point_id = ?"
         );
         $stmt->bind_param("ii", $characterId, $pointId);
         $stmt->execute();
@@ -309,22 +309,11 @@ class MapPoint
      */
     public function unlockForCharacter($characterId, $pointId)
     {
-        // Get user_id from character
-        $stmt = $this->db->prepare("SELECT user_id FROM characters WHERE id = ?");
-        $stmt->bind_param("i", $characterId);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $character = $result->fetch_assoc();
-        
-        if (!$character) {
-            return false;
-        }
-        
         $stmt = $this->db->prepare(
-            "INSERT IGNORE INTO player_unlocked_points (user_id, character_id, map_point_id, unlocked_at) 
-             VALUES (?, ?, ?, CURRENT_TIMESTAMP)"
+            "INSERT IGNORE INTO character_map_unlocks (character_id, map_point_id, unlocked_at) 
+             VALUES (?, ?, CURRENT_TIMESTAMP)"
         );
-        $stmt->bind_param("iii", $character['user_id'], $characterId, $pointId);
+        $stmt->bind_param("ii", $characterId, $pointId);
         
         return $stmt->execute();
     }
@@ -339,9 +328,14 @@ class MapPoint
     public function getVisiblePointsForCharacter($mapId, $characterId)
     {
         $stmt = $this->db->prepare(
-            "SELECT mp.* 
+            "SELECT mp.*, 
+                    s.name as story_name, 
+                    s.description as story_description, 
+                    s.min_level as story_min_level, 
+                    s.difficulty_level as story_difficulty
              FROM map_points mp
-             LEFT JOIN player_unlocked_points pup ON mp.id = pup.map_point_id AND pup.character_id = ?
+             LEFT JOIN character_map_unlocks pup ON mp.id = pup.map_point_id AND pup.character_id = ?
+             LEFT JOIN stories s ON mp.story_id = s.id
              WHERE mp.map_id = ? 
              AND mp.is_locked = 0
              AND (mp.is_hidden = 0 OR pup.character_id IS NOT NULL)

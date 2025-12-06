@@ -2,12 +2,37 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Admin Panel - DungeonXplorer</title>
+    <meta name="description" content="Administration panel for DungeonXplorer">
+
+    <!-- Social Media Meta Tags -->
+    <?php
+    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $baseUrl = $protocol . '://' . $host;
+    $ogImage = $baseUrl . '/assets/images/auth_bg.png';
+    $currentUrl = $baseUrl . ($_SERVER['REQUEST_URI'] ?? '');
+    ?>
+    <meta property="og:title" content="Admin Panel - DungeonXplorer">
+    <meta property="og:description" content="Administration panel for DungeonXplorer">
+    <meta property="og:image" content="<?= $ogImage ?>">
+    <meta property="og:url" content="<?= $currentUrl ?>">
+    <meta property="og:type" content="website">
+    
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Admin Panel - DungeonXplorer">
+    <meta name="twitter:description" content="Administration panel for DungeonXplorer">
+    <meta name="twitter:image" content="<?= $ogImage ?>">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+    </style>
 </head>
 <body class="bg-slate-950 text-slate-200 font-sans">
     <div class="flex min-h-screen">
@@ -54,6 +79,14 @@
                 <a href="/admin/quests" class="flex items-center px-6 py-3.5 text-slate-400 hover:bg-indigo-500/10 hover:text-slate-200 border-l-3 border-transparent hover:border-indigo-500 transition-all <?= strpos($_SERVER['REQUEST_URI'], '/admin/quests') === 0 ? 'bg-indigo-500/15 text-indigo-400 border-indigo-500' : '' ?>">
                     <span class="mr-3 text-xl">📜</span>
                     Gestion des Quêtes
+                </a>
+                <a href="/admin/procedural" class="flex items-center px-6 py-3.5 text-slate-400 hover:bg-indigo-500/10 hover:text-slate-200 border-l-3 border-transparent hover:border-indigo-500 transition-all <?= strpos($_SERVER['REQUEST_URI'], '/admin/procedural') === 0 ? 'bg-indigo-500/15 text-indigo-400 border-indigo-500' : '' ?>">
+                    <span class="mr-3 text-xl">📜</span>
+                    Gestion des Histoires Procedurales
+                </a>
+                <a href="/admin/stories" class="flex items-center px-6 py-3.5 text-slate-400 hover:bg-indigo-500/10 hover:text-slate-200 border-l-3 border-transparent hover:border-indigo-500 transition-all <?= strpos($_SERVER['REQUEST_URI'], '/admin/stories') === 0 ? 'bg-indigo-500/15 text-indigo-400 border-indigo-500' : '' ?>">
+                    <span class="mr-3 text-xl">📜</span>
+                    Gestion des Histoires
                 </a>
                 <a href="/" class="flex items-center px-6 py-3.5 text-slate-400 hover:bg-indigo-500/10 hover:text-slate-200 border-l-3 border-transparent hover:border-indigo-500 transition-all">
                     <span class="mr-3 text-xl">🏠</span>

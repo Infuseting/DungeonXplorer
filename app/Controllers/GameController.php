@@ -40,6 +40,15 @@ class GameController
         $inventoryModel = new Inventory();
         $inventory = $inventoryModel->getCharacterInventory($characterId);
         
+        // Check if character is in a dungeon
+        $storyProgressModel = new \App\Models\StoryProgress();
+        $activeStory = $storyProgressModel->getActiveStory($characterId);
+        
+        if ($activeStory) {
+            header('Location: /story/enter/' . $activeStory['story_id']);
+            exit;
+        }
+
         // Load map configuration and points using models
         $mapModel = new Map();
         $mapPointModel = new MapPoint();
@@ -96,7 +105,30 @@ class GameController
         ]);
         exit;
     }
-    
+
+    /**
+     * API endpoint to get map points for a specific map
+     */
+    public function getMapPoints($mapId)
+    {
+        header('Content-Type: application/json');
+        if (!isset($_SESSION['user_id'])) {
+            echo json_encode(['success' => false, 'message' => 'Non authentifié']);
+            exit;
+        }
+        if (!isset($_SESSION['character_id'])) {
+            echo json_encode(['success' => false, 'message' => 'Aucun personnage sélectionné']);
+            exit;
+        }
+        $mapPointModel = new \App\Models\MapPoint();
+        $points = $mapPointModel->getVisiblePointsForCharacter($mapId, $_SESSION['character_id']);
+        echo json_encode([
+            'success' => true,
+            'points' => $points
+        ]);
+        exit;
+    }
+        
     /**
      * Get NPC data for interaction
      */
@@ -273,7 +305,14 @@ class GameController
         $playerQuestId = $playerQuestModel->startQuest($_SESSION['character_id'], $questId);
         
         if ($playerQuestId) {
-            echo json_encode(['success' => true, 'message' => 'Quête acceptée !']);
+            $questModel = new \App\Models\Quest();
+            $quest = $questModel->findById($questId);
+            
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Quête acceptée !',
+                'quest_name' => $quest['name']
+            ]);
         } else {
             echo json_encode(['success' => false, 'message' => 'Impossible d\'accepter la quête']);
         }
@@ -367,13 +406,20 @@ class GameController
             if ($playerQuest) {
                 // Update the objective progress
                 error_log("Calling updateProgress({$playerQuest['id']}, {$objective['id']}, 1)");
-                $playerQuestModel->updateProgress($playerQuest['id'], $objective['id'], 1);
+                $events = $playerQuestModel->updateProgress($playerQuest['id'], $objective['id'], 1);
                 
                 error_log("SUCCESS: Quest updated");
                 echo json_encode([
                     'success' => true,
                     'quest_updated' => true,
-                    'message' => 'Objectif de quête complété !'
+                    'message' => 'Objectif de quête complété !',
+                    'quest_update' => [
+                        'quest_name' => $events['quest_name'],
+                        'objective_description' => $events['objective_description'],
+                        'objective_completed' => $events['objective_completed'],
+                        'quest_completed' => $events['quest_completed'],
+                        'unlocked_points' => $events['unlocked_points']
+                    ]
                 ]);
             } else {
                 error_log("WARNING: Player doesn't have this quest active");

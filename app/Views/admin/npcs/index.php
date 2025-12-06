@@ -3,86 +3,28 @@ $pageTitle = 'Gestion des PNJ';
 ob_start();
 ?>
 
-<style>
-    .npcs-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 1.5rem;
-        margin-top: 1.5rem;
-    }
-    
-    .npc-card {
-        background: var(--bg-darker);
-        border: 1px solid var(--border);
-        border-radius: 0.75rem;
-        padding: 1.5rem;
-        transition: all 0.2s;
-    }
-    
-    .npc-card:hover {
-        border-color: var(--primary);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-    
-    .npc-header {
-        display: flex;
-        gap: 1rem;
-        margin-bottom: 1rem;
-    }
-    
-    .npc-texture {
-        width: 64px;
-        height: 64px;
-        background: var(--bg-dark);
-        border: 2px solid var(--border);
-        border-radius: 0.5rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-    }
-    
-    .npc-texture img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    
-    .role-badge {
-        padding: 0.25rem 0.75rem;
-        border-radius: 0.25rem;
-        font-size: 0.75rem;
-        font-weight: 500;
-        text-transform: uppercase;
-    }
-    
-    .role-merchant { background: rgba(251, 191, 36, 0.2); color: #fde047; }
-    .role-quest_giver { background: rgba(168, 85, 247, 0.2); color: #d8b4fe; }
-    .role-lore { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; }
-    .role-guard { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
-</style>
+
 
 <div class="card">
     <div class="flex items-center justify-between mb-6">
-        <h3 class="card-header" style="margin-bottom: 0;">Gestion des PNJ</h3>
+        <h3 class="card-header mb-0">Gestion des PNJ</h3>
         <a href="/admin/npcs/create" class="btn btn-primary">
             ➕ Créer un PNJ
         </a>
     </div>
     
     <!-- Search and Filters -->
-    <div class="search-bar" style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+    <div class="search-bar flex gap-4 mb-6">
         <input 
             type="text" 
             id="search-input" 
             class="form-input" 
-            style="flex: 1; min-width: 250px;"
+            class="form-input flex-1 min-w-[250px]"
             placeholder="🔍 Rechercher par nom..."
             value="<?= htmlspecialchars($search ?? '') ?>"
         >
         
-        <select id="role-filter" class="form-select" style="min-width: 150px;">
+        <select id="role-filter" class="form-select min-w-[150px]">
             <option value="">Tous les rôles</option>
             <option value="merchant" <?= ($roleFilter ?? '') === 'merchant' ? 'selected' : '' ?>>Marchand</option>
             <option value="quest_giver" <?= ($roleFilter ?? '') === 'quest_giver' ? 'selected' : '' ?>>Donneur de quêtes</option>
@@ -95,26 +37,33 @@ ob_start();
     
     <!-- NPCs Grid -->
     <?php if (!empty($npcs)): ?>
-        <div class="npcs-grid">
+        <div class="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-6 mt-6">
             <?php foreach ($npcs as $npc): ?>
-                <div class="npc-card">
-                    <div class="npc-header">
-                        <div class="npc-texture">
+                <div class="bg-gray-800 border border-gray-700 rounded-xl p-6 transition-all duration-200 hover:border-indigo-500 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30">
+                    <div class="flex gap-4 mb-4">
+                        <div class="w-16 h-16 bg-gray-900 border-2 border-gray-700 rounded-lg flex items-center justify-center overflow-hidden">
                             <?php if ($npc['texture']): ?>
-                                <img src="/<?= htmlspecialchars($npc['texture']) ?>" alt="<?= htmlspecialchars($npc['name']) ?>">
+                                <img src="/<?= htmlspecialchars($npc['texture']) ?>" alt="<?= htmlspecialchars($npc['name']) ?>" class="w-full h-full object-cover">
                             <?php else: ?>
-                                <span style="font-size: 32px;">👤</span>
+                                <span class="text-[32px]">👤</span>
                             <?php endif; ?>
                         </div>
-                        <div style="flex: 1;">
-                            <div style="font-size: 1.125rem; font-weight: 600; color: var(--text-light); margin-bottom: 0.25rem;">
+                        <div class="flex-1">
+                            <div class="text-lg font-semibold text-gray-200 mb-1">
                                 <?= htmlspecialchars($npc['name']) ?>
                             </div>
                             <?php
                                 $roles = array_map('trim', explode(',', $npc['role'] ?? ''));
                                 foreach ($roles as $r):
+                                    $roleClass = match($r) {
+                                        'merchant' => 'bg-yellow-500/20 text-yellow-300',
+                                        'quest_giver' => 'bg-purple-500/20 text-purple-300',
+                                        'lore' => 'bg-indigo-500/20 text-indigo-300',
+                                        'guard' => 'bg-red-500/20 text-red-300',
+                                        default => 'bg-gray-700 text-gray-300'
+                                    };
                             ?>
-                                <span class="role-badge role-<?= $r ?>">
+                                <span class="px-3 py-1 rounded text-xs font-medium uppercase <?= $roleClass ?>">
                                     <?= str_replace('_', ' ', $r) ?>
                                 </span>
                             <?php endforeach; ?>
@@ -124,20 +73,20 @@ ob_start();
                     <!-- Merchant Info -->
                     <?php $rolesArr = array_map('trim', explode(',', $npc['role'] ?? '')); ?>
                     <?php if (in_array('merchant', $rolesArr) && $npc['merchant_seed']): ?>
-                        <div style="background: var(--bg-dark); padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 1rem;">
-                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem;">SEED Marchand</div>
-                            <div style="color: var(--text-light); font-weight: 600; font-family: monospace;">
+                        <div class="bg-gray-900 p-3 rounded-lg mb-4">
+                            <div class="text-xs text-gray-400 mb-1">SEED Marchand</div>
+                            <div class="text-gray-200 font-semibold font-mono">
                                 #<?= $npc['merchant_seed'] ?>
                             </div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">
+                            <div class="text-xs text-gray-400 mt-2">
                                 Rachat: <?= ($npc['buy_rate_own'] * 100) ?>% / <?= ($npc['buy_rate_other'] * 100) ?>%
                             </div>
                         </div>
                     <?php endif; ?>
                     
                     <!-- Actions -->
-                    <div style="display: flex; gap: 0.5rem;">
-                        <a href="/admin/npcs/edit/<?= $npc['id'] ?>" class="btn btn-sm btn-primary" style="flex: 1;">
+                    <div class="flex gap-2">
+                        <a href="/admin/npcs/edit/<?= $npc['id'] ?>" class="btn btn-sm btn-primary flex-1">
                             ✏️ Modifier
                         </a>
                         <button class="btn btn-sm btn-danger" onclick="deleteNPC(<?= $npc['id'] ?>)">
@@ -148,10 +97,10 @@ ob_start();
             <?php endforeach; ?>
         </div>
     <?php else: ?>
-        <div style="text-align: center; padding: 4rem; color: var(--text-muted);">
-            <p style="font-size: 3rem; margin-bottom: 1rem;">👥</p>
+        <div class="text-center py-16 text-gray-400">
+            <p class="text-5xl mb-4">👥</p>
             <p>Aucun PNJ trouvé</p>
-            <a href="/admin/npcs/create" class="btn btn-primary" style="margin-top: 1rem;">
+            <a href="/admin/npcs/create" class="btn btn-primary mt-4">
                 Créer le premier PNJ
             </a>
         </div>

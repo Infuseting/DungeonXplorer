@@ -3,36 +3,18 @@ $pageTitle = 'Créer un PNJ';
 ob_start();
 ?>
 
-<style>
-    .form-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1.5rem;
-    }
-    
-    .form-group-full {
-        grid-column: 1 / -1;
-    }
-    
-    #merchant-fields {
-        display: none;
-        background: var(--bg-darker);
-        padding: 1.5rem;
-        border-radius: 0.75rem;
-        border: 1px solid var(--border);
-    }
-</style>
+
 
 <div class="card">
     <div class="flex items-center justify-between mb-6">
-        <h3 class="card-header" style="margin-bottom: 0;">Créer un Nouveau PNJ</h3>
+        <h3 class="card-header mb-0">Créer un Nouveau PNJ</h3>
         <a href="/admin/npcs" class="btn btn-secondary">
             ← Retour
         </a>
     </div>
     
     <form method="POST" action="/admin/npcs/create" enctype="multipart/form-data">
-        <div class="form-grid">
+        <div class="grid grid-cols-2 gap-6">
             <!-- Basic Info -->
             <div class="form-group">
                 <label class="form-label">Nom du PNJ *</label>
@@ -41,7 +23,7 @@ ob_start();
             
             <div class="form-group">
                 <label class="form-label">Rôles</label>
-                <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+                <div class="flex gap-4 flex-wrap">
                     <label><input type="checkbox" name="roles[]" value="merchant"> Marchand</label>
                     <label><input type="checkbox" name="roles[]" value="quest_giver"> Donneur de quêtes</label>
                     <label><input type="checkbox" name="roles[]" value="lore"> Lore</label>
@@ -50,38 +32,38 @@ ob_start();
             </div>
             
             <!-- Texture Upload -->
-            <div class="form-group-full">
+            <div class="col-span-2">
                 <label class="form-label">Texture du PNJ</label>
-                <div style="display: flex; gap: 1rem; align-items: start;">
-                    <div style="flex: 1;">
+                <div class="flex gap-4 items-start">
+                    <div class="flex-1">
                         <input type="file" name="texture" id="texture-input" class="form-input" accept="image/*">
-                        <small style="color: var(--text-muted); display: block; margin-top: 0.5rem;">
+                        <small class="text-gray-400 block mt-2">
                             Formats acceptés: PNG, JPG, GIF. Taille recommandée: 64x64px
                         </small>
                     </div>
-                    <div id="texture-preview" style="width: 64px; height: 64px; border: 2px dashed var(--border); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; background: var(--bg-dark);">
-                        <span style="color: var(--text-muted); font-size: 0.75rem;">Aperçu</span>
+                    <div id="texture-preview" class="w-16 h-16 border-2 border-dashed border-gray-700 rounded-lg flex items-center justify-center bg-gray-900">
+                        <span class="text-gray-400 text-xs">Aperçu</span>
                     </div>
                 </div>
             </div>
             
             <!-- Merchant Fields -->
-            <div class="form-group-full" id="merchant-fields">
-                <h4 style="color: var(--text-light); margin-bottom: 1rem; font-size: 1.125rem;">
+            <div class="col-span-2 hidden bg-gray-900 p-6 rounded-xl border border-gray-700" id="merchant-fields">
+                <h4 class="text-gray-200 mb-4 text-lg">
                     💰 Configuration Marchand
                 </h4>
                 
-                <div class="form-grid">
+                <div class="grid grid-cols-2 gap-6">
                     <div class="form-group">
                         <label class="form-label">SEED Inventaire *</label>
                         <input type="number" name="merchant_seed" id="merchant-seed" class="form-input" placeholder="Ex: 12345">
-                        <small style="color: var(--text-muted); display: block; margin-top: 0.25rem;">
+                        <small class="text-gray-400 block mt-1">
                             Même SEED = même inventaire. Générera 10-20 items aléatoires.
                         </small>
                     </div>
                     
                     <div class="form-group">
-                        <button type="button" class="btn btn-secondary" onclick="generateRandomSeed()" style="margin-top: 1.75rem;">
+                        <button type="button" class="btn btn-secondary mt-7" onclick="generateRandomSeed()">
                             🎲 Générer SEED Aléatoire
                         </button>
                     </div>
@@ -89,7 +71,7 @@ ob_start();
                     <div class="form-group">
                         <label class="form-label">Taux rachat items vendus (%)</label>
                         <input type="number" step="0.01" name="buy_rate_own" class="form-input" value="5" min="0" max="100">
-                        <small style="color: var(--text-muted); display: block; margin-top: 0.25rem;">
+                        <small class="text-gray-400 block mt-1">
                             Pourcentage du prix pour items que le marchand vend
                         </small>
                     </div>
@@ -97,7 +79,7 @@ ob_start();
                     <div class="form-group">
                         <label class="form-label">Taux rachat autres items (%)</label>
                         <input type="number" step="0.01" name="buy_rate_other" class="form-input" value="15" min="0" max="100">
-                        <small style="color: var(--text-muted); display: block; margin-top: 0.25rem;">
+                        <small class="text-gray-400 block mt-1">
                             Pourcentage du prix pour autres items
                         </small>
                     </div>
@@ -105,21 +87,21 @@ ob_start();
             </div>
             
             <!-- Dialogue Trees -->
-            <div class="form-group-full">
+            <div class="col-span-2">
                 <label class="form-label">Arbres de Dialogue</label>
-                <div style="display:flex; flex-direction:column; gap:0.5rem; margin-top:0.5rem;">
+                <div class="flex flex-col gap-2 mt-2">
                     <?php if (!empty($dialogueTrees)): ?>
                         <?php foreach ($dialogueTrees as $tree): ?>
                             <label><input type="checkbox" name="dialogue_trees[]" value="<?= $tree['id'] ?>"> <?= htmlspecialchars($tree['name']) ?></label>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <p style="color: var(--text-muted);">Aucun arbre de dialogue créé.</p>
+                        <p class="text-gray-400">Aucun arbre de dialogue créé.</p>
                     <?php endif; ?>
                 </div>
             </div>
         </div>
         
-        <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+        <div class="mt-8 flex gap-4 justify-end">
             <a href="/admin/npcs" class="btn btn-secondary">Annuler</a>
             <button type="submit" class="btn btn-primary">✅ Créer le PNJ</button>
         </div>
@@ -156,7 +138,7 @@ textureInput.addEventListener('change', function(e) {
     if (file) {
         const reader = new FileReader();
         reader.onload = function(e) {
-            texturePreview.innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;">`;
+            texturePreview.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
         };
         reader.readAsDataURL(file);
     }

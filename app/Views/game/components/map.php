@@ -22,6 +22,10 @@
             <p id="point-description" class="text-gray-300 mb-6"></p>
             
             <div class="space-y-4">
+                <div id="point-extra-details" class="hidden space-y-4">
+                    <!-- Dynamic details like level, difficulty -->
+                </div>
+
                 <div class="bg-gray-900/50 rounded-lg p-4">
                     <h3 class="text-sm font-semibold text-gray-400 uppercase mb-2">Coordonnées</h3>
                     <p id="point-coords" class="text-white"></p>

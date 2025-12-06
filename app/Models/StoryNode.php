@@ -1,0 +1,291 @@
+<?php
+
+namespace App\Models;
+
+use App\Config\Database;
+
+class StoryNode
+{
+    private $db;
+
+    public function __construct()
+    {
+        $this->db = Database::getInstance()->getConnection();
+    }
+
+    /**
+     * Find node by ID
+     * 
+     * @param int $id
+     * @return array|null
+     */
+    public function findById($id)
+    {
+        $stmt = $this->db->prepare("SELECT * FROM story_nodes WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_assoc();
+    }
+
+    /**
+     * Get all nodes for a story (manual)
+     * 
+     * @param int $storyId
+     * @return array
+     */
+    public function getByStoryId($storyId)
+    {
+        $stmt = $this->db->prepare("SELECT * FROM story_nodes WHERE story_id = ? AND story_instance_id IS NULL");
+        $stmt->bind_param("i", $storyId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
+
+    /**
+     * Create a new node
+     * 
+     * @param array $data
+     * @return int|false
+     */
+    public function create($data)
+    {
+        $stmt = $this->db->prepare(
+            "INSERT INTO story_nodes (story_id, story_instance_id, name, description, image_path, is_start_node, is_end_node, can_exit, node_x, node_y) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        );
+        
+        $instanceId = !empty($data['story_instance_id']) ? $data['story_instance_id'] : null;
+        $canExit = $data['can_exit'] ?? 0;
+        
+        $stmt->bind_param(
+            "iisssiiiii", 
+            $data['story_id'], 
+            $instanceId,
+            $data['name'], 
+            $data['description'], 
+            $data['image_path'], 
+            $data['is_start_node'],
+            $data['is_end_node'],
+            $canExit,
+            $data['node_x'],
+            $data['node_y']
+        );
+        
+        if ($stmt->execute()) {
+            return $this->db->insert_id;
+        }
+        return false;
+    }
+
+    /**
+     * Update a node
+     * 
+     * @param int $id
+     * @param array $data
+     * @return bool
+     */
+    public function update($id, $data)
+    {
+        $stmt = $this->db->prepare(
+            "UPDATE story_nodes 
+             SET name = ?, description = ?, image_path = ?, is_start_node = ?, is_end_node = ?, can_exit = ?, node_x = ?, node_y = ? 
+             WHERE id = ?"
+        );
+        
+        $canExit = $data['can_exit'] ?? 0;
+        
+        $stmt->bind_param(
+            "sssiiiiii", 
+            $data['name'], 
+            $data['description'], 
+            $data['image_path'], 
+            $data['is_start_node'],
+            $data['is_end_node'],
+            $canExit,
+            $data['node_x'],
+            $data['node_y'],
+            $id
+        );
+        
+        return $stmt->execute();
+    }
+
+    /**
+     * Delete a node
+     * 
+     * @param int $id
+     * @return bool
+     */
+    public function delete($id)
+    {
+        $stmt = $this->db->prepare("DELETE FROM story_nodes WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        return $stmt->execute();
+    }
+
+    /**
+     * Get connections for a node
+     * 
+     * @param int $nodeId
+     * @return array
+     */
+    public function getConnections($nodeId)
+    {
+        $stmt = $this->db->prepare(
+            "SELECT c.*, n.name as to_node_name 
+             FROM story_node_connections c
+             JOIN story_nodes n ON c.to_node_id = n.id
+             WHERE c.from_node_id = ?
+             ORDER BY c.order_index ASC"
+        );
+        $stmt->bind_param("i", $nodeId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
+
+    /**
+     * Get return connections for a node (incoming connections with allow_return=1)
+     * 
+     * @param int $nodeId
+     * @return array
+     */
+    public function getReturnConnections($nodeId)
+    {
+        // We want to find connections that point TO this node, where allow_return is true.
+        // The "target" of the return is the FROM node of the original connection.
+        $stmt = $this->db->prepare(
+            "SELECT c.*, n.name as to_node_name, 1 as is_return
+             FROM story_node_connections c
+             JOIN story_nodes n ON c.from_node_id = n.id
+             WHERE c.to_node_id = ? AND c.allow_return = 1"
+        );
+        $stmt->bind_param("i", $nodeId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $connections = $result->fetch_all(MYSQLI_ASSOC);
+        
+        // Fix the IDs for the frontend: 
+        // For a return connection, the "destination" (to_node_id) from the player's perspective is the from_node_id of the connection
+        foreach ($connections as &$conn) {
+            $conn['to_node_id'] = $conn['from_node_id'];
+            
+            // Use return_text if available, otherwise fallback
+            $displayText = !empty($conn['return_text']) ? $conn['return_text'] : ("Retour : " . ($conn['action_text'] ?: $conn['to_node_name']));
+            
+            $conn['action_text'] = $displayText;
+            $conn['direction_text'] = $displayText;
+        }
+        
+        error_log("Found " . count($connections) . " return connections for node $nodeId");
+        
+        return $connections;
+    }
+
+    /**
+     * Get NPCs in a node
+     * 
+     * @param int $nodeId
+     * @return array
+     */
+    public function getNPCs($nodeId)
+    {
+        $stmt = $this->db->prepare(
+            "SELECT snn.*, n.name, n.role, n.texture 
+             FROM story_node_npcs snn
+             JOIN npcs n ON snn.npc_id = n.id
+             WHERE snn.node_id = ?"
+        );
+        $stmt->bind_param("i", $nodeId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
+
+    /**
+     * Get monsters in a node
+     * 
+     * @param int $nodeId
+     * @return array
+     */
+    public function getMonsters($nodeId)
+    {
+        $stmt = $this->db->prepare("SELECT * FROM story_node_monsters WHERE node_id = ?");
+        $stmt->bind_param("i", $nodeId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $monsters = $result->fetch_all(MYSQLI_ASSOC);
+        
+        // Decode JSON stats
+        foreach ($monsters as &$monster) {
+            if ($monster['monster_stats']) {
+                $monster['monster_stats'] = json_decode($monster['monster_stats'], true);
+            }
+        }
+        
+        return $monsters;
+    }
+
+    /**
+     * Get loots in a node
+     * 
+     * @param int $nodeId
+     * @return array
+     */
+    public function getLoots($nodeId)
+    {
+        $stmt = $this->db->prepare(
+            "SELECT snl.*, i.name, i.icon 
+             FROM story_node_loots snl
+             JOIN items i ON snl.item_id = i.id
+             WHERE snl.node_id = ?"
+        );
+        $stmt->bind_param("i", $nodeId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
+
+    /**
+     * Get full node data
+     * 
+     * @param int $nodeId
+     * @return array|null
+     */
+    public function getFullNodeData($nodeId)
+    {
+        $node = $this->findById($nodeId);
+        if (!$node) return null;
+        
+        $connections = $this->getConnections($nodeId);
+        $returnConnections = $this->getReturnConnections($nodeId);
+        
+        $node['connections'] = array_merge($connections, $returnConnections);
+        $node['npcs'] = $this->getNPCs($nodeId);
+        $node['monsters'] = $this->getMonsters($nodeId);
+        $node['loots'] = $this->getLoots($nodeId);
+        
+        return $node;
+    }
+
+    /**
+     * Get start node for an instance
+     * 
+     * @param int $instanceId
+     * @return array|null
+     */
+    public function getInstanceStartNode($instanceId)
+    {
+        $stmt = $this->db->prepare(
+            "SELECT * FROM story_nodes 
+             WHERE story_instance_id = ? AND is_start_node = 1 
+             LIMIT 1"
+        );
+        $stmt->bind_param("i", $instanceId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_assoc();
+    }
+}

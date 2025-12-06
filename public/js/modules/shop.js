@@ -5,6 +5,7 @@
 
 import { showToast } from './toast.js';
 import { setupTooltip } from './inventory.js';
+import { playSound } from './soundManager.js';
 
 let currentShopNPC = null;
 let playerGold = 0;
@@ -26,6 +27,7 @@ export function openShop(npcId) {
                 playerGold = data.player_gold;
                 renderShop(data);
                 document.getElementById('shop-modal').classList.remove('hidden');
+                playSound('open');
             } else {
                 showToast(data.message || 'Impossible d\'ouvrir la boutique', 'error');
             }
@@ -197,6 +199,7 @@ export function initShop() {
     if (closeBtn) {
         closeBtn.onclick = () => {
             modal.classList.add('hidden');
+            playSound('close');
         };
     }
 
@@ -204,6 +207,7 @@ export function initShop() {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
             modal.classList.add('hidden');
+            playSound('close');
         }
     });
 }
