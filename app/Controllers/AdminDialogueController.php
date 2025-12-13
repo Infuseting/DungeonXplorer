@@ -154,8 +154,6 @@ class AdminDialogueController
             
             $text = trim($data['text'] ?? '');
             
-            // Debug logging
-            file_put_contents(__DIR__ . '/../../debug_log.txt', date('Y-m-d H:i:s') . " - AddNode: " . json_encode($data) . "\n", FILE_APPEND);
             
             if ($text === '') {
                 echo json_encode(['success' => false, 'message' => 'Le texte est requis']);
@@ -177,15 +175,13 @@ class AdminDialogueController
                     (int)($data['order_index'] ?? 0)
                 );
                 
-                file_put_contents(__DIR__ . '/../../debug_log.txt', date('Y-m-d H:i:s') . " - NodeID: " . var_export($nodeId, true) . "\n", FILE_APPEND);
-                
+              
                 if ($nodeId) {
                     echo json_encode(['success' => true, 'node_id' => $nodeId]);
                 } else {
                     echo json_encode(['success' => false, 'message' => 'Erreur lors de l\'ajout (ID null)']);
                 }
             } catch (\Exception $e) {
-                file_put_contents(__DIR__ . '/../../debug_log.txt', date('Y-m-d H:i:s') . " - Exception: " . $e->getMessage() . "\n" . $e->getTraceAsString() . "\n", FILE_APPEND);
                 echo json_encode(['success' => false, 'message' => 'Exception: ' . $e->getMessage()]);
             }
         }
@@ -233,13 +229,10 @@ class AdminDialogueController
                 $id
             );
             
-            // Debug logging
-            file_put_contents(__DIR__ . '/../../debug_log.txt', date('Y-m-d H:i:s') . " - UpdateNode: " . json_encode($data) . "\n", FILE_APPEND);
-            
+           
             if ($stmt->execute()) {
                 echo json_encode(['success' => true]);
             } else {
-                file_put_contents(__DIR__ . '/../../debug_log.txt', date('Y-m-d H:i:s') . " - Update Error: " . $stmt->error . "\n", FILE_APPEND);
                 echo json_encode(['success' => false, 'message' => 'Erreur lors de la mise à jour']);
             }
         }
@@ -257,8 +250,6 @@ class AdminDialogueController
             $input = file_get_contents('php://input');
             $data = json_decode($input, true);
             
-            // Debug logging
-            file_put_contents(__DIR__ . '/../../debug_log.txt', date('Y-m-d H:i:s') . " - DeleteNode: " . json_encode($data) . "\n", FILE_APPEND);
             
             if (!$data || empty($data['id'])) {
                 echo json_encode(['success' => false, 'message' => 'ID manquant']);
