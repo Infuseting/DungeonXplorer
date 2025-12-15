@@ -73,7 +73,7 @@ ob_start();
                         <div class="character-card char-card-<?= $char['id'] ?> cursor-pointer bg-gray-800 border border-gray-700 p-3 rounded-lg flex items-center gap-4 <?= ($char['id'] === $selectedCharacter['id']) ? 'border-violet-500 ring-1 ring-violet-500' : '' ?>"
                              onclick="selectCharacter(<?= $char['id'] ?>)">
                             <div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden border border-gray-600 flex-shrink-0">
-                                <img src="/assets/images/<?= $image ?>" alt="<?= $char['class_name'] ?>" class="w-full h-full object-cover">
+                                <img src="/assets/images/<?= $char['class_name'] ?>/icon_<?= $char['class_name'] ?>.png"  class="w-full h-full object-cover">
                             </div>
                             <div>
                                 <div class="text-white font-bold"><?= htmlspecialchars($char['name']) ?></div>
@@ -129,7 +129,7 @@ ob_start();
                 <div class="absolute bottom-0 w-full h-1/4 bg-gradient-to-t from-violet-900/20 to-transparent rounded-full blur-3xl"></div>
                 
                 <!-- Character Model avec le helper -->
-                <div class="relative z-10 h-full w-full flex items-center justify-center pb-8 md:pb-12" id="character-container">
+                <div class="relative z-8 h-full w-full flex items-center justify-center pb-8 md:pb-12" id="character-container">
                     <?= renderCharacter($selectedCharacter, [
                         'size' => 'full',
                         'showFilter' => true,
