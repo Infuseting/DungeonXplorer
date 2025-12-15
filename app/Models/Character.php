@@ -3,14 +3,35 @@
 namespace App\Models;
 
 use App\Config\Database;
-
+use App\Models\Inventory;
+use App\Models\Stats;
 class Character
 {
     private $db;
+    private $name;
+    private $level;
+    private $xp;
+    private $gold;  
+    private $strength;
+    private $vitality;
+    private $intelligence;
+    private $dexterity;
+    private $inventory;
+    private $classId;
+    private $armor;
+    private $id;
+    private array $appearance = [];
+    private $className;
+
+     // caches
+    private array $inventoryCache = [];
+    private array $statsCache = [];
+
 
     public function __construct()
-    {
+    {   
         $this->db = Database::getInstance()->getConnection();
+        $this->inventory = new Inventory();
     }
 
     public function create($userId, $classId, $name)
@@ -23,6 +44,35 @@ class Character
         }
         return false;
     }
+public function getEquippedStats(Stats $statsEnum): int
+{
+    // Si déjà calculé, on renvoie directement
+    if (isset($this->statsCache[$statsEnum->value])) {
+        return $this->statsCache[$statsEnum->value];
+    }
+
+    $charInventory = $this->getInventory();
+    if(empty($charInventory) ) return 0;
+    $stats = 0;
+    foreach ($charInventory as $item) {
+        if (is_array($item)) {
+        foreach ($item as $subItem) {if ($subItem['location'] != 'equipped') continue;
+            $data = json_decode($subItem['stats'], true);
+            $stats += $data[$statsEnum->value] ?? 0;
+        }
+    }
+
+
+    }
+    // Mise en cache
+    $this->statsCache[$statsEnum->value] = $stats;
+    return $stats;
+}
+
+public function getAppearance(){
+    return $this->appearance;
+}
+
 
     public function updateAppearance($id, $appearanceData)
     {
@@ -35,7 +85,7 @@ class Character
     public function findAllByUserId($userId)
     {
         $stmt = $this->db->prepare("
-            SELECT c.*, cl.name as class_name, cs.level 
+            SELECT c.*, cl.name as class_name, cs.level,c.appearance
             FROM characters c
             JOIN classes cl ON c.class_id = cl.id
             LEFT JOIN character_stats cs ON c.id = cs.character_id
@@ -45,8 +95,7 @@ class Character
         $stmt->bind_param("i", $userId);
         $stmt->execute();
         $results = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-        
-        foreach ($results as &$character) {
+         foreach ($results as &$character) {
             if (!empty($character['appearance'])) {
                 $character['appearance'] = json_decode($character['appearance'], true);
             }
@@ -55,24 +104,70 @@ class Character
         return $results;
     }
 
+    public function unsetDb(){
+        $this->db = null;
+    }
+
     public function findById($id)
     {
-        $stmt = $this->db->prepare("SELECT * FROM characters WHERE id = ?");
+        $stmt = $this->db->prepare("SELECT c.id,cl.name as class_name,c.name,c.appearance, c.class_id, c.gold, cs.level, cs.xp, cs.strength,cs.dexterity,cs.intelligence,cs.vitality  FROM characters c  Join character_stats cs on c.id=cs.character_id join classes cl on cl.id = c.class_id WHERE c.id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
-        $result = $stmt->get_result()->fetch_assoc();
-        
-        if ($result && !empty($result['appearance'])) {
-            $result['appearance'] = json_decode($result['appearance'], true);
+            $data= $stmt->get_result()->fetch_assoc();
+
+
+
+        if ($data) {
+
+            $this->id = $data['id'];
+
+            $this->name = $data['name'];
+
+            $this->strength = $data['strength'];
+
+            $this->vitality = $data['vitality'];
+
+            $this->intelligence = $data['intelligence'];
+
+            $this->dexterity = $data['dexterity'];
+
+            $this->level = $data['level'];
+
+            $this->xp = $data['xp'];
+
+            $this->gold = $data['gold'];
+
+            $this->classId = $data['class_id'];
+
+            $this->className = $data['class_name'];
         }
         
-        return $result;
+                if (!empty($data['appearance'])) {
+                $this->appearance = json_decode($data['appearance'], true);
+            } else {
+                $this->appearance = []; // valeur par défaut
+            }
+
+        
+        return $data;
     }
+
+public function toArray(): array {
+    return [
+        'id'        => $this->id ?? 0,
+        'name'      => $this->name ?? '',
+        'class_name'=> $this->className ?? '',
+        'appearance'=> $this->appearance ?? [],
+        'class'     => ['name' => $this->className ?? ''],
+    ];
+}
+
 
     public function updateLastPlayed($id)
     {
         $stmt = $this->db->prepare("UPDATE characters SET last_played_at = NOW() WHERE id = ?");
         $stmt->bind_param("i", $id);
+        $_SESSION['character_id'] = $id;
         return $stmt->execute();
     }
 
@@ -82,6 +177,107 @@ class Character
         $stmt->bind_param("ii", $id, $userId);
         return $stmt->execute();
     }
+
+     public function getInventory(): array
+    {
+        // Si déjà chargé, on renvoie directement
+        if (!empty($this->inventoryCache)) {
+            echo 'empty';
+            return $this->inventoryCache;
+        }
+
+            
+
+            $result = $this->inventory->getCharacterInventory($this->id);
+
+            return is_array($result) ? $result : [];
+
+        
+
+        
+    }
+
+
+    public function toString()
+    {
+        return "\nName: " . $this->name . "\n" .
+               "Level: " . $this->level . "\n" .
+               "XP: " . $this->xp . "\n" .
+               "Gold: " . $this->gold . "\n" .
+               "Strength: " . $this->strength . "\n" .
+               "Vitality: " . $this->vitality . "\n" .
+               "Intelligence: " . $this->intelligence . "\n" .
+               "Dexterity: " . $this->dexterity . "\n";
+    }
+
+    public function getName()
+    {
+        return $this->name;
+    }   
+    public function getStrength()
+    {
+        return $this->strength;
+    }
+    public function getVitality()
+    {
+        return $this->vitality;
+    }
+    public function getIntelligence()
+    {
+        return $this->intelligence;
+    }
+
+    public function setArmorClass($nArmor){
+        $this->armor = $nArmor;
+
+    }
+    public function getDexterity()
+    {
+        return $this->dexterity;
+    }
+    public function setVitality($vitality)
+    {
+        $this->vitality = $vitality;
+    }
+
+    public function reduceVitality($number)
+    {
+        $this->vitality -= $number;
+    }
+
+    public function getClassId(){
+        return $this->classId;
+    }
+    public function getClassName()
+    {
+        return $this->className;
+    }
+    public function getArmorClass()
+    {
+        if($this->armor == null) $this->armor = $this->getStrength()/2 + $this->getEquippedStats(Stats::Defense);
+        return $this->armor;
+    }
+
+    public function isAlive()
+    {
+        return $this->vitality > 0;
+    }
+
+    public function getAttaqueClass()
+    {
+        return  $this->getStrength() + $this->getEquippedStats(Stats::Damage);
+    }
+     public function resetCache(): void
+    {
+        $this->inventoryCache = [];
+        $this->statsCache = [];
+    }
+
+    public function getId(){
+        return $this->id;
+    }
+
+
 
     // Admin Methods
     public function deleteById($id)

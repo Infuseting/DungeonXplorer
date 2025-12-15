@@ -7,6 +7,17 @@ use App\Config\Database;
 class Monster
 {
     private $db;
+    
+    // Properties for Combat Logic
+    private $name;
+    private $strength;
+    private $vitality;
+    private $intelligence;
+    private $dexterity;
+    private $defense;
+    private $attaque;
+    private $imagePath;
+    private $sallePath;
 
     public function __construct()
     {
@@ -14,7 +25,7 @@ class Monster
     }
 
     /**
-     * Get all monsters
+     * Get all monsters (Admin)
      * 
      * @return array
      */
@@ -23,9 +34,18 @@ class Monster
         $result = $this->db->query("SELECT * FROM monsters ORDER BY name ASC");
         return $result->fetch_all(MYSQLI_ASSOC);
     }
+    
+    /**
+     * Alias for getAll to satisfy potential Combat calls (if any)
+     */
+    public function findAll()
+    {
+        return $this->getAll();
+    }
 
     /**
      * Find monster by ID
+     * Compatible with Admin (returns array) and Combat (populates object)
      * 
      * @param int $id
      * @return array|null
@@ -35,12 +55,29 @@ class Monster
         $stmt = $this->db->prepare("SELECT * FROM monsters WHERE id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
-        $result = $stmt->get_result();
-        return $result->fetch_assoc();
+        $result = $stmt->get_result()->fetch_assoc();
+        
+        if ($result) {
+            // Populate Object Properties (Combat Mode)
+            $this->name = $result['name'];
+            $this->imagePath = $result['image_path'];
+            $this->sallePath = $result['salle_path'];
+
+            $json = $result['base_stats_json'];
+            $stats = json_decode($json, true);
+            $this->strength = $stats['strength'] ?? 0;
+            $this->vitality = $stats['vitality'] ?? 0;
+            $this->intelligence = $stats['intelligence'] ?? 0;
+            $this->dexterity = $stats['dexterity'] ?? 0;
+            $this->defense = $stats['defense'] ?? 0;
+            $this->attaque = $stats['attaque'] ?? 0;
+        }
+
+        return $result;
     }
 
     /**
-     * Create a new monster
+     * Create a new monster (Admin)
      * 
      * @param array $data
      * @return int|false
@@ -71,7 +108,7 @@ class Monster
     }
 
     /**
-     * Update a monster
+     * Update a monster (Admin)
      * 
      * @param int $id
      * @param array $data
@@ -102,7 +139,7 @@ class Monster
     }
 
     /**
-     * Delete a monster
+     * Delete a monster (Admin)
      * 
      * @param int $id
      * @return bool
@@ -112,5 +149,89 @@ class Monster
         $stmt = $this->db->prepare("DELETE FROM monsters WHERE id = ?");
         $stmt->bind_param("i", $id);
         return $stmt->execute();
+    }
+
+    // ==========================================
+    // COMBAT METHODS (Getters & Logic)
+    // ==========================================
+
+    public function getName()
+    {
+        return $this->name;
+    }  
+
+    public function getSallePath()
+    {
+        return $this->sallePath;
+    }
+
+    public function getImagePath()
+    {
+        return $this->imagePath;
+    }
+    
+    public function unsetDb()
+    {
+        $this->db = null;
+    }
+
+    public function getStrength()
+    {
+        return $this->strength;
+    }
+
+    public function getVitality()
+    {
+        return $this->vitality;
+    }
+
+    public function getIntelligence()
+    {
+        return $this->intelligence;
+    }
+    
+    public function getDexterity()
+    {
+        return $this->dexterity;
+    }
+
+    public function getDefense()
+    {
+        return $this->defense;
+    }
+
+    public function getAttaque()
+    {
+        return $this->attaque;
+    }
+
+    public function toString()
+    {
+        return "Monster: " . $this->name . " (STR: " . $this->strength . ", VIT: " . $this->vitality . ", INT: " . $this->intelligence . ", DEX: " . $this->dexterity . ")";
+    }
+
+    public function setVitality($vitality)
+    {
+        $this->vitality = $vitality;
+    }
+
+    public function getArmorClass()
+    {
+        return $this->getStrength()/2 + $this->getDefense()/1.5;
+    }
+
+    public function getAttaqueClass()
+    {
+        return $this->getStrength() + $this->getAttaque();
+    }
+
+    public function isAlive()
+    {
+        return $this->vitality > 0;
+    }
+    
+    public function reduceVitality($number)
+    {
+        $this->vitality -= $number;
     }
 }

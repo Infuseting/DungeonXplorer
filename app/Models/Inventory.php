@@ -26,6 +26,7 @@ class Inventory
         $stmt->execute();
         $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
+
         $inventory = [
             'equipped' => [],
             'inventory' => []

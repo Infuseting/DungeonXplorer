@@ -103,7 +103,10 @@ $router->mount('/game', function() use ($router) {
     // Quest API
     $router->post('/quest/accept', 'App\Controllers\GameController@acceptQuest');
     $router->get('/quest/log', 'App\Controllers\GameController@getQuestLog');
-
+    
+    $router->get('/combat/start/(\d+)', 'App\Controllers\CombatController@startCombat');
+    $router->post('/combat/roll-dice', 'App\Controllers\CombatController@rollDice');
+    $router->post('/combat/action', 'App\Controllers\CombatController@performAction');
     // Inventory API
     $router->post('/inventory/move', 'App\Controllers\InventoryController@move');
     $router->post('/inventory/equip', 'App\Controllers\InventoryController@equip');
