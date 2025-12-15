@@ -351,15 +351,41 @@
 
                 <!-- Inventory Grid -->
                 <div id="inventory-grid" class="flex-1 flex flex-col bg-gray-900/50 p-2 lg:p-4 rounded-xl border border-gray-700 overflow-hidden min-h-0">
-                    <h3 class="text-xs lg:text-sm font-medium text-gray-400 mb-2 lg:mb-3 uppercase tracking-wider">Contenu</h3>
+                    <div class="flex flex-col gap-2 mb-2 lg:mb-3">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xs lg:text-sm font-medium text-gray-400 uppercase tracking-wider">Contenu</h3>
+                            
+                            <!-- Sort Controls -->
+                            <select id="sort-select" class="bg-gray-800 text-xs text-white border border-gray-600 rounded px-2 py-1 focus:outline-none focus:border-violet-500">
+                                <option value="default">Tri: Défaut</option>
+                                <option value="weight-desc">Poids (Lourd > Léger)</option>
+                                <option value="weight-asc">Poids (Léger > Lourd)</option>
+                                <option value="price-desc">Valeur (Chère > Moins)</option>
+                                <option value="name-asc">Nom (A-Z)</option>
+                            </select>
+                        </div>
+
+                        <!-- Filter Controls -->
+                        <div class="flex gap-2 text-xs overflow-x-auto pb-1" id="filter-buttons">
+                            <button class="filter-btn px-3 py-1 bg-violet-600 text-white rounded-full transition-colors whitespace-nowrap active" data-filter="all">Tout</button>
+                            <button class="filter-btn px-3 py-1 bg-gray-700 text-gray-300 hover:text-white rounded-full transition-colors whitespace-nowrap" data-filter="weapon">Armes</button>
+                            <button class="filter-btn px-3 py-1 bg-gray-700 text-gray-300 hover:text-white rounded-full transition-colors whitespace-nowrap" data-filter="armor">Armures</button>
+                            <button class="filter-btn px-3 py-1 bg-gray-700 text-gray-300 hover:text-white rounded-full transition-colors whitespace-nowrap" data-filter="consumable">Conso</button>
+                             <button class="filter-btn px-3 py-1 bg-gray-700 text-gray-300 hover:text-white rounded-full transition-colors whitespace-nowrap" data-filter="resource">Ressources</button>
+                        </div>
+                    </div>
                     
                     <div class="flex-1 overflow-auto">
                         <div id="inventory-container" class="grid grid-cols-4 lg:grid-cols-6 gap-2">
                             <?php if(isset($inventory['inventory']) && !empty($inventory['inventory'])): ?>
                                 <?php foreach($inventory['inventory'] as $item): ?>
-                                    <div class="w-16 h-16 bg-gray-800/80 border-2 border-gray-600 relative flex items-center justify-center transition-all duration-200 hover:border-gray-500 hover:bg-gray-700/90 [&.drag-over]:border-violet-500 [&.drag-over]:bg-violet-500/20 rounded-lg flex items-center justify-center relative bg-gray-800 hover:bg-gray-700 transition-colors" 
+                                    <div class="inventory-item-slot w-16 h-16 bg-gray-800/80 border-2 border-gray-600 relative flex items-center justify-center transition-all duration-200 hover:border-gray-500 hover:bg-gray-700/90 [&.drag-over]:border-violet-500 [&.drag-over]:bg-violet-500/20 rounded-lg flex items-center justify-center relative bg-gray-800 hover:bg-gray-700 transition-colors" 
                                          data-location="inventory" 
-                                         data-inventory-id="<?= $item['id'] ?>">
+                                         data-inventory-id="<?= $item['id'] ?>"
+                                         data-price="<?= $item['price'] ?? 0 ?>"
+                                         data-weight="<?= $item['weight'] ?? 0 ?>"
+                                         data-name="<?= htmlspecialchars($item['name']) ?>"
+                                         data-type="<?= htmlspecialchars($item['type']) ?>">
                                         <img src="/<?= $item['icon'] ?>" 
                                              class="w-12 h-12 object-contain cursor-grab active:cursor-grabbing item-icon" 
                                              draggable="true" 
@@ -383,6 +409,63 @@
                         </div>
                     </div>
                 </div>
+
+                <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    const container = document.getElementById('inventory-container');
+                    const sortSelect = document.getElementById('sort-select');
+                    const filterBtns = document.querySelectorAll('.filter-btn');
+                    let items = Array.from(document.querySelectorAll('.inventory-item-slot'));
+
+                    function filterItems(type) {
+                        items.forEach(item => {
+                            const itemType = item.dataset.type;
+                            if (type === 'all' || itemType === type || (type === 'armor' && ['head', 'chest', 'legs', 'boots', 'gloves', 'shoulders'].includes(itemType))) {
+                                item.classList.remove('hidden');
+                            } else {
+                                item.classList.add('hidden');
+                            }
+                        });
+                    }
+
+                    function sortItems(criteria) {
+                        const sorted = items.sort((a, b) => {
+                            switch(criteria) {
+                                case 'weight-desc':
+                                    return (parseFloat(b.dataset.weight) || 0) - (parseFloat(a.dataset.weight) || 0);
+                                case 'weight-asc':
+                                    return (parseFloat(a.dataset.weight) || 0) - (parseFloat(b.dataset.weight) || 0);
+                                case 'price-desc':
+                                    return (parseFloat(b.dataset.price) || 0) - (parseFloat(a.dataset.price) || 0);
+                                case 'name-asc':
+                                    return a.dataset.name.localeCompare(b.dataset.name);
+                                default: // 'default' - conserve original order (DOM order)
+                                    return 0; // We might need to re-fetch original index if we want strict reset
+                            }
+                        });
+                        
+                        // Re-append to container
+                        sorted.forEach(item => container.appendChild(item));
+                    }
+
+                    // Event Listeners
+                    sortSelect.addEventListener('change', (e) => sortItems(e.target.value));
+
+                    filterBtns.forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            // UI Update
+                            filterBtns.forEach(b => {
+                                b.classList.remove('bg-violet-600', 'text-white', 'active');
+                                b.classList.add('bg-gray-700', 'text-gray-300');
+                            });
+                            e.target.classList.remove('bg-gray-700', 'text-gray-300');
+                            e.target.classList.add('bg-violet-600', 'text-white', 'active');
+                            
+                            filterItems(e.target.dataset.filter);
+                        });
+                    });
+                });
+                </script>
             </div>
         </div>
     </div>
