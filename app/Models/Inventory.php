@@ -268,6 +268,27 @@ class Inventory
         }
     }
 
+    public function deleteItem($characterId, $inventoryItemId)
+    {
+        // 1. Verify ownership
+        $stmt = $this->db->prepare("SELECT id FROM character_inventory WHERE character_id = ? AND id = ?");
+        $stmt->bind_param("ii", $characterId, $inventoryItemId);
+        $stmt->execute();
+        if ($stmt->get_result()->num_rows === 0) {
+            return ['success' => false, 'message' => 'Item not found or not owned'];
+        }
+
+        // 2. Delete
+        $stmt = $this->db->prepare("DELETE FROM character_inventory WHERE id = ?");
+        $stmt->bind_param("i", $inventoryItemId);
+        
+        if ($stmt->execute()) {
+            return ['success' => true, 'message' => 'Item deleted'];
+        } else {
+            return ['success' => false, 'message' => 'Database error'];
+        }
+    }
+
     private function determineSlotForItem($itemSlotType)
     {
         // Map item slot types to actual slot names

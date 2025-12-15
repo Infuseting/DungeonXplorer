@@ -78,4 +78,26 @@ class InventoryController
 
         echo json_encode($result);
     }
+    public function drop()
+    {
+        if (!isset($_SESSION['user_id']) || !isset($_SESSION['character_id'])) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $itemId = $input['itemId'] ?? null;
+
+        if (!$itemId) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Missing itemId']);
+            exit;
+        }
+
+        $inventoryModel = new Inventory();
+        $result = $inventoryModel->deleteItem($_SESSION['character_id'], $itemId);
+
+        echo json_encode($result);
+    }
 }

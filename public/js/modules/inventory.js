@@ -11,6 +11,7 @@ let draggedItem = null;
 let draggedItemData = null;
 let selectedItem = null; // For mobile click-based interaction
 let longPressTimer = null;
+let contextMenuTarget = null; // Target item for context menu
 
 const CELL_SIZE = 40;
 const LONG_PRESS_DURATION = 500; // ms
@@ -33,6 +34,7 @@ export function initInventory() {
         } else {
             setupDraggable(item);
             setupTooltip(item);
+            setupContextMenu(item); // Add context menu for desktop
         }
     });
 
@@ -46,6 +48,9 @@ export function initInventory() {
 
     // Setup modal controls
     setupModalControls();
+
+    // Setup Context Menu Events
+    setupContextMenuEvents();
 }
 
 /**
@@ -126,14 +131,13 @@ function setupMobileInteraction(item) {
     item.addEventListener('touchend', (e) => {
         clearTimeout(longPressTimer);
 
-        // If it was a quick tap (not long press), handle selection
-        if (!document.getElementById('item-tooltip').classList.contains('hidden')) {
-            // Tooltip is showing, hide it
-            document.getElementById('item-tooltip').classList.add('hidden');
-        } else {
-            // Handle item selection/deselection
-            handleMobileItemClick(item);
+        // If it was a quick tap (not long press), handle selection -> show tooltip
+        if (!contextMenuTarget) {
+            // Handle item selection/deselection (Tooltip on mobile)
+            handleMobileItemClick(item, e);
         }
+        // Reset context menu target after a short delay to allow menu processing if needed
+        setTimeout(() => { contextMenuTarget = null; }, 100);
     });
 
     item.addEventListener('touchmove', () => {
@@ -141,10 +145,12 @@ function setupMobileInteraction(item) {
     });
 
     // Also support regular click for testing on desktop
+    // Also support regular click for testing 
     item.addEventListener('click', (e) => {
         if (isMobile()) {
             e.preventDefault();
-            handleMobileItemClick(item);
+            e.stopPropagation();
+            handleMobileItemClick(item, e); // Now shows tooltip
         }
     });
 }
@@ -154,19 +160,48 @@ function setupMobileInteraction(item) {
  * @param {HTMLElement} item - Item element
  * @param {Touch} touch - Touch object
  */
+/**
+ * Show Context Menu (replaces Mobile Tooltip for long press)
+ * @param {HTMLElement} item - Item element
+ * @param {Touch} touch - Touch object
+ */
 function showMobileTooltip(item, touch) {
+    // Legacy name kept, but now opens Context Menu
+    showContextMenu(item, touch.clientX, touch.clientY);
+}
+
+/**
+ * Handle mobile item click (selection)
+ * @param {HTMLElement} item - Item element
+ */
+/**
+ * Handle mobile item click (selection) -> Show Tooltip (Stats)
+ * @param {HTMLElement} item - Item element
+ * @param {Event} e - Event
+ */
+function handleMobileItemClick(item, e) {
+    // Show stats tooltip on click for mobile
     const tooltip = document.getElementById('item-tooltip');
+
+    // If clicking same item and tooltip is open, close it
+    if (selectedItem === item && !tooltip.classList.contains('hidden')) {
+        tooltip.classList.add('hidden');
+        selectedItem = null;
+        return;
+    }
+
+    selectedItem = item;
+
+    // Populate Tooltip Data (Reusing specific tooltip logic here or calling a helper)
     const nameEl = document.getElementById('tooltip-name');
     const typeEl = document.getElementById('tooltip-type');
     const statsEl = document.getElementById('tooltip-stats');
     const descEl = document.getElementById('tooltip-desc');
 
-    // Populate Data
     nameEl.textContent = item.dataset.name;
     typeEl.textContent = item.dataset.type;
     descEl.innerHTML = item.dataset.description;
 
-    // Parse and display stats
     statsEl.innerHTML = '';
     try {
         const stats = JSON.parse(item.dataset.stats);
@@ -177,49 +212,50 @@ function showMobileTooltip(item, touch) {
             statRow.innerHTML = `<span>${label}</span><span>${value}</span>`;
             statsEl.appendChild(statRow);
         }
-    } catch (e) {
-        console.error('Error parsing stats', e);
+    } catch (err) {
+        console.error('Error parsing stats', err);
     }
 
-    // Position tooltip
+    // Position Tooltip
+    // On mobile, maybe center it or put it near the item?
+    // Let's use the touch/click coordinates if available, or center of item
+
+    let clientX, clientY;
+
+    if (e.type.includes('touch')) {
+        // usually passed from touchend, which might not have touches list populated the same way
+        // We'll trust that e is valid. If it's a click event:
+        clientX = e.clientX || 0;
+        clientY = e.clientY || 0;
+    } else {
+        clientX = e.clientX;
+        clientY = e.clientY;
+    }
+
+    // If coordinates are 0 (sometimes distinct touch/click), center on item
+    if (!clientX && !clientY) {
+        const rect = item.getBoundingClientRect();
+        clientX = rect.left + rect.width / 2;
+        clientY = rect.top + rect.height / 2;
+    }
+
     const offset = 15;
-    let left = touch.clientX + offset;
-    let top = touch.clientY + offset;
+    let left = clientX + offset;
+    let top = clientY + offset;
 
     // Boundary checks
+    tooltip.classList.remove('hidden'); // Show first to get dimensions
     if (left + tooltip.offsetWidth > window.innerWidth) {
-        left = touch.clientX - tooltip.offsetWidth - offset;
+        left = Math.max(0, window.innerWidth - tooltip.offsetWidth - 10);
     }
     if (top + tooltip.offsetHeight > window.innerHeight) {
-        top = touch.clientY - tooltip.offsetHeight - offset;
+        top = clientY - tooltip.offsetHeight - offset;
     }
 
     tooltip.style.left = left + 'px';
     tooltip.style.top = top + 'px';
-    tooltip.classList.remove('hidden');
 
     playSound('click');
-}
-
-/**
- * Handle mobile item click (selection)
- * @param {HTMLElement} item - Item element
- */
-function handleMobileItemClick(item) {
-    if (selectedItem === item) {
-        // Deselect
-        selectedItem.classList.remove('selected');
-        selectedItem = null;
-        playSound('click');
-    } else {
-        // Select
-        if (selectedItem) {
-            selectedItem.classList.remove('selected');
-        }
-        selectedItem = item;
-        item.classList.add('selected');
-        playSound('click');
-    }
 }
 
 /**
@@ -759,6 +795,153 @@ export function refreshInventory() {
         } else {
             setupDraggable(item);
             setupTooltip(item);
+            setupContextMenu(item);
         }
     });
+}
+
+/**
+ * Setup Context Menu for an item
+ * @param {HTMLElement} item - Item element
+ */
+function setupContextMenu(item) {
+    item.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        showContextMenu(item, e.clientX, e.clientY);
+    });
+}
+
+/**
+ * Show Context Menu
+ * @param {HTMLElement} item 
+ * @param {number} x 
+ * @param {number} y 
+ */
+function showContextMenu(item, x, y) {
+    const menu = document.getElementById('item-context-menu');
+    const btnEquip = document.getElementById('ctx-equip');
+    const btnUnequip = document.getElementById('ctx-unequip');
+
+    contextMenuTarget = item;
+
+    // Determine state (Equipped vs Inventory)
+    const isInInventory = item.closest('[data-location="inventory"]');
+
+    if (isInInventory) {
+        btnEquip.classList.remove('hidden');
+        btnUnequip.classList.add('hidden');
+        btnEquip.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            Équiper
+        `;
+    } else {
+        btnEquip.classList.add('hidden');
+        btnUnequip.classList.remove('hidden');
+    }
+
+    // Position
+    menu.style.left = `${x}px`;
+    menu.style.top = `${y}px`;
+    menu.classList.remove('hidden');
+
+    // Boundary check
+    const rect = menu.getBoundingClientRect();
+    if (rect.right > window.innerWidth) {
+        menu.style.left = `${window.innerWidth - rect.width - 10}px`;
+    }
+    if (rect.bottom > window.innerHeight) {
+        menu.style.top = `${window.innerHeight - rect.height - 10}px`;
+    }
+}
+
+/**
+ * Setup Context Menu Global Events
+ */
+function setupContextMenuEvents() {
+    const menu = document.getElementById('item-context-menu');
+    const btnEquip = document.getElementById('ctx-equip');
+    const btnUnequip = document.getElementById('ctx-unequip');
+    const btnDrop = document.getElementById('ctx-drop');
+
+    // Close menu on outside click
+    document.addEventListener('click', (e) => {
+        if (!menu.contains(e.target)) {
+            menu.classList.add('hidden');
+        }
+    });
+
+    document.addEventListener('contextmenu', (e) => {
+        if (!e.target.closest('.item-icon')) {
+            menu.classList.add('hidden');
+        }
+    });
+
+    // Action: Equip
+    btnEquip.addEventListener('click', () => {
+        if (contextMenuTarget) {
+            quickEquipItem(contextMenuTarget.dataset.id);
+            menu.classList.add('hidden');
+        }
+    });
+
+    // Action: Unequip
+    btnUnequip.addEventListener('click', () => {
+        if (contextMenuTarget) {
+            const slot = contextMenuTarget.closest('.slot');
+            if (slot && slot.dataset.slot) {
+                // Move to inventory
+                moveItem(contextMenuTarget.dataset.id, 'inventory');
+            }
+            menu.classList.add('hidden');
+        }
+    });
+
+    // Action: Drop
+    btnDrop.addEventListener('click', () => {
+        if (contextMenuTarget) {
+            if (confirm('Êtes-vous sûr de vouloir jeter cet objet définitivement ?')) {
+                dropItem(contextMenuTarget.dataset.id);
+            }
+            menu.classList.add('hidden');
+        }
+    });
+}
+
+/**
+ * Drop item (delete)
+ * @param {string} itemId 
+ */
+function dropItem(itemId) {
+    fetch('/game/inventory/drop', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ itemId: itemId })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove from DOM
+                const allInstances = document.querySelectorAll(`.item-icon[data-id="${itemId}"]`);
+                allInstances.forEach(item => {
+                    const parent = item.closest('.slot');
+                    if (parent && parent.dataset.location === 'inventory') {
+                        parent.remove();
+                    } else {
+                        item.remove();
+                    }
+                });
+                showToast('Objet jeté', 'info');
+                playSound('trash'); // Assuming sound exists or fails silently
+            } else {
+                showToast(data.message || 'Impossible de jeter l\'objet', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Erreur serveur', 'error');
+        });
 }
