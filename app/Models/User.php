@@ -109,4 +109,18 @@ class User
         $stmt->bind_param("i", $userId);
         return $stmt->execute();
     }
+
+    public function updateProfile($userId, $username)
+    {
+        $stmt = $this->db->prepare("UPDATE users SET username = ? WHERE id = ?");
+        $stmt->bind_param("si", $username, $userId);
+        return $stmt->execute();
+    }
+
+    public function updateEmail($userId, $email)
+    {
+        $stmt = $this->db->prepare("UPDATE users SET email = ? WHERE id = ?");
+        $stmt->bind_param("si", $email, $userId);
+        return $stmt->execute();
+    }
 }

@@ -207,6 +207,11 @@ $router->mount('/admin', function() use ($router) {
     $router->post('/users/reset-password/(\d+)', 'App\Controllers\AdminUserController@resetPassword');
     $router->post('/users/delete/(\d+)', 'App\Controllers\AdminUserController@delete');
     
+    // User Profile Settings (Self)
+    $router->post('/user/update-profile', 'App\Controllers\UserController@updateProfile');
+    $router->post('/user/update-email', 'App\Controllers\UserController@updateEmail');
+    $router->post('/user/update-password', 'App\Controllers\UserController@updatePassword');
+
     // Character Management
     $router->get('/characters', 'App\Controllers\AdminCharacterController@index');
     $router->post('/characters/delete/(\d+)', 'App\Controllers\AdminCharacterController@delete');
