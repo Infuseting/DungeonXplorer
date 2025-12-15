@@ -110,7 +110,7 @@ public function getAppearance(){
 
     public function findById($id)
     {
-        $stmt = $this->db->prepare("SELECT c.id,cl.name as class_name,c.name,c.appearance, c.class_id, c.gold, cs.level, cs.xp, cs.strength,cs.dexterity,cs.intelligence,cs.vitality  FROM characters c  Join character_stats cs on c.id=cs.character_id join classes cl on cl.id = c.class_id WHERE c.id = ?");
+        $stmt = $this->db->prepare("SELECT c.id, c.user_id, cl.name as class_name,c.name,c.appearance, c.class_id, c.gold, cs.level, cs.xp, cs.strength,cs.dexterity,cs.intelligence,cs.vitality  FROM characters c  Join character_stats cs on c.id=cs.character_id join classes cl on cl.id = c.class_id WHERE c.id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
             $data= $stmt->get_result()->fetch_assoc();

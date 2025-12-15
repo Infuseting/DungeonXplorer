@@ -32,6 +32,18 @@ $router->get('/logout', 'App\Controllers\AuthController@logout');
 $router->get('/forgot-password', 'App\Controllers\AuthController@forgotPassword');
 $router->post('/forgot-password', 'App\Controllers\AuthController@forgotPasswordPost');
 
+// User Profile & OAuth (Public/Protected mixed, handled by controllers/middleware)
+$router->post('/user/update-profile', 'App\Controllers\UserController@updateProfile');
+$router->post('/user/update-email', 'App\Controllers\UserController@updateEmail');
+$router->post('/user/update-password', 'App\Controllers\UserController@updatePassword');
+$router->get('/user/connected-accounts', 'App\Controllers\OAuthController@getConnectedAccounts'); // Should likely be protected
+
+// OAuth Social Login
+$router->get('/oauth/login/(\w+)', 'App\Controllers\OAuthController@redirect');
+$router->get('/oauth/callback/(\w+)', 'App\Controllers\OAuthController@callback');
+$router->post('/oauth/callback/(\w+)', 'App\Controllers\OAuthController@callback');
+$router->post('/oauth/unlink/(\w+)', 'App\Controllers\OAuthController@unlink');
+
 // API Routes (AVANT les routes protégées pour éviter les conflits)
 $router->get('/api/character/(\d+)/render', function($characterId) {
     if (!isset($_SESSION['user_id'])) {
@@ -208,9 +220,7 @@ $router->mount('/admin', function() use ($router) {
     $router->post('/users/delete/(\d+)', 'App\Controllers\AdminUserController@delete');
     
     // User Profile Settings (Self)
-    $router->post('/user/update-profile', 'App\Controllers\UserController@updateProfile');
-    $router->post('/user/update-email', 'App\Controllers\UserController@updateEmail');
-    $router->post('/user/update-password', 'App\Controllers\UserController@updatePassword');
+
 
     // Character Management
     $router->get('/characters', 'App\Controllers\AdminCharacterController@index');
