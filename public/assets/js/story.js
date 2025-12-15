@@ -315,17 +315,9 @@ async function collectLoot(lootId) {
 // Expose for inline onclicks
 // Expose for inline onclicks
 window.startCombat = (monsterId, options = {}) => {
-    let msg = "Combat non implémenté. Simuler une victoire ?";
-    if (options.initiative === 'enemy') {
-        msg = "⚠️ ÉCHEC DE LA FUITE !\nLe monstre a l'initiative et vous attaque !\n\n" + msg;
-    }
-
-    // Simulating combat victory for now since combat system is not integrated
-    // In real game, this would transition to combat view
-    if (confirm(msg)) {
-        showToast('Monstre vaincu !', 'success');
-        removeMonsterFromUI(monsterId);
-    }
+    // Redirect to the real combat system
+    // Identify via URL
+    window.location.href = `/game/combat/start/${monsterId}`;
 };
 
 window.attemptFlee = async (monsterId) => {

@@ -28,7 +28,31 @@ class CombatController
     
         $_SESSION['combat'] = $combat;
 
-        
+        // Check for initiative (e.g. from failed flee)
+        $initialData = null;
+        if (isset($_SESSION['combat_initiative']) && $_SESSION['combat_initiative'] === 'enemy') {
+            unset($_SESSION['combat_initiative']); // Consume flag
+            
+            // Run Monster Turn Immediately
+            $monsterResult = $combat->monsterTurn();
+            // $monsterResult is [$message, $bool] (bool is damage dealt?)
+            // Let's check Combat.php: monsterTurn returns [$message, $bool]. $bool seems unused in controller?
+            // Actually performAction uses $monsterMessage[1] as damageJ (damage to Joueur)
+            // But wtf, monsterTurn implementation:
+            // if successful attack: $bool = true. $damage calculated.
+            // Returns [$message, $bool].
+            // Wait, perform action: "damageJ" => $monsterMessage[1] ?? 
+            // In Combat.php: return [$message, $bool]; $bool is true on hit.
+            // Where is the damage value returned? It is NOT returned in monsterTurn!
+            // It modifies the player vitality directly. 
+            // We just need the message to show "Monster hit you for X". 
+            // The message contains the damage text.
+            
+            $initialData = [
+                'message' => $monsterResult[0],
+                'hit' => $monsterResult[1]
+            ];
+        }
 
         require_once __DIR__ . '/../Views/game/interfaceCombat.php';
     }

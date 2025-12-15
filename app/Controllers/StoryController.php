@@ -342,6 +342,8 @@ class StoryController
             if (!in_array($monsterId, $_SESSION[$sessionKey])) {
                 $_SESSION[$sessionKey][] = $monsterId;
             }
+        } else {
+             $_SESSION['combat_initiative'] = 'enemy';
         }
 
         echo json_encode([

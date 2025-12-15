@@ -431,6 +431,21 @@
                     ease: "power3.in"
                 });
             }  
+
+            // Initial Combat Data Injection
+            <?php if (isset($initialData) && $initialData): ?>
+                const initialData = <?php echo json_encode($initialData); ?>;
+                setTimeout(() => {
+                    const log = document.getElementById("combat-log");
+                    log.innerHTML += `<p class="text-red-400 font-semibold mb-1">⚠️ SURPRISE ATTACK!</p>`;
+                    log.innerHTML += `<p class="text-red-400 font-semibold mb-1">${initialData.message}</p>`;
+                    if (initialData.hit) {
+                        playerHit();
+                        // Update HP immediately
+                        document.getElementById('player-hp').textContent = <?php echo htmlspecialchars($characterModel->getVitality()); ?>;
+                    }
+                }, 500);
+            <?php endif; ?>
         </script>
     </body>
 </html>
