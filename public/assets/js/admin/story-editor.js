@@ -740,7 +740,15 @@ const storyEditor = {
         if (!node.monsters || node.monsters.length === 0) return '<div class="text-xs text-gray-600 italic">Aucun monstre</div>';
         return node.monsters.map(m => `
             <div class="flex justify-between items-center bg-gray-800 p-1.5 rounded text-xs">
-                <span class="text-gray-300">${this.escapeHtml(m.monster_name)} (Lvl ${m.monster_level})</span>
+                <div class="flex flex-col">
+                    <span class="text-gray-300">
+                        ${this.escapeHtml(m.monster_name)} (Lvl ${m.monster_level})
+                        ${m.is_boss ? '<span class="text-red-500 font-bold ml-1">BOSS</span>' : ''}
+                    </span>
+                    <span class="text-gray-500 text-[10px]">
+                        ${m.can_flee ? '🏃 Fuite possible' : '🔒 Fuite impossible'}
+                    </span>
+                </div>
                 <button onclick="storyEditor.removeEntity(${m.id}, 'monster')" class="text-red-400 hover:text-red-300">✕</button>
             </div>
         `).join('');
@@ -781,6 +789,12 @@ const storyEditor = {
                     <select id="entity_template_id" class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-white">
                         ${options}
                     </select>
+                </div>
+                <div class="mb-4">
+                    <label class="flex items-center gap-2 text-sm text-gray-300">
+                        <input type="checkbox" id="entity_can_flee" checked class="rounded bg-gray-900 border-gray-700 text-indigo-600">
+                        Fuite possible ?
+                    </label>
                 </div>
                 <!-- Optional: Custom override fields could go here -->
             `;
@@ -847,6 +861,8 @@ const storyEditor = {
         if (type === 'monster') {
             const templateId = document.getElementById('entity_template_id').value;
             formData.append('template_id', templateId);
+            const canFlee = document.getElementById('entity_can_flee').checked;
+            formData.append('can_flee', canFlee ? '1' : '0');
             // Default params from template will be handled by backend, or we could pass them here
         } else if (type === 'npc') {
             formData.append('npc_id', document.getElementById('entity_id').value);

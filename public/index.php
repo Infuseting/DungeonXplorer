@@ -126,6 +126,8 @@ $router->mount('/story', function() use ($router) {
     $router->get('/current', 'App\Controllers\StoryController@getCurrentNode');
     $router->post('/move', 'App\Controllers\StoryController@moveToNode');
     $router->post('/loot', 'App\Controllers\StoryController@collectLoot');
+    $router->post('/flee', 'App\Controllers\StoryController@attemptFlee');
+    $router->post('/clear-monsters', 'App\Controllers\StoryController@clearMonsters');
     $router->post('/exit', 'App\Controllers\StoryController@exitStory');
 });
 

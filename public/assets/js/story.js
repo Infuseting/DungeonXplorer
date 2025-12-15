@@ -28,6 +28,7 @@ async function loadCurrentNode() {
 
         storyState.currentNode = data.node;
         storyState.nodeStatus = data.status;
+        storyState.fledMonsters = data.fled_monsters || []; // Store fled IDs
         renderNode();
     } catch (error) {
         console.error('Error loading node:', error);
@@ -64,18 +65,22 @@ function renderNode() {
     // Update Exit Button
     const exitBtn = document.getElementById('exit-dungeon-btn');
     if (exitBtn) {
-        if (node.can_exit) {
-            exitBtn.classList.remove('hidden');
-        } else {
-            exitBtn.classList.add('hidden');
-        }
+        exitBtn.classList.toggle('hidden', !node.can_exit);
     }
 
     // Render Interactions
-    renderInteractions(node);
+    const hasActiveMonsters = renderInteractions(node);
 
-    // Render Choices
-    renderChoices(node);
+    // Render Choices - Hide if active monsters exist
+    const choicesDrawer = document.getElementById('choices-drawer');
+    if (hasActiveMonsters) {
+        choicesDrawer.classList.add('hidden'); // Or translate-y-full with pointer-events-none, but hidden is safer to prevent clicks
+        choicesDrawer.style.display = 'none'; // Force hide
+    } else {
+        choicesDrawer.style.display = 'block'; // Restore
+        choicesDrawer.classList.remove('hidden');
+        renderChoices(node);
+    }
 }
 
 function renderInteractions(node) {
@@ -88,21 +93,56 @@ function renderInteractions(node) {
     const npcsList = document.getElementById('npcs-list');
 
     let hasInteractions = false;
+    let activeMonstersCount = 0;
 
     // Monsters
     monstersList.innerHTML = '';
     if (node.monsters && node.monsters.length > 0) {
-        hasInteractions = true;
-        monstersContainer.classList.remove('hidden');
-        node.monsters.forEach(monster => {
-            const el = document.createElement('div');
-            el.className = 'bg-red-900/40 p-2 rounded border border-red-800 flex justify-between items-center';
-            el.innerHTML = `
-                <span class="font-bold text-red-200">${monster.monster_name} (Niv. ${monster.monster_level})</span>
-                <button class="bg-red-700 hover:bg-red-600 text-white px-2 py-1 rounded text-sm" onclick="startCombat(${monster.id})">Attaquer</button>
-            `;
-            monstersList.appendChild(el);
-        });
+        // Check if all monsters are fled
+        const totalMonsters = node.monsters.length;
+        const fledCount = node.monsters.filter(m => storyState.fledMonsters.includes(m.id)).length;
+        const allFled = totalMonsters > 0 && totalMonsters === fledCount;
+
+        if (allFled) {
+            // All fled: Hide UI, treat as no active monsters
+            monstersContainer.classList.add('hidden');
+            activeMonstersCount = 0;
+        } else {
+            // Not all fled: Show UI
+            hasInteractions = true;
+            monstersContainer.classList.remove('hidden');
+
+            node.monsters.forEach(monster => {
+                const isFled = storyState.fledMonsters.includes(monster.id);
+                if (!isFled) activeMonstersCount++;
+
+                const el = document.createElement('div');
+                // Style differently if fled
+                const bgClass = isFled ? 'bg-gray-800/60 border-gray-700 opacity-70' : 'bg-red-900/40 border-red-800';
+                el.className = `${bgClass} p-2 rounded border flex justify-between items-center transition-all`;
+
+                let actionsHtml = '';
+                if (isFled) {
+                    actionsHtml = '<span class="text-xs text-gray-400 font-bold border border-gray-500 px-2 py-1 rounded flex items-center">💨 A fui</span>';
+                } else {
+                    actionsHtml = `
+                        <div class="flex gap-2">
+                            ${(monster.can_flee === undefined || monster.can_flee == 1) ?
+                            `<button class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-sm" onclick="attemptFlee(${monster.id})">🏃 Fuir</button>` :
+                            '<span class="text-xs text-red-500 font-bold border border-red-500 px-1 py-1 rounded flex items-center">🔒 Combat Forcé</span>'
+                        }
+                            <button class="bg-red-700 hover:bg-red-600 text-white px-2 py-1 rounded text-sm" onclick="startCombat(${monster.id})">⚔️ Attaquer</button>
+                        </div>
+                    `;
+                }
+
+                el.innerHTML = `
+                    <span class="font-bold ${isFled ? 'text-gray-400' : 'text-red-200'}">${monster.monster_name} (Niv. ${monster.monster_level})</span>
+                    ${actionsHtml}
+                `;
+                monstersList.appendChild(el);
+            });
+        }
     } else {
         monstersContainer.classList.add('hidden');
     }
@@ -158,6 +198,7 @@ function renderInteractions(node) {
         if (mainContainer) mainContainer.classList.add('hidden');
     }
 
+    return activeMonstersCount > 0;
 }
 
 function renderChoices(node) {
@@ -272,6 +313,82 @@ async function collectLoot(lootId) {
 }
 
 // Expose for inline onclicks
-window.startCombat = (monsterId) => {
-    showToast('Combat non implémenté pour le moment', 'info');
+// Expose for inline onclicks
+window.startCombat = (monsterId, options = {}) => {
+    let msg = "Combat non implémenté. Simuler une victoire ?";
+    if (options.initiative === 'enemy') {
+        msg = "⚠️ ÉCHEC DE LA FUITE !\nLe monstre a l'initiative et vous attaque !\n\n" + msg;
+    }
+
+    // Simulating combat victory for now since combat system is not integrated
+    // In real game, this would transition to combat view
+    if (confirm(msg)) {
+        showToast('Monstre vaincu !', 'success');
+        removeMonsterFromUI(monsterId);
+    }
 };
+
+window.attemptFlee = async (monsterId) => {
+    try {
+        const formData = new FormData();
+        formData.append('story_id', STORY_ID);
+        formData.append('monster_id', monsterId);
+
+        const response = await fetch('/story/flee', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            showToast(data.message, 'success');
+            // Refresh to update UI states (fled status)
+            loadCurrentNode();
+        } else {
+            showToast(data.message, 'warning');
+            if (data.force_combat) {
+                setTimeout(() => {
+                    startCombat(monsterId, { initiative: 'enemy' });
+                }, 500);
+            }
+        }
+    } catch (error) {
+        console.error('Error fleeing:', error);
+    }
+};
+
+function removeMonsterFromUI(monsterId) {
+    const btn = document.querySelector(`button[onclick*="startCombat(${monsterId})"]`);
+    if (btn) {
+        const item = btn.closest('div');
+        item.remove();
+    }
+    checkRoomCleared();
+}
+
+async function checkRoomCleared() {
+    const list = document.getElementById('monsters-list');
+    if (list.children.length === 0) {
+        // All monsters gone
+        const container = document.getElementById('monsters-container');
+        container.classList.add('hidden');
+
+        // Tell backend we cleared the room
+        try {
+            const formData = new FormData();
+            formData.append('story_id', STORY_ID);
+
+            await fetch('/story/clear-monsters', {
+                method: 'POST',
+                body: formData
+            });
+
+            showToast('Zone sécurisée !', 'success');
+            // Reload to show NPCs/Loot
+            loadCurrentNode();
+
+        } catch (e) {
+            console.error(e);
+        }
+    }
+}

@@ -297,22 +297,24 @@ class StoryNode
     public function addMonster($nodeId, $monsterData)
     {
         $stmt = $this->db->prepare(
-            "INSERT INTO story_node_monsters (node_id, monster_name, monster_level, monster_stats, quantity, is_boss) 
-             VALUES (?, ?, ?, ?, ?, ?)"
+            "INSERT INTO story_node_monsters (node_id, monster_name, monster_level, monster_stats, quantity, is_boss, can_flee) 
+             VALUES (?, ?, ?, ?, ?, ?, ?)"
         );
         
         $statsJson = json_encode($monsterData['stats'] ?? []);
         $quantity = $monsterData['quantity'] ?? 1;
         $isBoss = $monsterData['is_boss'] ?? 0;
+        $canFlee = isset($monsterData['can_flee']) ? $monsterData['can_flee'] : 1; // Default to true (1)
         
         $stmt->bind_param(
-            "isssii", 
+            "isssiii", 
             $nodeId, 
             $monsterData['name'], 
             $monsterData['level'], 
             $statsJson,
             $quantity,
-            $isBoss
+            $isBoss,
+            $canFlee
         );
         
         if ($stmt->execute()) {

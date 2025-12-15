@@ -130,6 +130,10 @@ class StoryController
             $this->progressModel->markNodeVisited($characterId, $node['id']);
         }
 
+        // Get fled monsters for this session/node
+        $sessionKey = 'fled_monsters_' . $node['id'];
+        $fledMonsters = $_SESSION[$sessionKey] ?? [];
+
         // Filter loots: remove already collected ones
         if (!empty($node['loots'])) {
             foreach ($node['loots'] as $key => $loot) {
@@ -143,11 +147,22 @@ class StoryController
         // Filter monsters: remove if cleared
         if ($nodeStatus && $nodeStatus['monsters_cleared']) {
             $node['monsters'] = [];
+        } else {
+            // Enforce Order: Monsters > NPCs > Loot
+            // If monsters are present and not cleared, hide NPCs and Loot
+            if (!empty($node['monsters'])) {
+                $node['npcs'] = [];
+                $node['loots'] = [];
+                
+                // Add can_flee info if missing (it should be in * usually)
+                // Assuming story_node_monsters has the column, it's already in $node['monsters']
+            }
         }
 
         echo json_encode([
             'node' => $node,
-            'status' => $nodeStatus
+            'status' => $nodeStatus,
+            'fled_monsters' => $fledMonsters
         ]);
     }
 
@@ -172,7 +187,33 @@ class StoryController
         }
 
         $currentNodeId = $progress['current_node_id'];
-        error_log("Current node: $currentNodeId");
+        
+        // Custom Logic: Check if player can leave the room (Monsters cleared OR ALL Monsters fled)
+        $nodeStatus = $this->progressModel->getNodeStatus($characterId, $currentNodeId);
+        $monsters = $this->nodeModel->getMonsters($currentNodeId);
+        
+        $canMove = true;
+        if (!empty($monsters)) {
+            $areMonstersCleared = $nodeStatus && $nodeStatus['monsters_cleared'];
+            if (!$areMonstersCleared) {
+                // Check if all monsters are fled
+                $sessionKey = 'fled_monsters_' . $currentNodeId;
+                $fledMonsters = $_SESSION[$sessionKey] ?? [];
+                
+                $allFled = true;
+                foreach ($monsters as $m) {
+                    if (!in_array($m['id'], $fledMonsters)) {
+                        $allFled = false;
+                        break;
+                    }
+                }
+                
+                if (!$allFled) {
+                    echo json_encode(['success' => false, 'message' => 'Vous ne pouvez pas partir ! Il reste des monstres actifs.']);
+                    return;
+                }
+            }
+        }
         
         $connections = $this->nodeModel->getConnections($currentNodeId);
         $returnConnections = $this->nodeModel->getReturnConnections($currentNodeId);
@@ -192,11 +233,17 @@ class StoryController
         }
 
         if ($validMove) {
+            // Clear fled status for this node on exit
+            $sessionKey = 'fled_monsters_' . $currentNodeId;
+            if (isset($_SESSION[$sessionKey])) {
+                unset($_SESSION[$sessionKey]);
+            }
+
             $this->progressModel->updateProgress($characterId, $storyId, $nodeId);
             echo json_encode(['success' => true]);
         } else {
             error_log("Invalid move or conditions not met");
-            echo json_encode(['success' => false, 'message' => 'Invalid move or conditions not met']);
+            echo json_encode(['success' => false, 'message' => 'Déplacement invalide ou conditions non remplies']);
         }
     }
 
@@ -216,15 +263,11 @@ class StoryController
                 $character = $this->characterModel->findById($characterId);
                 return $character['level'] >= (int)$connection['condition_value'];
             case 'quest_active':
-                // Check if quest is active
-                // Need QuestModel method for this
                 return true; // Placeholder
             case 'quest_completed':
-                // Check if quest is completed
                 return true; // Placeholder
             case 'monster_killed':
-                // Check if monster killed in current node (or specific node?)
-                // Usually refers to clearing the room
+                // Check if monster killed in current node
                 $nodeStatus = $this->progressModel->getNodeStatus($characterId, $connection['from_node_id']);
                 return $nodeStatus && $nodeStatus['monsters_cleared'];
             default:
@@ -233,8 +276,101 @@ class StoryController
     }
 
     /**
-     * Collect loot
+     * Attempt to flee from a monster
      */
+    public function attemptFlee()
+    {
+        $characterId = $_SESSION['character_id'];
+        $storyId = $_POST['story_id'];
+        $monsterId = $_POST['monster_id']; // ID in story_node_monsters table
+
+        // Get monster details to check can_flee and difficulty
+        // We need a method to get specific monster instance.
+        // For now, we'll fetch all monsters in the node and find it.
+        $progress = $this->progressModel->getProgress($characterId, $storyId);
+        if (!$progress) {
+             echo json_encode(['success' => false, 'message' => 'Not in story']);
+             exit;
+        }
+        
+        $currentNodeId = $progress['current_node_id'];
+        $monsters = $this->nodeModel->getMonsters($currentNodeId);
+        $targetMonster = null;
+        foreach ($monsters as $m) {
+            if ($m['id'] == $monsterId) {
+                $targetMonster = $m;
+                break;
+            }
+        }
+
+        if (!$targetMonster) {
+            echo json_encode(['success' => false, 'message' => 'Monster not found']);
+            exit;
+        }
+
+        if (isset($targetMonster['can_flee']) && $targetMonster['can_flee'] == 0) {
+            echo json_encode(['success' => false, 'message' => 'Impossible de fuir ce monstre !']);
+            exit;
+        }
+
+        // Flee mechanics
+        // Chance = 50% + (Player Dex - Monster Level) * 2%
+        // Get Player Stats
+        $statsModel = new \App\Models\CharacterStats();
+        $stats = $statsModel->getEffectiveStats($characterId);
+        
+        // Fallback if stats not found (e.g. new char?)
+        $dexterity = $stats ? $stats['dexterity'] : 10;
+        
+        $monsterLevel = $targetMonster['monster_level'];
+        
+        $baseChance = 50;
+        $bonus = ($dexterity - $monsterLevel) * 2;
+        $chance = $baseChance + $bonus;
+        
+        // Clamp
+        $chance = max(5, min(95, $chance));
+        
+        $roll = rand(1, 100);
+        $success = $roll <= $chance;
+        
+        if ($success) {
+            $sessionKey = 'fled_monsters_' . $currentNodeId;
+            if (!isset($_SESSION[$sessionKey])) {
+                $_SESSION[$sessionKey] = [];
+            }
+            if (!in_array($monsterId, $_SESSION[$sessionKey])) {
+                $_SESSION[$sessionKey][] = $monsterId;
+            }
+        }
+
+        echo json_encode([
+            'success' => $success,
+            'roll' => $roll,
+            'chance' => $chance,
+            'force_combat' => !$success,
+            'message' => $success ? "Vous avez pris la fuite (Monstre unique) !" : "Échec de la fuite ! Le monstre vous bloque."
+        ]);
+    }
+
+    /**
+     * Mark room cleared (all monsters defeated/fled)
+     */
+    public function clearMonsters()
+    {
+        $characterId = $_SESSION['character_id'];
+        $storyId = $_POST['story_id'];
+        
+        // Simple security: verify we are in a node with monsters
+        $progress = $this->progressModel->getProgress($characterId, $storyId);
+        if ($progress) {
+            $this->progressModel->markNodeCleared($characterId, $progress['current_node_id']);
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['success' => false]);
+        }
+    }
+
     /**
      * Collect loot
      */
@@ -244,6 +380,17 @@ class StoryController
         $storyId = $_POST['story_id'];
         $nodeId = $_POST['node_id'];
         $lootId = $_POST['loot_id'];
+
+        // Enforce: Monsters must be cleared
+        $nodeStatus = $this->progressModel->getNodeStatus($characterId, $nodeId);
+        $monsters = $this->nodeModel->getMonsters($nodeId);
+        
+        if (!empty($monsters)) {
+            if (!$nodeStatus || !$nodeStatus['monsters_cleared']) {
+                 echo json_encode(['success' => false, 'message' => 'Vous devez d\'abord vaincre les monstres !']);
+                 return;
+            }
+        }
 
         // Verify loot exists in node
         $loots = $this->nodeModel->getLoots($nodeId);
@@ -272,8 +419,6 @@ class StoryController
             echo json_encode(['success' => false, 'message' => 'Invalid loot']);
         }
     }
-
-
 
     /**
      * Exit story

@@ -376,6 +376,7 @@ class AdminStoryController
                     'level' => $_POST['monster_level'] ?? 1,
                     'quantity' => $_POST['quantity'] ?? 1,
                     'is_boss' => isset($_POST['is_boss']) ? 1 : 0,
+                    'can_flee' => isset($_POST['can_flee']) ? 1 : 0,
                     'stats' => [] // Could be expanded to allow custom stats override
                 ];
                 
