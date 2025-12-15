@@ -92,6 +92,7 @@ class GameController
         }
 
         $points = $mapPointModel->getVisiblePointsForCharacter($mapId, $_SESSION['character_id']);
+        $points = $this->enrichPointsWithQuestStatus($points, $_SESSION['character_id']);
 
         echo json_encode([
             'success' => true,
@@ -122,6 +123,8 @@ class GameController
         }
         $mapPointModel = new \App\Models\MapPoint();
         $points = $mapPointModel->getVisiblePointsForCharacter($mapId, $_SESSION['character_id']);
+        $points = $this->enrichPointsWithQuestStatus($points, $_SESSION['character_id']);
+        
         echo json_encode([
             'success' => true,
             'points' => $points
@@ -439,5 +442,58 @@ class GameController
         }
         
         exit;
+    }
+
+    /**
+     * Check for available quests and add has_quest flag to points
+     */
+    private function enrichPointsWithQuestStatus($points, $characterId)
+    {
+        $npcModel = new \App\Models\NPC();
+        $playerQuestModel = new \App\Models\PlayerQuest();
+        $questModel = new \App\Models\Quest();
+        $characterModel = new \App\Models\Character();
+        
+        $character = $characterModel->findById($characterId);
+        $playerLevel = $character['level'] ?? 1;
+
+        foreach ($points as &$point) {
+            $point['has_quest'] = false;
+
+            if ($point['type'] === 'npc' && !empty($point['target_id'])) {
+                $npcId = $point['target_id'];
+                $allNpcQuests = $npcModel->getQuests($npcId);
+
+                foreach ($allNpcQuests as $quest) {
+                    // 1. Must be GIVER
+                    if (($quest['relation_type'] ?? 'GIVER') !== 'GIVER') continue;
+
+                    // 2. Check Level
+                    if ($playerLevel < $quest['min_level']) continue;
+
+                    // 3. Check if already started or completed
+                    $status = $playerQuestModel->getQuestStatus($characterId, $quest['id']);
+                    if ($status !== 'NOT_STARTED') continue;
+
+                    // 4. Check Prerequisites
+                    $prerequisites = $questModel->getPrerequisites($quest['id']);
+                    $prereqsMet = true;
+                    foreach ($prerequisites as $prereq) {
+                        $prereqStatus = $playerQuestModel->getQuestStatus($characterId, $prereq['required_quest_id']);
+                        if ($prereqStatus !== 'COMPLETED') {
+                            $prereqsMet = false;
+                            break;
+                        }
+                    }
+                    
+                    if ($prereqsMet) {
+                        $point['has_quest'] = true;
+                        break; // Found one available quest, no need to check others for this NPC
+                    }
+                }
+            }
+        }
+        
+        return $points;
     }
 }

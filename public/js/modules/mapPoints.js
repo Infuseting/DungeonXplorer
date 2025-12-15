@@ -154,14 +154,43 @@ export function initMapPoints(map, points) {
     // Add markers for each point
     points.forEach((point, index) => {
         console.log(`Adding marker ${index + 1}:`, point);
-        const marker = L.circleMarker([parseFloat(point.y), parseFloat(point.x)], {
-            radius: 8,
-            fillColor: getTypeColor(point.type),
-            color: '#fff',
-            weight: 2,
-            opacity: 1,
-            fillOpacity: 0.8
-        }).addTo(map);
+
+        let marker;
+
+        // If point has available quest, show exclamation mark
+        if (point.has_quest) {
+            const icon = L.divIcon({
+                className: 'quest-giver-icon',
+                html: `<div style="
+                    background-color: #fbbf24; 
+                    width: 24px; 
+                    height: 24px; 
+                    border-radius: 50%; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center; 
+                    border: 2px solid white;
+                    box-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+                    color: #fff;
+                    font-weight: bold;
+                    font-size: 16px;">!</div>`,
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+            });
+
+            marker = L.marker([parseFloat(point.y), parseFloat(point.x)], {
+                icon: icon
+            }).addTo(map);
+        } else {
+            marker = L.circleMarker([parseFloat(point.y), parseFloat(point.x)], {
+                radius: 8,
+                fillColor: getTypeColor(point.type),
+                color: '#fff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(map);
+        }
 
         console.log(`Marker ${index + 1} added at`, [parseFloat(point.y), parseFloat(point.x)]);
 
@@ -171,20 +200,22 @@ export function initMapPoints(map, points) {
             showPointDetails(point);
         });
 
-        // Hover effect
-        marker.on('mouseover', function () {
-            this.setStyle({
-                radius: 10,
-                weight: 3
+        // Hover effect (only for circle markers)
+        if (!point.has_quest) {
+            marker.on('mouseover', function () {
+                this.setStyle({
+                    radius: 10,
+                    weight: 3
+                });
             });
-        });
 
-        marker.on('mouseout', function () {
-            this.setStyle({
-                radius: 8,
-                weight: 2
+            marker.on('mouseout', function () {
+                this.setStyle({
+                    radius: 8,
+                    weight: 2
+                });
             });
-        });
+        }
 
         markers.push(marker);
     });
