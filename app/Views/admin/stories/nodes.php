@@ -55,6 +55,9 @@ ob_start();
 <script>
     const STORY_ID = <?= $story['id'] ?>;
     const INITIAL_NODES = <?= json_encode($nodes) ?>;
+    const AVAILABLE_MONSTERS = <?= json_encode($availableMonsters ?? []) ?>;
+    const AVAILABLE_NPCS = <?= json_encode($availableNPCs ?? []) ?>;
+    const AVAILABLE_ITEMS = <?= json_encode($availableItems ?? []) ?>;
 </script>
 <script src="/assets/js/admin/story-editor.js"></script>
 

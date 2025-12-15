@@ -95,4 +95,74 @@ class CharacterStats
         
         return $stmt->execute();
     }
+
+    /**
+     * Get effective stats (Base + Equipment + Penalties)
+     * @param int $characterId
+     * @return array
+     */
+    public function getEffectiveStats($characterId)
+    {
+        // 1. Get Base Stats
+        $baseStats = $this->findByCharacterId($characterId);
+        if (!$baseStats) return null;
+
+        $effectiveStats = [
+            'strength' => (int)$baseStats['strength'],
+            'dexterity' => (int)$baseStats['dexterity'],
+            'intelligence' => (int)$baseStats['intelligence'],
+            'vitality' => (int)$baseStats['vitality'],
+            
+        ];
+
+        // 2. Get Equipped Items
+        $inventoryModel = new Inventory();
+        $inventoryData = $inventoryModel->getCharacterInventory($characterId);
+        $equippedItems = $inventoryData['equipped'];
+
+        // 3. Calculate Bonus Stats from Equipment
+        foreach ($equippedItems as $item) {
+            if (!empty($item['stats'])) {
+                $itemStats = json_decode($item['stats'], true);
+                if ($itemStats) {
+                    foreach ($itemStats as $stat => $value) {
+                        // Map specific item stats to main stats if names match, or handle mapping
+                        // Assuming item stats keys match 'strength', 'dexterity', etc. for simplicity
+                        if (isset($effectiveStats[$stat])) {
+                            $effectiveStats[$stat] += (int)$value;
+                        }
+                    }
+                }
+            }
+        }
+
+        
+        $backpackCapacity = 0;
+        if (isset($equippedItems['backpack']) && !empty($equippedItems['backpack']['stats'])) {
+            $bpStats = json_decode($equippedItems['backpack']['stats'], true);
+            $backpackCapacity = (int)($bpStats['capacity'] ?? 0);
+        }
+
+        $maxWeight = 60 + $effectiveStats['strength'] + $backpackCapacity;
+        $currentWeight = $inventoryData['current_weight'];
+
+        // 5. Apply Overweight Penalty
+        $isOverweight = $currentWeight > $maxWeight;
+        
+        if ($isOverweight) {
+            foreach ($effectiveStats as $key => $val) {
+                $effectiveStats[$key] = floor($val * 0.5); // -50% penalty
+            }
+        }
+
+        return [
+            'stats' => $effectiveStats,
+            'base_stats' => $baseStats,
+            'weight' => [
+                'current' => $currentWeight,
+                'max' => $maxWeight,
+                'is_overweight' => $isOverweight
+            ]
+        ];
+    }
 }

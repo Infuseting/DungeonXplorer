@@ -234,6 +234,17 @@ $router->mount('/admin', function() use ($router) {
     $router->get('/procedural/(\d+)/loot', 'App\Controllers\AdminProceduralController@lootPools');
     $router->post('/procedural/(\d+)/loot/add', 'App\Controllers\AdminProceduralController@addLootPool');
     $router->post('/procedural/loot/delete/(\d+)', 'App\Controllers\AdminProceduralController@deleteLootPool');
+
+    // Monster Management
+    $router->get('/monsters', 'App\Controllers\AdminMonsterController@index');
+    $router->match('GET|POST', '/monsters/create', 'App\Controllers\AdminMonsterController@create');
+    $router->match('GET|POST', '/monsters/edit/(\d+)', 'App\Controllers\AdminMonsterController@edit');
+    $router->post('/monsters/delete/(\d+)', 'App\Controllers\AdminMonsterController@delete');
+
+    // Node Entity Management (API)
+    $router->get('/stories/nodes/(\d+)/entities', 'App\Controllers\AdminStoryController@getNodeEntities');
+    $router->post('/stories/nodes/entities/add', 'App\Controllers\AdminStoryController@addNodeEntity');
+    $router->post('/stories/nodes/entities/remove', 'App\Controllers\AdminStoryController@removeNodeEntity');
 });
 
 $router->set404('App\Controllers\ErrorController@error404');

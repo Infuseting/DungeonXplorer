@@ -288,4 +288,100 @@ class StoryNode
         $result = $stmt->get_result();
         return $result->fetch_assoc();
     }
+
+    // --- Entity Management Methods ---
+
+    /**
+     * Add a monster to a node
+     */
+    public function addMonster($nodeId, $monsterData)
+    {
+        $stmt = $this->db->prepare(
+            "INSERT INTO story_node_monsters (node_id, monster_name, monster_level, monster_stats, quantity, is_boss) 
+             VALUES (?, ?, ?, ?, ?, ?)"
+        );
+        
+        $statsJson = json_encode($monsterData['stats'] ?? []);
+        $quantity = $monsterData['quantity'] ?? 1;
+        $isBoss = $monsterData['is_boss'] ?? 0;
+        
+        $stmt->bind_param(
+            "isssii", 
+            $nodeId, 
+            $monsterData['name'], 
+            $monsterData['level'], 
+            $statsJson,
+            $quantity,
+            $isBoss
+        );
+        
+        if ($stmt->execute()) {
+            return $this->db->insert_id;
+        }
+        return false;
+    }
+
+    /**
+     * Remove a monster from a node
+     */
+    public function removeMonster($id)
+    {
+        $stmt = $this->db->prepare("DELETE FROM story_node_monsters WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        return $stmt->execute();
+    }
+
+    /**
+     * Add an NPC to a node
+     */
+    public function addNPC($nodeId, $npcId, $x = 0, $y = 0)
+    {
+        $stmt = $this->db->prepare(
+            "INSERT INTO story_node_npcs (node_id, npc_id, position_x, position_y) 
+             VALUES (?, ?, ?, ?)"
+        );
+        $stmt->bind_param("iidd", $nodeId, $npcId, $x, $y);
+        
+        if ($stmt->execute()) {
+            return $this->db->insert_id;
+        }
+        return false;
+    }
+
+    /**
+     * Remove an NPC from a node
+     */
+    public function removeNPC($id)
+    {
+        $stmt = $this->db->prepare("DELETE FROM story_node_npcs WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        return $stmt->execute();
+    }
+
+    /**
+     * Add loot to a node
+     */
+    public function addLoot($nodeId, $itemId, $quantity = 1, $chance = 1.0, $isGuaranteed = 0)
+    {
+        $stmt = $this->db->prepare(
+            "INSERT INTO story_node_loots (node_id, item_id, quantity, drop_chance, is_guaranteed) 
+             VALUES (?, ?, ?, ?, ?)"
+        );
+        $stmt->bind_param("iiidi", $nodeId, $itemId, $quantity, $chance, $isGuaranteed);
+        
+        if ($stmt->execute()) {
+            return $this->db->insert_id;
+        }
+        return false;
+    }
+
+    /**
+     * Remove loot from a node
+     */
+    public function removeLoot($id)
+    {
+        $stmt = $this->db->prepare("DELETE FROM story_node_loots WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        return $stmt->execute();
+    }
 }

@@ -299,16 +299,38 @@ const storyEditor = {
             
             <div class="mt-6 border-t border-gray-700 pt-4">
                 <h3 class="font-bold text-gray-300 mb-2">Contenu</h3>
-                <div class="space-y-2">
-                    <button class="w-full text-left px-3 py-2 bg-gray-750 hover:bg-gray-700 rounded text-sm text-gray-300">
-                        👾 Monstres (${node.monsters ? node.monsters.length : 0})
-                    </button>
-                    <button class="w-full text-left px-3 py-2 bg-gray-750 hover:bg-gray-700 rounded text-sm text-gray-300">
-                        👤 PNJs (${node.npcs ? node.npcs.length : 0})
-                    </button>
-                    <button class="w-full text-left px-3 py-2 bg-gray-750 hover:bg-gray-700 rounded text-sm text-gray-300">
-                        💎 Loots (${node.loots ? node.loots.length : 0})
-                    </button>
+                
+                <!-- Monsters Section -->
+                <div class="mb-2">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-sm text-gray-400">👾 Monstres</span>
+                        <button onclick="storyEditor.showAddEntityModal('monster')" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 rounded">Ajouter</button>
+                    </div>
+                    <div class="space-y-1" id="monsters-list">
+                        ${this.renderMonstersList(node)}
+                    </div>
+                </div>
+
+                <!-- NPCs Section -->
+                <div class="mb-2">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-sm text-gray-400">👤 PNJs</span>
+                        <button onclick="storyEditor.showAddEntityModal('npc')" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 rounded">Ajouter</button>
+                    </div>
+                    <div class="space-y-1" id="npcs-list">
+                        ${this.renderNPCsList(node)}
+                    </div>
+                </div>
+
+                <!-- Loots Section -->
+                <div class="mb-2">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-sm text-gray-400">💎 Loots</span>
+                        <button onclick="storyEditor.showAddEntityModal('loot')" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 rounded">Ajouter</button>
+                    </div>
+                    <div class="space-y-1" id="loots-list">
+                        ${this.renderLootsList(node)}
+                    </div>
                 </div>
             </div>
         `;
@@ -711,6 +733,195 @@ const storyEditor = {
         } catch (error) {
             console.error('Failed to delete connection:', error);
             alert('Erreur lors de la suppression');
+        }
+    },
+
+    renderMonstersList(node) {
+        if (!node.monsters || node.monsters.length === 0) return '<div class="text-xs text-gray-600 italic">Aucun monstre</div>';
+        return node.monsters.map(m => `
+            <div class="flex justify-between items-center bg-gray-800 p-1.5 rounded text-xs">
+                <span class="text-gray-300">${this.escapeHtml(m.monster_name)} (Lvl ${m.monster_level})</span>
+                <button onclick="storyEditor.removeEntity(${m.id}, 'monster')" class="text-red-400 hover:text-red-300">✕</button>
+            </div>
+        `).join('');
+    },
+
+    renderNPCsList(node) {
+        if (!node.npcs || node.npcs.length === 0) return '<div class="text-xs text-gray-600 italic">Aucun PNJ</div>';
+        return node.npcs.map(n => `
+            <div class="flex justify-between items-center bg-gray-800 p-1.5 rounded text-xs">
+                <span class="text-gray-300">${this.escapeHtml(n.name)}</span>
+                <button onclick="storyEditor.removeEntity(${n.id}, 'npc')" class="text-red-400 hover:text-red-300">✕</button>
+            </div>
+        `).join('');
+    },
+
+    renderLootsList(node) {
+        if (!node.loots || node.loots.length === 0) return '<div class="text-xs text-gray-600 italic">Aucun loot</div>';
+        return node.loots.map(l => `
+            <div class="flex justify-between items-center bg-gray-800 p-1.5 rounded text-xs">
+                <span class="text-gray-300">${this.escapeHtml(l.name)} (${l.drop_chance * 100}%)</span>
+                <button onclick="storyEditor.removeEntity(${l.id}, 'loot')" class="text-red-400 hover:text-red-300">✕</button>
+            </div>
+        `).join('');
+    },
+
+    showAddEntityModal(type) {
+        if (!this.selectedNode) return;
+
+        let html = '';
+        let title = '';
+
+        if (type === 'monster') {
+            title = 'Ajouter un Monstre';
+            const options = AVAILABLE_MONSTERS.map(m => `<option value="${m.id}">${m.name} (Lvl ${m.level_min}-${m.level_max})</option>`).join('');
+            html = `
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-400 mb-1">Modèle de Monstre</label>
+                    <select id="entity_template_id" class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-white">
+                        ${options}
+                    </select>
+                </div>
+                <!-- Optional: Custom override fields could go here -->
+            `;
+        } else if (type === 'npc') {
+            title = 'Ajouter un PNJ';
+            const options = AVAILABLE_NPCS.map(n => `<option value="${n.id}">${n.name}</option>`).join('');
+            html = `
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-400 mb-1">PNJ</label>
+                    <select id="entity_id" class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-white">
+                        ${options}
+                    </select>
+                </div>
+            `;
+        } else if (type === 'loot') {
+            title = 'Ajouter un Loot';
+            const options = AVAILABLE_ITEMS.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
+            html = `
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-400 mb-1">Item</label>
+                    <select id="entity_id" class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-white">
+                        ${options}
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-400 mb-1">Chance de drop (0.0 - 1.0)</label>
+                    <input type="number" id="entity_chance" value="1.0" step="0.1" min="0" max="1" class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-white">
+                </div>
+            `;
+        }
+
+        // Simple modal implementation using prompt/confirm is limited, so we act directly or build a small overlay.
+        // For simplicity in this context, let's use a custom overlay or just inject into the properties panel temporarily?
+        // Let's create a temporary overlay div
+
+        const overlay = document.createElement('div');
+        overlay.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+        overlay.innerHTML = `
+            <div class="bg-gray-800 p-6 rounded-lg w-96 border border-gray-700 shadow-xl">
+                <h3 class="text-xl font-bold text-white mb-4">${title}</h3>
+                ${html}
+                <div class="flex justify-end gap-2 mt-6">
+                    <button id="cancel-entity" class="text-gray-400 hover:text-white px-4 py-2">Annuler</button>
+                    <button id="confirm-entity" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded">Ajouter</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        document.getElementById('cancel-entity').onclick = () => overlay.remove();
+        document.getElementById('confirm-entity').onclick = () => {
+            this.confirmAddEntity(type);
+            overlay.remove();
+        };
+    },
+
+    async confirmAddEntity(type) {
+        if (!this.selectedNode) return;
+
+        const formData = new FormData();
+        formData.append('node_id', this.selectedNode.id);
+        formData.append('type', type);
+
+        if (type === 'monster') {
+            const templateId = document.getElementById('entity_template_id').value;
+            formData.append('template_id', templateId);
+            // Default params from template will be handled by backend, or we could pass them here
+        } else if (type === 'npc') {
+            formData.append('npc_id', document.getElementById('entity_id').value);
+        } else if (type === 'loot') {
+            formData.append('item_id', document.getElementById('entity_id').value);
+            formData.append('drop_chance', document.getElementById('entity_chance').value);
+        }
+
+        try {
+            const response = await fetch('/admin/stories/nodes/entities/add', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                // Refresh entity lists
+                await this.refreshNodeEntities(this.selectedNode.id);
+            } else {
+                alert('Erreur: ' + data.message);
+            }
+        } catch (error) {
+            console.error('Error adding entity:', error);
+            alert('Erreur réseau');
+        }
+    },
+
+    async removeEntity(id, type) {
+        if (!confirm('Supprimer cet élément ?')) return;
+
+        const formData = new FormData();
+        formData.append('entity_id', id);
+        formData.append('type', type);
+
+        try {
+            const response = await fetch('/admin/stories/nodes/entities/remove', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                if (this.selectedNode) {
+                    await this.refreshNodeEntities(this.selectedNode.id);
+                }
+            } else {
+                alert('Erreur: ' + data.message);
+            }
+        } catch (error) {
+            console.error('Error removing entity:', error);
+        }
+    },
+
+    async refreshNodeEntities(nodeId) {
+        const response = await fetch(`/admin/stories/nodes/${nodeId}/entities`);
+        const data = await response.json();
+
+        if (data.success) {
+            // Update the node object in local state
+            const node = this.nodes.find(n => n.id === nodeId);
+            if (node) {
+                node.monsters = data.monsters;
+                node.npcs = data.npcs;
+                node.loots = data.loot; // Backend sends 'loot' key, frontend model expects 'loots' based on initial load naming? 
+                // Wait, initial load naming check: 
+                // in StoryNode.php getFullNodeData returns 'loots'.
+                // in AdminStoryController getNodeEntities returns 'loot'.
+                // I should sync them. Let's fix the assignment here.
+                node.loots = data.loot;
+
+                // Refresh View if selected
+                if (this.selectedNode && this.selectedNode.id === nodeId) {
+                    this.showNodeProperties(node);
+                }
+            }
         }
     },
 

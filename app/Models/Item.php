@@ -26,4 +26,9 @@ class Item
         $result = $this->db->query("SELECT * FROM items");
         return $result->fetch_all(MYSQLI_ASSOC);
     }
+
+    public function getAll()
+    {
+        return $this->findAll();
+    }
 }
