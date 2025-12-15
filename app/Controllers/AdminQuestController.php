@@ -60,7 +60,9 @@ class AdminQuestController
                 'name' => $_POST['name'] ?? '',
                 'description' => $_POST['description'] ?? '',
                 'min_level' => (int)($_POST['min_level'] ?? 1),
-                'intro_text' => $_POST['intro_text'] ?? ''
+                'intro_text' => $_POST['intro_text'] ?? '',
+                'xp_reward' => (int)($_POST['xp_reward'] ?? 0),
+                'gold_reward' => (int)($_POST['gold_reward'] ?? 0)
             ];
             
             $questId = $questModel->create($data);
@@ -92,7 +94,9 @@ class AdminQuestController
                 'name' => $_POST['name'] ?? '',
                 'description' => $_POST['description'] ?? '',
                 'min_level' => (int)($_POST['min_level'] ?? 1),
-                'intro_text' => $_POST['intro_text'] ?? ''
+                'intro_text' => $_POST['intro_text'] ?? '',
+                'xp_reward' => (int)($_POST['xp_reward'] ?? 0),
+                'gold_reward' => (int)($_POST['gold_reward'] ?? 0)
             ];
             
             $questModel->update($id, $data);
@@ -142,6 +146,10 @@ class AdminQuestController
         // Load NPCs for TALK_NPC objectives
         $npcModel = new \App\Models\NPC();
         $allNPCs = $npcModel->getAll();
+
+        // Load all items for rewards selection
+        $itemModel = new \App\Models\Item();
+        $allItems = $itemModel->getAll();
         
         require_once __DIR__ . '/../Views/admin/quests/edit.php';
     }
@@ -155,6 +163,54 @@ class AdminQuestController
         $questModel->delete($id);
         
         header('Location: /admin/quests');
+        exit;
+    }
+
+    /**
+     * Add reward item (API)
+     */
+    public function addRewardItem()
+    {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true);
+            
+            if (!$data || empty($data['quest_id']) || empty($data['item_id'])) {
+                echo json_encode(['success' => false, 'message' => 'Données invalides']);
+                exit;
+            }
+            
+            $questModel = new \App\Models\Quest();
+            $success = $questModel->addRewardItem((int)$data['quest_id'], (int)$data['item_id'], (int)($data['quantity'] ?? 1));
+            
+            echo json_encode(['success' => $success]);
+        }
+        exit;
+    }
+
+    /**
+     * Remove reward item (API)
+     */
+    public function removeRewardItem()
+    {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true);
+            
+            if (!$data || empty($data['id'])) {
+                echo json_encode(['success' => false, 'message' => 'ID manquant']);
+                exit;
+            }
+            
+            $questModel = new \App\Models\Quest();
+            $success = $questModel->removeRewardItem((int)$data['id']);
+            
+            echo json_encode(['success' => $success]);
+        }
         exit;
     }
     

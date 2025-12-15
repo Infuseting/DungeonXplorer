@@ -197,8 +197,9 @@ $router->mount('/admin', function() use ($router) {
     $router->post('/quests/stage/add-unlock', 'App\Controllers\AdminQuestController@addMapUnlock');
     $router->post('/quests/stage/remove-unlock', 'App\Controllers\AdminQuestController@removeMapUnlock');
     $router->post('/quests/prerequisite/add', 'App\Controllers\AdminQuestController@addPrerequisite');
-    $router->post('/quests/prerequisite/add', 'App\Controllers\AdminQuestController@addPrerequisite');
     $router->post('/quests/prerequisite/remove', 'App\Controllers\AdminQuestController@removePrerequisite');
+    $router->post('/quests/reward/item/add', 'App\Controllers\AdminQuestController@addRewardItem');
+    $router->post('/quests/reward/item/remove', 'App\Controllers\AdminQuestController@removeRewardItem');
     
     // User Management
     $router->get('/users', 'App\Controllers\AdminUserController@index');

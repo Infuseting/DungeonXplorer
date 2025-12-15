@@ -12,6 +12,7 @@ ob_start();
     <button class="tab-btn active" onclick="switchTab('general')">📋 Général</button>
     <button class="tab-btn" onclick="switchTab('stages')">🎯 Étapes & Objectifs</button>
     <button class="tab-btn" onclick="switchTab('prerequisites')">🔒 Prérequis</button>
+    <button class="tab-btn" onclick="switchTab('rewards')">🎁 Récompenses</button>
 </div>
 
 <!-- General Tab -->
@@ -35,6 +36,16 @@ ob_start();
         <div class="form-group">
             <label for="min_level">Niveau minimum requis</label>
             <input type="number" id="min_level" name="min_level" value="<?= $quest['min_level'] ?>" min="1">
+        </div>
+
+        <div class="form-group">
+            <label for="xp_reward">Gain d'XP</label>
+            <input type="number" id="xp_reward" name="xp_reward" value="<?= $quest['xp_reward'] ?? 0 ?>" min="0">
+        </div>
+
+        <div class="form-group">
+            <label for="gold_reward">Gain d'Or</label>
+            <input type="number" id="gold_reward" name="gold_reward" value="<?= $quest['gold_reward'] ?? 0 ?>" min="0">
         </div>
         
         <div class="form-actions">
@@ -129,12 +140,43 @@ ob_start();
                 <button onclick="addPrerequisite()" class="btn btn-primary">➕ Ajouter</button>
             </div>
         </div>
-        
+
         <ul class="prerequisites-list">
             <?php foreach ($prerequisites as $prereq): ?>
                 <li class="prerequisite-item">
                     <span>✅ <?= htmlspecialchars($prereq['name']) ?></span>
                     <button onclick="removePrerequisite(<?= $prereq['id'] ?>)" class="btn btn-xs btn-danger">🗑️</button>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
+</div>
+
+<!-- Rewards Tab -->
+<div id="tab-rewards" class="tab-content">
+    <div class="prerequisites-container">
+        <h3>Récompenses (Objets)</h3>
+        <p>Objets donnés au joueur en plus de l'XP et de l'Or.</p>
+        
+        <div class="form-group">
+            <label>Ajouter un objet</label>
+            <div style="display: flex; gap: 0.5rem;">
+                <select id="reward-item-select" style="flex: 2; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="">-- Choisir un objet --</option>
+                    <?php foreach ($allItems as $item): ?>
+                        <option value="<?= $item['id'] ?>"><?= htmlspecialchars($item['name']) ?> (<?= $item['type'] ?>)</option>
+                    <?php endforeach; ?>
+                </select>
+                <input type="number" id="reward-item-qty" value="1" min="1" style="width: 80px; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                <button onclick="addRewardItem()" class="btn btn-primary">➕ Ajouter</button>
+            </div>
+        </div>
+        
+        <ul class="prerequisites-list">
+            <?php foreach ($quest['reward_items'] ?? [] as $reward): ?>
+                <li class="prerequisite-item">
+                    <span>🎁 <?= htmlspecialchars($reward['name']) ?> (x<?= $reward['quantity'] ?>)</span>
+                    <button onclick="removeRewardItem(<?= $reward['id'] ?>)" class="btn btn-xs btn-danger">🗑️</button>
                 </li>
             <?php endforeach; ?>
         </ul>
@@ -784,6 +826,48 @@ async function removeMapUnlock(stageId, mapPointId) {
             stage_id: stageId,
             map_point_id: mapPointId
         })
+    });
+    
+    const result = await response.json();
+    if (result.success) {
+        location.reload();
+    }
+}
+async function addRewardItem() {
+    const select = document.getElementById('reward-item-select');
+    const itemId = select.value;
+    const quantity = parseInt(document.getElementById('reward-item-qty').value) || 1;
+    
+    if (!itemId) {
+        alert('Sélectionnez un objet');
+        return;
+    }
+    
+    const response = await fetch('/admin/quests/reward/item/add', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            quest_id: questId,
+            item_id: parseInt(itemId),
+            quantity: quantity
+        })
+    });
+    
+    const result = await response.json();
+    if (result.success) {
+        location.reload();
+    } else {
+        alert(result.message || 'Erreur');
+    }
+}
+
+async function removeRewardItem(id) {
+    if (!confirm('Retirer cet objet ?')) return;
+    
+    const response = await fetch('/admin/quests/reward/item/remove', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({id: id})
     });
     
     const result = await response.json();

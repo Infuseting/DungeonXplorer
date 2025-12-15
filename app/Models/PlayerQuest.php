@@ -272,9 +272,54 @@ class PlayerQuest
             $updateStmt = $this->db->prepare("UPDATE player_quests SET status = 'COMPLETED', completed_at = NOW() WHERE id = ?");
             $updateStmt->bind_param("i", $playerQuestId);
             $updateStmt->execute();
+            
+            // Grant Rewards
+            $this->grantRewards($playerQuestId);
+            
             return true;
         }
     }
+
+    /**
+     * Grant rewards for completed quest
+     */
+    private function grantRewards($playerQuestId)
+    {
+        // Get Quest ID and Character ID
+        $stmt = $this->db->prepare("SELECT quest_id, character_id FROM player_quests WHERE id = ?");
+        $stmt->bind_param("i", $playerQuestId);
+        $stmt->execute();
+        $pq = $stmt->get_result()->fetch_assoc();
+        
+        if (!$pq) return;
+        
+        // Get Rewards
+        $questModel = new Quest();
+        $quest = $questModel->findById($pq['quest_id']); // get XP/Gold
+        $rewardItems = $questModel->getRewardItems($pq['quest_id']);
+        
+        // Grant XP & Gold
+        if (($quest['xp_reward'] ?? 0) > 0 || ($quest['gold_reward'] ?? 0) > 0) {
+            $sql = "UPDATE characters SET experience = experience + ?, gold = gold + ? WHERE id = ?";
+            $xp = $quest['xp_reward'] ?? 0;
+            $gold = $quest['gold_reward'] ?? 0;
+            $upd = $this->db->prepare($sql);
+            $upd->bind_param("iii", $xp, $gold, $pq['character_id']);
+            $upd->execute();
+        }
+        
+        // Grant Items
+        if (!empty($rewardItems)) {
+            $invModel = new Inventory();
+            foreach ($rewardItems as $reward) {
+                $qty = $reward['quantity'] ?? 1;
+                for ($i = 0; $i < $qty; $i++) {
+                    $invModel->addItem($pq['character_id'], $reward['item_id']);
+                }
+            }
+        }
+    }
+
     /**
      * Get full quest log for player character
      */
