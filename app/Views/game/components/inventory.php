@@ -385,7 +385,11 @@
                                          data-price="<?= $item['price'] ?? 0 ?>"
                                          data-weight="<?= $item['weight'] ?? 0 ?>"
                                          data-name="<?= htmlspecialchars($item['name']) ?>"
-                                         data-type="<?= htmlspecialchars($item['type']) ?>">
+                                         data-type="<?= htmlspecialchars($item['type']) ?>"
+                                         data-slot-type="<?= htmlspecialchars($item['item_slot_type']) ?>"
+                                         data-description="<?= htmlspecialchars($item['description']) ?>"
+                                         data-stats='<?= htmlspecialchars($item['stats']) ?>'
+                                         data-id="<?= $item['id'] ?>">
                                         <img src="/<?= $item['icon'] ?>" 
                                              class="w-12 h-12 object-contain cursor-grab active:cursor-grabbing item-icon" 
                                              draggable="true" 
@@ -415,8 +419,214 @@
                     const container = document.getElementById('inventory-container');
                     const sortSelect = document.getElementById('sort-select');
                     const filterBtns = document.querySelectorAll('.filter-btn');
+                    const tooltip = document.getElementById('item-tooltip');
                     let items = Array.from(document.querySelectorAll('.inventory-item-slot'));
 
+                    // Tooltip Logic
+                    const paperDollSlots = document.querySelectorAll('.slot'); // Equipped slots
+
+                    function showTooltip(e, itemElement) {
+                        const stats = JSON.parse(itemElement.dataset.stats || '{}');
+                        const name = itemElement.dataset.name;
+                        const type = itemElement.dataset.type;
+                        const desc = itemElement.dataset.description;
+                        const slotType = itemElement.dataset.slotType;
+                        const itemId = itemElement.dataset.id;
+                        
+                        console.log('Hover Item:', name, slotType, itemId);
+
+                        // Check for equipped item
+                        let equippedItem = null;
+                        
+                        let targetSlotName = null;
+                        if (['head', 'shoulders', 'amulet', 'chest', 'legs', 'boots', 'gloves', 'bracers', 'belt'].includes(slotType)) {
+                            targetSlotName = slotType;
+                        } else if (slotType === 'ring') {
+                            // Smart ring checking
+                            if (document.querySelector(`.slot[data-slot="ring_1"] .item-icon`)) {
+                                targetSlotName = 'ring_1';
+                                // If 1 is full, check 2 just to see if we should compare with 2 instead? 
+                                // For now, default to 1, or maybe 2 if 1 is empty? 
+                                // Actually better: If Ring 1 is empty and Ring 2 is full, compare with Ring 2? 
+                                // But usually we compare with the "primary" or "first available".
+                                // If I have a ring equipped in Slot 2, and Slot 1 is empty, and I hover a new ring... 
+                                // It should probably compare with Slot 2.
+                                // Let's refine:
+                                const r1 = document.querySelector(`.slot[data-slot="ring_1"] .item-icon`);
+                                const r2 = document.querySelector(`.slot[data-slot="ring_2"] .item-icon`);
+                                if (!r1 && r2) targetSlotName = 'ring_2';
+                                else targetSlotName = 'ring_1';
+                            } else {
+                                targetSlotName = 'ring_1';
+                            }
+                        } else if (slotType === 'main_hand') {
+                            targetSlotName = 'main_hand';
+                        } else if (slotType === 'off_hand') {
+                            targetSlotName = 'off_hand';
+                        }
+                        
+                        console.log('Target Slot:', targetSlotName);
+
+                        if (targetSlotName) {
+                            const equippedSlot = document.querySelector(`.slot[data-slot="${targetSlotName}"] .item-icon`);
+                            if (equippedSlot) {
+                                // Compare DOM elements to ensure we don't compare self to self (if hovering equipped item)
+                                // itemElement might be the DIV in grid, equippedSlot is IMG in paper doll.
+                                // Check IDs.
+                                if (equippedSlot.dataset.id !== itemId) {
+                                     equippedItem = {
+                                        name: equippedSlot.dataset.name,
+                                        type: equippedSlot.dataset.type,
+                                        stats: JSON.parse(equippedSlot.dataset.stats || '{}'),
+                                        icon: equippedSlot.src
+                                    };
+                                }
+                            }
+                        }
+
+                        // Render Tooltip
+                        if (equippedItem) {
+                            renderComparisonTooltip(name, type, stats, desc, equippedItem);
+                        } else {
+                            renderSingleTooltip(name, type, stats, desc);
+                        }
+
+                        // Position
+                        const rect = itemElement.getBoundingClientRect();
+                        tooltip.style.left = `${rect.right + 10}px`;
+                        tooltip.style.top = `${rect.top}px`;
+                        
+                        // Boundary checks
+                        tooltip.classList.remove('hidden');
+                        const tooltipRect = tooltip.getBoundingClientRect();
+                        if (tooltipRect.right > window.innerWidth) {
+                            tooltip.style.left = `${rect.left - tooltipRect.width - 10}px`;
+                        }
+                        if (tooltipRect.bottom > window.innerHeight) {
+                            tooltip.style.top = `${window.innerHeight - tooltipRect.height - 10}px`;
+                        }
+                    }
+
+                    function renderSingleTooltip(name, type, stats, desc) {
+                        tooltip.innerHTML = `
+                            <div class="tooltip-header mb-2 border-b border-gray-700 pb-1">
+                                <div class="font-bold text-violet-400 text-base">${name}</div>
+                                <div class="text-xs text-gray-500 uppercase">${type}</div>
+                            </div>
+                            <div class="space-y-1 mb-2">
+                                ${formatStats(stats)}
+                            </div>
+                            <div class="italic text-gray-400 text-xs border-t border-gray-700 pt-2">${desc || ''}</div>
+                        `;
+                        tooltip.className = "fixed bg-gray-900 border border-gray-600 p-3 rounded shadow-xl max-w-xs text-sm text-gray-300 z-50 pointer-events-none";
+                    }
+
+                    function renderComparisonTooltip(newName, newType, newStats, newDesc, equipped) {
+                         tooltip.innerHTML = `
+                            <div class="flex gap-4">
+                                <!-- Equipped -->
+                                <div class="w-1/2 border-r border-gray-700 pr-4 opacity-75">
+                                    <div class="text-xs text-gray-500 uppercase mb-1">Actuellement équipé</div>
+                                    <div class="font-bold text-gray-300 text-sm mb-1">${equipped.name}</div>
+                                    <div class="space-y-1 text-xs">
+                                        ${formatStats(equipped.stats)}
+                                    </div>
+                                </div>
+                                <!-- New -->
+                                <div class="w-1/2 pl-2">
+                                    <div class="text-xs text-green-500 uppercase mb-1">Sélectionné</div>
+                                    <div class="font-bold text-violet-400 text-sm mb-1">${newName}</div>
+                                    <div class="space-y-1 text-xs">
+                                        ${formatStatsWithDiff(newStats, equipped.stats)}
+                                    </div>
+                                    <div class="italic text-gray-500 text-[10px] mt-2 border-t border-gray-700 pt-1">${newDesc || ''}</div>
+                                </div>
+                            </div>
+                        `;
+                         tooltip.className = "fixed bg-gray-900 border border-gray-600 p-3 rounded shadow-xl w-[500px] text-sm text-gray-300 z-50 pointer-events-none";
+                    }
+
+                    function formatStats(stats) {
+                        return Object.entries(stats).map(([idx, val]) => {
+                             if(idx === 'capacity') return ''; 
+                             const label = idx.charAt(0).toUpperCase() + idx.slice(1);
+                             return `<div class="flex justify-between"><span>${label}</span><span class="text-white">+${val}</span></div>`;
+                        }).join('');
+                    }
+
+                    function formatStatsWithDiff(newStats, oldStats) {
+                         const allKeys = new Set([...Object.keys(newStats), ...Object.keys(oldStats)]);
+                         return Array.from(allKeys).map(key => {
+                             if(key === 'capacity') return '';
+                             const newVal = newStats[key] || 0;
+                             const oldVal = oldStats[key] || 0;
+                             const diff = newVal - oldVal;
+                             const label = key.charAt(0).toUpperCase() + key.slice(1);
+                             
+                             let diffHtml = '';
+                             if (diff > 0) diffHtml = `<span class="text-green-400 text-[10px] ml-1">(+${diff})</span>`;
+                             if (diff < 0) diffHtml = `<span class="text-red-400 text-[10px] ml-1">(${diff})</span>`;
+                             
+                             return `<div class="flex justify-between items-center">
+                                        <span>${label}</span>
+                                        <span>
+                                            <span class="text-white">+${newVal}</span>
+                                            ${diffHtml}
+                                        </span>
+                                     </div>`;
+                         }).join('');
+                    }
+
+                    function hideTooltip() {
+                        tooltip.classList.add('hidden');
+                    }
+
+                    // Attach hover events
+                    function attachTooltipEvents() {
+                         // Items in grid (divs) and items in paper doll (imgs)
+                         const allItems = [...document.querySelectorAll('.inventory-item-slot'), ...document.querySelectorAll('.slot .item-icon')];
+                         
+                         allItems.forEach(item => {
+                             item.removeEventListener('mouseenter', handleMouseEnter);
+                             item.removeEventListener('mouseleave', handleMouseLeave);
+                             
+                             item.addEventListener('mouseenter', handleMouseEnter);
+                             item.addEventListener('mouseleave', handleMouseLeave);
+                         });
+                    }
+                    
+                    function handleMouseEnter(e) {
+                         let target = e.target;
+                         // If hovering the div, target is div. If hovering img in div, target is img.
+                         // But for inventory grid items, we added attributes to the DIV.
+                         // So we want the DIV if it's a grid item.
+                         // If it's a paper doll item, we want the IMG (attributes are on IMG).
+                         
+                         // Check if closest is inventory-item-slot
+                         const gridSlot = target.closest('.inventory-item-slot');
+                         if (gridSlot) {
+                             target = gridSlot;
+                         } else {
+                             // Paper doll or something else
+                             if (!target.dataset.id && target.closest('[data-id]')) {
+                                 target = target.closest('[data-id]');
+                             }
+                         }
+                         
+                         if (target && target.dataset.id) {
+                            showTooltip(e, target);
+                         }
+                    }
+
+                    function handleMouseLeave() {
+                        hideTooltip();
+                    }
+
+                    // Initial Attach
+                    attachTooltipEvents();
+
+
+                    // ... (Existing Sort/Filter Logic) ...
                     function filterItems(type) {
                         items.forEach(item => {
                             const itemType = item.dataset.type;
@@ -439,28 +649,24 @@
                                     return (parseFloat(b.dataset.price) || 0) - (parseFloat(a.dataset.price) || 0);
                                 case 'name-asc':
                                     return a.dataset.name.localeCompare(b.dataset.name);
-                                default: // 'default' - conserve original order (DOM order)
-                                    return 0; // We might need to re-fetch original index if we want strict reset
+                                default: 
+                                    return 0; 
                             }
                         });
-                        
-                        // Re-append to container
                         sorted.forEach(item => container.appendChild(item));
+                        // Re-attach because DOM moved? Actually listeners stick to elements, so it's fine.
                     }
 
-                    // Event Listeners
                     sortSelect.addEventListener('change', (e) => sortItems(e.target.value));
 
                     filterBtns.forEach(btn => {
                         btn.addEventListener('click', (e) => {
-                            // UI Update
                             filterBtns.forEach(b => {
                                 b.classList.remove('bg-violet-600', 'text-white', 'active');
                                 b.classList.add('bg-gray-700', 'text-gray-300');
                             });
                             e.target.classList.remove('bg-gray-700', 'text-gray-300');
                             e.target.classList.add('bg-violet-600', 'text-white', 'active');
-                            
                             filterItems(e.target.dataset.filter);
                         });
                     });
