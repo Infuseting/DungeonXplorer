@@ -28,29 +28,47 @@ class CombatController
     
         $_SESSION['combat'] = $combat;
 
-        // Check for initiative (e.g. from failed flee)
-        $initialData = null;
+        // Initiative System
+        $statsModel = new \App\Models\CharacterStats();
+        $playerStats = $statsModel->getEffectiveStats($_SESSION['character_id']);
+        $playerDex = $playerStats['stats']['dexterity'] ?? 10;
+        $playerInit = rand(1, 20) + floor(($playerDex - 10) / 2);
+
+        $monsterDex = $monsterModel->getDexterity();
+        $monsterInit = rand(1, 20) + floor(($monsterDex - 10) / 2);
+
+        // Determine who starts
+        $monsterStarts = false;
+        $initMessage = "";
+
+        // Check forced initiative (Failed Flee)
         if (isset($_SESSION['combat_initiative']) && $_SESSION['combat_initiative'] === 'enemy') {
-            unset($_SESSION['combat_initiative']); // Consume flag
-            
+            $monsterStarts = true;
+            $initMessage = "Vous avez échoué à fuir ! Le monstre attaque en premier.";
+            unset($_SESSION['combat_initiative']);
+        } elseif ($monsterInit > $playerInit) {
+            $monsterStarts = true;
+            $initMessage = "Le monstre est plus rapide ! (Init: Monstre $monsterInit vs Vous $playerInit)";
+        } else {
+            $initMessage = "Vous avez l'initiative ! (Init: Vous $playerInit vs Monstre $monsterInit)";
+        }
+
+        $initialData = null;
+        if ($monsterStarts) {
             // Run Monster Turn Immediately
             $monsterResult = $combat->monsterTurn();
-            // $monsterResult is [$message, $bool] (bool is damage dealt?)
-            // Let's check Combat.php: monsterTurn returns [$message, $bool]. $bool seems unused in controller?
-            // Actually performAction uses $monsterMessage[1] as damageJ (damage to Joueur)
-            // But wtf, monsterTurn implementation:
-            // if successful attack: $bool = true. $damage calculated.
-            // Returns [$message, $bool].
-            // Wait, perform action: "damageJ" => $monsterMessage[1] ?? 
-            // In Combat.php: return [$message, $bool]; $bool is true on hit.
-            // Where is the damage value returned? It is NOT returned in monsterTurn!
-            // It modifies the player vitality directly. 
-            // We just need the message to show "Monster hit you for X". 
-            // The message contains the damage text.
+            // $monsterResult is [$message, $bool]
             
             $initialData = [
-                'message' => $monsterResult[0],
-                'hit' => $monsterResult[1]
+                'message' => $initMessage . " <br>" . $monsterResult[0],
+                'hit' => $monsterResult[1],
+                'monster_starts' => true
+            ];
+        } else {
+            $initialData = [
+                'message' => $initMessage . " À vous d'attaquer !",
+                'hit' => false,
+                'monster_starts' => false
             ];
         }
 

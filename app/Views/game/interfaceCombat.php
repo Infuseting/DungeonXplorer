@@ -437,12 +437,17 @@
                 const initialData = <?php echo json_encode($initialData); ?>;
                 setTimeout(() => {
                     const log = document.getElementById("combat-log");
-                    log.innerHTML += `<p class="text-red-400 font-semibold mb-1">⚠️ SURPRISE ATTACK!</p>`;
-                    log.innerHTML += `<p class="text-red-400 font-semibold mb-1">${initialData.message}</p>`;
+                    
+                    const msgClass = initialData.monster_starts ? "text-red-400" : "text-green-400";
+                    const title = initialData.monster_starts ? "⚠️ ATTENTION !" : "🚀 INITIATIVE !";
+                    
+                    log.innerHTML += `<p class="${msgClass} font-bold mb-1">${title}</p>`;
+                    log.innerHTML += `<p class="${msgClass} font-semibold mb-1">${initialData.message}</p>`;
+                    
                     if (initialData.hit) {
                         playerHit();
                         // Update HP immediately
-                        document.getElementById('player-hp').textContent = <?php echo htmlspecialchars($characterModel->getVitality()); ?>;
+                        document.getElementById('player-hp').textContent = "<?php echo htmlspecialchars($characterModel->getVitality()); ?>";
                     }
                 }, 500);
             <?php endif; ?>
