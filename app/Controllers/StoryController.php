@@ -159,6 +159,9 @@ class StoryController
             }
         }
 
+        // Get traps
+        $node['traps'] = $this->nodeModel->getTraps($node['id']);
+        
         echo json_encode([
             'node' => $node,
             'status' => $nodeStatus,
@@ -374,7 +377,77 @@ class StoryController
     }
 
     /**
-     * Collect loot
+     * Attempt to avoid/disarm a room trap
+     */
+    public function attemptTrapAvoidance()
+    {
+        $characterId = $_SESSION['character_id'];
+        $trapId = $_POST['trap_id'];
+        
+        // Fetch trap details
+        $db = \App\Config\Database::getInstance()->getConnection();
+        $stmt = $db->prepare("SELECT * FROM story_node_traps WHERE id = ?");
+        $stmt->bind_param("i", $trapId);
+        $stmt->execute();
+        $trap = $stmt->get_result()->fetch_assoc();
+        
+        if (!$trap) {
+            echo json_encode(['success' => false, 'message' => 'Piège introuvable']);
+            exit;
+        }
+
+        // Calculate Roll
+        $statsModel = new \App\Models\CharacterStats();
+        $stats = $statsModel->getEffectiveStats($characterId);
+        
+        // Map stat name to valid column (e.g. 'DEX' -> 'dexterity')
+        $statMap = [
+            'DEX' => 'dexterity',
+            'STR' => 'strength',
+            'INT' => 'intelligence',
+            'WIS' => 'wisdom',
+            'CON' => 'constitution'
+        ];
+        $statName = $statMap[$trap['avoid_stat']] ?? 'dexterity';
+        $statValue = $stats[$statName] ?? 10;
+        
+        // Simple D20 + Stat Mod mechanic
+        // Mod = (Score - 10) / 2
+        $mod = floor(($statValue - 10) / 2);
+        $roll = rand(1, 20);
+        $total = $roll + $mod;
+        
+        $success = $total >= $trap['difficulty_class'];
+        $damageTaken = 0;
+        
+        if (!$success) {
+            // Apply damage
+            // Parse dice (e.g. "1d6")
+            $parts = explode('d', $trap['damage_dice']);
+            $count = (int)$parts[0]; // 1
+            $faces = (int)($parts[1] ?? 6); // 6
+            
+            for ($i=0; $i<$count; $i++) {
+                $damageTaken += rand(1, $faces);
+            }
+            
+            // Reduce HP
+            $this->characterModel->takeDamage($characterId, $damageTaken);
+        }
+
+        echo json_encode([
+            'success' => $success,
+            'roll' => $roll,
+            'total' => $total,
+            'dc' => $trap['difficulty_class'],
+            'damage' => $damageTaken,
+            'message' => $success ? "Vous avez évité le piège !" : "Échec ! " . $trap['effect_text']
+        ]);
+        exit;
+    }
+
+    /**
+     * Collect loot (Updated with Trap Logic)
      */
     public function collectLoot()
     {
@@ -410,18 +483,51 @@ class StoryController
                 return;
             }
 
+            $trapTriggered = false;
+            $damageTaken = 0;
+            $trapMessage = '';
+
+            // Check Trap
+            if ($validLoot['is_trapped']) {
+                $statsModel = new \App\Models\CharacterStats();
+                $stats = $statsModel->getEffectiveStats($characterId);
+                $dex = $stats['dexterity'] ?? 10;
+                $mod = floor(($dex - 10) / 2);
+                
+                $roll = rand(1, 20);
+                $total = $roll + $mod;
+                
+                if ($total < $validLoot['trap_dc']) {
+                    $trapTriggered = true;
+                    // Calculate damage
+                    $parts = explode('d', $validLoot['trap_damage']);
+                    $count = (int)$parts[0];
+                    $faces = (int)($parts[1] ?? 4);
+                    for ($i=0; $i<$count; $i++) {
+                        $damageTaken += rand(1, $faces);
+                    }
+                    $this->characterModel->takeDamage($characterId, $damageTaken);
+                    $trapMessage = "Le coffre était piégé ! " . ($validLoot['trap_description'] ?: "Vous subissez des dégâts.");
+                }
+            }
+
             // Add item to inventory
             $this->inventoryModel->addItem($characterId, $validLoot['item_id'], $validLoot['quantity']);
             
             // Mark as collected
             $this->progressModel->collectLoot($characterId, $nodeId, $lootId);
             
-            echo json_encode(['success' => true]);
+            echo json_encode([
+                'success' => true,
+                'trap_triggered' => $trapTriggered,
+                'damage' => $damageTaken,
+                'trap_message' => $trapMessage
+            ]);
         } else {
             echo json_encode(['success' => false, 'message' => 'Invalid loot']);
         }
     }
-
+}
     /**
      * Exit story
      */

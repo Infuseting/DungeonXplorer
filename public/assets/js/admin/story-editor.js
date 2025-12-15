@@ -332,6 +332,17 @@ const storyEditor = {
                         ${this.renderLootsList(node)}
                     </div>
                 </div>
+
+                <!-- Traps Section -->
+                <div class="mb-2">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-sm text-gray-400">⚠️ Pièges</span>
+                        <button onclick="storyEditor.showAddEntityModal('trap')" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 rounded">Ajouter</button>
+                    </div>
+                    <div class="space-y-1" id="traps-list">
+                        ${this.renderTrapsList(node)}
+                    </div>
+                </div>
             </div>
         `;
     },
@@ -766,10 +777,27 @@ const storyEditor = {
 
     renderLootsList(node) {
         if (!node.loots || node.loots.length === 0) return '<div class="text-xs text-gray-600 italic">Aucun loot</div>';
-        return node.loots.map(l => `
+        return node.loots.map(l => {
+            const trapBadge = l.is_trapped ? '<span class="text-red-500 font-bold ml-1 text-[10px]" title="Piégé">⚠️</span>' : '';
+            return `
             <div class="flex justify-between items-center bg-gray-800 p-1.5 rounded text-xs">
-                <span class="text-gray-300">${this.escapeHtml(l.name)} (${l.drop_chance * 100}%)</span>
+                <span class="text-gray-300">${this.escapeHtml(l.name)} (${l.drop_chance * 100}%)${trapBadge}</span>
                 <button onclick="storyEditor.removeEntity(${l.id}, 'loot')" class="text-red-400 hover:text-red-300">✕</button>
+            </div>
+        `}).join('');
+    },
+
+    renderTrapsList(node) {
+        if (!node.traps || node.traps.length === 0) return '<div class="text-xs text-gray-600 italic">Aucun piège</div>';
+        return node.traps.map(t => `
+            <div class="flex justify-between items-center bg-gray-800 p-1.5 rounded text-xs">
+                <div class="flex flex-col">
+                    <span class="text-gray-300 font-bold">${this.escapeHtml(t.description)}</span>
+                    <span class="text-gray-500 text-[10px]">
+                        ${t.damage_dice} dgts | DC ${t.difficulty_class} ${t.avoid_stat}
+                    </span>
+                </div>
+                <button onclick="storyEditor.removeEntity(${t.id}, 'trap')" class="text-red-400 hover:text-red-300">✕</button>
             </div>
         `).join('');
     },
@@ -822,123 +850,190 @@ const storyEditor = {
                 <div class="mb-4">
                     <label class="block text-sm text-gray-400 mb-1">Chance de drop (0.0 - 1.0)</label>
                     <input type="number" id="entity_chance" value="1.0" step="0.1" min="0" max="1" class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-white">
+                    <select id="entity_item_id" class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-white">
+                        ${options}
+                    </select>
+                </div>
+                <div class="mb-4 flex gap-2">
+                    <div class="flex-1">
+                        <label class="block text-sm text-gray-400 mb-1">Quantité</label>
+                        <input type="number" id="entity_quantity" value="1" min="1" class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-white">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-sm text-gray-400 mb-1">Chance (0-1)</label>
+                        <input type="number" id="entity_drop_chance" value="1.0" min="0" max="1" step="0.1" class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-white">
+                    </div>
+                </div>
+                 <div class="mb-4">
+                    <label class="flex items-center gap-2 text-sm text-gray-300 mb-2">
+                        <input type="checkbox" id="entity_is_trapped" class="rounded bg-gray-900 border-gray-700 text-indigo-600" onchange="document.getElementById('trap-options').classList.toggle('hidden')">
+                        Coffre Piégé ?
+                    </label>
+                    <div id="trap-options" class="hidden pl-2 border-l-2 border-gray-700 mt-2 space-y-2">
+                         <div>
+                            <label class="block text-xs text-gray-400 mb-1">Description du piège</label>
+                            <input type="text" id="entity_trap_description" placeholder="Aiguille empoisonnée..." class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-white text-sm">
+                        </div>
+                        <div class="flex gap-2">
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">Dégâts</label>
+                                <input type="text" id="entity_trap_damage" value="1d4" class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-white text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">DC</label>
+                                <input type="number" id="entity_trap_dc" value="10" class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-white text-sm">
+                            </div>
+                        </div>
+                    </div>
                 </div>
             `;
         }
 
-        // Simple modal implementation using prompt/confirm is limited, so we act directly or build a small overlay.
-        // For simplicity in this context, let's use a custom overlay or just inject into the properties panel temporarily?
-        // Let's create a temporary overlay div
+        if (type === 'trap') {
+            title = 'Ajouter un Piège de Salle';
+            html = `
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-400 mb-1">Description</label>
+                    <input type="text" id="entity_description" placeholder="Fosse cachée, Fléchettes..." class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-white">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-400 mb-1">Effet (Texte)</label>
+                    <input type="text" id="entity_effect_text" value="Vous subissez des dégâts !" class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-white">
+                </div>
+                <div class="flex gap-2 mb-4">
+                     <div class="flex-1">
+                        <label class="block text-sm text-gray-400 mb-1">Dégâts (Dé)</label>
+                        <input type="text" id="entity_damage_dice" value="1d6" class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-white">
+                    </div>
+                     <div class="flex-1">
+                        <label class="block text-sm text-gray-400 mb-1">Stat. Evasion</label>
+                         <select id="entity_avoid_stat" class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-white">
+                            <option value="DEX">DEX</option>
+                            <option value="STR">STR</option>
+                            <option value="INT">INT</option>
+                            <option value="WIS">WIS</option>
+                            <option value="CON">CON</option>
+                        </select>
+                    </div>
+                     <div class="flex-1">
+                        <label class="block text-sm text-gray-400 mb-1">Difficulté (DC)</label>
+                        <input type="number" id="entity_difficulty_class" value="12" class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-white">
+                    </div>
+                </div>
+            `;
+        }
 
-        const overlay = document.createElement('div');
-        overlay.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
-        overlay.innerHTML = `
-            <div class="bg-gray-800 p-6 rounded-lg w-96 border border-gray-700 shadow-xl">
+        // Show modal (we'll implement a simple modal here since we don't have a shared modal component visible)
+        // Or reuse properties panel? No, modal is better.
+        // Let's create a temporary modal div
+        const modalId = 'add-entity-modal';
+        let modal = document.getElementById(modalId);
+        if (modal) modal.remove();
+
+        modal = document.createElement('div');
+        modal.id = modalId;
+        modal.className = 'fixed inset-0 bg-black/80 flex items-center justify-center z-50';
+        modal.innerHTML = `
+            <div class="bg-gray-800 rounded-lg border border-gray-700 p-6 w-96 shadow-xl">
                 <h3 class="text-xl font-bold text-white mb-4">${title}</h3>
-                ${html}
+                <div id="modal-content">
+                    ${html}
+                </div>
                 <div class="flex justify-end gap-2 mt-6">
-                    <button id="cancel-entity" class="text-gray-400 hover:text-white px-4 py-2">Annuler</button>
-                    <button id="confirm-entity" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded">Ajouter</button>
+                    <button onclick="document.getElementById('${modalId}').remove()" class="text-gray-400 hover:text-white px-4 py-2">Annuler</button>
+                    <button onclick="storyEditor.addEntity('${type}')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded font-bold">Ajouter</button>
                 </div>
             </div>
         `;
-        document.body.appendChild(overlay);
-
-        document.getElementById('cancel-entity').onclick = () => overlay.remove();
-        document.getElementById('confirm-entity').onclick = () => {
-            this.confirmAddEntity(type);
-            overlay.remove();
-        };
+        document.body.appendChild(modal);
     },
 
-    async confirmAddEntity(type) {
-        if (!this.selectedNode) return;
+    addEntity(type) {
+        const nodeId = this.selectedNode ? this.selectedNode.id : null;
+        if (!nodeId) return;
 
         const formData = new FormData();
-        formData.append('node_id', this.selectedNode.id);
+        formData.append('node_id', nodeId);
         formData.append('type', type);
 
         if (type === 'monster') {
-            const templateId = document.getElementById('entity_template_id').value;
-            formData.append('template_id', templateId);
-            const canFlee = document.getElementById('entity_can_flee').checked;
-            formData.append('can_flee', canFlee ? '1' : '0');
-            // Default params from template will be handled by backend, or we could pass them here
+            formData.append('template_id', document.getElementById('entity_template_id').value);
+            formData.append('can_flee', document.getElementById('entity_can_flee').checked ? 1 : 0);
         } else if (type === 'npc') {
             formData.append('npc_id', document.getElementById('entity_id').value);
         } else if (type === 'loot') {
-            formData.append('item_id', document.getElementById('entity_id').value);
-            formData.append('drop_chance', document.getElementById('entity_chance').value);
-        }
+            formData.append('item_id', document.getElementById('entity_item_id').value);
+            formData.append('quantity', document.getElementById('entity_quantity').value);
+            formData.append('drop_chance', document.getElementById('entity_drop_chance').value);
 
-        try {
-            const response = await fetch('/admin/stories/nodes/entities/add', {
-                method: 'POST',
-                body: formData
-            });
-            const data = await response.json();
-
-            if (data.success) {
-                // Refresh entity lists
-                await this.refreshNodeEntities(this.selectedNode.id);
-            } else {
-                alert('Erreur: ' + data.message);
+            const isTrapped = document.getElementById('entity_is_trapped').checked;
+            if (isTrapped) {
+                formData.append('is_trapped', 1);
+                formData.append('trap_description', document.getElementById('entity_trap_description').value);
+                formData.append('trap_damage', document.getElementById('entity_trap_damage').value);
+                formData.append('trap_dc', document.getElementById('entity_trap_dc').value);
             }
-        } catch (error) {
-            console.error('Error adding entity:', error);
-            alert('Erreur réseau');
+        } else if (type === 'trap') {
+            formData.append('description', document.getElementById('entity_description').value);
+            formData.append('effect_text', document.getElementById('entity_effect_text').value);
+            formData.append('damage_dice', document.getElementById('entity_damage_dice').value);
+            formData.append('avoid_stat', document.getElementById('entity_avoid_stat').value);
+            formData.append('difficulty_class', document.getElementById('entity_difficulty_class').value);
         }
+
+        fetch('/admin/stories/nodes/entities/add', {
+            method: 'POST',
+            body: formData
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('add-entity-modal').remove();
+                    // Refresh node data
+                    this.refreshNodeEntities(nodeId);
+                } else {
+                    alert('Erreur: ' + (data.message || 'Ajout impossible'));
+                }
+            });
     },
 
-    async removeEntity(id, type) {
+    refreshNodeEntities(nodeId) {
+        if (!this.selectedNode || this.selectedNode.id !== nodeId) return;
+
+        fetch(`/admin/stories/nodes/${nodeId}/entities`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    this.selectedNode.monsters = data.monsters;
+                    this.selectedNode.npcs = data.npcs;
+                    this.selectedNode.loots = data.loot;
+                    this.selectedNode.traps = data.traps;
+                    this.showNodeProperties(this.selectedNode);
+                }
+            });
+    },
+
+    removeEntity(id, type) {
         if (!confirm('Supprimer cet élément ?')) return;
 
         const formData = new FormData();
         formData.append('entity_id', id);
         formData.append('type', type);
 
-        try {
-            const response = await fetch('/admin/stories/nodes/entities/remove', {
-                method: 'POST',
-                body: formData
+        fetch('/admin/stories/nodes/entities/remove', {
+            method: 'POST',
+            body: formData
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    if (this.selectedNode) {
+                        this.refreshNodeEntities(this.selectedNode.id);
+                    }
+                } else {
+                    alert('Erreur lors de la suppression');
+                }
             });
-            const data = await response.json();
-
-            if (data.success) {
-                if (this.selectedNode) {
-                    await this.refreshNodeEntities(this.selectedNode.id);
-                }
-            } else {
-                alert('Erreur: ' + data.message);
-            }
-        } catch (error) {
-            console.error('Error removing entity:', error);
-        }
-    },
-
-    async refreshNodeEntities(nodeId) {
-        const response = await fetch(`/admin/stories/nodes/${nodeId}/entities`);
-        const data = await response.json();
-
-        if (data.success) {
-            // Update the node object in local state
-            const node = this.nodes.find(n => n.id === nodeId);
-            if (node) {
-                node.monsters = data.monsters;
-                node.npcs = data.npcs;
-                node.loots = data.loot; // Backend sends 'loot' key, frontend model expects 'loots' based on initial load naming? 
-                // Wait, initial load naming check: 
-                // in StoryNode.php getFullNodeData returns 'loots'.
-                // in AdminStoryController getNodeEntities returns 'loot'.
-                // I should sync them. Let's fix the assignment here.
-                node.loots = data.loot;
-
-                // Refresh View if selected
-                if (this.selectedNode && this.selectedNode.id === nodeId) {
-                    this.showNodeProperties(node);
-                }
-            }
-        }
     },
 
     escapeHtml(text) {
@@ -952,6 +1047,4 @@ const storyEditor = {
     }
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-    storyEditor.init();
 });

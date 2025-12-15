@@ -110,6 +110,14 @@
                         <div id="loot-list" class="space-y-2"></div>
                     </div>
 
+                    <!-- Traps -->
+                    <div id="traps-container" class="hidden">
+                        <h3 class="text-purple-400 font-bold mb-2 flex items-center gap-2">
+                            <span>⚠️</span> Pièges
+                        </h3>
+                        <div id="traps-list" class="space-y-2"></div>
+                    </div>
+
                     <!-- NPCs -->
                     <div id="npcs-container" class="hidden">
                         <h3 class="text-blue-400 font-bold mb-2 flex items-center gap-2">

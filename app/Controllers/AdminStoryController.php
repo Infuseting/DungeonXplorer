@@ -335,12 +335,14 @@ class AdminStoryController
         $monsters = $this->nodeModel->getMonsters($nodeId);
         $npcs = $this->nodeModel->getNPCs($nodeId);
         $loot = $this->nodeModel->getLoots($nodeId);
+        $traps = $this->nodeModel->getTraps($nodeId);
 
         echo json_encode([
             'success' => true,
             'monsters' => $monsters,
             'npcs' => $npcs,
-            'loot' => $loot
+            'loot' => $loot,
+            'traps' => $traps
         ]);
         exit;
     }
@@ -413,8 +415,29 @@ class AdminStoryController
                     $chance = $_POST['drop_chance'] ?? 1.0;
                     $quantity = $_POST['quantity'] ?? 1;
                     $isGuaranteed = isset($_POST['is_guaranteed']) ? 1 : 0;
-                    $id = $this->nodeModel->addLoot($nodeId, $itemId, $quantity, $chance, $isGuaranteed);
+                    
+                    $trapData = null;
+                    if (!empty($_POST['is_trapped'])) {
+                        $trapData = [
+                            'damage' => $_POST['trap_damage'] ?? '1d4',
+                            'dc' => $_POST['trap_dc'] ?? 10,
+                            'description' => $_POST['trap_description'] ?? ''
+                        ];
+                    }
+                    
+                    $id = $this->nodeModel->addLoot($nodeId, $itemId, $quantity, $chance, $isGuaranteed, $trapData);
                 }
+                break;
+                
+            case 'trap':
+                $data = [
+                    'description' => $_POST['description'] ?? 'Un piège',
+                    'damage_dice' => $_POST['damage_dice'] ?? '1d6',
+                    'effect_text' => $_POST['effect_text'] ?? 'Vous subissez des dégâts !',
+                    'avoid_stat' => $_POST['avoid_stat'] ?? 'DEX',
+                    'difficulty_class' => $_POST['difficulty_class'] ?? 12
+                ];
+                $id = $this->nodeModel->addTrap($nodeId, $data);
                 break;
         }
 
@@ -453,6 +476,9 @@ class AdminStoryController
                 break;
             case 'loot':
                 $success = $this->nodeModel->removeLoot($id);
+                break;
+            case 'trap':
+                $success = $this->nodeModel->removeTrap($id);
                 break;
         }
 

@@ -188,6 +188,30 @@ function renderInteractions(node) {
         npcsContainer.classList.add('hidden');
     }
 
+    // Traps
+    const trapsContainer = document.getElementById('traps-container');
+    const trapsList = document.getElementById('traps-list');
+    trapsList.innerHTML = '';
+
+    if (node.traps && node.traps.length > 0) {
+        hasInteractions = true;
+        trapsContainer.classList.remove('hidden');
+        node.traps.forEach(trap => {
+            const el = document.createElement('div');
+            el.className = 'bg-purple-900/40 p-2 rounded border border-purple-800 flex justify-between items-center';
+            el.innerHTML = `
+                <div class="flex flex-col">
+                    <span class="font-bold text-purple-200">⚠️ ${trap.description}</span>
+                    <span class="text-xs text-gray-400">Difficulté: ${trap.difficulty_class} (${trap.avoid_stat})</span>
+                </div>
+                <button class="bg-purple-700 hover:bg-purple-600 text-white px-2 py-1 rounded text-sm" onclick="attemptTrapAvoidance(${trap.id})">Esquiver/Désamorcer</button>
+            `;
+            trapsList.appendChild(el);
+        });
+    } else {
+        if (trapsContainer) trapsContainer.classList.add('hidden');
+    }
+
     if (hasInteractions) {
         area.classList.remove('hidden');
         const mainContainer = document.getElementById('main-content-container');
@@ -294,7 +318,12 @@ async function collectLoot(lootId) {
         const data = await response.json();
 
         if (data.success) {
-            showToast('Objet récupéré !', 'success');
+            if (data.trap_triggered) {
+                showToast(`⚠️ ${data.trap_message} (-${data.damage} HP)`, 'warning');
+            } else {
+                showToast('Objet récupéré !', 'success');
+            }
+
             // Remove from UI locally
             const btn = document.getElementById(`loot-btn-${lootId}`);
             if (btn) btn.closest('div').remove();
@@ -311,6 +340,37 @@ async function collectLoot(lootId) {
         console.error('Error collecting loot:', error);
     }
 }
+
+window.attemptTrapAvoidance = async (trapId) => {
+    try {
+        const formData = new FormData();
+        formData.append('story_id', STORY_ID);
+        formData.append('trap_id', trapId);
+
+        const response = await fetch('/story/trap/avoid', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            showToast(`${data.message}`, 'success');
+            // Visual feedback? 
+            // Maybe remove the trap from UI? Or mark as disarmed?
+            // Backend doesn't persist disarmed state for room traps currently in `story_node_traps` (unless we add a progress tracking for it).
+            // For now, the user can "avoid" it repeatedly? Maybe we should hide it.
+            // But valid point: if they successfully avoided, they can proceed?
+            // Actually room traps are just hazards. They don't block movement unless configured (not implemented yet).
+        } else {
+            showToast(`${data.message} (-${data.damage} HP)`, 'error');
+            if (data.damage > 0) {
+                // Update HP UI if we had one visible live.
+            }
+        }
+    } catch (error) {
+        console.error('Error avoiding trap:', error);
+    }
+};
 
 // Expose for inline onclicks
 // Expose for inline onclicks

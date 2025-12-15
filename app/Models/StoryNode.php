@@ -266,6 +266,7 @@ class StoryNode
         $node['npcs'] = $this->getNPCs($nodeId);
         $node['monsters'] = $this->getMonsters($nodeId);
         $node['loots'] = $this->getLoots($nodeId);
+        $node['traps'] = $this->getTraps($nodeId);
         
         return $node;
     }
@@ -361,15 +362,76 @@ class StoryNode
     }
 
     /**
-     * Add loot to a node
+     * Get traps in a node
+     * 
+     * @param int $nodeId
+     * @return array
      */
-    public function addLoot($nodeId, $itemId, $quantity = 1, $chance = 1.0, $isGuaranteed = 0)
+    public function getTraps($nodeId)
+    {
+        $stmt = $this->db->prepare("SELECT * FROM story_node_traps WHERE node_id = ?");
+        $stmt->bind_param("i", $nodeId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
+
+    /**
+     * Add a trap to a node
+     */
+    public function addTrap($nodeId, $data)
     {
         $stmt = $this->db->prepare(
-            "INSERT INTO story_node_loots (node_id, item_id, quantity, drop_chance, is_guaranteed) 
-             VALUES (?, ?, ?, ?, ?)"
+            "INSERT INTO story_node_traps (node_id, description, damage_dice, effect_text, avoid_stat, difficulty_class) 
+             VALUES (?, ?, ?, ?, ?, ?)"
         );
-        $stmt->bind_param("iiidi", $nodeId, $itemId, $quantity, $chance, $isGuaranteed);
+        
+        $damage = $data['damage_dice'] ?? '1d6';
+        $dc = $data['difficulty_class'] ?? 12;
+        $stat = $data['avoid_stat'] ?? 'DEX';
+        
+        $stmt->bind_param(
+            "issssi", 
+            $nodeId, 
+            $data['description'], 
+            $damage,
+            $data['effect_text'],
+            $stat,
+            $dc
+        );
+        
+        if ($stmt->execute()) {
+            return $this->db->insert_id;
+        }
+        return false;
+    }
+
+    /**
+     * Remove a trap
+     */
+    public function removeTrap($id)
+    {
+        $stmt = $this->db->prepare("DELETE FROM story_node_traps WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        return $stmt->execute();
+    }
+
+    /**
+     * Add loot to a node (Updated with Trap support)
+     */
+    public function addLoot($nodeId, $itemId, $quantity = 1, $chance = 1.0, $isGuaranteed = 0, $trapData = null)
+    {
+        $stmt = $this->db->prepare(
+            "INSERT INTO story_node_loots (node_id, item_id, quantity, drop_chance, is_guaranteed, is_trapped, trap_damage, trap_dc, trap_description) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        );
+        
+        $isTrapped = $trapData ? 1 : 0;
+        $trapDamage = $trapData['damage'] ?? null;
+        $trapDc = $trapData['dc'] ?? null;
+        $trapDesc = $trapData['description'] ?? null;
+        
+        $stmt->bind_param("iiidiisis", $nodeId, $itemId, $quantity, $chance, $isGuaranteed, $isTrapped, $trapDamage, $trapDc, $trapDesc);
         
         if ($stmt->execute()) {
             return $this->db->insert_id;
