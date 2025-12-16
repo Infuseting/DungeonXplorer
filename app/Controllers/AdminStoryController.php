@@ -106,9 +106,9 @@ class AdminStoryController
         }
 
         // Fetch available entities for the editor
-        $monsterModel = new \App\Models\Monster();
-        $npcModel = new \App\Models\NPC();
-        $itemModel = new \App\Models\Item();
+        $monsterModel = new Monster();
+        $npcModel = new NPC();
+        $itemModel = new Item();
 
         $monsters = $monsterModel->getAll();
         $npcs = $npcModel->getAll();
@@ -243,7 +243,7 @@ class AdminStoryController
             exit;
         }
 
-        $db = \App\Config\Database::getInstance()->getConnection();
+        $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare(
             "INSERT INTO story_node_connections (from_node_id, to_node_id, direction_text, condition_type, condition_value) 
              VALUES (?, ?, ?, ?, ?)"
@@ -275,7 +275,7 @@ class AdminStoryController
             exit;
         }
 
-        $db = \App\Config\Database::getInstance()->getConnection();
+        $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare(
             "UPDATE story_node_connections 
              SET direction_text = ?, condition_type = ?, condition_value = ?,
@@ -314,7 +314,7 @@ class AdminStoryController
             exit;
         }
 
-        $db = \App\Config\Database::getInstance()->getConnection();
+        $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare("DELETE FROM story_node_connections WHERE id = ?");
         $stmt->bind_param("i", $id);
         
@@ -390,7 +390,7 @@ class AdminStoryController
                 // So we MUST copy data.
                 
                 if (!empty($_POST['template_id'])) {
-                    $monsterModel = new \App\Models\Monster();
+                    $monsterModel = new Monster();
                     $template = $monsterModel->findById($_POST['template_id']);
                     if ($template) {
                         $monsterData['name'] = $template['name'];

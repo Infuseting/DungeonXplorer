@@ -1,6 +1,14 @@
 <?php
 namespace App\Models;
 
+use App\Models\Skill;
+use App\Models\Character;
+use App\Services\DifficultyService;
+use App\Models\Stats;
+use App\Models\Database;
+use App\Models\Inventory;
+use App\Models\CharacterBuff;
+
 if (isset($_POST['diceRoll'])) {
     $_SESSION['diceRoll'] = intval($_POST['diceRoll']);
 }
@@ -64,7 +72,7 @@ class Combat
             switch ($action) {
                 case 'use_skill':
                     if (!$skillId) { $message = "No skill selected."; break; }
-                    $skillModel = new \App\Models\Skill();
+                    $skillModel = new Skill();
                     $skill = $skillModel->findById($skillId);
                     if (!$skill) { $message = "Skill not found."; break; }
                     
@@ -287,7 +295,7 @@ class Combat
 
                     // Difficulty Modifier (Incoming Damage)
                     if (isset($_SESSION['current_difficulty'])) {
-                        $diffService = new \App\Services\DifficultyService(); 
+                        $diffService = new DifficultyService(); 
                         // Note: Unserializing service from session might be better if strictly needed, 
                         // but instantiating new one is cheap here.
                         $dmgMod = $diffService->getDamageModifier($_SESSION['current_difficulty']);

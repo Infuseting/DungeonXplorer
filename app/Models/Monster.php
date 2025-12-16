@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Models\CharacterStats;
+    
 
 class Monster
 {
@@ -21,7 +23,11 @@ class Monster
     private $creatureType = 'neutral';
     private $affinities = [];
 
-    // ... (constructor) ...
+    public function __construct()
+    {
+        $this->db = Database::getInstance()->getConnection();
+        
+    }
 
     public function findById($id)
     {
@@ -192,4 +198,5 @@ class Monster
     {
         $this->vitality -= $number;
     }
+   
 }

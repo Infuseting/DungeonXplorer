@@ -58,7 +58,7 @@ class ShopController
         // Let's check Character model or User model.
         // Wait, I haven't checked where gold is stored.
         // I'll assume it's on the character for now.
-        $db = \App\Config\Database::getInstance()->getConnection();
+        $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare("SELECT gold FROM characters WHERE id = ?");
         $stmt->bind_param("i", $_SESSION['character_id']);
         $stmt->execute();
@@ -91,7 +91,7 @@ class ShopController
             exit;
         }
 
-        $db = \App\Config\Database::getInstance()->getConnection();
+        $db = Database::getInstance()->getConnection();
         $npcModel = new NPC();
         $inventoryModel = new Inventory();
 
@@ -149,7 +149,7 @@ class ShopController
         // 6. Decrease NPC Inventory - REMOVED (Unlimited Stock)
 
         // Log Action
-        $logger = new \App\Services\LoggerService();
+        $logger = new LoggerService();
         $logger->logGameplay($_SESSION['user_id'], $_SESSION['character_id'], 'NPC_BUY', [
             'npc_id' => $npcId,
             'item_id' => $itemId,
@@ -177,7 +177,7 @@ class ShopController
             exit;
         }
 
-        $db = \App\Config\Database::getInstance()->getConnection();
+        $db = Database::getInstance()->getConnection();
         $npcModel = new NPC();
         
         // 1. Get Item from Player Inventory
@@ -212,7 +212,7 @@ class ShopController
         // 5. Add to NPC Inventory - REMOVED (No Buyback)
 
         // Log Action
-        $logger = new \App\Services\LoggerService();
+        $logger = new LoggerService();
         $logger->logGameplay($_SESSION['user_id'], $_SESSION['character_id'], 'NPC_SELL', [
             'npc_id' => $npcId,
             'item_id' => $item['real_item_id'],

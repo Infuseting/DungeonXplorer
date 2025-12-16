@@ -8,7 +8,7 @@ class AdminMapController
     
     public function __construct()
     {
-        $this->db = \App\Config\Database::getInstance()->getConnection();
+        $this->db = Database::getInstance()->getConnection();
     }
     
     public function index()
@@ -34,7 +34,7 @@ class AdminMapController
         $mapPoints = $this->getMapPoints($selectedMapId);
         
         // Get Factions
-        $factionModel = new \App\Models\Faction();
+        $factionModel = new Faction();
         $factions = $factionModel->getAll();
 
         require_once __DIR__ . '/../Views/admin/map/index.php';
@@ -72,11 +72,11 @@ class AdminMapController
         $maps = $this->getAllMaps();
         
         // Get all NPCs for assignment dropdown
-        $npcModel = new \App\Models\NPC();
+        $npcModel = new NPC();
         $npcs = $npcModel->getAll();
         
         // Get all stories for assignment dropdown
-        $storyModel = new \App\Models\Story();
+        $storyModel = new Story();
         $stories = $storyModel->getAll();
         
         // Build query with filters

@@ -83,160 +83,161 @@ function renderNode() {
     }
 }
 
-const area = document.getElementById('interaction-area');
-const monstersContainer = document.getElementById('monsters-container');
-const monstersList = document.getElementById('monsters-list');
-const lootContainer = document.getElementById('loot-container');
-const lootList = document.getElementById('loot-list');
-const npcsContainer = document.getElementById('npcs-container');
-const npcsList = document.getElementById('npcs-list');
-const trapsContainer = document.getElementById('traps-container'); // Correct ID usage
-const trapsList = document.getElementById('traps-list');
+function renderInteractions(node) {
+    const area = document.getElementById('interaction-area');
+    const monstersContainer = document.getElementById('monsters-container');
+    const monstersList = document.getElementById('monsters-list');
+    const lootContainer = document.getElementById('loot-container');
+    const lootList = document.getElementById('loot-list');
+    const npcsContainer = document.getElementById('npcs-container');
+    const npcsList = document.getElementById('npcs-list');
+    const trapsContainer = document.getElementById('traps-container'); // Correct ID usage
+    const trapsList = document.getElementById('traps-list');
 
-let hasInteractions = false;
-let activeMonstersCount = 0;
+    let hasInteractions = false;
+    let activeMonstersCount = 0;
 
-// Check Search State
-// We use sessionStorage to remember if we searched THIS node
-const searchKey = `searched_${STORY_ID}_${node.id}`;
-const hasSearched = sessionStorage.getItem(searchKey) === 'true';
+    // Check Search State
+    // We use sessionStorage to remember if we searched THIS node
+    const searchKey = `searched_${STORY_ID}_${node.id}`;
+    const hasSearched = sessionStorage.getItem(searchKey) === 'true';
 
-// --- Monsters (Always visible) ---
-monstersList.innerHTML = '';
-if (node.monsters && node.monsters.length > 0) {
-    // ... (existing monster logic) ...
-    const totalMonsters = node.monsters.length;
-    const fledCount = node.monsters.filter(m => storyState.fledMonsters.includes(m.id)).length;
-    const allFled = totalMonsters > 0 && totalMonsters === fledCount;
+    // --- Monsters (Always visible) ---
+    monstersList.innerHTML = '';
+    if (node.monsters && node.monsters.length > 0) {
+        // ... (existing monster logic) ...
+        const totalMonsters = node.monsters.length;
+        const fledCount = node.monsters.filter(m => storyState.fledMonsters.includes(m.id)).length;
+        const allFled = totalMonsters > 0 && totalMonsters === fledCount;
 
-    if (allFled) {
-        monstersContainer.classList.add('hidden');
-        activeMonstersCount = 0;
-    } else {
-        hasInteractions = true;
-        monstersContainer.classList.remove('hidden');
+        if (allFled) {
+            monstersContainer.classList.add('hidden');
+            activeMonstersCount = 0;
+        } else {
+            hasInteractions = true;
+            monstersContainer.classList.remove('hidden');
 
-        node.monsters.forEach(monster => {
-            const isFled = storyState.fledMonsters.includes(monster.id);
-            if (!isFled) activeMonstersCount++;
+            node.monsters.forEach(monster => {
+                const isFled = storyState.fledMonsters.includes(monster.id);
+                if (!isFled) activeMonstersCount++;
 
-            const el = document.createElement('div');
-            const bgClass = isFled ? 'bg-gray-800/60 border-gray-700 opacity-70' : 'bg-red-900/40 border-red-800';
-            el.className = `${bgClass} p-2 rounded border flex justify-between items-center transition-all`;
+                const el = document.createElement('div');
+                const bgClass = isFled ? 'bg-gray-800/60 border-gray-700 opacity-70' : 'bg-red-900/40 border-red-800';
+                el.className = `${bgClass} p-2 rounded border flex justify-between items-center transition-all`;
 
-            let actionsHtml = '';
-            if (isFled) {
-                actionsHtml = '<span class="text-xs text-gray-400 font-bold border border-gray-500 px-2 py-1 rounded flex items-center">💨 A fui</span>';
-            } else {
-                actionsHtml = `
+                let actionsHtml = '';
+                if (isFled) {
+                    actionsHtml = '<span class="text-xs text-gray-400 font-bold border border-gray-500 px-2 py-1 rounded flex items-center">💨 A fui</span>';
+                } else {
+                    actionsHtml = `
                         <div class="flex gap-2">
                              ${(monster.can_flee === undefined || monster.can_flee == 1) ?
-                        `<button class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-sm" onclick="attemptFlee(${monster.id})">🏃 Fuir</button>` :
-                        '<span class="text-xs text-red-500 font-bold border border-red-500 px-1 py-1 rounded flex items-center">🔒 Combat Forcé</span>'
-                    }
+                            `<button class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-sm" onclick="attemptFlee(${monster.id})">🏃 Fuir</button>` :
+                            '<span class="text-xs text-red-500 font-bold border border-red-500 px-1 py-1 rounded flex items-center">🔒 Combat Forcé</span>'
+                        }
                             <button class="bg-red-700 hover:bg-red-600 text-white px-2 py-1 rounded text-sm" onclick="startCombat(${monster.id})">⚔️ Attaquer</button>
                         </div>
                     `;
-            }
+                }
 
-            el.innerHTML = `
+                el.innerHTML = `
                     <span class="font-bold ${isFled ? 'text-gray-400' : 'text-red-200'}">${monster.monster_name} (Niv. ${monster.monster_level})</span>
                     ${actionsHtml}
                 `;
-            monstersList.appendChild(el);
-        });
+                monstersList.appendChild(el);
+            });
+        }
+    } else {
+        monstersContainer.classList.add('hidden');
     }
-} else {
-    monstersContainer.classList.add('hidden');
-}
 
-// --- Loot & Traps (Requires Search) ---
-// Note: NPCs are usually visible? Let's say yes. Loot/Traps hidden.
+    // --- Loot & Traps (Requires Search) ---
+    // Note: NPCs are usually visible? Let's say yes. Loot/Traps hidden.
 
-// Loot
-lootList.innerHTML = '';
-const hasLoot = node.loots && node.loots.length > 0;
+    // Loot
+    lootList.innerHTML = '';
+    const hasLoot = node.loots && node.loots.length > 0;
 
-if (hasSearched && hasLoot) {
-    hasInteractions = true;
-    lootContainer.classList.remove('hidden');
-    node.loots.forEach(loot => {
-        const el = document.createElement('div');
-        el.className = 'bg-yellow-900/40 p-2 rounded border border-yellow-800 flex justify-between items-center';
-        el.innerHTML = `
+    if (hasSearched && hasLoot) {
+        hasInteractions = true;
+        lootContainer.classList.remove('hidden');
+        node.loots.forEach(loot => {
+            const el = document.createElement('div');
+            el.className = 'bg-yellow-900/40 p-2 rounded border border-yellow-800 flex justify-between items-center';
+            el.innerHTML = `
                 <div class="flex items-center gap-2">
                     <span class="text-xl">${loot.icon || '📦'}</span>
                     <span class="text-yellow-200">${loot.name} x${loot.quantity}</span>
                 </div>
                 <button class="bg-yellow-700 hover:bg-yellow-600 text-white px-2 py-1 rounded text-sm" id="loot-btn-${loot.id}">Prendre</button>
             `;
-        lootList.appendChild(el);
-        document.getElementById(`loot-btn-${loot.id}`).addEventListener('click', () => collectLoot(loot.id));
-    });
-} else {
-    lootContainer.classList.add('hidden');
-}
+            lootList.appendChild(el);
+            document.getElementById(`loot-btn-${loot.id}`).addEventListener('click', () => collectLoot(loot.id));
+        });
+    } else {
+        lootContainer.classList.add('hidden');
+    }
 
-// Traps
-trapsList.innerHTML = '';
-const hasTraps = node.traps && node.traps.length > 0;
+    // Traps
+    trapsList.innerHTML = '';
+    const hasTraps = node.traps && node.traps.length > 0;
 
-if (hasSearched && hasTraps) {
-    hasInteractions = true;
-    trapsContainer.classList.remove('hidden');
-    node.traps.forEach(trap => {
-        const el = document.createElement('div');
-        el.className = 'bg-purple-900/40 p-2 rounded border border-purple-800 flex justify-between items-center';
-        el.innerHTML = `
+    if (hasSearched && hasTraps) {
+        hasInteractions = true;
+        trapsContainer.classList.remove('hidden');
+        node.traps.forEach(trap => {
+            const el = document.createElement('div');
+            el.className = 'bg-purple-900/40 p-2 rounded border border-purple-800 flex justify-between items-center';
+            el.innerHTML = `
                 <div class="flex flex-col">
                     <span class="font-bold text-purple-200">⚠️ ${trap.description}</span>
                     <span class="text-xs text-gray-400">Difficulté: ${trap.difficulty_class} (${trap.avoid_stat})</span>
                 </div>
                 <button class="bg-purple-700 hover:bg-purple-600 text-white px-2 py-1 rounded text-sm" onclick="attemptTrapAvoidance(${trap.id})">Esquiver/Désamorcer</button>
             `;
-        trapsList.appendChild(el);
-    });
-} else {
-    trapsContainer.classList.add('hidden');
-}
+            trapsList.appendChild(el);
+        });
+    } else {
+        trapsContainer.classList.add('hidden');
+    }
 
-// NPCs
-npcsList.innerHTML = '';
-if (node.npcs && node.npcs.length > 0) {
-    hasInteractions = true;
-    npcsContainer.classList.remove('hidden');
-    node.npcs.forEach(npc => {
-        const el = document.createElement('div');
-        el.className = 'bg-blue-900/40 p-2 rounded border border-blue-800 flex justify-between items-center';
-        el.innerHTML = `
+    // NPCs
+    npcsList.innerHTML = '';
+    if (node.npcs && node.npcs.length > 0) {
+        hasInteractions = true;
+        npcsContainer.classList.remove('hidden');
+        node.npcs.forEach(npc => {
+            const el = document.createElement('div');
+            el.className = 'bg-blue-900/40 p-2 rounded border border-blue-800 flex justify-between items-center';
+            el.innerHTML = `
                 <span class="font-bold text-blue-200">${npc.name}</span>
                 <button class="bg-blue-700 hover:bg-blue-600 text-white px-2 py-1 rounded text-sm">Parler</button>
             `;
-        npcsList.appendChild(el);
-    });
-} else {
-    npcsContainer.classList.add('hidden');
-}
+            npcsList.appendChild(el);
+        });
+    } else {
+        npcsContainer.classList.add('hidden');
+    }
 
-// --- Search Button Injection in renderChoices or here? ---
-// If monsters are present, choices are hidden anyway.
-// We want "Fouiller" to be a primary action.
-// Let's inject a "Fouiller" button into the choices drawer if NOT searched.
-// We pass this info to renderChoices via storyState or arguments.
-storyState.showSearchButton = !hasSearched && !activeMonstersCount > 0; // Can't search during combat
+    // --- Search Button Injection in renderChoices or here? ---
+    // If monsters are present, choices are hidden anyway.
+    // We want "Fouiller" to be a primary action.
+    // Let's inject a "Fouiller" button into the choices drawer if NOT searched.
+    // We pass this info to renderChoices via storyState or arguments.
+    storyState.showSearchButton = !hasSearched && !activeMonstersCount > 0; // Can't search during combat
 
-// Visibility of Main Container
-if (hasInteractions || activeMonstersCount > 0) {
-    area.classList.remove('hidden');
-    const mainContainer = document.getElementById('main-content-container');
-    if (mainContainer) mainContainer.classList.remove('hidden');
-} else {
-    area.classList.add('hidden');
-    // Don't hide main container if we want to show description, but here it wraps interaction area.
-    // It's fine.
-}
+    // Visibility of Main Container
+    if (hasInteractions || activeMonstersCount > 0) {
+        area.classList.remove('hidden');
+        const mainContainer = document.getElementById('main-content-container');
+        if (mainContainer) mainContainer.classList.remove('hidden');
+    } else {
+        area.classList.add('hidden');
+        // Don't hide main container if we want to show description, but here it wraps interaction area.
+        // It's fine.
+    }
 
-return activeMonstersCount > 0;
+    return activeMonstersCount > 0;
 }
 
 function renderChoices(node) {

@@ -30,7 +30,7 @@ class Skill
 
     public function getUnlockedSkills($characterId)
     {
-        $sql = "SELECT s.*, cs.unlocked_at 
+        $sql = "SELECT s.*, cs.created_at 
                 FROM skills s 
                 JOIN character_skills cs ON s.id = cs.skill_id 
                 WHERE cs.character_id = ?";
@@ -72,5 +72,11 @@ class Skill
         $stmt->bind_param("i", $characterId);
         $stmt->execute();
         return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+    public function updatePosition($id, $x, $y)
+    {
+        $stmt = $this->db->prepare("UPDATE skills SET node_x = ?, node_y = ? WHERE id = ?");
+        $stmt->bind_param("iii", $x, $y, $id);
+        return $stmt->execute();
     }
 }

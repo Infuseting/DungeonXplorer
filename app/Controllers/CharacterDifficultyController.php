@@ -72,7 +72,7 @@ class CharacterDifficultyController
         // Save Appearance
         // Make sure we have the appearance data correctly
         if (!empty($appearance)) {
-             $characterModel->updateAppearance($newCharacterId, $appearance);
+            $characterModel->updateAppearance($newCharacterId, $appearance);
         }
 
         // Clean session

@@ -1,8 +1,13 @@
 <?php
 namespace App\Controllers;
+use App\Services\LoggerService;
+use App\Services\DifficultyService;
+use App\Services\StatusEffectService;
 use App\Models\Character;
 use App\Models\Monster;
 use App\Models\Combat;
+use App\Models\CharacterStats;
+
 class CombatController
 {
     public function startCombat( $monsterId)
@@ -21,6 +26,7 @@ class CombatController
 
     
         $_SESSION['maxHpPlayer'] = $characterModel->getVitality();
+        $monsterModel = new Monster();
         $monsterModel->findById($monsterId);
         $monsterModel->unsetDb();
         $combat = new Combat($characterModel, $monsterModel);
@@ -28,14 +34,14 @@ class CombatController
         $_SESSION['combat'] = $combat;
         
         // Log Combat Start
-        $logger = new \App\Services\LoggerService();
+        $logger = new LoggerService();
         $logger->logGameplay($_SESSION['user_id'], $_SESSION['character_id'], 'COMBAT_START', [
             'monster_id' => $monsterId,
             'monster_name' => $monsterModel->getName()
         ]);
         
         // Difficulty handling
-        $difficultyService = new \App\Services\DifficultyService();
+        $difficultyService = new DifficultyService();
         $_SESSION['difficulty_service'] = serialize($difficultyService);
         $_SESSION['current_difficulty'] = $characterModel->getDifficulty();
         $_SESSION['is_ironman'] = $characterModel->isIronman();
@@ -43,7 +49,7 @@ class CombatController
         // Initiative System
 
         // Initiative System
-        $statsModel = new \App\Models\CharacterStats();
+        $statsModel = new CharacterStats();
         $playerStats = $statsModel->getEffectiveStats($_SESSION['character_id']);
         $playerDex = $playerStats['stats']['dexterity'] ?? 10;
         $playerInit = rand(1, 20) + floor(($playerDex - 10) / 2);
@@ -139,7 +145,7 @@ class CombatController
         $charId = $_SESSION['character_id'];
 
         // --- STATUS EFFECT PROCESSING (PLAYER TURN START) ---
-        $statusService = new \App\Services\StatusEffectService();
+        $statusService = new StatusEffectService();
         $statusResult = $statusService->processTurn($charId);
         
         $statusMessages = $statusResult['messages'];
@@ -199,7 +205,7 @@ class CombatController
              ];
 
              // Log Victory
-             $logger = new \App\Services\LoggerService();
+             $logger = new LoggerService();
              $logger->logGameplay($_SESSION['user_id'], $_SESSION['character_id'], 'COMBAT_WIN', [
                  'monster_id' => $monsterModel->getId(),
                  'xp_gained' => $calc['xp'],
@@ -212,7 +218,7 @@ class CombatController
         if (!$combat->isAlive($combat->getJoueur())) {
 
              // Log Stats
-             $logger = new \App\Services\LoggerService();
+             $logger = new LoggerService();
              $logger->logGameplay($_SESSION['user_id'], $_SESSION['character_id'], 'COMBAT_LOSS', [
                  'monster_id' => $monsterModel->getId()
              ]);
@@ -260,20 +266,20 @@ class CombatController
         
         // Difficulty Modifier
         $difficulty = $_SESSION['current_difficulty'] ?? 'NORMAL';
-        $diffService = new \App\Services\DifficultyService();
+        $diffService = new DifficultyService();
         $xpModifier = $diffService->getXpModifier($difficulty);
         
         return ['xp' => (int)($xp * $xpModifier), 'gold' => (int)$gold];
     }
     
     private function generateLoot($characterId, $monsterModel) {
-        $db = \App\Config\Database::getInstance()->getConnection();
-        $inventoryModel = new \App\Models\Inventory();
+        $db = Database::getInstance()->getConnection();
+        $inventoryModel = new Inventory();
         $loot = [];
         
         // 30% Chance * Difficulty Modifier
         $difficulty = $_SESSION['current_difficulty'] ?? 'NORMAL';
-        $diffService = new \App\Services\DifficultyService();
+        $diffService = new DifficultyService();
         $lootModifier = $diffService->getLootChanceModifier($difficulty);
         $baseChance = 30;
         
@@ -286,14 +292,8 @@ class CombatController
         }
         return $loot;
     }
-}
-
-public function endCombat() {
-    unset($_SESSION['combat']); 
-}
-
-
-
-    
+    public function endCombat() {
+        unset($_SESSION['combat']); 
+    }
 
 }

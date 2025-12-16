@@ -384,7 +384,7 @@
     });
 </script>
 
-<script type="module" src="/assets/js/story.js"></script>
+<script type="module" src="/js/story.js"></script>
 
 
 

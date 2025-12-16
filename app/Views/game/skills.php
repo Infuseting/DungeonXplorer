@@ -26,7 +26,7 @@
         <div class="flex justify-between items-center mb-8 bg-gray-800 p-4 rounded-lg border border-gray-700">
             <div class="flex items-center gap-4">
                 <div class="bg-gray-700 p-3 rounded-full">
-                    <span class="material-symbols-outlined text-amber-500 text-3xl">local_police</span>
+                    <span class="material-symbols-outlined text-amber-500 text-3xl"></span>
                 </div>
                 <div>
                     <p class="text-sm text-gray-400">Points Disponibles</p>
@@ -40,120 +40,186 @@
             </div>
         </div>
 
-        <!-- Skills Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <?php foreach ($classSkills as $skill): ?>
-                <?php 
-                    $isUnlocked = in_array($skill['id'], $unlockedIds);
-                    $canAfford = $character->getSkillPoints() >= $skill['cost_sp'];
-                    $levelMet = $character->getLevel() >= $skill['min_level'];
-                    $prereqMet = true;
-                    if ($skill['parent_skill_id']) {
-                        $prereqMet = in_array($skill['parent_skill_id'], $unlockedIds);
-                    }
-                    $isAvailable = !$isUnlocked && $canAfford && $levelMet && $prereqMet;
-                    
-                    // Style classes
-                    $cardClass = "bg-gray-800 border-2";
-                    if ($isUnlocked) {
-                        $cardClass .= " border-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.3)]";
-                    } elseif ($isAvailable) {
-                        $cardClass .= " border-gray-600 hover:border-gray-400";
-                    } else {
-                        $cardClass .= " border-gray-700 opacity-60";
-                    }
-                ?>
-                
-                <div class="<?= $cardClass ?> rounded-lg p-5 relative transition-all duration-300 skill-card" data-id="<?= $skill['id'] ?>">
-                    <!-- Level Badge -->
-                    <div class="absolute -top-3 -right-3 bg-gray-900 border border-gray-600 rounded-full w-8 h-8 flex items-center justify-center text-xs font-bold text-gray-400" title="Niveau requis">
-                        <?= $skill['min_level'] ?>
-                    </div>
 
-                    <div class="flex justify-between items-start mb-3">
-                        <h3 class="text-xl font-bold text-amber-100"><?= htmlspecialchars($skill['name']) ?></h3>
-                        <?php if ($skill['type'] === 'paddle'): // Typo fix: passive ?>
-                            <span class="px-2 py-0.5 rounded text-xs bg-blue-900 text-blue-300 border border-blue-700 uppercase">Passif</span>
-                        <?php elseif ($skill['type'] === 'passive'): ?>
-                            <span class="px-2 py-0.5 rounded text-xs bg-blue-900 text-blue-300 border border-blue-700 uppercase">Passif</span>
-                        <?php else: ?>
-                            <span class="px-2 py-0.5 rounded text-xs bg-red-900 text-red-300 border border-red-700 uppercase">Actif</span>
-                        <?php endif; ?>
-                    </div>
-                    
-                    <p class="text-gray-400 text-sm mb-4 min-h-[40px]"><?= htmlspecialchars($skill['description']) ?></p>
-                    
-                    <div class="text-sm text-gray-500 mb-4 space-y-1">
-                        <?php if ($skill['type'] === 'active'): ?>
-                            <div class="flex justify-between">
-                                <span>Coût Mana:</span> <span class="text-blue-400"><?= $skill['cost_mp'] ?> MP</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>Cooldown:</span> <span><?= $skill['cooldown'] > 0 ? $skill['cooldown'].' tours' : 'Aucun' ?></span>
-                            </div>
-                        <?php endif; ?>
-                        <?php if ($skill['parent_skill_id']): ?>
-                            <div class="text-orange-400 text-xs mt-2">
-                                <span class="material-symbols-outlined text-[14px] align-middle">lock</span> Requis: Compétence précédente
-                            </div>
-                        <?php endif; ?>
-                    </div>
+        <!-- Canvas Container -->
+        <div class="relative w-full h-[600px] bg-gray-900 border border-gray-700 rounded-lg overflow-hidden cursor-grab active:cursor-grabbing" id="skill-tree-container">
+             <!-- SVG Layer for Lines -->
+            <svg id="connections-layer" class="absolute inset-0 w-full h-full pointer-events-none transform-origin-0"></svg>
+            
+            <!-- Nodes Layer -->
+            <div id="nodes-layer" class="absolute inset-0 transform-origin-0"></div>
 
-                    <div class="mt-auto">
-                        <?php if ($isUnlocked): ?>
-                            <button disabled class="w-full py-2 bg-green-900/30 border border-green-600 text-green-400 rounded cursor-default flex items-center justify-center gap-2">
-                                <span class="material-symbols-outlined">check_circle</span> Appris
-                            </button>
-                        <?php else: ?>
-                            <button onclick="unlockSkill(<?= $skill['id'] ?>)" 
-                                    <?= !$isAvailable ? 'disabled' : '' ?>
-                                    class="w-full py-2 rounded font-bold transition-all flex items-center justify-center gap-2
-                                    <?= $isAvailable 
-                                        ? 'bg-amber-600 hover:bg-amber-500 text-white shadow-lg shadow-amber-900/20' 
-                                        : 'bg-gray-700 text-gray-500 cursor-not-allowed' 
-                                    ?>">
-                                <span>Débloquer</span>
-                                <span class="bg-black/20 px-2 rounded text-sm"><?= $skill['cost_sp'] ?> SP</span>
-                            </button>
-                            <?php if (!$isAvailable && !$prereqMet): ?>
-                                <p class="text-center text-xs text-red-400 mt-2">Prérequis manquant</p>
-                            <?php elseif (!$isAvailable && !$levelMet): ?>
-                                <p class="text-center text-xs text-red-400 mt-2">Niveau trop bas</p>
-                            <?php elseif (!$isAvailable && !$canAfford): ?>
-                                <p class="text-center text-xs text-red-400 mt-2">Points insuffisants</p>
-                            <?php endif; ?>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            <?php endforeach; ?>
+            <div class="absolute bottom-4 right-4 bg-gray-800/80 p-2 rounded text-xs text-gray-400">
+                Molette pour zoomer • Glisser pour déplacer
+            </div>
         </div>
+
     </main>
 
     <script>
-        function unlockSkill(skillId) {
-            if(!confirm('Débloquer cette compétence pour ' + event.currentTarget.querySelector('span:last-child').innerText + ' ?')) return;
+        // Data populated from PHP
+        const CHARACTER_LEVEL = <?= $character->getLevel() ?>;
+        const SKILL_POINTS = <?= $character->getSkillPoints() ?>;
+        const UNLOCKED_IDS = <?= json_encode($unlockedIds) ?>;
+        
+        // Prepare Skill Data with Status
+        const SKILLS = <?= json_encode(array_map(function($s) use ($character, $unlockedIds) {
+            $isUnlocked = in_array($s['id'], $unlockedIds);
+            $canAfford = $character->getSkillPoints() >= $s['cost_sp'];
+            $levelMet = $character->getLevel() >= $s['min_level'];
+            $prereqMet = true;
+            if ($s['parent_skill_id']) $prereqMet = in_array($s['parent_skill_id'], $unlockedIds);
             
-            fetch('/game/skills/unlock', {
-                method: 'POST',
-                headers: {
-                     'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ skill_id: skillId })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.success) {
-                  // Reload to update UI state easily
-                  window.location.reload();
+            $s['status'] = 'locked';
+            if ($isUnlocked) $s['status'] = 'unlocked';
+            else if ($canAfford && $levelMet && $prereqMet) $s['status'] = 'available';
+            
+            return $s;
+        }, $classSkills)) ?>;
+
+        const tree = {
+            container: document.getElementById('skill-tree-container'),
+            nodesLayer: document.getElementById('nodes-layer'),
+            connectionsLayer: document.getElementById('connections-layer'),
+            pan: { x: 0, y: 0 },
+            scale: 1,
+            isDragging: false,
+            dragStart: { x: 0, y: 0 },
+
+            init() {
+                this.render();
+                this.setupEvents();
+                this.centerView();
+            },
+
+            centerView() {
+                // Find bounds or just center 0,0 ? Usually start nodes around 100,100
+                // For now just consistent default
+                this.pan = { x: 20, y: 20 };
+                this.updateTransform();
+            },
+
+            render() {
+                this.nodesLayer.innerHTML = '';
+                this.connectionsLayer.innerHTML = '';
+
+                SKILLS.forEach(skill => {
+                    this.renderNode(skill);
+                    if (skill.parent_skill_id) {
+                        const parent = SKILLS.find(s => s.id == skill.parent_skill_id);
+                        if (parent) this.renderConnection(parent, skill);
+                    }
+                });
+            },
+
+            renderNode(skill) {
+                const el = document.createElement('div');
+                // Base classes
+                let classes = "absolute w-44 p-3 rounded-lg border-2 transition-all duration-300 select-none flex flex-col gap-1";
+                let statusIcon = "";
+                
+                if (skill.status === 'unlocked') {
+                    classes += " bg-gray-800 border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)] z-20";
+                    statusIcon = `<span class="material-symbols-outlined text-amber-500">check_circle</span>`;
+                } else if (skill.status === 'available') {
+                    classes += " bg-gray-800 border-gray-500 hover:border-amber-400 hover:scale-105 cursor-pointer z-20";
+                    statusIcon = `<span class="material-symbols-outlined text-green-400 animate-pulse">lock_open</span>`;
+                    
+                    el.onclick = () => this.unlockSkill(skill.id, skill.name, skill.cost_sp);
                 } else {
-                    alert('Erreur: ' + data.message);
+                    classes += " bg-gray-900 border-gray-800 text-gray-600 opacity-80 z-10 grayscale";
+                    statusIcon = `<span class="material-symbols-outlined text-gray-700">lock</span>`;
                 }
-            })
-            .catch(err => {
-                console.error(err);
-                alert('Erreur de communication');
-            });
-        }
-    </script>
+
+                el.className = classes;
+                el.style.left = `${skill.node_x}px`;
+                el.style.top = `${skill.node_y}px`;
+
+                el.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="font-bold text-sm ${skill.status === 'available' ? 'text-amber-100' : ''}">${skill.name}</div>
+                        ${statusIcon}
+                    </div>
+                    <div class="text-[10px] uppercase font-bold tracking-wide ${skill.type==='passive'?'text-blue-400':'text-red-400'}">${skill.type}</div>
+                    <div class="text-xs mt-1 text-gray-400 leading-tight line-clamp-2" title="${skill.description}">${skill.description}</div>
+                    <div class="mt-2 text-xs font-mono flex gap-2">
+                        <span class="${skill.status==='available'?'text-green-400':''}">${skill.cost_sp} SP</span>
+                        ${skill.min_level > CHARACTER_LEVEL ? '<span class="text-red-500">Lvl '+skill.min_level+'</span>' : '<span class="opacity-50">Lvl '+skill.min_level+'</span>'}
+                    </div>
+                `;
+
+                this.nodesLayer.appendChild(el);
+            },
+
+            renderConnection(parent, child) {
+                const startX = parseInt(parent.node_x) + 88; // Center X
+                const startY = parseInt(parent.node_y) + 80; // Bottom (approx)
+                const endX = parseInt(child.node_x) + 88;   // Center X
+                const endY = parseInt(child.node_y);        // Top
+
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                // Curvy connection
+                const d = `M ${startX} ${startY} C ${startX} ${startY + 50}, ${endX} ${endY - 50}, ${endX} ${endY}`;
+                
+                path.setAttribute('d', d);
+                // Style based on child status (if child is unlocked/available, line is brighter)
+                let stroke = "#374151"; // gray-700
+                if (child.status === 'unlocked') stroke = "#d97706"; // amber-600
+                else if (child.status === 'available') stroke = "#9ca3af"; // gray-400
+
+                path.setAttribute('stroke', stroke);
+                path.setAttribute('stroke-width', '2');
+                path.setAttribute('fill', 'none');
+                
+                this.connectionsLayer.appendChild(path);
+            },
+
+            setupEvents() {
+                this.container.addEventListener('mousedown', e => {
+                    this.isDragging = true;
+                    this.dragStart = { x: e.clientX - this.pan.x, y: e.clientY - this.pan.y };
+                });
+                
+                window.addEventListener('mousemove', e => {
+                    if (!this.isDragging) return;
+                    this.pan.x = e.clientX - this.dragStart.x;
+                    this.pan.y = e.clientY - this.dragStart.y;
+                    this.updateTransform();
+                });
+
+                window.addEventListener('mouseup', () => this.isDragging = false);
+
+                this.container.addEventListener('wheel', e => {
+                    e.preventDefault();
+                    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                    this.scale = Math.min(Math.max(0.5, this.scale * delta), 2);
+                    this.updateTransform();
+                });
+            },
+
+            updateTransform() {
+                const t = `translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.scale})`;
+                this.nodesLayer.style.transform = t;
+                this.connectionsLayer.style.transform = t;
+            },
+
+            unlockSkill(id, name, cost) {
+                if(!confirm(`Débloquer ${name} pour ${cost} SP ?`)) return;
+                
+                fetch('/game/skills/unlock', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ skill_id: id })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) location.reload();
+                    else alert('Erreur: ' + data.message);
+                });
+            }
+        };
+
+        // Init on load
+        tree.init();
 </body>
 </html>

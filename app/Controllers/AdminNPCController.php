@@ -10,9 +10,9 @@ class AdminNPCController
     
     public function __construct()
     {
-        $this->npcModel = new \App\Models\NPC();
-        $this->dialogueModel = new \App\Models\DialogueTree();
-        $this->questModel = new \App\Models\Quest();
+        $this->npcModel = new NPC();
+        $this->dialogueModel = new DialogueTree();
+        $this->questModel = new Quest();
     }
     
     /**
@@ -51,7 +51,7 @@ class AdminNPCController
             $dialogueTrees = $this->dialogueModel->getAll();
             
             // Get Factions
-            $factionModel = new \App\Models\Faction();
+            $factionModel = new Faction();
             $factions = $factionModel->getAll();
             
             require_once __DIR__ . '/../Views/admin/npcs/create.php';
@@ -136,7 +136,7 @@ class AdminNPCController
             $merchantInventory = $this->npcModel->getMerchantInventory($id);
             
             // Load factions
-            $factionModel = new \App\Models\Faction();
+            $factionModel = new Faction();
             $factions = $factionModel->getAll();
             
             // Load quests
@@ -214,7 +214,7 @@ class AdminNPCController
         }
         
         // Log Admin Action
-        $logger = new \App\Services\LoggerService();
+        $logger = new LoggerService();
         $logger->logCritical($_SESSION['user_id'], 'ADMIN_NPC_UPDATE', [
             'npc_id' => $id,
             'name' => $data['name'],

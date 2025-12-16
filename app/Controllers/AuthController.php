@@ -157,7 +157,7 @@ class AuthController
             exit;
         }
 
-        $resetModel = new \App\Models\PasswordReset();
+        $resetModel = new PasswordReset();
         $reset = $resetModel->verify($user['id'], $code);
 
         if ($reset) {

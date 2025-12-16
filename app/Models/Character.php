@@ -4,28 +4,44 @@ namespace App\Models;
 
 use App\Config\Database;
 use App\Models\Inventory;
-use App\Models\Stats;
+use App\Models\Stats as StatsEnum; 
 class Character
 {
-    private $db;
-    private $name;
-    private $level;
-    private $xp;
-    private $gold;  
-    private $strength;
-    private $vitality;
-    private $intelligence;
-    private $dexterity;
-    private $inventory;
-    private $classId;
-    private $armor;
-    private $id;
-    private $currentHp; // Added currentHp
-    private $skillPoints;
-    private $difficulty;
-    private $isIronman;
+    public function getId() {
+        return $this->id;
+    }
+    public function getEquippedStats(StatsEnum $stat): int
+    {
+        $inventoryModel = new Inventory();
+        $inv = $inventoryModel->getCharacterInventory($this->id);
+        
+        $total = 0;
+        $statKey = $stat->value; // e.g., 'damage', 'defense'
 
-     // caches
+        if (!empty($inv['equipped'])) {
+            foreach ($inv['equipped'] as $item) {
+                $stats = json_decode($item['stats'] ?? '[]', true);
+                if (isset($stats[$statKey])) {
+                    $total += (int)$stats[$statKey];
+                }
+            }
+        }
+        
+        return $total;
+    }
+
+    // Removed duplicate isAlive() here - use the one checking currentHp
+
+    public function getAttaqueClass()
+    {
+        return  $this->getStrength() + $this->getEquippedStats(StatsEnum::Damage);
+    }
+    public function resetCache(): void
+    {
+        $this->inventoryCache = [];
+        $this->statsCache = [];
+    }
+
     private array $inventoryCache = [];
     private array $statsCache = [];
 
@@ -34,6 +50,14 @@ class Character
     {   
         $this->db = Database::getInstance()->getConnection();
         $this->inventory = new Inventory();
+    }
+
+    public function __wakeup()
+    {
+        $this->db = Database::getInstance()->getConnection();
+        if (!$this->inventory) {
+             $this->inventory = new Inventory();
+        }
     }
 
     public function create($userId, $classId, $name, $difficulty = 'NORMAL', $isIronman = 0)
@@ -46,9 +70,23 @@ class Character
         }
         return false;
     }
-    // ... existing getEquippedStats ...
     
-    // ... skipping to findById ...
+    public function findAllByUserId($userId)
+    {
+        $stmt = $this->db->prepare("SELECT c.*, cl.name as class_name, cs.level 
+                                    FROM characters c 
+                                    JOIN classes cl ON c.class_id = cl.id 
+                                    JOIN character_stats cs ON c.id = cs.character_id 
+                                    WHERE c.user_id = ?");
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $characters = [];
+        while ($row = $result->fetch_assoc()) {
+            $characters[] = $row;
+        }
+        return $characters;
+    }
 
     public function findById($id)
     {
@@ -59,6 +97,7 @@ class Character
         
         if ($data) {
             $this->id = $data['id'];
+            $this->userId = $data['user_id'];
             $this->name = $data['name'];
             $this->classId = $data['class_id'];
             $this->className = $data['class_name'];
@@ -77,7 +116,7 @@ class Character
 
             // Load Effective Stats (Base + Equipment + Skills)
             // This ensures combat uses the boosting values
-            $statsModel = new \App\Models\CharacterStats();
+            $statsModel = new CharacterStats();
             $effective = $statsModel->getEffectiveStats($this->id);
             if ($effective && isset($effective['stats'])) {
                 $this->strength = $effective['stats']['strength'];
@@ -90,54 +129,30 @@ class Character
         }
         return null; // Return null if not found
     }
-
-
-
-
-        if ($data) {
-
-            $this->id = $data['id'];
-
-            $this->name = $data['name'];
-
-            $this->strength = $data['strength'];
-
-            $this->vitality = $data['vitality'];
-
-            $this->intelligence = $data['intelligence'];
-
-            $this->dexterity = $data['dexterity'];
-
-            $this->level = $data['level'];
-
-            $this->xp = $data['xp'];
-
-            $this->gold = $data['gold'];
-
-            $this->classId = $data['class_id'];
-
-            $this->className = $data['class_name'];
-        }
-        
-                if (!empty($data['appearance'])) {
-                $this->appearance = json_decode($data['appearance'], true);
-            } else {
-                $this->appearance = []; // valeur par défaut
-            }
-
-        
-        return $data;
+    public function getSkillPoints() {
+        return $this->skillPoints;
+    }
+    public function getLevel() {
+        return $this->level;
     }
 
-public function toArray(): array {
-    return [
-        'id'        => $this->id ?? 0,
-        'name'      => $this->name ?? '',
-        'class_name'=> $this->className ?? '',
-        'appearance'=> $this->appearance ?? [],
-        'class'     => ['name' => $this->className ?? ''],
-    ];
-}
+
+
+
+    public function unsetDb() {
+        $this->db = null;
+    }
+
+    public function toArray(): array {
+        return [
+            'id'        => $this->id ?? 0,
+            'name'      => $this->name ?? '',
+            'class_name'=> $this->className ?? '',
+            'appearance'=> $this->appearance ?? [],
+            'class'     => ['name' => $this->className ?? ''],
+        ];
+    }   
+
 
 
     public function updateLastPlayed($id)
@@ -187,6 +202,8 @@ public function toArray(): array {
                "Dexterity: " . $this->dexterity . "\n";
     }
 
+    
+
     public function heal($characterId, $amount)
     {
         $stmt = $this->db->prepare("UPDATE character_stats SET current_hp = LEAST(vitality, current_hp + ?) WHERE character_id = ?");
@@ -196,6 +213,7 @@ public function toArray(): array {
 
     public function addGold($amount)
     {
+        $this->ensureDb();
         $stmt = $this->db->prepare("UPDATE characters SET gold = gold + ? WHERE id = ?");
         $stmt->bind_param("ii", $amount, $this->id);
         if ($stmt->execute()) {
@@ -207,6 +225,7 @@ public function toArray(): array {
 
     public function addXp($amount)
     {
+        $this->ensureDb();
         // 1. Fetch current stats fresh to be safe
         $stmt = $this->db->prepare("SELECT xp, level, skill_points, vitality FROM character_stats WHERE character_id = ?");
         $stmt->bind_param("i", $this->id);
@@ -300,7 +319,6 @@ public function toArray(): array {
 
     public function reduceVitality($number)
     {
-        // Actually reduce current HP, not max vitality
         $stmt = $this->db->prepare("UPDATE character_stats SET current_hp = GREATEST(0, current_hp - ?) WHERE character_id = ?");
         $stmt->bind_param("ii", $number, $this->id);
         $stmt->execute();
@@ -344,27 +362,17 @@ public function toArray(): array {
         // Strength was used in original formula. Vitality creates "meat shield"?
         // Let's stick to Equipment Defense + potentially a small constant/stat if defined.
         // For now: Just Equipped Defense.
-        if($this->armor == null) $this->armor = $this->getEquippedStats(\App\Enums\Stats::Defense);
+        if($this->armor == null) $this->armor = $this->getEquippedStats(StatsEnum::Defense);
         return $this->armor;
     }
 
     // Removed duplicate isAlive() here - use the one checking currentHp
 
-    public function getAttaqueClass()
-    {
-        // Strength + Weapon Damage
-        return  $this->getStrength() + $this->getEquippedStats(\App\Enums\Stats::Damage);
+    
+   
+    public function getUserId(){
+        return $this->userId;
     }
-     public function resetCache(): void
-    {
-        $this->inventoryCache = [];
-        $this->statsCache = [];
-    }
-
-    public function getId(){
-        return $this->id;
-    }
-
 
 
     // Admin Methods

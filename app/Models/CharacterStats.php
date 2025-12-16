@@ -135,11 +135,10 @@ class CharacterStats
                 }
             }
         }
-            }
-        }
+
 
         // 3.5 Apply Passive Skills
-        $skillModel = new \App\Models\Skill();
+        $skillModel = new Skill();
         $passives = $skillModel->getPassiveBonuses($characterId);
         foreach ($passives as $p) {
             $type = $p['effect_type']; // e.g., 'passive_str_flat'
@@ -174,41 +173,9 @@ class CharacterStats
                         }
                     }
                 }
+                }
             }
-            // Handle Defense specifically if needed?
-            // Character::getArmorClass calculates Defense. It calls getEquippedStats(Stats::Defense).
-            // getEffectiveStats returns [stats => [str, dex...]].
-            // If Character.php uses getEffectiveStats for stats, it works.
-            // But ArmorClass logic in Character.php is: getStrength() + getEquippedStats(Defense).
-            // It uses `getStrength`, which returns `$this->strength` (Base + Bonuses?).
-            // Wait, Character::findById loads raw DB stats. 
-            // It does NOT automatically load effective stats into `$this->strength`.
-            // Check Character.php::getStrength(). It returns `$this->strength`.
-            // So Character.php uses BASE STATS currently?
-            // THIS IS A MAJOR FINDING.
-            // `Character::findById` loads `strength` from `character_stats` table.
-            // `CharacterStats::getEffectiveStats` calculates the effective ones but is it USED?
-            // Existing `CombatController` line 33: `$playerStats = $statsModel->getEffectiveStats(...)`.
-            // Existing `interfaceCombat.php` line 96: `$characterModel->getStrength()`.
-            // If `Character` model holds BASE stats, then the UI shows BASE stats.
-            
-            // HOWEVER, passive skills should update EFFECTIVE stats returned by `getEffectiveStats`.
-            // And CombatController IS using `getEffectiveStats` for Initiative.
-            // But `Combat.php` uses `$joueur->getStrength()`.
-            // If `$joueur` is a `Character` instance, `getStrength()` returns Base.
-            // This means Equipment Bonuses to Strength were NOT APPLIED in Damage Calc in existing code??
-            // `Character::getEquippedStats` (line 48) iterates inventory.
-            // `Character::getAttaqueClass` (line 278): `getStrength() + getEquippedStats(Damage)`.
-            // So Weapon Damage is added. But Strength Bonus from items is NOT added to `getStrength()`.
-            // It seems "Stat Bonuses from Items" were NOT implemented in `Character.php`.
-            // Only `CharacterStats::getEffectiveStats` implements it, which is used for Weight... and maybe Initiative.
-            
-            // To fix this globally and support Skills properly:
-            // `Character` should trigger `getEffectiveStats` or `Character::getStrength` should return effective.
-            // Refactoring `Character` to use `CharacterStats::getEffectiveStats` might be risky/large.
-            // BUT for Skills to work (e.g. +5 Str Buff), we NEED effective stats.
-            
-            // For now, I will ensure `getEffectiveStats` includes Passives.
+
             // And I will try to update `Character` to load effective stats or use them.
             // User request is "Systeme de gain ... Interface ... Actions".
             // If I stick to `CharacterStats::getEffectiveStats`, at least weight/init are correct.

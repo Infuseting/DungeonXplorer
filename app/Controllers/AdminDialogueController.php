@@ -8,7 +8,7 @@ class AdminDialogueController
     
     public function __construct()
     {
-        $this->db = \App\Config\Database::getInstance()->getConnection();
+        $this->db = Database::getInstance()->getConnection();
     }
     
     /**
@@ -18,8 +18,8 @@ class AdminDialogueController
     {
         $search = $_GET['search'] ?? '';
         
-        $dialogueModel = new \App\Models\DialogueTree();
-        $npcModel = new \App\Models\NPC();
+        $dialogueModel = new DialogueTree();
+        $npcModel = new NPC();
         
         // Get all trees with node count
         $query = "SELECT dt.*, 
@@ -62,7 +62,7 @@ class AdminDialogueController
     public function create()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $dialogueModel = new \App\Models\DialogueTree();
+            $dialogueModel = new DialogueTree();
             
             $name = $_POST['name'] ?? '';
             $description = $_POST['description'] ?? '';
@@ -83,7 +83,7 @@ class AdminDialogueController
      */
     public function edit($id)
     {
-        $dialogueModel = new \App\Models\DialogueTree();
+        $dialogueModel = new DialogueTree();
         $tree = $dialogueModel->findById($id);
         
         if (!$tree) {
@@ -110,7 +110,7 @@ class AdminDialogueController
      */
     public function delete($id)
     {
-        $dialogueModel = new \App\Models\DialogueTree();
+        $dialogueModel = new DialogueTree();
         $dialogueModel->delete($id);
         
         header('Location: /admin/dialogues');
@@ -122,7 +122,7 @@ class AdminDialogueController
      */
     public function editTree($id)
     {
-        $dialogueModel = new \App\Models\DialogueTree();
+        $dialogueModel = new DialogueTree();
         $tree = $dialogueModel->findById($id);
         
         if (!$tree) {
@@ -168,7 +168,7 @@ class AdminDialogueController
             $conditionType = $data['condition_type'] ?? 'NONE';
             $conditionValue = $data['condition_value'] ?? null;
 
-            $dialogueModel = new \App\Models\DialogueTree();
+            $dialogueModel = new DialogueTree();
             
             try {
                 // Modified to pass new fields (requires Model update too, but we can do raw SQL insert here if Model doesn't support it yet)
@@ -279,7 +279,7 @@ class AdminDialogueController
                 exit;
             }
             
-            $dialogueModel = new \App\Models\DialogueTree();
+            $dialogueModel = new DialogueTree();
             if ($dialogueModel->deleteDialogue($data['id'])) {
                 echo json_encode(['success' => true]);
             } else {

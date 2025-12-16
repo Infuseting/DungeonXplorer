@@ -292,3 +292,6 @@ export function clearMapHistory() {
     currentMapData = null;
     updateBackButton();
 }
+
+// Make loadMapPoints available globally
+window.loadMapPoints = loadMapPoints;

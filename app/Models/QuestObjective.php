@@ -8,7 +8,7 @@ class QuestObjective
     
     public function __construct()
     {
-        $this->db = \App\Config\Database::getInstance()->getConnection();
+        $this->db = Database::getInstance()->getConnection();
     }
     
     public function create($data)

@@ -28,6 +28,13 @@ ob_start();
             
             <!-- Dropdown Menu -->
             <div id="user-dropdown" class="hidden absolute top-14 left-0 w-72 bg-gray-800 border-2 border-gray-600 rounded-lg shadow-xl overflow-hidden">
+                <button id="load-save-button" class="w-full px-4 py-3 text-left text-white hover:bg-gray-700 transition-colors flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    Charger une partie
+                </button>
+
                 <button id="settings-button" class="w-full px-4 py-3 text-left text-white hover:bg-gray-700 transition-colors flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -77,7 +84,7 @@ ob_start();
         </button>
 
          <!-- Skills Button -->
-         <button id="skills-toggle" onclick="window.location.href='/game/skills'" class="w-12 h-12 md:w-16 md:h-16 bg-amber-600 hover:bg-amber-700 text-white rounded-full shadow-lg border-2 border-amber-400 flex items-center justify-center transition-transform hover:scale-110 active:scale-95">
+         <button id="skills-toggle" class="w-12 h-12 md:w-16 md:h-16 bg-amber-600 hover:bg-amber-700 text-white rounded-full shadow-lg border-2 border-amber-400 flex items-center justify-center transition-transform hover:scale-110 active:scale-95">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
             </svg>
@@ -95,6 +102,12 @@ ob_start();
 
     <!-- Quest Journal Modal -->
     <?php require __DIR__ . '/components/quest-journal-modal.php'; ?>
+
+    <!-- Skills Modal -->
+    <?php require __DIR__ . '/components/skills-modal.php'; ?>
+
+    <!-- Save/Load Modal -->
+    <?php require __DIR__ . '/components/save-load-modal.php'; ?>
 
     <!-- Settings Modal -->
     <?php require __DIR__ . '/components/settings-modal.php'; ?>
@@ -151,7 +164,7 @@ ob_start();
     import { initSoundManager, playSound } from '/js/modules/soundManager.js';
 
     // Make character ID available globally
-    window.characterId = <?= $character['id'] ?>;
+    window.characterId = <?= $character->getId() ?>;
 
     // Initialize on DOM ready
     document.addEventListener('DOMContentLoaded', async () => {
@@ -219,6 +232,19 @@ ob_start();
                 if (!userMenuButton.contains(e.target) && !userDropdown.contains(e.target)) {
                     userDropdown.classList.add('hidden');
                 }
+            });
+        }
+        
+        
+        
+        // Load Game Button
+        const loadSaveBtn = document.getElementById('load-save-button');
+        if (loadSaveBtn) {
+            loadSaveBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                playSound('click');
+                userDropdown.classList.add('hidden');
+                SaveSystem.open('load');
             });
         }
         
@@ -324,43 +350,14 @@ ob_start();
             }, 800);
         }
 
-        async function manualSave() {
-            const { showToast } = await import('/js/modules/toast.js');
-            const { playSound } = await import('/js/modules/soundManager.js');
-            playSound('click');
-            
-            const name = prompt("Nom de la sauvegarde :", "Partie " + new Date().toLocaleString());
-            if (!name) return;
-
-            showToast('Sauvegarde en cours...', 'info');
-            
-            try {
-                const formData = new FormData();
-                formData.append('name', name);
-                
-                const response = await fetch('/game/save', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-                
-                if (data.success) {
-                    showToast('Sauvegarde réussie !', 'success');
-                } else {
-                    showToast('Erreur: ' + data.message, 'error');
-                }
-            } catch (e) {
-                showToast('Erreur technique', 'error');
-            }
-        }
-
-        
-        // Manual Save Button
+        // Manual Save Button (Opens Modal)
         const manualSaveBtn = document.getElementById('manual-save-button');
         if (manualSaveBtn) {
             manualSaveBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                manualSave();
+                playSound('click');
+                userDropdown.classList.add('hidden'); // Close dropdown
+                SaveSystem.open('save');
             });
         }
 

@@ -7,7 +7,8 @@ use App\Models\CharacterClass;
 use App\Models\CharacterStats;
 
 class CharacterAppearanceController
-{
+{   
+    
     public function index($characterId)
     {
         if (!isset($_SESSION['user_id'])) {
@@ -31,7 +32,7 @@ class CharacterAppearanceController
             $characterModel = new Character();
             $character = $characterModel->findById($characterId);
             
-            if (!$character || $character['user_id'] != $_SESSION['user_id']) {
+            if (!$character || $character->getUserId() != $_SESSION['user_id']) {
                 header('Location: /personnage');
                 exit;
             }
@@ -59,7 +60,54 @@ class CharacterAppearanceController
         
         require __DIR__ . '/../Views/character/appearance.php';
     }
-    
+    public function toFullArray($characterId) {
+        if (!isset($_SESSION['user_id'])) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Unauthorized']);
+            exit;
+        }
+        
+        $characterModel = new Character();
+        $character = $characterModel->findById($characterId);
+        
+        if (!$character || $character->getUserId() != $_SESSION['user_id']) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Forbidden']);
+            exit;
+        }
+        
+        // Convert object to array for renderCharacter
+        $characterData = $character->toArray();
+        
+        // Add User ID manually if needed or just ensure structure matches
+        $characterData['user_id'] = $character->getUserId();
+
+        // Récupérer la classe complète
+        $classModel = new CharacterClass();
+        $characterData['class'] = $classModel->findById($characterData['class']['name'] ?? 'Warrior'); // Wait, toArray has class name?
+        // Actually toArray returns ['class' => ['name' => ...]]
+        // But we need the ID to fetch full class?
+        // findById on Character loaded classId.
+        // We can just use the class info present in character object if available, OR fetch again.
+        // Character object has classId.
+        // Let's add getClassId to Character model or use internal property if public (it's private).
+        // Let's assume we can fetch by class Name or similar, OR add getClassId method.
+        // For now, simpler: Character::findById query ALREADY joined classes and got `class_name`.
+        // `renderCharacter` uses `$character['class']['name']` OR `$character['class_name']`.
+        // `toArray` returns `class_name` and `class` nested. this should be enough for name.
+        
+        // Récupérer les stats
+        $statsModel = new CharacterStats();
+        $characterData['stats'] = $statsModel->findByCharacterId($characterId);
+        
+        // Rendre le personnage
+        echo renderCharacter($characterData, [
+            'size' => 'full',
+            'showFilter' => true,
+            'id' => 'character-' . $characterData['id'],
+            'class' => 'max-h-full max-w-full drop-shadow-2xl hover:brightness-110 transition duration-500'
+        ]);
+    }
     private function getAppearanceOptions($className)
     {
         $basePath = __DIR__ . '/../../public/assets/images/' . $className;
@@ -153,7 +201,7 @@ class CharacterAppearanceController
             $characterModel = new Character();
             $character = $characterModel->findById($characterId);
             
-            if (!$character || $character['user_id'] != $_SESSION['user_id']) {
+            if (!$character || $character->getUserId() != $_SESSION['user_id']) {
                 header('Location: /personnage');
                 exit;
             }

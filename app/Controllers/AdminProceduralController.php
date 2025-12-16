@@ -135,7 +135,7 @@ class AdminProceduralController
         }
         $pools = $this->templateModel->getLootPools($id);
         // Need items list for dropdown
-        $itemModel = new \App\Models\Item(); // Assuming Item model exists
+        $itemModel = new Item(); // Assuming Item model exists
         $items = $itemModel->getAll(); // Assuming getAll exists
         
         $this->render('admin/procedural/loot-pools', ['template' => $template, 'pools' => $pools, 'items' => $items]);

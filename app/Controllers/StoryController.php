@@ -8,6 +8,7 @@ use App\Models\StoryProgress;
 use App\Models\StoryInstance;
 use App\Models\Character;
 use App\Models\Inventory;
+use App\Models\CharacterStats;  
 
 class StoryController
 {
@@ -66,7 +67,7 @@ class StoryController
                 
                 if (!$instance) {
                     // Generate new instance
-                    $generator = new \App\Services\ProceduralGenerator();
+                    $generator = new ProceduralGenerator();
                     $instanceId = $generator->generate($storyId, $characterId);
                     
                     if (!$instanceId) {
@@ -98,7 +99,7 @@ class StoryController
         ]);
 
         // Log Entry
-        $logger = new \App\Services\LoggerService();
+        $logger = new LoggerService();
         $logger->logGameplay($_SESSION['user_id'], $_SESSION['character_id'], 'DUNGEON_ENTER', [
             'story_id' => $storyId,
             'story_title' => $story['title']
@@ -291,7 +292,7 @@ class StoryController
         if (strpos($connection['condition_type'], 'stat_') === 0) {
             $statName = substr($connection['condition_type'], 5); // e.g. "strength"
             
-            $statsModel = new \App\Models\CharacterStats();
+            $statsModel = new CharacterStats();
             $effectiveStats = $statsModel->getEffectiveStats($characterId);
             
             if (!$effectiveStats) return false;
@@ -370,7 +371,7 @@ class StoryController
         // Flee mechanics
         // Chance = 50% + (Player Dex - Monster Level) * 2%
         // Get Player Stats
-        $statsModel = new \App\Models\CharacterStats();
+        $statsModel = new CharacterStats();
         $stats = $statsModel->getEffectiveStats($characterId);
         
         // Fallback if stats not found (e.g. new char?)
@@ -436,7 +437,7 @@ class StoryController
         $trapId = $_POST['trap_id'];
         
         // Fetch trap details
-        $db = \App\Config\Database::getInstance()->getConnection();
+        $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare("SELECT * FROM story_node_traps WHERE id = ?");
         $stmt->bind_param("i", $trapId);
         $stmt->execute();
@@ -448,7 +449,7 @@ class StoryController
         }
 
         // Calculate Roll
-        $statsModel = new \App\Models\CharacterStats();
+        $statsModel = new CharacterStats();
         $stats = $statsModel->getEffectiveStats($characterId);
         
         // Map stat name to valid column (e.g. 'DEX' -> 'dexterity')
@@ -540,7 +541,7 @@ class StoryController
 
             // Check Trap
             if ($validLoot['is_trapped']) {
-                $statsModel = new \App\Models\CharacterStats();
+                $statsModel = new CharacterStats();
                 $stats = $statsModel->getEffectiveStats($characterId);
                 $dex = $stats['dexterity'] ?? 10;
                 $mod = floor(($dex - 10) / 2);
@@ -578,7 +579,6 @@ class StoryController
             echo json_encode(['success' => false, 'message' => 'Invalid loot']);
         }
     }
-}
     /**
      * Search the room (Fouiller)
      */
@@ -598,7 +598,7 @@ class StoryController
         $loots = $this->nodeModel->getLoots($nodeId);
 
         // Calculate Perception / Investigation Roll
-        $statsModel = new \App\Models\CharacterStats();
+        $statsModel = new CharacterStats();
         $stats = $statsModel->getEffectiveStats($characterId);
         $wis = $stats['wisdom'] ?? 10;
         $int = $stats['intelligence'] ?? 10;
@@ -641,7 +641,7 @@ class StoryController
             $this->characterModel->takeDamage($characterId, $damageTaken);
             $message = "En fouillant, vous déclenchez un piège ! " . $triggeredTrap['effect_text'];
             
-            return echo json_encode([
+            return json_encode([
                 'success' => true,
                 'action' => 'triggered',
                 'damage' => $damageTaken,

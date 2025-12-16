@@ -63,9 +63,9 @@ function displayNPCModal() {
     actionsEl.classList.remove('hidden');
     actionsEl.classList.add('flex'); // Ensure actions are visible
 
-    // Display initial greeting (support multiple roles stored as CSV)
+    // Display initial greeting (support text override from backend)
     const npcRoles = Array.isArray(currentNPC.role) ? currentNPC.role : (String(currentNPC.role || '').split(',').map(r => r.trim()).filter(Boolean));
-    textEl.textContent = getGreeting(npcRoles);
+    textEl.textContent = currentNPC.active_quest_greeting || getGreeting(npcRoles);
 
     // Add action buttons based on roles
     if (npcRoles.includes('merchant')) {
@@ -184,6 +184,12 @@ function acceptQuest(questId) {
 
                 playSound('notification');
                 showToast(`Quête acceptée : ${data.quest_name}`, 'quest');
+
+                // Refresh Map Points to remove '!' icon
+                if (window.loadMapPoints) {
+                    const mapId = window.currentMapData ? window.currentMapData.mapId : 1;
+                    window.loadMapPoints(mapId, window.characterId);
+                }
 
                 closeNPCModal();
             } else {

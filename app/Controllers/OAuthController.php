@@ -5,6 +5,8 @@ namespace App\Controllers;
 use App\Services\OAuthService;
 use App\Models\User;
 use App\Config\Database;
+use App\Services\TokenService;
+
 
 class OAuthController
 {
@@ -16,7 +18,7 @@ class OAuthController
     {
         $this->oauthService = new OAuthService();
         $this->db = Database::getInstance()->getConnection();
-        $this->tokenService = new \App\Services\TokenService();
+        $this->tokenService = new TokenService();
     }
 
     public function redirect($provider)

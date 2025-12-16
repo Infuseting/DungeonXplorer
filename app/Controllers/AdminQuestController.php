@@ -8,7 +8,7 @@ class AdminQuestController
     
     public function __construct()
     {
-        $this->db = \App\Config\Database::getInstance()->getConnection();
+        $this->db = Database::getInstance()->getConnection();
     }
     
     /**
@@ -18,7 +18,7 @@ class AdminQuestController
     {
         $search = $_GET['search'] ?? '';
         
-        $questModel = new \App\Models\Quest();
+        $questModel = new Quest();
         
         $query = "SELECT q.*, 
                   (SELECT COUNT(*) FROM quest_stages WHERE quest_id = q.id) as stage_count
@@ -54,7 +54,7 @@ class AdminQuestController
     public function create()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $questModel = new \App\Models\Quest();
+            $questModel = new Quest();
             
             $data = [
                 'name' => $_POST['name'] ?? '',
@@ -81,7 +81,7 @@ class AdminQuestController
      */
     public function edit($id)
     {
-        $questModel = new \App\Models\Quest();
+        $questModel = new Quest();
         $quest = $questModel->getFullQuest($id);
         
         if (!$quest) {
@@ -105,7 +105,7 @@ class AdminQuestController
         }
         
         // Get NPCs for assignment
-        $npcModel = new \App\Models\NPC();
+        $npcModel = new NPC();
         $npcs = $npcModel->getAll();
         
         // Get assigned NPCs
@@ -121,13 +121,13 @@ class AdminQuestController
         $assignedNPCs = $result->fetch_all(MYSQLI_ASSOC);
         
         // Get map points for unlock selection
-        $mapPointModel = new \App\Models\MapPoint();
+        $mapPointModel = new MapPoint();
         $stmt = $this->db->prepare("SELECT id, name, map_id FROM map_points ORDER BY map_id, name");
         $stmt->execute();
         $allMapPoints = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
         // Load unlocks for each stage
-        $stageModel = new \App\Models\QuestStage();
+        $stageModel = new QuestStage();
         if (!empty($quest['stages'])) {
             foreach ($quest['stages'] as &$stage) {
                 $stage['unlocks'] = $stageModel->getMapUnlocks($stage['id']);
@@ -140,15 +140,15 @@ class AdminQuestController
         $allQuests = $questModel->getAll();
         
         // Load dialogue trees for objective assignment
-        $dialogueModel = new \App\Models\DialogueTree();
+        $dialogueModel = new DialogueTree();
         $dialogueTrees = $dialogueModel->getAll();
         
         // Load NPCs for TALK_NPC objectives
-        $npcModel = new \App\Models\NPC();
+        $npcModel = new NPC();
         $allNPCs = $npcModel->getAll();
 
         // Load all items for rewards selection
-        $itemModel = new \App\Models\Item();
+        $itemModel = new Item();
         $allItems = $itemModel->getAll();
         
         require_once __DIR__ . '/../Views/admin/quests/edit.php';
@@ -159,7 +159,7 @@ class AdminQuestController
      */
     public function delete($id)
     {
-        $questModel = new \App\Models\Quest();
+        $questModel = new Quest();
         $questModel->delete($id);
         
         header('Location: /admin/quests');
@@ -182,7 +182,7 @@ class AdminQuestController
                 exit;
             }
             
-            $questModel = new \App\Models\Quest();
+            $questModel = new Quest();
             $success = $questModel->addRewardItem((int)$data['quest_id'], (int)$data['item_id'], (int)($data['quantity'] ?? 1));
             
             echo json_encode(['success' => $success]);
@@ -206,7 +206,7 @@ class AdminQuestController
                 exit;
             }
             
-            $questModel = new \App\Models\Quest();
+            $questModel = new Quest();
             $success = $questModel->removeRewardItem((int)$data['id']);
             
             echo json_encode(['success' => $success]);
@@ -230,7 +230,7 @@ class AdminQuestController
                 exit;
             }
             
-            $stageModel = new \App\Models\QuestStage();
+            $stageModel = new QuestStage();
             $stageId = $stageModel->create([
                 'quest_id' => (int)$data['quest_id'],
                 'name' => trim($data['name']),
@@ -264,7 +264,7 @@ class AdminQuestController
                 exit;
             }
             
-            $stageModel = new \App\Models\QuestStage();
+            $stageModel = new QuestStage();
             $success = $stageModel->update((int)$data['id'], [
                 'name' => trim($data['name']),
                 'description' => trim($data['description'] ?? ''),
@@ -293,7 +293,7 @@ class AdminQuestController
                 exit;
             }
             
-            $stageModel = new \App\Models\QuestStage();
+            $stageModel = new QuestStage();
             $success = $stageModel->delete((int)$data['id']);
             
             echo json_encode(['success' => $success]);
@@ -317,7 +317,7 @@ class AdminQuestController
                 exit;
             }
             
-            $objectiveModel = new \App\Models\QuestObjective();
+            $objectiveModel = new QuestObjective();
             $objectiveId = $objectiveModel->create([
                 'stage_id' => (int)$data['stage_id'],
                 'type' => $data['type'],
@@ -352,7 +352,7 @@ class AdminQuestController
                 exit;
             }
             
-            $objectiveModel = new \App\Models\QuestObjective();
+            $objectiveModel = new QuestObjective();
             $success = $objectiveModel->update((int)$data['id'], [
                 'type' => $data['type'],
                 'target_id' => !empty($data['target_id']) ? (int)$data['target_id'] : null,
@@ -382,7 +382,7 @@ class AdminQuestController
                 exit;
             }
             
-            $objectiveModel = new \App\Models\QuestObjective();
+            $objectiveModel = new QuestObjective();
             $success = $objectiveModel->delete((int)$data['id']);
             
             echo json_encode(['success' => $success]);
@@ -464,7 +464,7 @@ class AdminQuestController
                 exit;
             }
             
-            $stageModel = new \App\Models\QuestStage();
+            $stageModel = new QuestStage();
             $success = $stageModel->addMapUnlock((int)$data['stage_id'], (int)$data['map_point_id']);
             
             echo json_encode(['success' => $success]);
@@ -488,7 +488,7 @@ class AdminQuestController
                 exit;
             }
             
-            $stageModel = new \App\Models\QuestStage();
+            $stageModel = new QuestStage();
             $success = $stageModel->removeMapUnlock((int)$data['stage_id'], (int)$data['map_point_id']);
             
             echo json_encode(['success' => $success]);
@@ -512,7 +512,7 @@ class AdminQuestController
                 exit;
             }
             
-            $questModel = new \App\Models\Quest();
+            $questModel = new Quest();
             $success = $questModel->addPrerequisite((int)$data['quest_id'], (int)$data['required_quest_id']);
             
             echo json_encode(['success' => $success]);
@@ -536,7 +536,7 @@ class AdminQuestController
                 exit;
             }
             
-            $questModel = new \App\Models\Quest();
+            $questModel = new Quest();
             $success = $questModel->removePrerequisite((int)$data['quest_id'], (int)$data['required_quest_id']);
             
             echo json_encode(['success' => $success]);

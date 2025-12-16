@@ -1,5 +1,8 @@
 <?php
-
+use App\Models\CharacterBuff;
+use App\Models\Character;
+use App\Models\Stats;
+use App\Models\Skill
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -143,7 +146,7 @@
                             <!-- Status Effects Container -->
                             <div id="status-effects-container" class="mt-4 flex flex-wrap gap-2 justify-center min-h-[40px] w-full px-2">
                                 <?php
-                                    $buffModel = new \App\Models\CharacterBuff();
+                                    $buffModel = new CharacterBuff();
                                     $activeBuffs = $buffModel->getActiveBuffs($characterModel->getId());
                                     
                                     if(empty($activeBuffs)):
@@ -206,8 +209,8 @@
 
                         <li>
                         <?php 
-                            $skillModel = new \App\Models\Skill();
-                            $unlockedSkills = $skillModel->getUnlockedSkills($character->getId());
+                            $skillModel = new Skill();
+                            $unlockedSkills = $skillModel->getUnlockedSkills($characterModel->getId());
                             // Filter Active
                             $actives = array_filter($unlockedSkills, function($s) { return $s['type'] === 'active'; });
                             

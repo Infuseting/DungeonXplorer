@@ -29,7 +29,7 @@ class AdminController
     // API endpoint for dashboard charts
     public function stats()
     {
-        $db = \App\Config\Database::getInstance()->getConnection();
+        $db = Database::getInstance()->getConnection();
 
         // Class distribution
         $classes = [];
@@ -75,21 +75,21 @@ class AdminController
     
     private function getTotalUsers()
     {
-        $db = \App\Config\Database::getInstance()->getConnection();
+        $db = Database::getInstance()->getConnection();
         $result = $db->query("SELECT COUNT(*) as count FROM users");
         return $result->fetch_assoc()['count'];
     }
     
     private function getTotalCharacters()
     {
-        $db = \App\Config\Database::getInstance()->getConnection();
+        $db = Database::getInstance()->getConnection();
         $result = $db->query("SELECT COUNT(*) as count FROM characters");
         return $result->fetch_assoc()['count'];
     }
     
     private function getTotalMaps()
     {
-        $db = \App\Config\Database::getInstance()->getConnection();
+        $db = Database::getInstance()->getConnection();
         $result = $db->query("SELECT COUNT(*) as count FROM maps");
         return $result->fetch_assoc()['count'];
     }
@@ -97,14 +97,14 @@ class AdminController
     
     private function getTotalNPCs()
     {
-        $db = \App\Config\Database::getInstance()->getConnection();
+        $db = Database::getInstance()->getConnection();
         $result = $db->query("SELECT COUNT(*) as count FROM npcs");
         return $result->fetch_assoc()['count'];
     }
     
     private function getRecentCharacters($limit = 5)
     {
-        $db = \App\Config\Database::getInstance()->getConnection();
+        $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare("
             SELECT c.*, u.username, cl.name as class_name 
             FROM characters c 

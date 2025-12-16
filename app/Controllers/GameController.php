@@ -6,6 +6,15 @@ use App\Models\Character;
 use App\Models\Inventory;
 use App\Models\Map;
 use App\Models\MapPoint;
+use App\Models\StoryProgress;
+use App\Models\Quest;
+use App\Models\PlayerQuest;
+use App\Models\DialogueTree;
+use App\Models\NPC;
+use App\Models\CharacterStats;
+use App\Models\Skill;
+use App\Services\TokenService;
+
 
 class GameController
 {
@@ -31,7 +40,7 @@ class GameController
         $character = $characterModel->findById($characterId);
 
         // Verify ownership
-        if ($character['user_id'] !== $_SESSION['user_id']) {
+        if ($character->getUserId() !== $_SESSION['user_id']) {
             header('Location: /personnage');
             exit;
         }
@@ -41,7 +50,7 @@ class GameController
         $inventory = $inventoryModel->getCharacterInventory($characterId);
         
         // Check if character is in a dungeon
-        $storyProgressModel = new \App\Models\StoryProgress();
+        $storyProgressModel = new StoryProgress();
         $activeStory = $storyProgressModel->getActiveStory($characterId);
         
         if ($activeStory) {
@@ -52,6 +61,27 @@ class GameController
         // Load map configuration and points using models
         $mapModel = new Map();
         $mapPointModel = new MapPoint();
+        
+        // Prepare Skills Data for Modal
+        $skillModel = new Skill();
+        $classSkills = $skillModel->getSkillsByClass($character->getClassId());
+        $unlocked = $skillModel->getUnlockedSkills($characterId);
+        $unlockedIds = array_map(function($s) { return $s['id']; }, $unlocked);
+        
+        $playerSkillsJson = json_encode(array_map(function($s) use ($character, $unlockedIds) {
+            $isUnlocked = in_array($s['id'], $unlockedIds);
+            $canAfford = $character->getSkillPoints() >= $s['cost_sp'];
+            $levelMet = $character->getLevel() >= $s['min_level'];
+            $prereqMet = true;
+            if ($s['parent_skill_id']) $prereqMet = in_array($s['parent_skill_id'], $unlockedIds);
+            
+            $s['status'] = 'locked';
+            if ($isUnlocked) $s['status'] = 'unlocked';
+            else if ($canAfford && $levelMet && $prereqMet) $s['status'] = 'available';
+            
+            return $s;
+        }, $classSkills));
+
         
         // Default to map ID 1 (you can make this dynamic later)
         $mapId = 1;
@@ -81,8 +111,8 @@ class GameController
             exit;
         }
 
-        $mapModel = new \App\Models\Map();
-        $mapPointModel = new \App\Models\MapPoint();
+        $mapModel = new Map();
+        $mapPointModel = new MapPoint();
 
         $map = $mapModel->findById($mapId);
         
@@ -121,7 +151,7 @@ class GameController
             echo json_encode(['success' => false, 'message' => 'Aucun personnage sélectionné']);
             exit;
         }
-        $mapPointModel = new \App\Models\MapPoint();
+        $mapPointModel = new MapPoint();
         $points = $mapPointModel->getVisiblePointsForCharacter($mapId, $_SESSION['character_id']);
         $points = $this->enrichPointsWithQuestStatus($points, $_SESSION['character_id']);
         
@@ -139,8 +169,8 @@ class GameController
     {
         header('Content-Type: application/json');
         
-        $npcModel = new \App\Models\NPC();
-        $dialogueModel = new \App\Models\DialogueTree();
+        $npcModel = new NPC();
+        $dialogueModel = new DialogueTree();
         
         $npc = $npcModel->findById($id);
         
@@ -156,8 +186,8 @@ class GameController
         $availableDialogues = [];
         
         if (isset($_SESSION['character_id'])) {
-            $playerQuestModel = new \App\Models\PlayerQuest();
-            $db = \App\Config\Database::getInstance()->getConnection();
+            $playerQuestModel = new PlayerQuest();
+            $db = Database::getInstance()->getConnection();
             
             foreach ($allDialogueTrees as $tree) {
                 // Check if dialogue is linked to a quest objective
@@ -206,12 +236,12 @@ class GameController
         $availableQuests = [];
         if (in_array('quest_giver', $npcRoles) && isset($_SESSION['character_id'])) {
             $allNpcQuests = $npcModel->getQuests($id);
-            $playerQuestModel = new \App\Models\PlayerQuest();
-            $questModel = new \App\Models\Quest();
-            $characterModel = new \App\Models\Character();
+            $playerQuestModel = new PlayerQuest();
+            $questModel = new Quest();
+            $characterModel = new Character();
             
             $character = $characterModel->findById($_SESSION['character_id']);
-            $playerLevel = $character['level'] ?? 1;
+            $playerLevel = $character->getLevel() ?? 1;
 
             foreach ($allNpcQuests as $quest) {
                 // 1. Must be GIVER
@@ -238,6 +268,17 @@ class GameController
 
                 $availableQuests[] = $quest;
             }
+
+            // Check for Active Quests for Greeting Override
+            foreach ($allNpcQuests as $quest) {
+                if (($quest['relation_type'] ?? 'GIVER') !== 'GIVER') continue;
+                $status = $playerQuestModel->getQuestStatus($_SESSION['character_id'], $quest['id']);
+                if ($status === 'ACTIVE') {
+                    // Customizable greeting for active quest
+                    $npc['active_quest_greeting'] = "Alors, comment avance la quête \"" . $quest['name'] . "\" ? Je compte sur vous !";
+                    break;
+                }
+            }
         }
         
         echo json_encode([
@@ -257,7 +298,7 @@ class GameController
     {
         header('Content-Type: application/json');
         
-        $dialogueModel = new \App\Models\DialogueTree();
+        $dialogueModel = new DialogueTree();
         $tree = $dialogueModel->getDialogueTree($treeId);
         
         if (empty($tree)) {
@@ -295,7 +336,7 @@ class GameController
             exit;
         }
         
-        $playerQuestModel = new \App\Models\PlayerQuest();
+        $playerQuestModel = new PlayerQuest();
         
         // Check if already started
         $status = $playerQuestModel->getQuestStatus($_SESSION['character_id'], $questId);
@@ -308,7 +349,7 @@ class GameController
         $playerQuestId = $playerQuestModel->startQuest($_SESSION['character_id'], $questId);
         
         if ($playerQuestId) {
-            $questModel = new \App\Models\Quest();
+            $questModel = new Quest();
             $quest = $questModel->findById($questId);
             
             echo json_encode([
@@ -334,7 +375,7 @@ class GameController
             exit;
         }
         
-        $playerQuestModel = new \App\Models\PlayerQuest();
+        $playerQuestModel = new PlayerQuest();
         $log = $playerQuestModel->getQuestLog($_SESSION['character_id']);
         
         echo json_encode([
@@ -374,15 +415,15 @@ class GameController
         }
         
         // Check if this dialogue is linked to a quest objective
-        $dialogueModel = new \App\Models\DialogueTree();
+        $dialogueModel = new DialogueTree();
         $objective = $dialogueModel->getQuestObjective($treeId);
         
         error_log("Objective found: " . ($objective ? "YES (ID: {$objective['id']})" : "NO"));
         
         if ($objective) {
             // This dialogue is linked to a quest - update progress
-            $playerQuestModel = new \App\Models\PlayerQuest();
-            $db = \App\Config\Database::getInstance()->getConnection();
+            $playerQuestModel = new PlayerQuest();
+            $db = Database::getInstance()->getConnection();
             
             error_log("Quest ID: {$objective['quest_id']}, Stage ID: {$objective['stage_id']}");
             
@@ -465,9 +506,9 @@ class GameController
         }
 
         $characterId = $_SESSION['character_id'];
-        $inventoryModel = new \App\Models\Inventory();
-        $characterModel = new \App\Models\Character();
-        $buffService = new \App\Services\BuffService();
+        $inventoryModel = new Inventory();
+        $characterModel = new Character();
+        $buffService = new BuffService();
 
         // 1. Get Item Details from Inventory (to check type and verify ownership)
         // Need to expose a getter for specific item details in Inventory model or use raw query here?
@@ -476,7 +517,7 @@ class GameController
         // I added consumeItem but strictly it just consumes. I need item stats/effects first.
         // Let's rely on DB here for safety.
         
-        $db = \App\Config\Database::getInstance()->getConnection();
+        $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare("
             SELECT i.* 
             FROM character_inventory ci
@@ -638,7 +679,7 @@ class GameController
             exit;
         }
 
-        $db = \App\Config\Database::getInstance()->getConnection();
+        $db = Database::getInstance()->getConnection();
         
         // 1. Fetch dialogue node
         $stmt = $db->prepare("SELECT * FROM dialogues WHERE id = ?");
@@ -675,9 +716,9 @@ class GameController
     {
         if ($type === 'NONE') return true;
         
-        $characterModel = new \App\Models\Character();
-        $invModel = new \App\Models\Inventory();
-        $pqModel = new \App\Models\PlayerQuest();
+        $characterModel = new Character();
+        $invModel = new Inventory();
+        $pqModel = new PlayerQuest();
 
         switch ($type) {
             case 'MIN_LEVEL':
@@ -712,9 +753,9 @@ class GameController
     {
         if ($type === 'NONE') return null;
 
-        $characterModel = new \App\Models\Character();
-        $invModel = new \App\Models\Inventory();
-        $pqModel = new \App\Models\PlayerQuest();
+        $characterModel = new Character();
+        $invModel = new Inventory();
+        $pqModel = new PlayerQuest();
         $char = $characterModel->findById($characterId); // Hydrate model
 
         switch ($type) {
@@ -767,7 +808,7 @@ class GameController
                 if (count($parts) === 2) {
                     $factionId = (int)$parts[0];
                     $amount = (int)$parts[1];
-                    $repService = new \App\Services\ReputationService();
+                    $repService = new ReputationService();
                     if ($repService->modifyReputation($characterId, $factionId, $amount)) {
                          return ['reputation_modified' => $amount, 'faction_id' => $factionId];
                     }
@@ -783,13 +824,13 @@ class GameController
      */
     private function enrichPointsWithQuestStatus($points, $characterId)
     {
-        $npcModel = new \App\Models\NPC();
-        $playerQuestModel = new \App\Models\PlayerQuest();
-        $questModel = new \App\Models\Quest();
-        $characterModel = new \App\Models\Character();
+        $npcModel = new NPC();
+        $playerQuestModel = new PlayerQuest();
+        $questModel = new Quest();
+        $characterModel = new Character();
         
         $character = $characterModel->findById($characterId);
-        $playerLevel = $character['level'] ?? 1;
+        $playerLevel = $character->toArray()['level'] ?? 1;
 
         foreach ($points as &$point) {
             $point['has_quest'] = false;

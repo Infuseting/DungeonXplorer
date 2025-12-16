@@ -8,7 +8,7 @@ class NPC
     
     public function __construct()
     {
-        $this->db = \App\Config\Database::getInstance()->getConnection();
+        $this->db = Database::getInstance()->getConnection();
     }
     
     /**
@@ -167,7 +167,7 @@ class NPC
         $modifier = 1.0;
         
         if ($characterId) {
-            $repService = new \App\Services\ReputationService();
+            $repService = new ReputationService();
             // Get NPC Faction
             $npc = $this->findById($npcId);
             $factionId = $npc['faction_id'] ?? null;
@@ -180,7 +180,7 @@ class NPC
 
         // Apply Difficulty Modifier
         if (isset($_SESSION['current_difficulty'])) {
-             $diffService = new \App\Services\DifficultyService();
+             $diffService = new DifficultyService();
              $diffMod = $diffService->getPriceModifier($_SESSION['current_difficulty']);
              $modifier *= $diffMod;
         }
@@ -225,7 +225,7 @@ class NPC
         
         $modifier = 1.0;
         if ($characterId) {
-            $repService = new \App\Services\ReputationService();
+            $repService = new ReputationService();
             $factionId = $npc['faction_id'] ?? null;
             
             if ($factionId) {

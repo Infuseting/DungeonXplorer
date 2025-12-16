@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Services;
+use App\Config\Database;
 
 class LoggerService
 {
@@ -13,7 +14,7 @@ class LoggerService
     const CAT_SYSTEM   = 'SYSTEM';
 
     public function __construct() {
-        $this->db = \App\Config\Database::getInstance()->getConnection();
+        $this->db = Database::getInstance()->getConnection();
     }
 
     /**

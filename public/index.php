@@ -9,7 +9,8 @@ ini_set('error_log', __DIR__ . '/../var/log/php_errors.log');
 
 
 require __DIR__ . '/../vendor/autoload.php';
-
+use App\Middleware\AuthMiddleware;
+use App\Middleware\AdminMiddleware;
 // Load environment variables
 try {
     $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
@@ -20,6 +21,8 @@ try {
 
 // Load helper functions
 require_once __DIR__ . '/../app/helpers.php';
+
+$router = new \Bramus\Router\Router();
 
 $router->post('/game/combat/end', 'App\Controllers\CombatController@endCombat');
 
@@ -36,9 +39,8 @@ if ($_SERVER['REQUEST_URI'] === '/migrate-consumables') {
     exit;
 }
 
-session_start();
 
-$router = new \Bramus\Router\Router();
+session_start();
 
 $router->get('/', 'App\Controllers\HomeController@index');
 $router->get('/login', 'App\Controllers\AuthController@login');
@@ -62,46 +64,15 @@ $router->post('/oauth/callback/(\w+)', 'App\Controllers\OAuthController@callback
 $router->post('/oauth/unlink/(\w+)', 'App\Controllers\OAuthController@unlink');
 
 // API Routes
-$router->get('/api/character/(\d+)/render', function($characterId) {
-    if (!isset($_SESSION['user_id'])) {
-        http_response_code(401);
-        echo json_encode(['error' => 'Unauthorized']);
-        exit;
-    }
-    
-    $characterModel = new \App\Models\Character();
-    $character = $characterModel->findById($characterId);
-    
-    if (!$character || $character['user_id'] != $_SESSION['user_id']) {
-        http_response_code(403);
-        echo json_encode(['error' => 'Forbidden']);
-        exit;
-    }
-    
-    // Récupérer la classe complète
-    $classModel = new \App\Models\CharacterClass();
-    $character['class'] = $classModel->findById($character['class_id']);
-    
-    // Récupérer les stats
-    $statsModel = new \App\Models\CharacterStats();
-    $character['stats'] = $statsModel->findByCharacterId($characterId);
-    
-    // Rendre le personnage
-    echo renderCharacter($character, [
-        'size' => 'full',
-        'showFilter' => true,
-        'id' => 'character-' . $character['id'],
-        'class' => 'max-h-full max-w-full drop-shadow-2xl hover:brightness-110 transition duration-500'
-    ]);
-});
+$router->get('/api/character/(\d+)/render', 'App\Controllers\CharacterAppearanceController@toFullArray');
 
 // Character Routes (Protected)
 $router->mount('/personnage', function() use ($router) {
     $router->before('GET|POST', '', function() {
-        (new \App\Middleware\AuthMiddleware())->handle();
+        (new AuthMiddleware())->handle();
     });
     $router->before('GET|POST', '.*', function() {
-        (new \App\Middleware\AuthMiddleware())->handle();
+        (new AuthMiddleware())->handle();
     });
     $router->get('/', 'App\Controllers\CharacterController@index');
     $router->get('/create', 'App\Controllers\CharacterController@create');
@@ -120,10 +91,10 @@ $router->mount('/personnage', function() use ($router) {
 // Game Routes (Protected)
 $router->mount('/game', function() use ($router) {
     $router->before('GET|POST', '', function() {
-        (new \App\Middleware\AuthMiddleware())->handle();
+        (new AuthMiddleware())->handle();
     });
     $router->before('GET|POST', '.*', function() {
-        (new \App\Middleware\AuthMiddleware())->handle();
+        (new AuthMiddleware())->handle();
     });
 
     $router->post('/', 'App\Controllers\GameController@index'); // POST from character select
@@ -163,7 +134,7 @@ $router->mount('/game', function() use ($router) {
 // Story Routes (Protected)
 $router->mount('/story', function() use ($router) {
     $router->before('GET|POST', '.*', function() {
-        (new \App\Middleware\AuthMiddleware())->handle();
+        (new AuthMiddleware())->handle();
     });
 
     $router->get('/enter/(\d+)', 'App\Controllers\StoryController@enterStory');
@@ -180,10 +151,10 @@ $router->mount('/story', function() use ($router) {
 // Admin Routes (Protected)
 $router->mount('/admin', function() use ($router) {
     $router->before('GET|POST', '.*', function() {
-        (new \App\Middleware\AdminMiddleware())->handle();
+        (new AdminMiddleware())->handle();
     });
     $router->before('GET|POST', '', function() {
-        (new \App\Middleware\AdminMiddleware())->handle();
+        (new AdminMiddleware())->handle();
     });
 
     $router->get('/', 'App\Controllers\AdminController@dashboard');
