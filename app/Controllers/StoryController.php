@@ -529,6 +529,96 @@ class StoryController
     }
 }
     /**
+     * Search the room (Fouiller)
+     */
+    public function searchRoom()
+    {
+        $characterId = $_SESSION['character_id'];
+        $storyId = $_POST['story_id'];
+        
+        $progress = $this->progressModel->getProgress($characterId, $storyId);
+        if (!$progress) {
+            echo json_encode(['success' => false, 'message' => 'Not in story']);
+            exit;
+        }
+
+        $nodeId = $progress['current_node_id'];
+        $traps = $this->nodeModel->getTraps($nodeId);
+        $loots = $this->nodeModel->getLoots($nodeId);
+
+        // Calculate Perception / Investigation Roll
+        $statsModel = new \App\Models\CharacterStats();
+        $stats = $statsModel->getEffectiveStats($characterId);
+        $wis = $stats['wisdom'] ?? 10;
+        $int = $stats['intelligence'] ?? 10;
+        
+        // Use higher of INT or WIS
+        $mod = floor((max($wis, $int) - 10) / 2);
+        $roll = rand(1, 20);
+        $total = $roll + $mod;
+
+        $message = "Vous fouillez minutieusement la pièce...";
+        $foundTraps = []; // IDs of found traps
+        $triggeredTrap = null;
+        $damageTaken = 0;
+
+        foreach ($traps as $trap) {
+            // Trap Detection Logic
+            // If total < DC: Fail to find (or trigger if very low?)
+            // Let's say: If total < DC - 5 => Trigger!
+            // If total >= DC => Find
+            
+            if ($total >= $trap['difficulty_class']) {
+                $foundTraps[] = $trap['id'];
+                $message .= " Vous repérez un piège !";
+            } elseif ($total < $trap['difficulty_class'] - 5) {
+                // Critical Fail - Trigger
+                $triggeredTrap = $trap;
+                break; // Stop searching if you trigger a trap
+            }
+        }
+
+        if ($triggeredTrap) {
+            // Apply damage
+            $parts = explode('d', $triggeredTrap['damage_dice']);
+            $count = (int)$parts[0]; 
+            $faces = (int)($parts[1] ?? 6);
+            
+            for ($i=0; $i<$count; $i++) {
+                $damageTaken += rand(1, $faces);
+            }
+            $this->characterModel->takeDamage($characterId, $damageTaken);
+            $message = "En fouillant, vous déclenchez un piège ! " . $triggeredTrap['effect_text'];
+            
+            return echo json_encode([
+                'success' => true,
+                'action' => 'triggered',
+                'damage' => $damageTaken,
+                'message' => $message,
+                'found_loot' => !empty($loots) // Still reveal loot usually? Let's say yes.
+            ]);
+        }
+
+        // If no trap triggered, we find loot (always find loot if we survive the search?)
+        // Or maybe hidden loot needs a check too. For now, we reveal all loot.
+        
+        if (empty($traps) && empty($loots)) {
+             $message = "Vous ne trouvez rien d'intéressant.";
+        } elseif (!empty($loots)) {
+             $message .= " Vous trouvez des objets.";
+        }
+
+        echo json_encode([
+            'success' => true,
+            'action' => 'searched',
+            'roll' => $roll,
+            'total' => $total,
+            'message' => $message,
+            'found_traps' => $foundTraps
+        ]);
+    }
+
+    /**
      * Exit story
      */
     public function exitStory()

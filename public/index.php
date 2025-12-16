@@ -153,6 +153,7 @@ $router->mount('/story', function() use ($router) {
     $router->post('/clear-monsters', 'App\Controllers\StoryController@clearMonsters');
     $router->post('/exit', 'App\Controllers\StoryController@exitStory');
     $router->post('/trap/avoid', 'App\Controllers\StoryController@attemptTrapAvoidance');
+    $router->post('/search', 'App\Controllers\StoryController@searchRoom');
 });
 
 // Admin Routes (Protected)
