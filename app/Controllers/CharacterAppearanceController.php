@@ -119,12 +119,15 @@ class CharacterAppearanceController
             $makeupData[$makeupFile] = true;
         }
         
+        $hairData = [
+            'redCyan' => (int)($_POST['hair_red_cyan'] ?? 100),
+            'greenMagenta' => (int)($_POST['hair_green_magenta'] ?? 100),
+            'blueYellow' => (int)($_POST['hair_blue_yellow'] ?? 100),
+            'natural' => isset($_POST['hair_natural'])
+        ];
+        
         $appearance = [
-            'hair' => [
-                'redCyan' => (int)($_POST['hair_red_cyan'] ?? 100),
-                'greenMagenta' => (int)($_POST['hair_green_magenta'] ?? 100),
-                'blueYellow' => (int)($_POST['hair_blue_yellow'] ?? 100)
-            ],
+            'hair' => $hairData,
             'eyes' => [
                 'color' => $_POST['eye_color'] ?? 'brown'
             ],

@@ -16,15 +16,44 @@ class CharacterController
         }
 
         $characterModel = new Character();
+        $classModel = new CharacterClass();
+        $statsModel = new CharacterStats();
+        
         $characters = $characterModel->findAllByUserId($_SESSION['user_id']);
         
-        // If user has no characters, redirect to create
         if (empty($characters)) {
             header('Location: /personnage/create');
             exit;
         }
 
-        // Get the last played character (first in the list due to ORDER BY)
+        // Enrichir chaque personnage avec les données de classe ET les stats
+        foreach ($characters as &$character) {
+            // Récupérer la classe complète
+            $character['class'] = $classModel->findById($character['class_id']);
+            
+            // Récupérer les stats du personnage
+            $character['stats'] = $statsModel->findByCharacterId($character['id']);
+            
+            // Si pas de stats en BDD, utiliser les stats de base
+            if (!$character['stats']) {
+                $baseStats = json_decode($character['class']['base_stats_json'], true);
+                $character['stats'] = [
+                    'strength' => $baseStats['strength'] ?? 10,
+                    'dexterity' => $baseStats['dexterity'] ?? 10,
+                    'intelligence' => $baseStats['intelligence'] ?? 10,
+                    'vitality' => $baseStats['vitality'] ?? 10,
+                    'level' => 1
+                ];
+            }
+            
+            // Fusionner les stats au niveau principal
+            $character['strength'] = $character['stats']['strength'];
+            $character['dexterity'] = $character['stats']['dexterity'];
+            $character['intelligence'] = $character['stats']['intelligence'];
+            $character['vitality'] = $character['stats']['vitality'];
+            $character['level'] = $character['stats']['level'] ?? 1;
+        }
+
         $selectedCharacter = $characters[0];
         
         require_once __DIR__ . '/../Views/character/index.php';
@@ -68,7 +97,7 @@ class CharacterController
             exit;
         }
 
-        // Store character data in session temporarily (pas encore en BDD)
+        // Store character data in session temporarily
         $_SESSION['temp_character'] = [
             'name' => $name,
             'class_id' => $classId,

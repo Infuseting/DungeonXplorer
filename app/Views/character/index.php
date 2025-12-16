@@ -83,7 +83,7 @@ ob_start();
                         <div class="character-card char-card-<?= $char['id'] ?> cursor-pointer bg-gray-800 border border-gray-700 p-3 rounded-lg flex items-center gap-4 <?= ($char['id'] === $selectedCharacter['id']) ? 'border-violet-500 ring-1 ring-violet-500' : '' ?>"
                              onclick="selectCharacter(<?= $char['id'] ?>)">
                             <div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden border border-gray-600 flex-shrink-0">
-                                <img src="/assets/images/<?= $image ?>" alt="<?= $char['class_name'] ?>" class="w-full h-full object-cover">
+                                <img src="/assets/images/<?= $char['class_name'] ?>/icon_<?= $char['class_name'] ?>.png"  class="w-full h-full object-cover">
                             </div>
                             <div>
                                 <div class="text-white font-bold"><?= htmlspecialchars($char['name']) ?></div>
@@ -98,26 +98,13 @@ ob_start();
                     </a>
                 </div>
             </div>
-            <!-- Stats / Actions (Right on Desktop, Fixed Bottom on Mobile) -->
-            <div class="hidden lg:block lg:order-3 lg:col-span-3 bg-gray-800/80 backdrop-blur p-4 md:p-6 rounded-xl border border-gray-700">
-                <!-- Stats -->
-                <div class="space-y-3 mb-6 md:mb-8">
+            <!-- Stats / Actions (Right on Desktop, Bottom on Mobile) -->
+            <div class="order-3 lg:order-3 lg:col-span-4 bg-gray-800/80 backdrop-blur p-4 md:p-6 rounded-xl border border-gray-700 w-full max-w-md mx-auto lg:max-w-none">
+                <!-- Stats Radar Chart -->
+                <div class="hidden md:block mb-6 md:mb-8">
                     <h3 class="text-lg font-medium text-white mb-4 border-b border-gray-700 pb-2">Statistiques</h3>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-400">Force</span>
-                        <span id="stat-strength" class="text-white font-bold"><?= $selectedCharacter['strength'] ?? 10 ?></span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-400">Dextérité</span>
-                        <span id="stat-dexterity" class="text-white font-bold"><?= $selectedCharacter['dexterity'] ?? 10 ?></span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-400">Intelligence</span>
-                        <span id="stat-intelligence" class="text-white font-bold"><?= $selectedCharacter['intelligence'] ?? 10 ?></span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-400">Vitalité</span>
-                        <span id="stat-vitality" class="text-white font-bold"><?= $selectedCharacter['vitality'] ?? 10 ?></span>
+                    <div class="relative flex items-center justify-center h-[350px] w-full max-w-full">
+                        <canvas id="statsRadarChart"></canvas>
                     </div>
                 </div>
 
@@ -149,12 +136,12 @@ ob_start();
                 </div>
             </div>
             <!-- Character Preview (Center) -->
-            <div class="order-1 lg:order-2 lg:col-span-6 flex flex-col items-center justify-between relative h-[50vh] lg:h-[70vh] py-4">
+            <div class="order-1 lg:order-2 lg:col-span-5 flex flex-col items-center justify-center relative h-[60vh] lg:h-[60vh]">
                 <!-- Pedestal Effect -->
                 <div class="absolute bottom-0 w-full h-1/4 bg-gradient-to-t from-violet-900/20 to-transparent rounded-full blur-3xl"></div>
                 
                 <!-- Character Model avec le helper -->
-                <div class="relative z-10 flex-1 w-full flex items-end justify-center pb-4" id="character-container" style="max-height: calc(100% - 120px);">
+                <div class="relative z-8 h-full w-full flex items-center justify-center pb-8 md:pb-12" id="character-container">
                     <?= renderCharacter($selectedCharacter, [
                         'size' => 'full',
                         'showFilter' => true,
@@ -173,18 +160,15 @@ ob_start();
             </div>
 
             <!-- Desktop Character List -->
-            <div class="hidden lg:block lg:col-span-3 space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar lg:order-1">
+            <div class="hidden lg:block lg:col-span-3 space-y-4 max-h-[60vh] overflow-y-auto overflow-x-hidden pr-2 custom-scrollbar lg:order-1">
                 <h2 class="text-xl text-gray-400 font-medium mb-6 border-b border-gray-700 pb-2">Vos Héros</h2>
                 <?php foreach ($characters as $char): ?>
                     <div class="character-card char-card-<?= $char['id'] ?> cursor-pointer bg-gray-800/80 backdrop-blur border border-gray-700 p-4 rounded-lg flex items-center gap-4 <?= ($char['id'] === $selectedCharacter['id']) ? 'border-violet-500 ring-1 ring-violet-500 bg-gray-800' : 'hover:border-gray-500' ?>"
                          onclick="selectCharacter(<?= $char['id'] ?>)">
                         <div class="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden border border-gray-600">
-                            <?= renderCharacter($char, [
-                                'size' => 'small',
-                                'showFilter' => true,
-                                'id' => 'card-char-' . $char['id'],
-                                'class' => 'w-full h-full object-cover'
-                            ]) ?>
+                            <img src="/assets/images/<?= $char['class_name'] ?>/icon_<?= $char['class_name'] ?>.png" 
+                                     alt="<?= $char['class_name'] ?>" 
+                                     class="w-full h-full object-contain">
                         </div>
                         <div>
                             <div class="text-white font-bold"><?= htmlspecialchars($char['name']) ?></div>
@@ -192,8 +176,8 @@ ob_start();
                         </div>
                     </div>
                 <?php endforeach; ?>
-                <a href="/personnage/create" class="block w-full py-4 border-2 border-dashed border-gray-700 text-gray-500 rounded-lg text-center hover:border-violet-500 hover:text-violet-400 transition group">
-                    <span class="text-2xl block mb-1">+</span>
+                <a href="/personnage/create" class="block w-full py-4 border-2 border-dashed border-gray-700 text-gray-500 rounded-lg text-center hover:border-violet-500 hover:text-violet-400 transition group overflow-hidden">
+                    <span class="text-2xl block mb-1 transition-transform inline-block">+</span>
                     Créer un nouveau héros
                 </a>
             </div>
@@ -244,10 +228,22 @@ ob_start();
 <script>
 const characters = <?= json_encode($characters) ?>;
 const classImages = <?= json_encode($classImages) ?>;
+let statsChart = null;
 
-// User Menu & Settings Logic
+// User Menu & Settings Logic AND Stats Chart Init
 document.addEventListener('DOMContentLoaded', async () => {
-    // User menu dropdown
+    // 1. Chart Initialization
+    const char = characters.find(c => c.id === parseInt(document.getElementById('selected-character-id').value));
+    if (char) {
+        updateStatsChart(
+            char.strength || 10,
+            char.dexterity || 10,
+            char.intelligence || 10,
+            char.vitality || 10
+        );
+    }
+
+    // 2. User menu dropdown
     const userMenuButton = document.getElementById('user-menu-button');
     const userDropdown = document.getElementById('user-dropdown');
     
@@ -265,7 +261,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
     
-    // Settings modal
+    // 3. Settings modal
     const settingsButton = document.getElementById('settings-button');
     const settingsModal = document.getElementById('settings-modal');
     const settingsCloseBtn = document.getElementById('settings-close-btn');
@@ -337,17 +333,87 @@ document.addEventListener('DOMContentLoaded', async () => {
         const target = e.target.closest('button, a, .character-card, .slot, .quest-item, .leaflet-interactive');
         
         if (target) {
-            // Don't play if sound was already played by specific handler (optional check)
-            // For now, we rely on soundManager to handle concurrency or just play it
             try {
                 const { playSound } = await import('/js/modules/soundManager.js');
                 playSound('click');
-            } catch (err) {
-                // Sound manager might not be loaded yet
-            }
+            } catch (err) { }
         }
     });
 });
+
+// Fonction pour créer/mettre à jour le graphique radar
+function updateStatsChart(strength, dexterity, intelligence, vitality) {
+    const ctx = document.getElementById('statsRadarChart');
+    if (!ctx) return;
+    
+    // Détruire l'ancien graphique s'il existe
+    if (statsChart) {
+        statsChart.destroy();
+    }
+    
+    // Créer le nouveau graphique
+    statsChart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: ['Force', 'Dextérité', 'Intelligence', 'Vitalité'],
+            datasets: [{
+                label: 'Statistiques',
+                data: [strength, dexterity, intelligence, vitality],
+                backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                borderColor: 'rgba(139, 92, 246, 1)',
+                borderWidth: 2,
+                pointBackgroundColor: 'rgba(139, 92, 246, 1)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgba(139, 92, 246, 1)',
+                pointRadius: 5,
+                pointHoverRadius: 7
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                r: {
+                    beginAtZero: true,
+                    max: 100,
+                    min: 0,
+                    ticks: {
+                        stepSize: 20,
+                        color: 'rgba(156, 163, 175, 0.8)',
+                        backdropColor: 'transparent',
+                        font: { size: 11 }
+                    },
+                    grid: {
+                        color: 'rgba(75, 85, 99, 0.5)',
+                        lineWidth: 1
+                    },
+                    pointLabels: {
+                        color: 'rgba(229, 231, 235, 1)',
+                        font: { size: 13, weight: '600' }
+                    },
+                    angleLines: { color: 'rgba(75, 85, 99, 0.5)' }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                    titleColor: '#fff',
+                    bodyColor: '#c4b5fd',
+                    borderColor: 'rgba(139, 92, 246, 0.5)',
+                    borderWidth: 1,
+                    padding: 12,
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': ' + context.parsed.r;
+                        }
+                    }
+                }
+            }
+    }});
+}
 
 function toggleCharacterMenu() {
     const menu = document.getElementById('mobile-menu');
@@ -365,39 +431,14 @@ function toggleCharacterMenu() {
 }
 
 function selectCharacter(id) {
-    const char = characters.find(c => c.id == id);
+    const char = characters.find(c => c.id === id);
     if (!char) return;
-
-    // Update Stats
-    document.getElementById('stat-strength').textContent = char.strength || 10;
-    document.getElementById('stat-dexterity').textContent = char.dexterity || 10;
-    document.getElementById('stat-intelligence').textContent = char.intelligence || 10;
-    document.getElementById('stat-vitality').textContent = char.vitality || 10;
-
-    // Recharger le personnage avec le helper (via AJAX)
-    fetch(`/api/character/${id}/render`)
-        .then(response => response.text())
-        .then(html => {
-            const container = document.getElementById('character-container');
-            container.innerHTML = html;
-            
-            // Réappliquer les filtres de cheveux
-            if (window.CharacterRenderer) {
-                const renderer = new CharacterRenderer();
-                renderer.initAll();
-            }
-        })
-        .catch(error => {
-            console.error('Erreur de chargement du personnage:', error);
-            // Fallback sur l'ancienne méthode
-            updateCharacterFallback(char);
-        });
 
     // Update Info
     document.getElementById('character-name').textContent = char.name;
     document.getElementById('character-details').textContent = `Niveau ${char.level} ${char.class_name}`;
     
-    // Update Hidden Inputs (Desktop and Mobile)
+    // Update Hidden Inputs
     document.getElementById('selected-character-id').value = char.id;
     const mobileInputs = document.querySelectorAll('.mobile-character-id');
     mobileInputs.forEach(input => input.value = char.id);
@@ -414,7 +455,41 @@ function selectCharacter(id) {
         card.classList.add('border-violet-500', 'ring-1', 'ring-violet-500', 'bg-gray-800');
     });
 
-    // Close mobile menu if open
+    // Recharger le personnage
+    fetch(`/api/character/${id}/render`)
+        .then(response => {
+            if (!response.ok) throw new Error('HTTP error ' + response.status);
+            return response.text();
+        })
+        .then(html => {
+            const container = document.getElementById('character-container');
+            container.innerHTML = html;
+            
+            if (window.CharacterRenderer) {
+                const renderer = new CharacterRenderer();
+                renderer.initAll();
+            }
+            
+            // Update Chart
+            updateStatsChart(
+                char.strength || 10,
+                char.dexterity || 10,
+                char.intelligence || 10,
+                char.vitality || 10
+            );
+        })
+        .catch(error => {
+            console.error('Erreur de chargement du personnage:', error);
+            updateCharacterFallback(char);
+            updateStatsChart(
+                char.strength || 10,
+                char.dexterity || 10,
+                char.intelligence || 10,
+                char.vitality || 10
+            );
+        });
+
+    // Close mobile menu
     const menu = document.getElementById('mobile-menu');
     if (!menu.classList.contains('-translate-x-full')) {
         toggleCharacterMenu();

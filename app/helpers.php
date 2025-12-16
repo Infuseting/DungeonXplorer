@@ -88,12 +88,14 @@ function renderCharacter($character, $options = []) {
         <?php endif; ?>
         
         <!-- Hair Layer -->
-        <img src="<?= $imageBase ?>/hair.png" 
-             alt="Cheveux" 
-             class="character-layer-hair absolute top-0 left-0 w-full h-full object-contain"
-             data-hair-red="<?= $hairRedCyan ?>"
-             data-hair-green="<?= $hairGreenMagenta ?>"
-             data-hair-blue="<?= $hairBlueYellow ?>">
+        <?php if (!isset($appearance['hair']['natural']) || $appearance['hair']['natural'] !== true): ?>
+            <img src="<?= $imageBase ?>/hair.png" 
+                 alt="Cheveux" 
+                 class="character-layer-hair absolute top-0 left-0 w-full h-full object-contain"
+                 data-hair-red="<?= $hairRedCyan ?>"
+                 data-hair-green="<?= $hairGreenMagenta ?>"
+                 data-hair-blue="<?= $hairBlueYellow ?>">
+        <?php endif; ?>
         
         <!-- Makeup Layers -->
         <?php if (isset($appearance['makeup']) && is_array($appearance['makeup'])): ?>

@@ -25,6 +25,7 @@
     <meta name="twitter:description" content="<?= $description ?? 'Plongez dans un RPG textuel immersif' ?>">
     <meta name="twitter:image" content="<?= $ogImage ?>">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <?php if (isset($customStyles)): ?>
     <style>
         body {
