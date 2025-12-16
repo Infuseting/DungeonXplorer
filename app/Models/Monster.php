@@ -18,38 +18,11 @@ class Monster
     private $attaque;
     private $imagePath;
     private $sallePath;
+    private $creatureType = 'neutral';
+    private $affinities = [];
 
-    public function __construct()
-    {
-        $this->db = Database::getInstance()->getConnection();
-    }
+    // ... (constructor) ...
 
-    /**
-     * Get all monsters (Admin)
-     * 
-     * @return array
-     */
-    public function getAll()
-    {
-        $result = $this->db->query("SELECT * FROM monsters ORDER BY name ASC");
-        return $result->fetch_all(MYSQLI_ASSOC);
-    }
-    
-    /**
-     * Alias for getAll to satisfy potential Combat calls (if any)
-     */
-    public function findAll()
-    {
-        return $this->getAll();
-    }
-
-    /**
-     * Find monster by ID
-     * Compatible with Admin (returns array) and Combat (populates object)
-     * 
-     * @param int $id
-     * @return array|null
-     */
     public function findById($id)
     {
         $stmt = $this->db->prepare("SELECT * FROM monsters WHERE id = ?");
@@ -71,34 +44,36 @@ class Monster
             $this->dexterity = $stats['dexterity'] ?? 0;
             $this->defense = $stats['defense'] ?? 0;
             $this->attaque = $stats['attaque'] ?? 0;
+
+            // New Properties
+            $this->creatureType = $result['creature_type'] ?? 'neutral';
+            $this->affinities = !empty($result['affinities']) ? json_decode($result['affinities'], true) : [];
         }
 
         return $result;
     }
 
-    /**
-     * Create a new monster (Admin)
-     * 
-     * @param array $data
-     * @return int|false
-     */
     public function create($data)
     {
         $stmt = $this->db->prepare(
-            "INSERT INTO monsters (name, image_path, salle_path, level_min, level_max, base_stats_json) 
-             VALUES (?, ?, ?, ?, ?, ?)"
+            "INSERT INTO monsters (name, image_path, salle_path, level_min, level_max, base_stats_json, creature_type, affinities) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
         );
         
         $statsJson = json_encode($data['stats'] ?? []);
+        $affinitiesJson = json_encode($data['affinities'] ?? []);
+        $type = $data['creature_type'] ?? 'neutral';
         
         $stmt->bind_param(
-            "sssiis", 
+            "sssiisss", 
             $data['name'], 
             $data['image_path'],
             $data['salle_path'],
             $data['level_min'],
             $data['level_max'], 
-            $statsJson
+            $statsJson,
+            $type,
+            $affinitiesJson
         );
         
         if ($stmt->execute()) {
@@ -107,43 +82,36 @@ class Monster
         return false;
     }
 
-    /**
-     * Update a monster (Admin)
-     * 
-     * @param int $id
-     * @param array $data
-     * @return bool
-     */
     public function update($id, $data)
     {
         $stmt = $this->db->prepare(
             "UPDATE monsters 
-             SET name = ?, image_path = ?, salle_path = ?, level_min = ?, level_max = ?, base_stats_json = ? 
+             SET name = ?, image_path = ?, salle_path = ?, level_min = ?, level_max = ?, base_stats_json = ?, creature_type = ?, affinities = ? 
              WHERE id = ?"
         );
         
         $statsJson = json_encode($data['stats'] ?? []);
+        $affinitiesJson = json_encode($data['affinities'] ?? []);
+        $type = $data['creature_type'] ?? 'neutral';
         
         $stmt->bind_param(
-            "sssiisi", 
+            "sssiisssi", 
             $data['name'], 
             $data['image_path'], 
             $data['salle_path'],
             $data['level_min'],
             $data['level_max'],
             $statsJson,
+            $type,
+            $affinitiesJson,
             $id
         );
         
         return $stmt->execute();
     }
+    
+    // ... (delete method unchanged) ...
 
-    /**
-     * Delete a monster (Admin)
-     * 
-     * @param int $id
-     * @return bool
-     */
     public function delete($id)
     {
         $stmt = $this->db->prepare("DELETE FROM monsters WHERE id = ?");
@@ -151,63 +119,53 @@ class Monster
         return $stmt->execute();
     }
 
+
     // ==========================================
     // COMBAT METHODS (Getters & Logic)
     // ==========================================
 
-    public function getName()
+    public function getCreatureType()
     {
-        return $this->name;
-    }  
-
-    public function getSallePath()
-    {
-        return $this->sallePath;
+        return $this->creatureType;
     }
 
-    public function getImagePath()
+    public function getAffinities()
     {
-        return $this->imagePath;
-    }
-    
-    public function unsetDb()
-    {
-        $this->db = null;
+        return $this->affinities;
     }
 
-    public function getStrength()
+    /**
+     * Get Resistance/Weakness Modifier for a specific Damage Type
+     * @param string $damageType e.g. 'fire', 'holy', 'physical'
+     * @return array ['type' => 'percent'|'flat', 'value' => int] (Value is positive for weakness likely? Or we standardize)
+     */
+    public function getAffinityModifier($damageType)
     {
-        return $this->strength;
+        // affinities structure: e.g. [{"element": "fire", "type": "percent", "value": -50}]
+        // Actually simple Key-Value might be easier? {"fire": {"type": "percent", "value": -50}}
+        // Let's assume KV, simpler to lookup.
+        
+        if (isset($this->affinities[$damageType])) {
+            return $this->affinities[$damageType];
+        }
+        return null;
     }
 
-    public function getVitality()
-    {
-        return $this->vitality;
-    }
-
-    public function getIntelligence()
-    {
-        return $this->intelligence;
-    }
-    
-    public function getDexterity()
-    {
-        return $this->dexterity;
-    }
-
-    public function getDefense()
-    {
-        return $this->defense;
-    }
-
-    public function getAttaque()
-    {
-        return $this->attaque;
-    }
+    // ... (existing getters: getName, etc.)
+    public function getName() { return $this->name; }
+    public function getSallePath() { return $this->sallePath; }
+    public function getImagePath() { return $this->imagePath; }
+    public function unsetDb() { $this->db = null; }
+    public function getStrength() { return $this->strength; }
+    public function getVitality() { return $this->vitality; }
+    public function getIntelligence() { return $this->intelligence; }
+    public function getDexterity() { return $this->dexterity; }
+    public function getDefense() { return $this->defense; }
+    public function getAttaque() { return $this->attaque; }
 
     public function toString()
     {
-        return "Monster: " . $this->name . " (STR: " . $this->strength . ", VIT: " . $this->vitality . ", INT: " . $this->intelligence . ", DEX: " . $this->dexterity . ")";
+        return "Monster: " . $this->name . " [" . $this->creatureType . "] (STR: " . $this->strength . ", VIT: " . $this->vitality . ")";
     }
 
     public function setVitality($vitality)

@@ -49,7 +49,90 @@ ob_start();
                         <input type="text" name="salle_path" value="<?= htmlspecialchars($monster['salle_path'] ?? '') ?>" placeholder="/assets/images/salles/..."
                                class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500">
                     </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Type de Créature</label>
+                        <select name="creature_type" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500">
+                            <?php 
+                            $types = ['neutral' => 'Neutre', 'undead' => 'Mort-Vivant', 'humanoid' => 'Humanoïde', 'beast' => 'Bête', 'demon' => 'Démon', 'dragon' => 'Dragon', 'elemental' => 'Élémentaire'];
+                            $current = $monster['creature_type'] ?? 'neutral';
+                            foreach ($types as $val => $label): ?>
+                                <option value="<?= $val ?>" <?= $current === $val ? 'selected' : '' ?>><?= $label ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                 </div>
+
+                <!-- Affinités -->
+                <div class="space-y-4">
+                    <h3 class="text-lg font-semibold text-purple-400 border-b border-gray-700 pb-2">Forces & Faiblesses</h3>
+                    
+                    <div id="affinities-container" class="space-y-3">
+                        <?php 
+                        $affinities = $monster['affinities_data'] ?? [];
+                        foreach ($affinities as $element => $data): 
+                             // Simplify old numeric Structure if present, but we defined it as [type, value]
+                             $type = $data['type'] ?? 'percent';
+                             $value = $data['value'] ?? 0;
+                        ?>
+                        <div class="flex items-center gap-2 bg-gray-800/50 p-2 rounded border border-gray-700">
+                            <select name="affinity_element[]" class="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white focus:ring-1 focus:ring-purple-500">
+                                <?php 
+                                $elements = ['physical' => 'Physique', 'fire' => 'Feu', 'ice' => 'Glace', 'lightning' => 'Foudre', 'holy' => 'Sacré', 'shadow' => 'Ombre', 'poison' => 'Poison'];
+                                foreach ($elements as $elVal => $elLabel): ?>
+                                    <option value="<?= $elVal ?>" <?= $element === $elVal ? 'selected' : '' ?>><?= $elLabel ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            
+                            <input type="number" name="affinity_value[]" placeholder="Val" value="<?= $value ?>" step="any"
+                                   class="w-20 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white">
+                                   
+                            <select name="affinity_type[]" class="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white">
+                                <option value="percent" <?= $type === 'percent' ? 'selected' : '' ?>>%</option>
+                                <option value="flat" <?= $type === 'flat' ? 'selected' : '' ?>>Fixe</option>
+                            </select>
+                            
+                            <button type="button" onclick="this.closest('div').remove()" class="text-red-400 hover:text-red-300 px-2">×</button>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                    
+                    <button type="button" onclick="addAffinityRow()" 
+                            class="text-sm bg-gray-800 hover:bg-gray-700 text-purple-300 border border-purple-900/50 px-3 py-1 rounded transition-colors flex items-center gap-1">
+                        <span>+</span> Ajouter une affinité
+                    </button>
+                    <p class="text-xs text-gray-500 mt-1">Négatif = Résistance (ex: -50%), Positif = Faiblesse (ex: +50%)</p>
+                </div>
+
+                <script>
+                function addAffinityRow() {
+                    const container = document.getElementById('affinities-container');
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center gap-2 bg-gray-800/50 p-2 rounded border border-gray-700';
+                    div.innerHTML = `
+                        <select name="affinity_element[]" class="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white focus:ring-1 focus:ring-purple-500">
+                             <option value="physical">Physique</option>
+                            <option value="fire">Feu</option>
+                            <option value="ice">Glace</option>
+                            <option value="lightning">Foudre</option>
+                            <option value="holy">Sacré</option>
+                            <option value="shadow">Ombre</option>
+                            <option value="poison">Poison</option>
+                        </select>
+                        
+                        <input type="number" name="affinity_value[]" placeholder="Val" value="0" step="any"
+                               class="w-20 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white">
+                               
+                        <select name="affinity_type[]" class="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-white">
+                            <option value="percent">%</option>
+                            <option value="flat">Fixe</option>
+                        </select>
+                        
+                        <button type="button" onclick="this.closest('div').remove()" class="text-red-400 hover:text-red-300 px-2">×</button>
+                    `;
+                    container.appendChild(div);
+                }
+                </script>
 
                 <!-- Statistiques -->
                 <div class="space-y-4">

@@ -59,6 +59,33 @@ class Combat
                         $reduction = $this->boss->getDefense() / 2;
                         $actualDamage = max(1, $rawDamage - $reduction); // Min 1 damage
                         
+                        // --- Affinity / Weakness Check ---
+                        // Default damage type is 'physical' for now
+                        $damageType = 'physical'; 
+                        
+                        // Check modifiers
+                        $affinity = $this->boss->getAffinityModifier($damageType);
+                        if ($affinity) {
+                            $type = $affinity['type'] ?? 'percent'; // percent or flat
+                            $value = floatval($affinity['value'] ?? 0);
+                            
+                            if ($type === 'percent') {
+                                // Value is % (e.g. -50 for 50% resistance, +50 for 50% weakness)
+                                $modifier = 1 + ($value / 100);
+                                $actualDamage *= $modifier;
+                                $message .= " (Weakness/Resist: {$value}%)";
+                            } else {
+                                // Flat value
+                                $actualDamage += $value;
+                                $message .= " (Weakness/Resist: {$value} flat)";
+                            }
+                        }
+                        
+                        // Check Creature Type Bonus? (Not implemented on player items yet)
+                        // ...
+                        
+                        $actualDamage = max(1, floor($actualDamage)); // Ensure integer >= 1
+                        
                         $this->boss->reduceVitality($actualDamage);
                         $message = $this->joueur->getName() . " hits " . $this->boss->getName() . " for " . $actualDamage . " damage! (Roll: $hitRoll vs AC: $defenseScore - Reduct: $reduction)\n";
                     } else {
