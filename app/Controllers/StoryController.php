@@ -293,7 +293,6 @@ class StoryController
             $requiredVal = (int)$connection['condition_value'];
             
             // Assume requirement is "At least X" (>=)
-            // If we need "<", we could handle it via specific types or value syntax, but standard is >=
             return $currentVal >= $requiredVal;
         }
 

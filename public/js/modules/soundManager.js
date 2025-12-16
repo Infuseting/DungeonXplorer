@@ -137,6 +137,9 @@ class SoundManager {
             try {
                 this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 console.log('[SoundManager] AudioContext created');
+
+                // Setup Audio Graph for effects
+                this.setupAudioGraph();
             } catch (e) {
                 console.warn('[SoundManager] Web Audio API not supported:', e);
             }
@@ -149,6 +152,78 @@ class SoundManager {
 
         // Start background music
         this.playMusic();
+    }
+
+    setupAudioGraph() {
+        if (!this.audioContext || !this.musicElement) return;
+
+        try {
+            // Create source from music element
+            // Note: createMediaElementSource can only be called once per element
+            if (!this.sourceNode) {
+                this.sourceNode = this.audioContext.createMediaElementSource(this.musicElement);
+            }
+
+            // Create filters
+            // Bass Boost (LowShelf)
+            this.bassBoostFilter = this.audioContext.createBiquadFilter();
+            this.bassBoostFilter.type = 'lowshelf';
+            this.bassBoostFilter.frequency.value = 100; // Hz
+            this.bassBoostFilter.gain.value = 0; // dB (Starts neutral)
+
+            // Low Pass (Muffled effect)
+            this.lowPassFilter = this.audioContext.createBiquadFilter();
+            this.lowPassFilter.type = 'lowpass';
+            this.lowPassFilter.frequency.value = 22000; // Hz (Open)
+
+            // Master Gain
+            this.masterGainNode = this.audioContext.createGain();
+            this.masterGainNode.gain.value = 1.0;
+
+            // Connect graph: Source -> Bass -> LowPass -> Gain -> Dest
+            this.sourceNode.connect(this.bassBoostFilter);
+            this.bassBoostFilter.connect(this.lowPassFilter);
+            this.lowPassFilter.connect(this.masterGainNode);
+            this.masterGainNode.connect(this.audioContext.destination);
+
+            console.log('[SoundManager] Audio Graph connected');
+        } catch (e) {
+            console.error('[SoundManager] Error setting up audio graph:', e);
+        }
+    }
+
+    /**
+     * Update audio effects based on Combat Health
+     * call this with (currentHp, maxHp)
+     */
+    updateCombatState(currentHp, maxHp) {
+        if (!this.audioContext || !this.bassBoostFilter) return;
+
+        const ratio = currentHp / maxHp;
+        const now = this.audioContext.currentTime;
+        const rampTime = 2; // seconds
+
+        if (ratio <= 0.3 && ratio > 0) {
+            // LOW HP MODE: Intense
+            // Boost Bass
+            this.bassBoostFilter.gain.setTargetAtTime(15, now, 0.5); // +15dB
+
+            // Slightly muffle high end for focus/pressure
+            // But user asked for "bass boost or stuff", stress.
+            // Keeping it clear but punchy might be better. 
+            // Let's drop LP slightly to 5000Hz to darken it?
+            // Or maybe HighPass to make it thin?
+            // "Render plus stressante" -> usually Bass Boost + Distortion or Heartbeat.
+            // Let's stick to Bass Boost.
+
+            // Increase speed slightly
+            this.musicElement.playbackRate = 1.15;
+
+        } else {
+            // NORMAL MODE
+            this.bassBoostFilter.gain.setTargetAtTime(0, now, 0.5);
+            this.musicElement.playbackRate = 1.0;
+        }
     }
 
     /**
@@ -489,6 +564,10 @@ export function setSFXVolume(volume) {
 
 export function getVolumes() {
     return soundManager.getVolumes();
+}
+
+export function updateCombatState(currentHp, maxHp) {
+    soundManager.updateCombatState(currentHp, maxHp);
 }
 
 export default soundManager;

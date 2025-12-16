@@ -218,8 +218,18 @@
             </main>
         </div>
 
+        <script type="module">
+            import { updateCombatState, changeMusicCategory } from '/js/modules/soundManager.js';
+            window.updateCombatSound = updateCombatState;
+            window.changeMusicCategory = changeMusicCategory;
+            
+            // Start combat music immediately
+            changeMusicCategory('combat');
+        </script>
+
         <script>
             let end = false;
+            const MAX_HP = <?php echo (int)$characterModel->getVitality(); ?>;
             const winOrLoss = document.getElementById('win?');
             const redirection = document.getElementById('redirectBtn');
             const dice = document.getElementById("dice");
@@ -231,6 +241,15 @@
             const btnRun = document.getElementById("btn-special");
             const monster = document.getElementById("monster");
             const character = document.getElementById('character');
+            
+            // Initial Sound Check
+            setTimeout(() => {
+                if(window.updateCombatSound) {
+                    const currentHp = parseInt(document.getElementById('player-hp').textContent) || MAX_HP;
+                    window.updateCombatSound(currentHp, MAX_HP);
+                }
+            }, 1000);
+
             function disableActions() {
                 btnAttack.disabled = true;
                 btnDefend.disabled = true;
@@ -294,6 +313,12 @@
                         // Mettre à jour les HP du joueur
                         if (typeof data.playerHp !== "undefined") {
                             document.getElementById('player-hp').innerHTML = "";
+                            
+                            // Audio Update
+                            if (window.updateCombatSound) {
+                                window.updateCombatSound(data.playerHp, MAX_HP);
+                            }
+
                             if (data.playerHp <= 0) {
                                 playerLoss();
                                 document.getElementById('player-hp').innerHTML += "<p style='color:red'>" + data.playerHp + "</p>";
