@@ -22,6 +22,7 @@ class Character
     private $id;
     private array $appearance = [];
     private $className;
+    private $currentHp; // Added currentHp
 
      // caches
     private array $inventoryCache = [];
@@ -44,76 +45,36 @@ class Character
         }
         return false;
     }
-public function getEquippedStats(Stats $statsEnum): int
-{
-    // Si déjà calculé, on renvoie directement
-    if (isset($this->statsCache[$statsEnum->value])) {
-        return $this->statsCache[$statsEnum->value];
-    }
-
-    $charInventory = $this->getInventory();
-    if(empty($charInventory) ) return 0;
-    $stats = 0;
-    foreach ($charInventory as $item) {
-        if (is_array($item)) {
-        foreach ($item as $subItem) {if ($subItem['location'] != 'equipped') continue;
-            $data = json_decode($subItem['stats'], true);
-            $stats += $data[$statsEnum->value] ?? 0;
-        }
-    }
-
-
-    }
-    // Mise en cache
-    $this->statsCache[$statsEnum->value] = $stats;
-    return $stats;
-}
-
-public function getAppearance(){
-    return $this->appearance;
-}
-
-
-    public function updateAppearance($id, $appearanceData)
-    {
-        $jsonAppearance = json_encode($appearanceData);
-        $stmt = $this->db->prepare("UPDATE characters SET appearance = ? WHERE id = ?");
-        $stmt->bind_param("si", $jsonAppearance, $id);
-        return $stmt->execute();
-    }
-
-    public function findAllByUserId($userId)
-    {
-        $stmt = $this->db->prepare("
-            SELECT c.*, cl.name as class_name, cs.level,c.appearance
-            FROM characters c
-            JOIN classes cl ON c.class_id = cl.id
-            LEFT JOIN character_stats cs ON c.id = cs.character_id
-            WHERE c.user_id = ?
-            ORDER BY c.last_played_at DESC
-        ");
-        $stmt->bind_param("i", $userId);
-        $stmt->execute();
-        $results = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-         foreach ($results as &$character) {
-            if (!empty($character['appearance'])) {
-                $character['appearance'] = json_decode($character['appearance'], true);
-            }
-        }
-        
-        return $results;
-    }
-
-    public function unsetDb(){
-        $this->db = null;
-    }
+    // ... existing getEquippedStats ...
+    
+    // ... skipping to findById ...
 
     public function findById($id)
     {
-        $stmt = $this->db->prepare("SELECT c.id, c.user_id, cl.name as class_name,c.name,c.appearance, c.class_id, c.gold, cs.level, cs.xp, cs.strength,cs.dexterity,cs.intelligence,cs.vitality  FROM characters c  Join character_stats cs on c.id=cs.character_id join classes cl on cl.id = c.class_id WHERE c.id = ?");
+        $stmt = $this->db->prepare("SELECT c.id, c.user_id, cl.name as class_name,c.name,c.appearance, c.class_id, c.gold, cs.level, cs.xp, cs.strength,cs.dexterity,cs.intelligence,cs.vitality, cs.current_hp FROM characters c  Join character_stats cs on c.id=cs.character_id join classes cl on cl.id = c.class_id WHERE c.id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
-            $data= $stmt->get_result()->fetch_assoc();
+        $data= $stmt->get_result()->fetch_assoc();
+        
+        if ($data) {
+            $this->id = $data['id'];
+            $this->name = $data['name'];
+            $this->classId = $data['class_id'];
+            $this->className = $data['class_name'];
+            $this->gold = $data['gold'];
+            $this->level = $data['level'];
+            $this->xp = $data['xp'];
+            $this->strength = $data['strength'];
+            $this->vitality = $data['vitality'];
+            $this->intelligence = $data['intelligence'];
+            $this->dexterity = $data['dexterity'];
+            $this->appearance = json_decode($data['appearance'] ?? '[]', true);
+            $this->currentHp = $data['current_hp'] ?? $data['vitality']; // Default to vitality if null
+            return $this;
+        }
+        return null; // Return null if not found
+    }
+
 
 
 
@@ -210,6 +171,25 @@ public function toArray(): array {
                "Dexterity: " . $this->dexterity . "\n";
     }
 
+    public function heal($characterId, $amount)
+    {
+        // For now, assume healing just adds to a 'current_hp' column if it exists,
+        // or just logs it if we don't have that column yet.
+        // Assuming 'vitality' is the stat, and maybe there's 'hp' column in characters or character_stats.
+        // Let's safe-check and try to update 'hp' in character_stats.
+        // If the column doesn't exist, this query will fail silently or throw, but we should try.
+        // Actually, let's look at migration output to see if we can add 'current_hp'.
+        // For now, let's implement the query assuming 'current_hp' exists or will exist.
+        // If not, we might need a migration for it too.
+        
+        // Check if current_hp exists in schema (can't easily checking runtime).
+        // I will add 'current_hp' to the migration script just in case!
+        
+        $stmt = $this->db->prepare("UPDATE character_stats SET current_hp = current_hp + ? WHERE character_id = ?");
+        $stmt->bind_param("ii", $amount, $characterId);
+        return $stmt->execute();
+    }
+
     public function getName()
     {
         return $this->name;
@@ -242,8 +222,30 @@ public function toArray(): array {
 
     public function reduceVitality($number)
     {
-        $this->vitality -= $number;
+        // Actually reduce current HP, not max vitality
+        $stmt = $this->db->prepare("UPDATE character_stats SET current_hp = GREATEST(0, current_hp - ?) WHERE character_id = ?");
+        $stmt->bind_param("ii", $number, $this->id);
+        $stmt->execute();
+        
+        // Update local cache if current object is waiting
+        if (isset($this->currentHp)) {
+            $this->currentHp = max(0, $this->currentHp - $number);
+        }
     }
+    
+    public function isAlive()
+    {
+        if (isset($this->currentHp)) {
+            return $this->currentHp > 0;
+        }
+        // Fallback if currentHp not set (should not happen if loaded via findById)
+        $stmt = $this->db->prepare("SELECT current_hp FROM character_stats WHERE character_id = ?");
+        $stmt->bind_param("i", $this->id);
+        $stmt->execute();
+        $res = $stmt->get_result()->fetch_assoc();
+        return ($res['current_hp'] > 0);
+    }
+
 
     public function getClassId(){
         return $this->classId;

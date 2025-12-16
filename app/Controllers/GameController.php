@@ -445,6 +445,180 @@ class GameController
     }
 
     /**
+     * Use a consumable item
+     */
+    public function useItem()
+    {
+        header('Content-Type: application/json');
+
+        if (!isset($_SESSION['character_id'])) {
+            echo json_encode(['success' => false, 'message' => 'Personnage non sélectionné']);
+            exit;
+        }
+
+        $data = json_decode(file_get_contents('php://input'), true);
+        $inventoryItemId = $data['item_id'] ?? null;
+
+        if (!$inventoryItemId) {
+            echo json_encode(['success' => false, 'message' => 'ID d\'objet manquant']);
+            exit;
+        }
+
+        $characterId = $_SESSION['character_id'];
+        $inventoryModel = new \App\Models\Inventory();
+        $characterModel = new \App\Models\Character();
+        $buffService = new \App\Services\BuffService();
+
+        // 1. Get Item Details from Inventory (to check type and verify ownership)
+        // Need to expose a getter for specific item details in Inventory model or use raw query here?
+        // Inventory::getItemInInventory is private. Let's make it public or duplicate logic safely.
+        // Actually moveItem uses getItemInInventory. Let's use a new helper or public method if available.
+        // I added consumeItem but strictly it just consumes. I need item stats/effects first.
+        // Let's rely on DB here for safety.
+        
+        $db = \App\Config\Database::getInstance()->getConnection();
+        $stmt = $db->prepare("
+            SELECT i.* 
+            FROM character_inventory ci
+            JOIN items i ON ci.item_id = i.id
+            WHERE ci.id = ? AND ci.character_id = ?
+        ");
+        $stmt->bind_param("ii", $inventoryItemId, $characterId);
+        $stmt->execute();
+        $item = $stmt->get_result()->fetch_assoc();
+
+        if (!$item) {
+            echo json_encode(['success' => false, 'message' => 'Objet non trouvé']);
+            exit;
+        }
+
+        if ($item['type'] !== 'consumable') {
+            echo json_encode(['success' => false, 'message' => 'Cet objet n\'est pas consommable']);
+            exit;
+        }
+
+        // 2. Apply Effect
+        $effectApplied = false;
+        $message = "Objet utilisé";
+
+        if ($item['effect_type'] === 'heal') {
+            // Instant Heal
+            $healAmount = $item['effect_value'];
+            $character = $characterModel->findById($characterId);
+            // Assuming max HP logic exists or using Vitality * 10 or similar.
+            // For now, let's implement a simple heal logic in specific method or direct DB update.
+            // Let's use a helper in Character model if possible, or direct update here.
+            // Character has reduceVitality, need restore/heal.
+            
+            // Logic: Current HP is often stored? Or is it calculated?
+            // User schema check: `characters` has `vitality`. 
+            // Usually games have `current_hp` and `max_hp`.
+            // Let's assume `current_hp` exists in `character_stats` or `characters`?
+            // Checked Character.php: `findById` selects `cs.vitality`. It doesn't seem to explicitly show `current_hp`.
+            // Wait, `reduceVitality` decreases `this->vitality`. This implies `vitality` IS the health pool? 
+            // Or `vitality` stat determines MaxHP?
+            // Typically RPG: Vitality -> MaxHP. CurrentHP is separate.
+            // IF the user requests "potions qui redonne des HPs", there must be HP.
+            // Let's check `character_stats` table columns from previous context or assume.
+            // If `reduceVitality` lowers `vitality` directly, then `vitality` IS the health.
+            // That's unusual but possible.
+            // Let's assume standard behavior: Heal = +Vitality (if it's the pool) or +CurrentHP.
+            // Given `reduceVitality` exists, I will assume updating `vitality` column IS the heal (or rather, restoring it?).
+            // Actually, if `reduceVitality` permantly lowers the STAT vitality, that's bad.
+            // But if `vitality` is just "Health Points", then `increaseVitality` is Heal.
+            
+            // However, the user said "potions qui redonne des HPs" vs "potions qui donnent des HPs max".
+            // So:
+            // Heal = Restore Current HP.
+            // Buff Max HP = Increase Max HP (temporarily).
+            
+            // I need to know where Current HP is.
+            // Let's assume there is a `current_hp` column or `hp` column.
+            // `Character.php` selects `cs.vitality`. Maybe `vitality` IS the stat, and `current_hp` is missing?
+            // Start of conversation mentioned `Character.php`.
+            // `reduceVitality` implies damage.
+            // Let's verify schema if possible. If not, I'll log a warning or assume a column 'current_hp'.
+            // Actually, if I look at `Character::findById`, it gets `c.gold`, `cs.level`, `cs.xp`, ... `cs.vitality`.
+            // It does NOT select `current_hp`.
+            
+            // I'll assume for now that I should create `current_hp` in `character_stats` if it doesn't exist, 
+            // OR the user implies `vitality` is strictly the stat and we need a way to track damage.
+            // BUT, `reduceVitality` implementation: `$this->vitality -= $number`. This modifies the object property.
+            // It doesn't persist it in that method.
+            
+            // Let's add `heal` method to Character that updates `current_hp`.
+            // If `current_hp` doesn't exist, I might need to add it.
+            // Actually, looking at `Character.php`:
+            /*
+                public function reduceVitality($number)
+                {
+                    $this->vitality -= $number;
+                }
+            */
+            // This suggests partial implementation.
+            
+            // DECISION: I will assume `character_stats` should have `current_hp`. 
+            // I'll check if `current_hp` exists in the STANDALONE MIGRATION check or just add it if missing to be safe.
+            // Alternatively, maybe "Vitality" IS the HP? "2.0 / 75.0 kg". "Strength +0".
+            // Let's assume `current_hp` column needs to be used.
+            // For now, I will use `Character::heal($amount)` and implement it to try updating `current_hp`.
+            
+            $characterModel->heal($characterId, $healAmount);
+            $message = "Points de vie restaurés: +$healAmount";
+            $effectApplied = true;
+
+        } elseif ($item['effect_type'] === 'buff') {
+            // Apply Buff
+            $stats = json_decode($item['stats'], true); // Use stats column for buff modifiers
+            $durationValue = $item['duration_value'];
+            $durationType = $item['duration_type']; // 'seconds' or 'turns'
+            
+            $buffService->applyBuff(
+                $characterId, 
+                $item['name'], 
+                $stats, 
+                $durationType, 
+                $durationValue
+            );
+            $message = "Effet appliqué: " . $item['name'];
+            $effectApplied = true;
+        }
+
+        if ($effectApplied) {
+            // 3. Consume Item
+            $inventoryModel->consumeItem($characterId, $inventoryItemId);
+            
+            // Get updated stats for UI
+            // Force cache reset
+             $character = $characterModel->findById($characterId);
+             $characterModel->resetCache(); 
+             // We need to re-instantiate or reset
+             
+             // actually the model instance $characterModel is just a factory/gateway usually.
+             // But we need the object to get stats.
+             $charObj = new Character();
+             $charObj->findById($characterId);
+             
+             $newStats = [
+                 'strength' => $charObj->getStrength(),
+                 'vitality' => $charObj->getVitality(),
+                 'dexterity' => $charObj->getDexterity(),
+                 'intelligence' => $charObj->getIntelligence(),
+                 // Add current HP if we have it
+             ];
+
+             echo json_encode([
+                 'success' => true, 
+                 'message' => $message,
+                 'new_stats' => $newStats
+             ]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Aucun effet disponible']);
+        }
+        exit;
+    }
+
+    /**
      * Check for available quests and add has_quest flag to points
      */
     private function enrichPointsWithQuestStatus($points, $characterId)

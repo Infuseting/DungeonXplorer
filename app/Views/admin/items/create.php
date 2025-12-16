@@ -104,6 +104,46 @@ ob_start();
                 </label>
             </div>
             
+            <!-- Consumable Properties (Shown only if type=consumable) -->
+            <div class="col-span-2 hidden" id="consumable-properties">
+                <div class="bg-gray-900 p-6 rounded-xl border border-gray-700">
+                    <h4 class="text-gray-200 mb-6 text-lg">
+                        🧪 Propriétés du Consommable
+                    </h4>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="form-group">
+                            <label class="form-label">Type d'Effet</label>
+                            <select name="effect_type" class="form-select">
+                                <option value="none">Aucun</option>
+                                <option value="heal">Soin (Heal)</option>
+                                <option value="buff">Buff de Stat</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Valeur de l'Effet</label>
+                            <input type="number" name="effect_value" class="form-input" value="0">
+                            <small class="text-gray-400">PV rendus ou valeur fixe</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Type de Durée</label>
+                            <select name="duration_type" class="form-select">
+                                <option value="instant">Instantané</option>
+                                <option value="seconds">Temps réel (secondes)</option>
+                                <option value="turns">Tours de combat</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Valeur Durée</label>
+                            <input type="number" name="duration_value" class="form-input" value="0">
+                            <small class="text-gray-400">Nombre de secondes ou tours</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Image Upload -->
             <div class="col-span-2">
                 <label class="form-label">Image de l'Item</label>
@@ -207,6 +247,21 @@ imageInput.addEventListener('change', function(e) {
         reader.readAsDataURL(file);
     }
 });
+
+// Consumable Type Logic
+const typeSelect = document.querySelector('select[name="type"]');
+const consumableProps = document.getElementById('consumable-properties');
+
+function updateTypeVisibility() {
+    if (typeSelect.value === 'consumable') {
+        consumableProps.classList.remove('hidden');
+    } else {
+        consumableProps.classList.add('hidden');
+    }
+}
+typeSelect.addEventListener('change', updateTypeVisibility);
+updateTypeVisibility();
+
 </script>
 
 <?php

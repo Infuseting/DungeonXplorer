@@ -123,14 +123,22 @@ class AdminItemController
         $p_two_handed = (int)$twoHanded;
         $p_width = (int)($_POST['width'] ?? 0);
         $p_height = (int)($_POST['height'] ?? 0);
-        $p_weight = (int)($_POST['weight'] ?? 0);
+        $p_weight = (float)($_POST['weight'] ?? 0); // Changed to float
         $p_icon = $finalIcon;
         $p_stat_ranges = $statRangesJson;
         $p_max_stack = (int)($_POST['max_stack'] ?? 1);
         $p_price = ($_POST['price'] === '' || !isset($_POST['price'])) ? null : $_POST['price'];
         $p_is_purchasable = isset($_POST['is_purchasable']) ? 1 : 0;
+        
+        // New Consumable Fields
+        $p_effect_type = $_POST['effect_type'] ?? 'none';
+        $p_duration_type = $_POST['duration_type'] ?? 'instant';
+        $p_duration_value = (int)($_POST['duration_value'] ?? 0);
+        $p_effect_value = (int)($_POST['effect_value'] ?? 0);
 
-        $types = "ssssiiiissiii"; // name,desc,type,slot | two_handed,width,height,weight | icon,stat_ranges,max_stack,price,is_purchasable
+        $types = "ssssiiidiississii"; // name,desc,type,slot | two_handed,width,height,weight | icon,stat_ranges,max_stack,price,is_purchasable | effect_type, duration_type, duration_value, effect_value
+        // Note: weight is double (d).
+        
         $stmt->bind_param(
             $types,
             $p_name,
@@ -145,7 +153,11 @@ class AdminItemController
             $p_stat_ranges,
             $p_max_stack,
             $p_price,
-            $p_is_purchasable
+            $p_is_purchasable,
+            $p_effect_type,
+            $p_duration_type,
+            $p_duration_value,
+            $p_effect_value
         );
         
         if ($stmt->execute()) {
@@ -224,7 +236,8 @@ class AdminItemController
         $stmt = $this->db->prepare("
             UPDATE items 
             SET name = ?, description = ?, type = ?, slot_type = ?, two_handed = ?, 
-                width = ?, height = ?, weight = ?, icon = ?, stat_ranges = ?, max_stack = ?, price = ?, is_purchasable = ?
+                width = ?, height = ?, weight = ?, icon = ?, stat_ranges = ?, max_stack = ?, price = ?, is_purchasable = ?,
+                effect_type = ?, duration_type = ?, duration_value = ?, effect_value = ?
             WHERE id = ?
         ");
         
@@ -239,7 +252,7 @@ class AdminItemController
         $p_two_handed = (int)$twoHanded;
         $p_width = (int)($_POST['width'] ?? $item['width']);
         $p_height = (int)($_POST['height'] ?? $item['height']);
-        $p_weight = (int)($_POST['weight'] ?? $item['weight']);
+        $p_weight = (float)($_POST['weight'] ?? $item['weight']);
         $p_icon = $iconPath;
         $p_stat_ranges = $statRangesJson;
         $p_max_stack = (int)($_POST['max_stack'] ?? $item['max_stack']);
@@ -247,7 +260,13 @@ class AdminItemController
         $p_is_purchasable = isset($_POST['is_purchasable']) ? 1 : 0;
         $p_id = (int)$id;
 
-        $types = "ssssiiiissiiii"; // name,desc,type,slot | two_handed,width,height,weight | icon,stat_ranges,max_stack,price,is_purchasable | id
+        // New Consumable Fields
+        $p_effect_type = $_POST['effect_type'] ?? 'none';
+        $p_duration_type = $_POST['duration_type'] ?? 'instant';
+        $p_duration_value = (int)($_POST['duration_value'] ?? 0);
+        $p_effect_value = (int)($_POST['effect_value'] ?? 0);
+
+        $types = "ssssiiidiississiisii"; // name,desc,type,slot | two_handed,width,height,weight | icon,stat_ranges,max_stack,price,is_purchasable | effect_type, duration_type, duration_value, effect_value | id
         $stmt->bind_param(
             $types,
             $p_name,
@@ -263,6 +282,10 @@ class AdminItemController
             $p_max_stack,
             $p_price,
             $p_is_purchasable,
+            $p_effect_type,
+            $p_duration_type,
+            $p_duration_value,
+            $p_effect_value,
             $p_id
         );
         

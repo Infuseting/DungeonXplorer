@@ -1,5 +1,7 @@
 <?php
 
+
+
 error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
 ini_set('display_errors', 'Off');
 ini_set('log_errors', 'On');
@@ -18,6 +20,12 @@ try {
 
 // Load helper functions
 require_once __DIR__ . '/../app/helpers.php';
+
+// Temporary Migration Route (Placed here to access loaded Env)
+if ($_SERVER['REQUEST_URI'] === '/migrate-consumables') {
+    require_once __DIR__ . '/../migration_consumables_buffs.php';
+    exit;
+}
 
 session_start();
 

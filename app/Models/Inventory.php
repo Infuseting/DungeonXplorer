@@ -290,6 +290,34 @@ class Inventory
         }
     }
 
+    public function consumeItem($characterId, $inventoryItemId)
+    {
+        // 1. Get Item Details
+        $stmt = $this->db->prepare("SELECT id, quantity, item_id FROM character_inventory WHERE character_id = ? AND id = ?");
+        $stmt->bind_param("ii", $characterId, $inventoryItemId);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc();
+
+        if (!$result) {
+            return ['success' => false, 'message' => 'Item not found'];
+        }
+
+        // 2. Decrement quantity or delete
+        if (isset($result['quantity']) && $result['quantity'] > 1) {
+            $stmt = $this->db->prepare("UPDATE character_inventory SET quantity = quantity - 1 WHERE id = ?");
+            $stmt->bind_param("i", $inventoryItemId);
+        } else {
+            $stmt = $this->db->prepare("DELETE FROM character_inventory WHERE id = ?");
+            $stmt->bind_param("i", $inventoryItemId);
+        }
+
+        if ($stmt->execute()) {
+             return ['success' => true, 'message' => 'Item consumed', 'itemId' => $result['item_id']];
+        } else {
+             return ['success' => false, 'message' => 'Database error'];
+        }
+    }
+
     private function determineSlotForItem($itemSlotType)
     {
         // Map item slot types to actual slot names
