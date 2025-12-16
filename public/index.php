@@ -21,7 +21,13 @@ try {
 // Load helper functions
 require_once __DIR__ . '/../app/helpers.php';
 
-// Temporary Migration Route (Placed here to access loaded Env)
+$router->post('/game/combat/end', 'App\Controllers\CombatController@endCombat');
+
+// Save System Routes
+$router->post('/game/save', 'App\Controllers\SaveController@saveGame');
+$router->post('/game/load', 'App\Controllers\SaveController@loadGame');
+$router->get('/game/saves', 'App\Controllers\SaveController@listSaves');
+
 if ($_SERVER['REQUEST_URI'] === '/migrate-consumables') {
     require_once __DIR__ . '/../migration_consumables_buffs.php';
     exit;

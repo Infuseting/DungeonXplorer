@@ -36,6 +36,13 @@ ob_start();
                     Paramètres
                 </button>
                 
+                <button id="manual-save-button" class="w-full px-4 py-3 text-left text-white hover:bg-gray-700 transition-colors flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                    </svg>
+                    Sauvegarder
+                </button>
+
                 <button id="return-menu-button" class="w-full px-4 py-3 text-left text-white hover:bg-gray-700 transition-colors flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
@@ -291,10 +298,70 @@ ob_start();
             playSound('click');
             showToast('Sauvegarde en cours...', 'info');
             
-            // Simulate save delay (since it's auto-save, we just give visual feedback)
+            // Real Save Call
+            try {
+                const formData = new FormData();
+                formData.append('name', 'AutoSave ' + new Date().toLocaleString());
+                
+                const response = await fetch('/game/save', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('Sauvegarde réussie !', 'success');
+                } else {
+                    showToast('Erreur sauvegarde: ' + data.message, 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('Erreur de connexion', 'error');
+            }
+
             setTimeout(() => {
                 window.location.href = actionUrl;
             }, 800);
+        }
+
+        async function manualSave() {
+            const { showToast } = await import('/js/modules/toast.js');
+            const { playSound } = await import('/js/modules/soundManager.js');
+            playSound('click');
+            
+            const name = prompt("Nom de la sauvegarde :", "Partie " + new Date().toLocaleString());
+            if (!name) return;
+
+            showToast('Sauvegarde en cours...', 'info');
+            
+            try {
+                const formData = new FormData();
+                formData.append('name', name);
+                
+                const response = await fetch('/game/save', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('Sauvegarde réussie !', 'success');
+                } else {
+                    showToast('Erreur: ' + data.message, 'error');
+                }
+            } catch (e) {
+                showToast('Erreur technique', 'error');
+            }
+        }
+
+        
+        // Manual Save Button
+        const manualSaveBtn = document.getElementById('manual-save-button');
+        if (manualSaveBtn) {
+            manualSaveBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                manualSave();
+            });
         }
 
         // Return to Menu

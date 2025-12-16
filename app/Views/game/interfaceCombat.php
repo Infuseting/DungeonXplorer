@@ -443,15 +443,50 @@
                 disableActions();
                 btn.disabled = true;
                 playerDie();
+                
                 setTimeout(() => {
-                    setTimeout(() => {
                     document.getElementById('combat-log').textContent = "";
-                    console.log('loose');
                     bg.classList.add("sepia", "saturate-200", "hue-rotate-[-50deg]", "brightness-75");
                     winOrLoss.classList.add("text-red-600", "animate-pulse");
-                    winOrLoss.innerHTML = '<p class ="text-4xl font-bold z-9999"> YOU LOST </p>';
-                     }, 1500);    
-                }, 1000);
+                    
+                    // Fetch Saves
+                    fetch('/game/saves')
+                    .then(r => r.json())
+                    .then(data => {
+                        let savesHtml = '<div class="mt-4 p-4 bg-gray-900/90 rounded text-center"><p class="text-white mb-2">Charger une sauvegarde :</p>';
+                        if (data.success && data.saves.length > 0) {
+                            savesHtml += '<div class="flex flex-col gap-2">';
+                            data.saves.forEach(s => {
+                                savesHtml += `<button onclick="loadSave(${s.id})" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded">${s.save_name} (${s.created_at})</button>`;
+                            });
+                             savesHtml += '</div>';
+                        } else {
+                            savesHtml += '<p class="text-gray-400">Aucune sauvegarde trouvée.</p>';
+                        }
+                        savesHtml += '<button onclick="window.location.href=\'/game\'" class="mt-4 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded">Retour Menu (Risqué)</button></div>';
+                        
+                        winOrLoss.innerHTML = '<p class ="text-5xl font-black text-red-600 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] mb-4">GAME OVER</p>' + savesHtml;
+                    });
+
+                }, 2000);
+            }
+
+            function loadSave(id) {
+                if(!confirm("Charger cette sauvegarde ?")) return;
+                fetch('/game/load', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: 'save_id=' + id
+                })
+                .then(r => r.json())
+                .then(d => {
+                    if(d.success) {
+                        alert("Partie chargée !");
+                        window.location.href = '/game';
+                    } else {
+                        alert("Erreur: " + d.message);
+                    }
+                });
             }
             //animation plus graphique
             function ennemyHit(){

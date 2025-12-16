@@ -29,6 +29,13 @@
                     </svg>
                     Paramètres
                 </button>
+
+                <button id="manual-save-button" class="w-full px-4 py-3 text-left text-white hover:bg-gray-700 transition-colors flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                    </svg>
+                    Sauvegarder
+                </button>
                 
                 <button id="return-menu-button" class="w-full px-4 py-3 text-left text-white hover:bg-gray-700 transition-colors flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -276,6 +283,25 @@
             });
         }
         
+        // Manual Save Button
+        const manualSaveBtn = document.getElementById('manual-save-button');
+        if (manualSaveBtn) {
+            manualSaveBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const name = prompt("Nom de la sauvegarde :", "Partie " + new Date().toLocaleString());
+                if (!name) return;
+                
+                try {
+                const formData = new FormData();
+                formData.append('name', name);
+                const r = await fetch('/game/save', { method: 'POST', body: formData });
+                const d = await r.json();
+                if(d.success) alert("Sauvegarde réussie !");
+                else alert("Erreur: " + d.message);
+                } catch(e) { alert("Erreur technique"); }
+            });
+        }
+
         // Return to menu button
         const returnMenuBtn = document.getElementById('return-menu-button');
         if (returnMenuBtn) {
