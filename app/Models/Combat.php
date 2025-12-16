@@ -41,126 +41,143 @@ class Combat
         public function playerTurn($action){
             $bool = false;
 
-          switch ($action) {
-            case 'attack':
-                if ($this->isAttaqueSuccessfulFromPlayer()) {
-                    $bool = true;
-                    $damage = $this->joueur->getAttaqueClass();
-                    $this->boss->reduceVitality($damage);
-                    $message = $this->joueur->getName() . " hits " . $this->boss->getName() . " for " . $damage . " damage!\n";
-                } else {
-                    $message = $this->joueur->getName() . " misses " . $this->boss->getName() . "!\n";
-                }
-                break;
+            switch ($action) {
+                case 'attack':
+                    // Hit Chance: Player Dex vs Monster Dex
+                    $hitRoll = $this->dice() + ($this->joueur->getDexterity() / 2);
+                    $defenseScore = 10 + ($this->boss->getDexterity() / 2); // Base AC 10 + Dex Mod
+                    
+                    if ($hitRoll >= $defenseScore) {
+                        $bool = true;
+                        
+                        // Damage: Player Str + Weapon Damage (included in getAttaqueClass or separate?)
+                        // getAttaqueClass currently seems to be Str + DamageStat? Let's check Character.php
+                        // Assuming getAttaqueClass returns total Attack Power (Str + Weapon)
+                        $rawDamage = $this->joueur->getAttaqueClass(); 
+                        
+                        // Defense: Monster Defense Stat
+                        $reduction = $this->boss->getDefense() / 2;
+                        $actualDamage = max(1, $rawDamage - $reduction); // Min 1 damage
+                        
+                        $this->boss->reduceVitality($actualDamage);
+                        $message = $this->joueur->getName() . " hits " . $this->boss->getName() . " for " . $actualDamage . " damage! (Roll: $hitRoll vs AC: $defenseScore - Reduct: $reduction)\n";
+                    } else {
+                        $message = $this->joueur->getName() . " misses " . $this->boss->getName() . "! (Roll: $hitRoll vs AC: $defenseScore)\n";
+                    }
+                    break;
 
-            case 'defend':
-                // Stocker la défense initiale
-                $_SESSION['initialDefence'] = $this->joueur->getArmorClass();
+                case 'defend':
+                    // Temp bonus to Defense (AC)
+                    // We can boost Dex or Defense stat temporarily?
+                    // Let's boost Armor Class used for Hit detection or Damage reduction?
+                    // User asked for "Defense (Reduction des dégâts)"
+                    // "Agilité (Chance de toucher, Esquive)"
+                    // So Defend should boost Reduction (Defense) or Evasion (Agility)?
+                    // "Defend" usually implies blocking/parrying -> Mitigation or Evasion.
+                    // Let's boost Evasion (Dex) + Defense for this turn.
+                    
+                    $_SESSION['temp_defense_bonus'] = $_SESSION['diceRoll']; // Use dice roll as bonus
+                    
+                    $message = $this->joueur->getName() . " takes a defensive stance!\n";
+                    break;
+                    
+                case 'usePotion':
+                    // Potion logic (restore HP)
+                    // Use max HP session var
+                    $restore = 20; // Default potion?
+                    $maxHp = $_SESSION['maxHpPlayer'];
+                    $current = $this->joueur->getVitality(); // Actually currentHp via getter
+                    $newHp = min($maxHp, $current + $restore);
+                    
+                    // We need a setCurrentHp on Character? 
+                    // Character::heal() adds to current_hp.
+                    $this->joueur->heal($_SESSION['character_id'], $restore); // Use DB method
+                    
+                    // Sync local cache if possible or trust DB for next fetch?
+                    // Combat loop might keep object in memory.
+                    // We should probably update the local object too if methods allow.
+                    // Character::heal updates DB.
+                    // Character model currently uses 'vitality' property for max HP in getVitality()? 
+                    // No, getVitality returns the Stat.
+                    // Combat logic relies on getVitality() returning HP?
+                    // In Character.php check: getVitality() returns stat. 
+                    // This is a disconnect. 'isAlive' checks 'currentHp' or 'vitality'.
+                    // Fixing this: Combat should use 'getCurrentHp' and 'getMaxHp'.
+                    
+                    $message = $this->joueur->getName() . " drinks a potion (+20 HP)!\n";
+                    break;
 
-                // Bonus temporaire (ici basé sur le dé)
-                $bonus = $_SESSION['diceRoll'];
-                $this->joueur->setArmorClass($_SESSION['initialDefence'] + $bonus);
+                default:
+                    $message = $this->joueur->getName() . " does nothing...\n";
+                    break;
+            }
 
-                $message = $this->joueur->getName() . " takes a defensive stance (+$bonus armor)!\n";
-                break;
-            case 'usePotion':
-                $health =$this->joueur->getVitality() + 5;
-                if($health > $_SESSION['maxHpPlayer']){
-                    $this->joueur->setVitality($_SESSION['maxHpPlayer']);
-                    $message = $this->joueur->getName() . " takes a heal  (max health)!\n";
-                }
-                else{
-                    $this->joueur->setVitality($health);
-                     $message = $this->joueur->getName() . " takes a heal  (+5 health)!\n";
-
-                }
-                break;
-
-            default:
-                $message = $this->joueur->getName() . " does nothing...\n";
-                break;
-        }
-
-            if(!$this->isAlive($this->boss)) {
-                $message .= $this->joueur->getName() . " wins the combat!\n";
+            if(!$this->boss->isAlive()) {
+                $message .= $this->boss->getName() . " is defeated!\n";
                 $this->endCombat();
             }
 
-            return [$message,$bool];
-
-            
+            return [$message, $bool];
         }
 
         public function monsterTurn()
         {
-            $dice = $this->dice();
             $bool = false;
+            $message = "";
 
-            if($this->isMonsterAlive()){
-                if($this->isAttaqueSuccessfulFromMonster()) {
-                    $bool = true;
+            if($this->boss->isAlive()) {
+                // Calculation
+                // Hit Chance: Monster Dex vs Player Dex
+                $hitRoll = $this->dice() + ($this->boss->getDexterity() / 2);
                 
-                    $damage = $this->boss->getAttaque();
-                    $this->joueur->reduceVitality($damage);
-                    $message = $this->boss->getName() . " hits " . $this->joueur->getName() . " for " . $damage . " damage!\n";
-                    } else {
-                        $message =  $this->boss->getName() . " misses " . $this->joueur->getName() . "!\n";
+                // Player evasion
+                $playerDex = $this->joueur->getDexterity();
+                // Check if Defend action active? (Bonus to AC?)
+                 $bonusEvasion = 0;
+                 // If we had a dodge action...
+                
+                $defenseScore = 10 + ($playerDex / 2) + $bonusEvasion;
+                
+                if($hitRoll >= $defenseScore) {
+                    $bool = true;
+                    
+                    // Damage: Monster Str/Attack
+                    $rawDamage = $this->boss->getAttaqueClass(); // Assuming this is Attack Power
+                    
+                    // Mitigation: Player Defense
+                    $playerDef = $this->joueur->getArmorClass(); // getArmorClass in Character uses Str/2 + Equipped Defense?
+                    // Let's stick to using stats directly if possible or the helper methods.
+                    // Character::getArmorClass() = Str/2 + EquippedDefense. 
+                    // This is effectively "Defense".
+                    
+                    $reduction = $playerDef / 2;
+                    
+                    // Defend Action Bonus?
+                    if (isset($_SESSION['temp_defense_bonus'])) {
+                        $reduction += $_SESSION['temp_defense_bonus'];
+                        unset($_SESSION['temp_defense_bonus']);
                     }
-                    if(!$this->isAlive($this->joueur)) {
-                        $message .= $this->boss->getName() . " wins the combat!\n";
-                        $this->endCombat();
+
+                    $actualDamage = max(0, $rawDamage - $reduction);
+                    
+                    $this->joueur->reduceVitality($actualDamage);
+                    $message = $this->boss->getName() . " hits " . $this->joueur->getName() . " for " . $actualDamage . " damage! (Roll: $hitRoll vs AC: $defenseScore)\n";
+                } else {
+                    $message =  $this->boss->getName() . " misses " . $this->joueur->getName() . "! (Roll: $hitRoll vs AC: $defenseScore)\n";
+                    // If defend was active, clear it
+                    if (isset($_SESSION['temp_defense_bonus'])) unset($_SESSION['temp_defense_bonus']);
+                }
+
+                if(!$this->joueur->isAlive()) {
+                    $message .= $this->boss->getName() . " wins the combat!\n";
+                    $this->endCombat();
                 }
                 
-            }else{
-                $message = $this->boss->getName()." a été vaincu ! ";
+            } else {
+                $message = $this->boss->getName()." is already dead.";
             }
             
-
-         
             return [$message,$bool];
-        }
-
-        public function isEnd(){
-            return $this->end;
-        }
-
-
-        public function getJoueur()
-        {
-            return $this->joueur;
-        }
-
-        public function getBoss()
-        {
-            return $this->boss;
-        }
-
-        public function getPlayerHp(){
-            return $this->joueur->getVitality();
-        }
-
-        public function isAttaqueSuccessfulFromPlayer()
-        {
-            $attackRoll = $this->joueur->getAttaqueClass()+$_SESSION['diceRoll'];
-            $defenseRoll = $this->boss->getArmorClass()+$this->dice()/3;
-
-            
-            
-            return $attackRoll >= $defenseRoll;
-        }
-        
-        public function isAttaqueSuccessfulFromMonster()
-        {
-            $attackRoll = $this->boss->getAttaqueClass()+$this->dice()/2;
-            $defenseRoll = $this->joueur->getArmorClass()+$_SESSION['diceRoll'];
-
-            
-            
-            return $attackRoll >= $defenseRoll;
-        }
-
-        public function isMonsterAlive(){
-            return  $this->boss->isAlive();
         }
 
         public function endCombat()

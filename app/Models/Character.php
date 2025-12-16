@@ -254,20 +254,28 @@ public function toArray(): array {
     {
         return $this->className;
     }
+    
+    /**
+     * Get Total Defense (Reduction)
+     * Used for Damage Reduction, not Hit Avoidance (Evasion).
+     */
     public function getArmorClass()
     {
-        if($this->armor == null) $this->armor = $this->getStrength()/2 + $this->getEquippedStats(Stats::Defense);
+        // Defense Stat from items + potentially Vitality/2 or specific Defense stat?
+        // User requested: "Utilisation de la Défense (Réduction des dégâts)"
+        // Strength was used in original formula. Vitality creates "meat shield"?
+        // Let's stick to Equipment Defense + potentially a small constant/stat if defined.
+        // For now: Just Equipped Defense.
+        if($this->armor == null) $this->armor = $this->getEquippedStats(\App\Enums\Stats::Defense);
         return $this->armor;
     }
 
-    public function isAlive()
-    {
-        return $this->vitality > 0;
-    }
+    // Removed duplicate isAlive() here - use the one checking currentHp
 
     public function getAttaqueClass()
     {
-        return  $this->getStrength() + $this->getEquippedStats(Stats::Damage);
+        // Strength + Weapon Damage
+        return  $this->getStrength() + $this->getEquippedStats(\App\Enums\Stats::Damage);
     }
      public function resetCache(): void
     {
