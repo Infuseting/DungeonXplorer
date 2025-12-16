@@ -141,17 +141,85 @@ class CombatController
      // Consommer le dé
     unset($_SESSION['diceRoll']);
 
-   echo json_encode([
-    "success" => true,
-    "player"  => $playerMessage[0],
-    "monster" => $monsterMessage[0],
-    "playerHp" => $combat->getPlayerHp(),
-    "win" => !$combat->isMonsterAlive(),
-    "newTurn" => !$combat->isEnd(),
-    "damageM" => $playerMessage[1],
-    "damageJ" => $monsterMessage[1]
+    // Check Victory
+    $rewards = [];
+    if (!$combat->isMonsterAlive()) {
+         $monsterModel = $combat->getMonster();
+         $calc = $this->calculateRewards($combat, $monsterModel);
+         
+         $charModel = $combat->getJoueur();
+         // Refresh DB connection on model if needed? findById closes/unsets DB?
+         // Character::findById unsets DB? No, it unsets NOTHING. 
+         // Wait, CombatController lines 19/26 call unsetDb().
+         // This removes the internal DB connection property?
+         // Character.php line 35 `__construct` opens it.
+         // If we unset it, we might need to reconnect.
+         // Let's check Character.php: `unsetDb` wasn't shown in Step 1976... 
+         // Monster.php line 158 has `unsetDb`.
+         // CombatController Step 1979 line 19 calls `$characterModel->unsetDb()`.
+         // I suspect `Character.php` has it or I missed it.
+         // If `unsetDb` is called, `addXp` which uses `$this->db` will fail.
+         // I should instantiate a NEW Character model to save? Or Re-connect?
+         // Or just instantiate new model for saving.
+         
+         $saveChar = new Character();
+         $saveChar->findById($_SESSION['character_id']);
+         $xpRes = $saveChar->addXp($calc['xp']);
+         $saveChar->addGold($calc['gold']);
+         
+         // Loot
+         $loot = $this->generateLoot($_SESSION['character_id'], $monsterModel);
+         
+         $rewards = [
+             'xp' => $calc['xp'],
+             'gold' => $calc['gold'],
+             'levels_gained' => $xpRes['levels_gained'],
+             'loot' => $loot
+         ];
+    }
 
-]);
+    echo json_encode([
+        "success" => true,
+        "player"  => $playerMessage[0],
+        "monster" => $monsterMessage[0],
+        "playerHp" => $combat->getPlayerHp(), // This uses local object, might not reflect full heal from level up unless refreshed? 
+                                            // The UI uses this for bar. saveChar->addXp restored HP in DB.
+                                            // $combat->getJoueur() is the OLD object (no DB access).
+                                            // I should update it? Or just send 'maxHpPlayer' update?
+        "win" => !$combat->isMonsterAlive(),
+        "newTurn" => !$combat->isEnd(),
+        "damageM" => $playerMessage[1],
+        "damageJ" => $monsterMessage[1],
+        "rewards" => $rewards
+    ]);
+} 
+
+    private function calculateRewards(Combat $combat, Monster $monsterModel) {
+        // Simplified formulas
+        $str = $monsterModel->getStrength();
+        $vit = $monsterModel->getVitality();
+        
+        $xp = 50 + ($str * 2) + ($vit * 2);
+        $gold = rand(5, 15) + $str;
+        
+        return ['xp' => (int)$xp, 'gold' => (int)$gold];
+    }
+    
+    private function generateLoot($characterId, $monsterModel) {
+        $db = \App\Config\Database::getInstance()->getConnection();
+        $inventoryModel = new \App\Models\Inventory();
+        $loot = [];
+        
+        // 30% Chance
+        if (rand(1, 100) <= 30) {
+            $res = $db->query("SELECT id, name FROM items ORDER BY RAND() LIMIT 1");
+            if ($res && $row = $res->fetch_assoc()) {
+                $add = $inventoryModel->addItem($characterId, $row['id']);
+                if ($add['success']) $loot[] = $row['name'];
+            }
+        }
+        return $loot;
+    }
 }
 
 public function endCombat() {

@@ -187,21 +187,69 @@ public function toArray(): array {
 
     public function heal($characterId, $amount)
     {
-        // For now, assume healing just adds to a 'current_hp' column if it exists,
-        // or just logs it if we don't have that column yet.
-        // Assuming 'vitality' is the stat, and maybe there's 'hp' column in characters or character_stats.
-        // Let's safe-check and try to update 'hp' in character_stats.
-        // If the column doesn't exist, this query will fail silently or throw, but we should try.
-        // Actually, let's look at migration output to see if we can add 'current_hp'.
-        // For now, let's implement the query assuming 'current_hp' exists or will exist.
-        // If not, we might need a migration for it too.
-        
-        // Check if current_hp exists in schema (can't easily checking runtime).
-        // I will add 'current_hp' to the migration script just in case!
-        
-        $stmt = $this->db->prepare("UPDATE character_stats SET current_hp = current_hp + ? WHERE character_id = ?");
+        $stmt = $this->db->prepare("UPDATE character_stats SET current_hp = LEAST(vitality, current_hp + ?) WHERE character_id = ?");
         $stmt->bind_param("ii", $amount, $characterId);
         return $stmt->execute();
+    }
+
+    public function addGold($amount)
+    {
+        $stmt = $this->db->prepare("UPDATE characters SET gold = gold + ? WHERE id = ?");
+        $stmt->bind_param("ii", $amount, $this->id);
+        if ($stmt->execute()) {
+            $this->gold += $amount;
+            return true;
+        }
+        return false;
+    }
+
+    public function addXp($amount)
+    {
+        // 1. Fetch current stats fresh to be safe
+        $stmt = $this->db->prepare("SELECT xp, level, skill_points, vitality FROM character_stats WHERE character_id = ?");
+        $stmt->bind_param("i", $this->id);
+        $stmt->execute();
+        $stats = $stmt->get_result()->fetch_assoc();
+        
+        $xp = $stats['xp'] + $amount;
+        $level = $stats['level'];
+        $sp = $stats['skill_points'];
+        $levelsGained = 0;
+        
+        // Threshold Formula: Level * 100
+        $threshold = $level * 100;
+        
+        while ($xp >= $threshold) {
+            $xp -= $threshold;
+            $level++;
+            $levelsGained++;
+            $sp++; // 1 SP per level
+            $threshold = $level * 100;
+        }
+        
+        // Update DB
+        $stmt = $this->db->prepare("UPDATE character_stats SET xp = ?, level = ?, skill_points = ? WHERE character_id = ?");
+        $stmt->bind_param("iiii", $xp, $level, $sp, $this->id);
+        $success = $stmt->execute();
+        
+        if ($success && $levelsGained > 0) {
+            // Restore HP on level up? Optional, but nice.
+            // Let's refill HP.
+             $this->db->query("UPDATE character_stats SET current_hp = vitality WHERE character_id = " . $this->id);
+        }
+        
+        // Update local
+        $this->xp = $xp;
+        $this->level = $level;
+        $this->skillPoints = $sp;
+        
+        return [
+            'success' => $success,
+            'levels_gained' => $levelsGained,
+            'current_level' => $level,
+            'current_xp' => $xp,
+            'next_threshold' => $threshold
+        ];
     }
 
     public function getName()

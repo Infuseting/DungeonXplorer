@@ -31,6 +31,22 @@ class Combat
             return $this->joueur->getCurrentHp();
         }
 
+        public function getMonster() {
+            return $this->boss;
+        }
+
+        public function getJoueur() {
+            return $this->joueur;
+        }
+
+        public function isMonsterAlive() {
+            return $this->boss->isAlive();
+        }
+        
+        public function isEnd() { 
+            return $this->end; 
+        }
+
         public function isAlive($entity)
         {
             if ($entity->getVitality() <= 0) {

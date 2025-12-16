@@ -332,7 +332,7 @@
                              }, 1000);
                         if (data.win ) {
                             end  = true;
-                            playerWin();
+                            playerWin(data.rewards);
                         }
                         // Mettre à jour les HP du joueur
                         if (typeof data.playerHp !== "undefined") {
@@ -391,21 +391,48 @@
                 });
             }
 
-            function playerWin() {
+            function playerWin(rewards) {
                 disableActions();
                     setTimeout(() => {
                     bossDie();
                     setTimeout(() => {
                         document.getElementById('combat-log').textContent = "";
                         winOrLoss.classList.add("text-black-600", "animate-pulse");
-                        let redirect = document.createElement("button");
-                        redirect.textContent = "Achever le combat"
-                        redirect.classList.add('p-4','border','border-purple-500/50','bg-gray-800/50','mt-5','rounded-lg','z-999','hover:scale-105');
-                        redirect.onclick = () =>{
-                            window.location.href = "http://localhost:8080/game";
-                            //window.location.href = "https://dungeonxplorer.infuseting.fr/game"
+                        
+                        let rewardHtml = '';
+                        if (rewards) {
+                            rewardHtml += `<div class="mt-4 text-center bg-gray-800/90 p-4 rounded-lg border border-yellow-500/50 shadow-lg">
+                                <h3 class="text-yellow-400 font-bold mb-2 uppercase tracking-wide">Butin de Guerre</h3>
+                                <div class="flex flex-col gap-1">
+                                    <p class="text-violet-300 font-bold text-lg">XP: <span class="text-white">+${rewards.xp}</span></p>
+                                    <p class="text-yellow-300 font-bold text-lg">Or: <span class="text-white">+${rewards.gold}</span></p>
+                                </div>`;
+                            
+                            if (rewards.levels_gained > 0) {
+                                rewardHtml += `<div class="mt-2 p-2 bg-green-900/50 rounded border border-green-500/50 animate-bounce">
+                                    <p class="text-green-400 font-bold uppercase">🎉 Niveau Supérieur ! (+${rewards.levels_gained})</p>
+                                </div>`;
+                            }
+                            
+                            if (rewards.loot && rewards.loot.length > 0) {
+                                rewardHtml += `<div class="mt-3 pt-2 border-t border-gray-600">
+                                    <p class="text-blue-300 font-semibold mb-1">Objets trouvés :</p>
+                                    <ul class="text-sm text-gray-300 space-y-1">`;
+                                rewards.loot.forEach(item => {
+                                    rewardHtml += `<li class="flex items-center justify-center gap-2"><span class="text-yellow-500">★</span> ${item}</li>`;
+                                });
+                                rewardHtml += `</ul></div>`;
+                            }
+                            rewardHtml += `</div>`;
                         }
-                        winOrLoss.innerHTML = '<p class ="text-4xl font-bold z-9999"> YOU WIN </p>';
+
+                        let redirect = document.createElement("button");
+                        redirect.textContent = "Retour au Donjon"
+                        redirect.classList.add('px-8','py-3','bg-purple-600','text-white','font-bold','uppercase','tracking-widest','hover:bg-purple-500','mt-6','rounded-full','shadow-lg','transform','hover:scale-105','transition','duration-200');
+                        redirect.onclick = () =>{
+                            window.location.href = "/game";
+                        }
+                        winOrLoss.innerHTML = '<p class ="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-red-600 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] mb-4"> VICTOIRE </p>' + rewardHtml;
                         redirection.appendChild(redirect);
                     }, 1000);   
                 }, 1000);
