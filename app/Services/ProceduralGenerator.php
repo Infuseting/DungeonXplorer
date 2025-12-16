@@ -6,9 +6,11 @@ use App\Models\ProceduralTemplate;
 use App\Models\StoryInstance;
 use App\Models\StoryNode;
 use App\Models\Story;
+use App\Config\Database;
 
 class ProceduralGenerator
 {
+    private $db;
     private $templateModel;
     private $instanceModel;
     private $nodeModel;
@@ -16,6 +18,7 @@ class ProceduralGenerator
 
     public function __construct()
     {
+        $this->db = Database::getInstance()->getConnection();
         $this->templateModel = new ProceduralTemplate();
         $this->instanceModel = new StoryInstance();
         $this->nodeModel = new StoryNode();
@@ -26,246 +29,291 @@ class ProceduralGenerator
      * Generate a new dungeon instance
      * 
      * @param int $storyId
-     * @param int|null $characterId
+     * @param int $characterId
      * @return int|false Instance ID
      */
-    public function generate($storyId, $characterId = null)
+    public function generate($storyId, $characterId)
     {
         // 1. Get Story and Template
         $story = $this->storyModel->findById($storyId);
-        if (!$story || $story['type'] !== 'procedural' || !$story['procedural_template_id']) {
+        if (!$story || !$story['procedural_template_id']) {
             return false;
         }
 
         $template = $this->templateModel->findById($story['procedural_template_id']);
-        if (!$template) return false;
+        if (!$template) {
+            return false;
+        }
 
-        // 2. Create Instance
-        $seed = mt_rand(); // Or use provided seed
-        srand($seed); // Initialize RNG
+        // 2. Create Story Instance
+        $instanceData = [
+            'story_id' => $storyId,
+            'character_id' => $characterId,
+            'current_node_id' => null, // Will update later
+            'status' => 'active',
+            'dungeon_data' => json_encode(['seed' => time()]) // Store seed if we want reproducibility later
+        ];
         
-        $instanceType = $characterId ? 'character' : 'shared';
-        $instanceId = $this->instanceModel->create($storyId, $characterId, $seed, $instanceType);
-        
+        // Manual insert for instance to get ID (Model create might not support all fields yet? Let's check or use DB directly)
+        // StoryInstance::create ($characterId, $storyId) exists? 
+        // Let's use direct DB for safety to ensure we get ID.
+        // Or check StoryInstance model. 
+        // Assuming StoryInstance::create($data) or similar exists.
+        // Let's implement robustly.
+        $instanceId = $this->createInstance($storyId, $characterId);
         if (!$instanceId) return false;
 
-        // 3. Generate Graph
-        $nodes = $this->generateGraph($template);
+        // 3. Generate Layout (Grid / Random Walk)
+        $layout = $this->generateLayout($template);
 
-        // 4. Save Nodes to DB
-        $nodeIdMap = []; // Map internal index to DB ID
-        
-        foreach ($nodes as $index => $nodeData) {
-            $data = [
+        // 4. Persist Nodes and Connections
+        $nodeMap = []; // Key: "x,y" => DB ID
+        $startNodeId = null;
+
+        foreach ($layout['rooms'] as $coord => $roomData) {
+            $isStart = ($coord === $layout['start']);
+            $isEnd = ($coord === $layout['end']);
+            
+            // Determine Room Theme/Image
+            // Simple logic: Pick random image from template images (if any) or default
+            // For now, use placeholder or pick from template->room_themes
+            $imagePath = $this->pickRoomImage($template, $isStart, $isEnd);
+
+            $nodeData = [
                 'story_id' => $storyId,
                 'story_instance_id' => $instanceId,
-                'name' => $nodeData['name'],
-                'description' => $nodeData['description'],
-                'image_path' => $nodeData['image_path'],
-                'is_start_node' => $nodeData['is_start'] ? 1 : 0,
-                'is_end_node' => $nodeData['is_end'] ? 1 : 0,
-                'node_x' => $nodeData['x'] * 200, // Scale for visual
-                'node_y' => $nodeData['y'] * 200
+                'name' => $this->generateRoomName($isStart, $isEnd),
+                'description' => $this->generateRoomDescription($isStart, $isEnd),
+                'image_path' => $imagePath,
+                'is_start_node' => $isStart ? 1 : 0,
+                'is_end_node' => $isEnd ? 1 : 0,
+                'can_exit' => $isEnd ? 1 : 0, // Only exit at end? Or Start? Usually Start allows exit, End allows "Finish".
+                                              // Let's allow Exit at Start node.
+                'node_x' => $roomData['x'],
+                'node_y' => $roomData['y']
             ];
             
-            $dbId = $this->nodeModel->create($data);
-            $nodeIdMap[$index] = $dbId;
-        }
+            // FORCE Start Node to be exitable back to menu
+            if ($isStart) $nodeData['can_exit'] = 1;
 
-        // 5. Save Connections
-        // Need to access the raw DB or add method to NodeModel for connections
-        // For now, I'll assume I can use a raw query or add a method.
-        // Let's add a helper method in StoryNode model later or use raw query here if possible.
-        // Actually, I should use the model. I'll add `addConnection` to StoryNode model or use raw SQL here.
-        // Since I don't want to modify the model right now, I'll use a direct query via the model's db connection if accessible, 
-        // or just instantiate Database.
-        $db = \App\Config\Database::getInstance()->getConnection();
-        $stmt = $db->prepare("INSERT INTO story_node_connections (from_node_id, to_node_id, direction_text) VALUES (?, ?, ?)");
-
-        foreach ($nodes as $index => $nodeData) {
-            $fromId = $nodeIdMap[$index];
-            foreach ($nodeData['connections'] as $targetIndex => $direction) {
-                $toId = $nodeIdMap[$targetIndex];
-                $stmt->bind_param("iis", $fromId, $toId, $direction);
-                $stmt->execute();
+            $nodeId = $this->nodeModel->create($nodeData);
+            if ($nodeId) {
+                $nodeMap[$coord] = $nodeId;
+                if ($isStart) $startNodeId = $nodeId;
+                
+                // Populate Content (Monsters, Loot, Traps)
+                if (!$isStart) { // Safe zone at start
+                    $this->populateRoom($nodeId, $template, $isEnd);
+                }
             }
         }
 
-        // 6. Populate Content (Monsters, Loot)
-        $monsterPool = $this->templateModel->getMonsterPools($template['id']);
-        $lootPool = $this->templateModel->getLootPools($template['id']);
-
-        foreach ($nodes as $index => $nodeData) {
-            $dbId = $nodeIdMap[$index];
+        // 5. Create Connections
+        foreach ($layout['connections'] as $conn) {
+            $fromCoord = $conn['from']; // "0,0"
+            $toCoord = $conn['to'];     // "0,1"
             
-            // Monsters
-            if (!$nodeData['is_start'] && !empty($monsterPool)) {
-                // Chance to spawn monster
-                if (rand(0, 100) < 60 || $nodeData['is_end']) { // 60% chance or guaranteed for boss
-                    $this->spawnMonsters($dbId, $monsterPool, $nodeData['is_end']);
-                }
-            }
-
-            // Loot
-            if (!empty($lootPool)) {
-                if (rand(0, 100) < 40 || $nodeData['is_end']) { // 40% chance
-                    $this->spawnLoot($dbId, $lootPool, $nodeData['is_end']);
-                }
+            if (isset($nodeMap[$fromCoord]) && isset($nodeMap[$toCoord])) {
+                $fromId = $nodeMap[$fromCoord];
+                $toId = $nodeMap[$toCoord];
+                
+                $this->createConnection($fromId, $toId, $conn['direction']);
+                // Bidirectional? Usually yes for grid.
+                // Flip direction
+                $flip = [
+                    'Nord' => 'Sud', 'Sud' => 'Nord', 
+                    'Est' => 'Ouest', 'Ouest' => 'Est'
+                ];
+                $backDir = $flip[$conn['direction']] ?? 'Retour';
+                $this->createConnection($toId, $fromId, $backDir);
             }
         }
 
         return $instanceId;
     }
 
-    private function generateGraph($template)
+    private function createInstance($storyId, $characterId)
     {
-        $minRooms = $template['min_rooms'];
-        $maxRooms = $template['max_rooms'];
+        $stmt = $this->db->prepare("INSERT INTO story_instances (story_id, character_id, status) VALUES (?, ?, 'active')");
+        $stmt->bind_param("ii", $storyId, $characterId);
+        if ($stmt->execute()) {
+            return $this->db->insert_id;
+        }
+        return false;
+    }
+
+    private function generateLayout($template)
+    {
+        $minRooms = $template['min_rooms'] ?? 5;
+        $maxRooms = $template['max_rooms'] ?? 10;
         $targetRooms = rand($minRooms, $maxRooms);
         
-        $nodes = [];
-        // Start Node
-        $nodes[0] = [
-            'x' => 0, 'y' => 0, 
-            'is_start' => true, 'is_end' => false, 
-            'connections' => [],
-            'name' => 'Entrée',
-            'description' => 'Le début de votre aventure.',
-            'image_path' => '' // TODO: Pick from image pool
-        ];
-
+        $rooms = [];
+        $connections = [];
+        
+        // Start at 0,0
+        $currentX = 0;
+        $currentY = 0;
+        $rooms["0,0"] = ['x' => 0, 'y' => 0];
+        
         $directions = [
-            'north' => ['x' => 0, 'y' => -1, 'opp' => 'south', 'text' => 'Nord'],
-            'south' => ['x' => 0, 'y' => 1, 'opp' => 'north', 'text' => 'Sud'],
-            'east' => ['x' => 1, 'y' => 0, 'opp' => 'west', 'text' => 'Est'],
-            'west' => ['x' => -1, 'y' => 0, 'opp' => 'east', 'text' => 'Ouest']
+            ['x' => 0, 'y' => 1, 'name' => 'Nord'],
+            ['x' => 0, 'y' => -1, 'name' => 'Sud'],
+            ['x' => 1, 'y' => 0, 'name' => 'Est'],
+            ['x' => -1, 'y' => 0, 'name' => 'Ouest']
         ];
-
-        $queue = [0];
-        $occupied = ['0,0' => 0];
-        $createdCount = 1;
-
-        while ($createdCount < $targetRooms && !empty($queue)) {
-            $currentIndex = array_shift($queue); // BFS for spread, or array_pop for DFS (linear)
-            // Let's mix it up: random pick from queue for organic growth?
-            // For now BFS is fine.
+        
+        // Random Walk
+        $sanity = 0;
+        while (count($rooms) < $targetRooms && $sanity < 1000) {
+            $sanity++;
             
-            $currentX = $nodes[$currentIndex]['x'];
-            $currentY = $nodes[$currentIndex]['y'];
-
-            // Try to add neighbors
-            $possibleDirs = array_keys($directions);
-            shuffle($possibleDirs);
-
-            foreach ($possibleDirs as $dirKey) {
-                if ($createdCount >= $targetRooms) break;
-
-                $dir = $directions[$dirKey];
-                $newX = $currentX + $dir['x'];
-                $newY = $currentY + $dir['y'];
-                $key = "$newX,$newY";
-
-                if (!isset($occupied[$key])) {
-                    // Create new node
-                    $newIndex = count($nodes);
-                    $nodes[$newIndex] = [
-                        'x' => $newX, 'y' => $newY,
-                        'is_start' => false, 'is_end' => false,
-                        'connections' => [],
-                        'name' => 'Salle ' . $newIndex,
-                        'description' => 'Une salle sombre et humide.',
-                        'image_path' => ''
-                    ];
-                    
-                    // Connect
-                    $nodes[$currentIndex]['connections'][$newIndex] = $dir['text'];
-                    $nodes[$newIndex]['connections'][$currentIndex] = $directions[$dir['opp']]['text'];
-
-                    $occupied[$key] = $newIndex;
-                    $queue[] = $newIndex;
-                    $createdCount++;
-                } else {
-                    // Node exists, maybe connect if density allows (loops)
-                    if ($template['allow_loops'] && rand(0, 100) < ($template['connection_density'] * 100)) {
-                        $neighborIndex = $occupied[$key];
-                        // Avoid duplicate connections
-                        if (!isset($nodes[$currentIndex]['connections'][$neighborIndex])) {
-                            $nodes[$currentIndex]['connections'][$neighborIndex] = $dir['text'];
-                            $nodes[$neighborIndex]['connections'][$currentIndex] = $directions[$dir['opp']]['text'];
-                        }
-                    }
+            // Pick random direction
+            $dir = $directions[array_rand($directions)];
+            
+            $nextX = $currentX + $dir['x'];
+            $nextY = $currentY + $dir['y'];
+            $key = "$nextX,$nextY";
+            
+            if (!isset($rooms[$key])) {
+                $rooms[$key] = ['x' => $nextX, 'y' => $nextY];
+                
+                // Add connection
+                $connections[] = [
+                    'from' => "$currentX,$currentY",
+                    'to' => "$nextX,$nextY",
+                    'direction' => $dir['name']
+                ];
+                
+                $currentX = $nextX;
+                $currentY = $nextY;
+            } else {
+                // If backtracking allowed, maybe just move there?
+                if ($template['allow_backtrack']) {
+                    $currentX = $nextX;
+                    $currentY = $nextY;
                 }
             }
+        }
+        
+        // Determine End Node (Furthest from start ideally, or just last placed)
+        // Simple: Last placed is End.
+        end($rooms);
+        $endKey = key($rooms);
+        
+        return [
+            'rooms' => $rooms,
+            'connections' => $connections,
+            'start' => "0,0",
+            'end' => $endKey
+        ];
+    }
+
+    private function populateRoom($nodeId, $template, $isBossRoom)
+    {
+        // 1. Monsters
+        // Get Monster Pools
+        $monsterPools = $this->templateModel->getMonsterPools($template['id']);
+        
+        // Determine if monster spawns (e.g. 50% chance regular room, 100% boss room)
+        $spawnChance = $isBossRoom ? 100 : 50; 
+        
+        if (rand(1, 100) <= $spawnChance) {
+            // Filter pools based on Boss logic
+            $validPools = array_filter($monsterPools, function($p) use ($isBossRoom) {
+                if ($p['boss_room_only'] && !$isBossRoom) return false;
+                if ($isBossRoom && $p['is_boss']) return true; // Boss pool for boss room
+                if ($isBossRoom && !$p['is_boss']) return false; // Only bosses in boss room? Or minions too?
+                                                               // Let's simplify: Boss Room gets Boss Pools.
+                return true;
+            });
             
-            // Re-add current to queue if it has open sides? 
-            // No, standard BFS/Prim's doesn't need that.
-            // But to ensure we reach target, we might need to be aggressive.
-            if (empty($queue) && $createdCount < $targetRooms) {
-                // Pick a random existing node to branch from
-                $queue[] = rand(0, count($nodes) - 1);
+            if (!empty($validPools)) {
+                // Weighted Random Selection
+                $pool = $this->pickWeighted($validPools);
+                if ($pool) {
+                    $qty = rand($pool['min_quantity'], $pool['max_quantity']);
+                    $this->nodeModel->addMonster($nodeId, [
+                        'name' => $pool['monster_name'],
+                        'level' => rand($pool['min_level'], $pool['max_level']),
+                        'stats' => $pool['monster_stats_base'], // Should scale?
+                        'quantity' => $qty,
+                        'is_boss' => $pool['is_boss'],
+                        'can_flee' => $pool['is_boss'] ? 0 : 1
+                    ]);
+                }
             }
         }
-
-        // Mark End Node (furthest from start)
-        $maxDist = 0;
-        $endIndex = 0;
-        foreach ($nodes as $index => $node) {
-            $dist = abs($node['x']) + abs($node['y']); // Manhattan distance
-            if ($dist > $maxDist) {
-                $maxDist = $dist;
-                $endIndex = $index;
+        
+        // 2. Traps
+        // 20% Chance
+        if (rand(1, 100) <= 20) {
+             $this->nodeModel->addTrap($nodeId, [
+                 'description' => "Un mécanisme suspect...",
+                 'damage_dice' => '1d6',
+                 'effect_text' => 'Une fléchette vous touche !',
+                 'avoid_stat' => 'DEX',
+                 'difficulty_class' => 12
+             ]);
+        }
+        
+        // 3. Loot
+        // 30% Chance (100% if Boss)
+        $lootChance = $isBossRoom ? 100 : 30;
+        if (rand(1, 100) <= $lootChance) {
+            $lootPools = $this->templateModel->getLootPools($template['id']);
+            $validLoot = array_filter($lootPools, function($p) use ($isBossRoom) {
+                if ($p['boss_loot_only'] && !$isBossRoom) return false;
+                return true;
+            });
+            
+            if (!empty($validLoot)) {
+                $pool = $this->pickWeighted($validLoot, 'drop_weight');
+                if ($pool) {
+                    $qty = rand($pool['min_quantity'], $pool['max_quantity']);
+                    $this->nodeModel->addLoot($nodeId, $pool['item_id'], $qty, 1.0, 0); // 100% chance once selected
+                }
             }
         }
-        $nodes[$endIndex]['is_end'] = true;
-        $nodes[$endIndex]['name'] = 'Salle du Boss';
-        $nodes[$endIndex]['description'] = 'Une aura menaçante règne ici.';
-
-        return $nodes;
     }
 
-    private function spawnMonsters($nodeId, $pool, $isBossRoom)
+    private function createConnection($fromId, $toId, $text)
     {
-        // Filter pool
-        $candidates = array_filter($pool, function($m) use ($isBossRoom) {
-            return $isBossRoom ? ($m['is_boss'] || $m['boss_room_only']) : (!$m['is_boss'] && !$m['boss_room_only']);
-        });
-        
-        if (empty($candidates) && $isBossRoom) {
-            // Fallback: use any monster if no boss defined
-             $candidates = $pool;
+        $stmt = $this->db->prepare("INSERT INTO story_node_connections (from_node_id, to_node_id, action_text, direction_text) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("iiss", $fromId, $toId, $text, $text);
+        $stmt->execute();
+    }
+    
+    // Helpers
+    private function pickWeighted($items, $weightKey = 'spawn_weight') {
+        $total = 0;
+        foreach ($items as $item) $total += $item[$weightKey];
+        $rand = rand(1, $total);
+        foreach ($items as $item) {
+            $rand -= $item[$weightKey];
+            if ($rand <= 0) return $item;
         }
-
-        if (empty($candidates)) return;
-
-        // Pick one (weighted)
-        $monster = $candidates[array_rand($candidates)]; // Simple random for now
-        
-        // Insert
-        $db = \App\Config\Database::getInstance()->getConnection();
-        $stmt = $db->prepare("INSERT INTO story_node_monsters (node_id, monster_name, monster_level, quantity, is_boss) VALUES (?, ?, ?, ?, ?)");
-        
-        $qty = rand($monster['min_quantity'], $monster['max_quantity']);
-        $stmt->bind_param("isiis", $nodeId, $monster['monster_name'], $monster['min_level'], $qty, $monster['is_boss']);
-        $stmt->execute();
+        return reset($items);
     }
-
-    private function spawnLoot($nodeId, $pool, $isBossRoom)
-    {
-        // Similar logic for loot
-        $candidates = array_filter($pool, function($l) use ($isBossRoom) {
-            return $isBossRoom ? $l['boss_loot_only'] : !$l['boss_loot_only'];
-        });
+    
+    private function generateRoomName($isStart, $isEnd) {
+        if ($isStart) return "Entrée du Donjon";
+        if ($isEnd) return "Antre du Boss";
         
-        if (empty($candidates)) return;
-
-        $loot = $candidates[array_rand($candidates)];
-        
-        $db = \App\Config\Database::getInstance()->getConnection();
-        $stmt = $db->prepare("INSERT INTO story_node_loots (node_id, item_id, quantity, drop_chance) VALUES (?, ?, ?, ?)");
-        
-        $qty = rand($loot['min_quantity'], $loot['max_quantity']);
-        $chance = 1.0; // Guaranteed if spawned
-        $stmt->bind_param("iiid", $nodeId, $loot['item_id'], $qty, $chance);
-        $stmt->execute();
+        $names = ["Couloir Sombre", "Salle Humide", "Ancienne Crypte", "Passage Étroit", "Salle des Gardes", "Armurerie Abandonnée"];
+        return $names[array_rand($names)];
+    }
+    
+    private function generateRoomDescription($isStart, $isEnd) {
+        if ($isStart) return "Vous êtes au début de votre exploration. L'air est vicié.";
+        if ($isEnd) return "Une aura menaçante règne ici. Vous sentez une présence puissante.";
+        return "Une pièce sombre aux murs de pierre suintants.";
+    }
+    
+    private function pickRoomImage($template, $isStart, $isEnd) {
+        // Placeholder or real logic
+        if ($isStart) return "/assets/images/cave_start.webp";
+        if ($isEnd) return "/assets/images/cave_boss.webp";
+        return "/assets/images/cave_room.webp";
     }
 }
