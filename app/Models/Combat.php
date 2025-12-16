@@ -284,6 +284,17 @@ class Combat
                     }
 
                     $actualDamage = max(0, $rawDamage - $reduction);
+
+                    // Difficulty Modifier (Incoming Damage)
+                    if (isset($_SESSION['current_difficulty'])) {
+                        $diffService = new \App\Services\DifficultyService(); 
+                        // Note: Unserializing service from session might be better if strictly needed, 
+                        // but instantiating new one is cheap here.
+                        $dmgMod = $diffService->getDamageModifier($_SESSION['current_difficulty']);
+                        $actualDamage = floor($actualDamage * $dmgMod);
+                        // Ensure at least 1 dmg if raw was high enough to penetrate armor
+                        if (($rawDamage - $reduction) > 0) $actualDamage = max(1, $actualDamage);
+                    }
                     
                     $this->joueur->reduceVitality($actualDamage);
                     $message = $this->boss->getName() . " hits " . $this->joueur->getName() . " for " . $actualDamage . " damage! (Roll: $hitRoll vs AC: $defenseScore)\n";

@@ -178,6 +178,13 @@ class NPC
             }
         }
 
+        // Apply Difficulty Modifier
+        if (isset($_SESSION['current_difficulty'])) {
+             $diffService = new \App\Services\DifficultyService();
+             $diffMod = $diffService->getPriceModifier($_SESSION['current_difficulty']);
+             $modifier *= $diffMod;
+        }
+
         $npc = $this->findById($npcId); // Fetch again or optimize. For now optimize later.
         if (!$npc) return 0;
 

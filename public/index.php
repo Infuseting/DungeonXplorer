@@ -111,6 +111,10 @@ $router->mount('/personnage', function() use ($router) {
     // Appearance routes - accepte "preview" ou un ID numérique
     $router->get('/apparence/(preview|\d+)', 'App\Controllers\CharacterAppearanceController@index');
     $router->post('/apparence/(preview|\d+)', 'App\Controllers\CharacterAppearanceController@update');
+
+    // Difficulty Routes
+    $router->get('/difficulty', 'App\Controllers\CharacterDifficultyController@index');
+    $router->post('/difficulty', 'App\Controllers\CharacterDifficultyController@store');
 });
 
 // Game Routes (Protected)
@@ -184,6 +188,7 @@ $router->mount('/admin', function() use ($router) {
 
     $router->get('/', 'App\Controllers\AdminController@dashboard');
     $router->get('/stats', 'App\Controllers\AdminController@stats');
+    $router->get('/logs', 'App\Controllers\AdminLogController@index');
     
     // Factions Management
     $router->get('/factions', 'App\Controllers\AdminFactionController@index');

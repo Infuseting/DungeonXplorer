@@ -21,12 +21,26 @@ class CombatController
 
     
         $_SESSION['maxHpPlayer'] = $characterModel->getVitality();
-        $monsterModel = new Monster();
         $monsterModel->findById($monsterId);
         $monsterModel->unsetDb();
         $combat = new Combat($characterModel, $monsterModel);
     
         $_SESSION['combat'] = $combat;
+        
+        // Log Combat Start
+        $logger = new \App\Services\LoggerService();
+        $logger->logGameplay($_SESSION['user_id'], $_SESSION['character_id'], 'COMBAT_START', [
+            'monster_id' => $monsterId,
+            'monster_name' => $monsterModel->getName()
+        ]);
+        
+        // Difficulty handling
+        $difficultyService = new \App\Services\DifficultyService();
+        $_SESSION['difficulty_service'] = serialize($difficultyService);
+        $_SESSION['current_difficulty'] = $characterModel->getDifficulty();
+        $_SESSION['is_ironman'] = $characterModel->isIronman();
+
+        // Initiative System
 
         // Initiative System
         $statsModel = new \App\Models\CharacterStats();
@@ -183,6 +197,44 @@ class CombatController
                  'levels_gained' => $xpRes['levels_gained'],
                  'loot' => $loot
              ];
+
+             // Log Victory
+             $logger = new \App\Services\LoggerService();
+             $logger->logGameplay($_SESSION['user_id'], $_SESSION['character_id'], 'COMBAT_WIN', [
+                 'monster_id' => $monsterModel->getId(),
+                 'xp_gained' => $calc['xp'],
+                 'gold_gained' => $calc['gold'],
+                 'loot' => $loot
+             ]);
+        }
+
+        // Check Defeat
+        if (!$combat->isAlive($combat->getJoueur())) {
+
+             // Log Stats
+             $logger = new \App\Services\LoggerService();
+             $logger->logGameplay($_SESSION['user_id'], $_SESSION['character_id'], 'COMBAT_LOSS', [
+                 'monster_id' => $monsterModel->getId()
+             ]);
+
+             if ($_SESSION['is_ironman']) {
+                 $charModel = new Character();
+                 $charModel->deleteById($charId);
+                 // Redirect handled in JS or via specific response flag?
+                 // JS expects JSON.
+                 echo json_encode([
+                    "success" => true,
+                    "player" => $playerMessage[0],
+                    "monster" => $monsterMessage ? $monsterMessage[0] : "",
+                    "playerHp" => 0,
+                    "win" => false,
+                    "gameOver" => true,
+                    "ironmanDeath" => true,
+                    "redirect" => "/personnage/create?error=permadeath" 
+                 ]);
+                 unset($_SESSION['combat']);
+                 return;
+             }
         }
 
         echo json_encode([
@@ -206,7 +258,12 @@ class CombatController
         $xp = 50 + ($str * 2) + ($vit * 2);
         $gold = rand(5, 15) + $str;
         
-        return ['xp' => (int)$xp, 'gold' => (int)$gold];
+        // Difficulty Modifier
+        $difficulty = $_SESSION['current_difficulty'] ?? 'NORMAL';
+        $diffService = new \App\Services\DifficultyService();
+        $xpModifier = $diffService->getXpModifier($difficulty);
+        
+        return ['xp' => (int)($xp * $xpModifier), 'gold' => (int)$gold];
     }
     
     private function generateLoot($characterId, $monsterModel) {
@@ -214,8 +271,13 @@ class CombatController
         $inventoryModel = new \App\Models\Inventory();
         $loot = [];
         
-        // 30% Chance
-        if (rand(1, 100) <= 30) {
+        // 30% Chance * Difficulty Modifier
+        $difficulty = $_SESSION['current_difficulty'] ?? 'NORMAL';
+        $diffService = new \App\Services\DifficultyService();
+        $lootModifier = $diffService->getLootChanceModifier($difficulty);
+        $baseChance = 30;
+        
+        if (rand(1, 100) <= ($baseChance * $lootModifier)) {
             $res = $db->query("SELECT id, name FROM items ORDER BY RAND() LIMIT 1");
             if ($res && $row = $res->fetch_assoc()) {
                 $add = $inventoryModel->addItem($characterId, $row['id']);

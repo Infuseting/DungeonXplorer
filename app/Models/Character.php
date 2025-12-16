@@ -20,10 +20,10 @@ class Character
     private $classId;
     private $armor;
     private $id;
-    private array $appearance = [];
-    private $className;
     private $currentHp; // Added currentHp
     private $skillPoints;
+    private $difficulty;
+    private $isIronman;
 
      // caches
     private array $inventoryCache = [];
@@ -36,10 +36,10 @@ class Character
         $this->inventory = new Inventory();
     }
 
-    public function create($userId, $classId, $name)
+    public function create($userId, $classId, $name, $difficulty = 'NORMAL', $isIronman = 0)
     {
-        $stmt = $this->db->prepare("INSERT INTO characters (user_id, class_id, name) VALUES (?, ?, ?)");
-        $stmt->bind_param("iis", $userId, $classId, $name);
+        $stmt = $this->db->prepare("INSERT INTO characters (user_id, class_id, name, difficulty, is_ironman) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("iissi", $userId, $classId, $name, $difficulty, $isIronman);
         
         if ($stmt->execute()) {
             return $this->db->insert_id;
@@ -52,7 +52,7 @@ class Character
 
     public function findById($id)
     {
-        $stmt = $this->db->prepare("SELECT c.id, c.user_id, cl.name as class_name,c.name,c.appearance, c.class_id, c.gold, cs.level, cs.xp, cs.strength,cs.dexterity,cs.intelligence,cs.vitality, cs.current_hp, cs.skill_points FROM characters c  Join character_stats cs on c.id=cs.character_id join classes cl on cl.id = c.class_id WHERE c.id = ?");
+        $stmt = $this->db->prepare("SELECT c.id, c.user_id, cl.name as class_name,c.name,c.appearance, c.class_id, c.gold, c.difficulty, c.is_ironman, cs.level, cs.xp, cs.strength,cs.dexterity,cs.intelligence,cs.vitality, cs.current_hp, cs.skill_points FROM characters c  Join character_stats cs on c.id=cs.character_id join classes cl on cl.id = c.class_id WHERE c.id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
         $data= $stmt->get_result()->fetch_assoc();
@@ -71,6 +71,8 @@ class Character
             $this->intelligence = $data['intelligence'];
             $this->dexterity = $data['dexterity'];
             $this->appearance = json_decode($data['appearance'] ?? '[]', true);
+            $this->difficulty = $data['difficulty'] ?? 'NORMAL';
+            $this->isIronman = $data['is_ironman'] ?? 0;
             $this->currentHp = $data['current_hp'] ?? $data['vitality']; // Default to vitality if null
 
             // Load Effective Stats (Base + Equipment + Skills)
@@ -260,6 +262,16 @@ public function toArray(): array {
     {
         return $this->currentHp ?? $this->vitality;
     }  
+
+    public function getDifficulty()
+    {
+        return $this->difficulty ?? 'NORMAL';
+    }
+
+    public function isIronman()
+    {
+        return (bool)$this->isIronman;
+    }
     public function getStrength()
     {
         return $this->strength;

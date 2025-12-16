@@ -148,6 +148,15 @@ class ShopController
 
         // 6. Decrease NPC Inventory - REMOVED (Unlimited Stock)
 
+        // Log Action
+        $logger = new \App\Services\LoggerService();
+        $logger->logGameplay($_SESSION['user_id'], $_SESSION['character_id'], 'NPC_BUY', [
+            'npc_id' => $npcId,
+            'item_id' => $itemId,
+            'price' => $price,
+            'gold_remaining' => $newGold
+        ]);
+
         echo json_encode(['success' => true, 'message' => 'Item purchased', 'new_gold' => $newGold]);
     }
 
@@ -201,6 +210,15 @@ class ShopController
         $stmt->execute();
 
         // 5. Add to NPC Inventory - REMOVED (No Buyback)
+
+        // Log Action
+        $logger = new \App\Services\LoggerService();
+        $logger->logGameplay($_SESSION['user_id'], $_SESSION['character_id'], 'NPC_SELL', [
+            'npc_id' => $npcId,
+            'item_id' => $item['real_item_id'],
+            'price' => $sellPrice,
+            'gold_earned' => $sellPrice
+        ]);
 
         echo json_encode(['success' => true, 'message' => 'Item sold', 'gold_earned' => $sellPrice]);
     }

@@ -47,6 +47,9 @@
                 <a href="/admin" class="flex items-center px-6 py-3.5 text-slate-400 hover:bg-indigo-500/10 hover:text-slate-200 border-l-3 border-transparent hover:border-indigo-500 transition-all <?= $_SERVER['REQUEST_URI'] === '/admin' ? 'bg-indigo-500/15 text-indigo-400 border-indigo-500' : '' ?>">
                     <span class="mr-3 text-xl">📊</span>
                     Dashboard
+                <a href="/admin/logs" class="flex items-center px-6 py-3.5 text-slate-400 hover:bg-indigo-500/10 hover:text-slate-200 border-l-3 border-transparent hover:border-indigo-500 transition-all <?= strpos($_SERVER['REQUEST_URI'], '/admin/logs') !== false ? 'bg-indigo-500/15 text-indigo-400 border-indigo-500' : '' ?>">
+                    <span class="mr-3 text-xl">📋</span>
+                    Diagnostic Logs
                 </a>
                 <a href="/admin/users" class="flex items-center px-6 py-3.5 text-slate-400 hover:bg-indigo-500/10 hover:text-slate-200 border-l-3 border-transparent hover:border-indigo-500 transition-all <?= strpos($_SERVER['REQUEST_URI'], '/admin/users') !== false ? 'bg-indigo-500/15 text-indigo-400 border-indigo-500' : '' ?>">
                     <span class="mr-3 text-xl">👥</span>

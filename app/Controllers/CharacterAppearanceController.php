@@ -134,39 +134,18 @@ class CharacterAppearanceController
             'makeup' => $makeupData
         ];
         
-        // Mode preview : créer le personnage maintenant
+        // Mode preview : save appearance to session and redirect to difficulty
         if ($characterId === 'preview') {
             if (!isset($_SESSION['temp_character'])) {
                 header('Location: /personnage/create');
                 exit;
             }
 
-            $tempChar = $_SESSION['temp_character'];
-            
-            // Créer le personnage en BDD
-            $characterModel = new Character();
-            $newCharacterId = $characterModel->create(
-                $_SESSION['user_id'],
-                $tempChar['class_id'],
-                $tempChar['name']
-            );
-            
-            if (!$newCharacterId) {
-                header('Location: /personnage/create?error=creation_failed');
-                exit;
-            }
+            // Update session with appearance data
+            $_SESSION['temp_character']['appearance'] = $appearance;
 
-            // Créer les stats
-            $statsModel = new CharacterStats();
-            $statsModel->create($newCharacterId, $tempChar['class_id']);
-
-            // Sauvegarder l'apparence
-            $characterModel->updateAppearance($newCharacterId, $appearance);
-
-            // Nettoyer la session
-            unset($_SESSION['temp_character']);
-
-            header('Location: /personnage');
+            // Redirect to Difficulty Selection
+            header('Location: /personnage/difficulty');
             exit;
         }
         // Mode édition : mettre à jour un personnage existant

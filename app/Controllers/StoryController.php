@@ -96,6 +96,13 @@ class StoryController
             'story' => $story,
             'inventory' => $inventory
         ]);
+
+        // Log Entry
+        $logger = new \App\Services\LoggerService();
+        $logger->logGameplay($_SESSION['user_id'], $_SESSION['character_id'], 'DUNGEON_ENTER', [
+            'story_id' => $storyId,
+            'story_title' => $story['title']
+        ]);
     }
 
     /**

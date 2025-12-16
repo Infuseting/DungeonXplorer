@@ -208,11 +208,18 @@ class AdminNPCController
         }
 
         // Add newly selected
-        foreach ($newIds as $nid) {
             if (!in_array($nid, $existingIds)) {
                 $this->npcModel->assignDialogueTree($id, $nid);
             }
         }
+        
+        // Log Admin Action
+        $logger = new \App\Services\LoggerService();
+        $logger->logCritical($_SESSION['user_id'], 'ADMIN_NPC_UPDATE', [
+            'npc_id' => $id,
+            'name' => $data['name'],
+            'role' => $data['role']
+        ]);
 
         // Update quest assignments
         $existingQuests = $this->npcModel->getQuests($id);
