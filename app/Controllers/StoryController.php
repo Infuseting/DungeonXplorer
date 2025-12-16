@@ -162,6 +162,29 @@ class StoryController
         // Get traps
         $node['traps'] = $this->nodeModel->getTraps($node['id']);
         
+        // Check accessibility for all connections
+        if (!empty($node['connections'])) {
+            foreach ($node['connections'] as &$conn) {
+                $conn['is_accessible'] = $this->checkCondition($conn, $characterId);
+                
+                // Add human-readable reason if locked
+                if (!$conn['is_accessible']) {
+                    if (strpos($conn['condition_type'], 'stat_') === 0) {
+                        $stat = ucfirst(substr($conn['condition_type'], 5));
+                        $conn['lock_reason'] = "Requis : $stat " . $conn['condition_value'];
+                    } elseif ($conn['condition_type'] === 'level') {
+                        $conn['lock_reason'] = "Niveau " . $conn['condition_value'] . " requis";
+                    } elseif ($conn['condition_type'] === 'item') {
+                         $conn['lock_reason'] = "Objet requis";
+                    } elseif ($conn['condition_type'] === 'class') {
+                         $conn['lock_reason'] = "Classe requise";
+                    } else {
+                        $conn['lock_reason'] = "Condition non remplie";
+                    }
+                }
+            }
+        }
+        
         echo json_encode([
             'node' => $node,
             'status' => $nodeStatus,
@@ -257,6 +280,23 @@ class StoryController
     {
         if ($connection['condition_type'] === 'none') return true;
 
+        // Stat Check (Format: stat_strength, stat_dexterity, etc.)
+        if (strpos($connection['condition_type'], 'stat_') === 0) {
+            $statName = substr($connection['condition_type'], 5); // e.g. "strength"
+            
+            $statsModel = new \App\Models\CharacterStats();
+            $effectiveStats = $statsModel->getEffectiveStats($characterId);
+            
+            if (!$effectiveStats) return false;
+            
+            $currentVal = $effectiveStats[$statName] ?? 0;
+            $requiredVal = (int)$connection['condition_value'];
+            
+            // Assume requirement is "At least X" (>=)
+            // If we need "<", we could handle it via specific types or value syntax, but standard is >=
+            return $currentVal >= $requiredVal;
+        }
+
         switch ($connection['condition_type']) {
             case 'item':
                 // Check if player has item
@@ -265,12 +305,17 @@ class StoryController
                 // Check player level
                 $character = $this->characterModel->findById($characterId);
                 return $character['level'] >= (int)$connection['condition_value'];
+            case 'class':
+                $character = $this->characterModel->findById($characterId);
+                // condition_value could be class ID or Name? Let's assume ID for robustness or handle both
+                return $character['class_id'] == $connection['condition_value'];
             case 'quest_active':
                 return true; // Placeholder
             case 'quest_completed':
                 return true; // Placeholder
             case 'monster_killed':
                 // Check if monster killed in current node
+                // Note: Logic suggests looking at FROM node, which is where we are.
                 $nodeStatus = $this->progressModel->getNodeStatus($characterId, $connection['from_node_id']);
                 return $nodeStatus && $nodeStatus['monsters_cleared'];
             default:

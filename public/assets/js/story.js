@@ -298,9 +298,22 @@ function renderChoices(node) {
         }
         if (conn.is_return) icon = '↩️';
 
+        const isLocked = conn.is_accessible === false;
+        btn.disabled = isLocked;
+
+        let labelHtml = `<span class="font-medium">${conn.direction_text}</span>`;
+        if (isLocked) {
+            icon = '🔒';
+            if (conn.lock_reason) {
+                labelHtml += `<div class="text-xs text-red-400 mt-1">${conn.lock_reason}</div>`;
+            }
+        }
+
         btn.innerHTML = `
             <span class="text-2xl group-hover:scale-110 transition-transform">${icon}</span>
-            <span class="font-medium">${conn.direction_text}</span>
+            <div class="flex flex-col text-left">
+                ${labelHtml}
+            </div>
         `;
 
         btn.addEventListener('click', () => {

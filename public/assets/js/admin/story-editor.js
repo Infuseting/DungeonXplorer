@@ -373,15 +373,22 @@ const storyEditor = {
 
                 <div class="mb-3">
                     <label class="block text-sm text-gray-400 mb-1">Condition d'affichage</label>
-                    <select name="condition_type" class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-white mb-2" onchange="storyEditor.toggleConditionValue(this)">
-                        <option value="none" ${conn.data?.condition_type === 'none' ? 'selected' : ''}>Aucune</option>
-                        <option value="item" ${conn.data?.condition_type === 'item' ? 'selected' : ''}>Posséder un item</option>
-                        <option value="level" ${conn.data?.condition_type === 'level' ? 'selected' : ''}>Niveau minimum</option>
-                        <option value="quest_active" ${conn.data?.condition_type === 'quest_active' ? 'selected' : ''}>Quête active</option>
-                        <option value="quest_completed" ${conn.data?.condition_type === 'quest_completed' ? 'selected' : ''}>Quête complétée</option>
-                        <option value="quest_stage" ${conn.data?.condition_type === 'quest_stage' ? 'selected' : ''}>Stage de quête spécifique</option>
-                        <option value="monster_killed" ${conn.data?.condition_type === 'monster_killed' ? 'selected' : ''}>Monstres tués dans la salle</option>
-                    </select>
+                        <select name="condition_type" class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-white mb-2" onchange="storyEditor.toggleConditionValue(this)">
+                            <option value="none" ${conn.data?.condition_type === 'none' ? 'selected' : ''}>Aucune</option>
+                            <option value="item" ${conn.data?.condition_type === 'item' ? 'selected' : ''}>Posséder un item</option>
+                            <option value="level" ${conn.data?.condition_type === 'level' ? 'selected' : ''}>Niveau minimum</option>
+                            <option value="class" ${conn.data?.condition_type === 'class' ? 'selected' : ''}>Classe spécifique</option>
+                            <option value="stat_strength" ${conn.data?.condition_type === 'stat_strength' ? 'selected' : ''}>Stat : Force</option>
+                            <option value="stat_dexterity" ${conn.data?.condition_type === 'stat_dexterity' ? 'selected' : ''}>Stat : Dextérité</option>
+                            <option value="stat_constitution" ${conn.data?.condition_type === 'stat_constitution' ? 'selected' : ''}>Stat : Constitution</option>
+                            <option value="stat_intelligence" ${conn.data?.condition_type === 'stat_intelligence' ? 'selected' : ''}>Stat : Intelligence</option>
+                            <option value="stat_wisdom" ${conn.data?.condition_type === 'stat_wisdom' ? 'selected' : ''}>Stat : Sagesse</option>
+                            <option value="stat_charisma" ${conn.data?.condition_type === 'stat_charisma' ? 'selected' : ''}>Stat : Charisme</option>
+                            <option value="quest_active" ${conn.data?.condition_type === 'quest_active' ? 'selected' : ''}>Quête active</option>
+                            <option value="quest_completed" ${conn.data?.condition_type === 'quest_completed' ? 'selected' : ''}>Quête complétée</option>
+                            <option value="quest_stage" ${conn.data?.condition_type === 'quest_stage' ? 'selected' : ''}>Stage de quête spécifique</option>
+                            <option value="monster_killed" ${conn.data?.condition_type === 'monster_killed' ? 'selected' : ''}>Monstres tués dans la salle</option>
+                        </select>
                     <input type="text" name="condition_value" id="condition_value" value="${this.escapeHtml(conn.data?.condition_value || '')}" 
                            class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-white ${conn.data?.condition_type === 'none' || conn.data?.condition_type === 'monster_killed' ? 'hidden' : ''}"
                            placeholder="ID de l'item, niveau, ID de quête...">
@@ -414,6 +421,13 @@ const storyEditor = {
                             <option value="none" ${conn.data?.return_condition_type === 'none' ? 'selected' : ''}>Aucune</option>
                             <option value="item" ${conn.data?.return_condition_type === 'item' ? 'selected' : ''}>Posséder un item</option>
                             <option value="level" ${conn.data?.return_condition_type === 'level' ? 'selected' : ''}>Niveau minimum</option>
+                            <option value="class" ${conn.data?.return_condition_type === 'class' ? 'selected' : ''}>Classe spécifique</option>
+                            <option value="stat_strength" ${conn.data?.return_condition_type === 'stat_strength' ? 'selected' : ''}>Stat : Force</option>
+                            <option value="stat_dexterity" ${conn.data?.return_condition_type === 'stat_dexterity' ? 'selected' : ''}>Stat : Dextérité</option>
+                            <option value="stat_constitution" ${conn.data?.return_condition_type === 'stat_constitution' ? 'selected' : ''}>Stat : Constitution</option>
+                            <option value="stat_intelligence" ${conn.data?.return_condition_type === 'stat_intelligence' ? 'selected' : ''}>Stat : Intelligence</option>
+                            <option value="stat_wisdom" ${conn.data?.return_condition_type === 'stat_wisdom' ? 'selected' : ''}>Stat : Sagesse</option>
+                            <option value="stat_charisma" ${conn.data?.return_condition_type === 'stat_charisma' ? 'selected' : ''}>Stat : Charisme</option>
                             <option value="quest_active" ${conn.data?.return_condition_type === 'quest_active' ? 'selected' : ''}>Quête active</option>
                             <option value="quest_completed" ${conn.data?.return_condition_type === 'quest_completed' ? 'selected' : ''}>Quête complétée</option>
                             <option value="quest_stage" ${conn.data?.return_condition_type === 'quest_stage' ? 'selected' : ''}>Stage de quête spécifique</option>
@@ -1047,4 +1061,6 @@ const storyEditor = {
     }
 };
 
+document.addEventListener('DOMContentLoaded', () => {
+    storyEditor.init();
 });
