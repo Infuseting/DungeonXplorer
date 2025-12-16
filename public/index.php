@@ -26,7 +26,10 @@ $router->post('/game/combat/end', 'App\Controllers\CombatController@endCombat');
 // Save System Routes
 $router->post('/game/save', 'App\Controllers\SaveController@saveGame');
 $router->post('/game/load', 'App\Controllers\SaveController@loadGame');
-$router->get('/game/saves', 'App\Controllers\SaveController@listSaves');
+$router->post('/game/saves', 'App\Controllers\SaveController@listSaves');
+
+// Dialogue Routes
+$router->post('/game/dialogue/select', 'App\Controllers\GameController@selectDialogueOption');
 
 if ($_SERVER['REQUEST_URI'] === '/migrate-consumables') {
     require_once __DIR__ . '/../migration_consumables_buffs.php';
@@ -182,8 +185,17 @@ $router->mount('/admin', function() use ($router) {
     $router->get('/', 'App\Controllers\AdminController@dashboard');
     $router->get('/stats', 'App\Controllers\AdminController@stats');
     
+    // Factions Management
+    $router->get('/factions', 'App\Controllers\AdminFactionController@index');
+    $router->get('/factions/create', 'App\Controllers\AdminFactionController@create');
+    $router->post('/factions/create', 'App\Controllers\AdminFactionController@create');
+    $router->get('/factions/edit/(\d+)', 'App\Controllers\AdminFactionController@edit');
+    $router->post('/factions/edit/(\d+)', 'App\Controllers\AdminFactionController@edit');
+    $router->post('/factions/delete/(\d+)', 'App\Controllers\AdminFactionController@delete');
+
     // Map Management
     $router->get('/map', 'App\Controllers\AdminMapController@index');
+    $router->post('/map/update', 'App\Controllers\AdminMapController@updateMap');
     $router->post('/map/create', 'App\Controllers\AdminMapController@createPoint');
     $router->post('/map/delete/(\d+)', 'App\Controllers\AdminMapController@deletePoint');
     

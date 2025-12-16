@@ -33,7 +33,32 @@ class AdminMapController
         // Get map points for the selected map
         $mapPoints = $this->getMapPoints($selectedMapId);
         
+        // Get Factions
+        $factionModel = new \App\Models\Faction();
+        $factions = $factionModel->getAll();
+
         require_once __DIR__ . '/../Views/admin/map/index.php';
+    }
+
+    public function updateMap()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $mapId = $_POST['map_id'] ?? null;
+            if (!$mapId) {
+                header('Location: /admin/map');
+                exit;
+            }
+
+            $name = $_POST['name'] ?? '';
+            $factionId = !empty($_POST['faction_id']) ? $_POST['faction_id'] : null;
+
+            $stmt = $this->db->prepare("UPDATE maps SET name = ?, faction_id = ? WHERE id = ?");
+            $stmt->bind_param("sii", $name, $factionId, $mapId);
+            $stmt->execute();
+
+            header('Location: /admin/map?map_id=' . $mapId . '&success=updated');
+            exit;
+        }
     }
     
     public function managePoints()

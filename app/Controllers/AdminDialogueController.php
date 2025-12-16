@@ -154,7 +154,6 @@ class AdminDialogueController
             
             $text = trim($data['text'] ?? '');
             
-            
             if ($text === '') {
                 echo json_encode(['success' => false, 'message' => 'Le texte est requis']);
                 exit;
@@ -163,23 +162,39 @@ class AdminDialogueController
             $parentId = !empty($data['parent_id']) ? (int)$data['parent_id'] : null;
             $choiceText = !empty($data['choice_text']) ? trim($data['choice_text']) : null;
             
+            // New fields
+            $actionType = $data['action_type'] ?? 'NONE';
+            $actionValue = $data['action_value'] ?? null;
+            $conditionType = $data['condition_type'] ?? 'NONE';
+            $conditionValue = $data['condition_value'] ?? null;
+
             $dialogueModel = new \App\Models\DialogueTree();
             
             try {
+                // Modified to pass new fields (requires Model update too, but we can do raw SQL insert here if Model doesn't support it yet)
+                // Let's assume Model needs update. I'll check Model next.
+                // For now, I'll direct inject via Model's method if it accepts array or I'll override it here? 
+                // Better to update Model. But for this step I'll assume I update Model's addDialogue.
+                // Wait, `addDialogue` in Model probably takes explicit args.
+                // I should verify Model first. I'll assume I update Model later.
+                
                 $nodeId = $dialogueModel->addDialogue(
                     (int)$data['tree_id'],
                     $text,
                     $parentId,
                     (int)($data['is_player_choice'] ?? 0),
                     $choiceText,
-                    (int)($data['order_index'] ?? 0)
+                    (int)($data['order_index'] ?? 0),
+                    $actionType,
+                    $actionValue,
+                    $conditionType,
+                    $conditionValue
                 );
                 
-              
                 if ($nodeId) {
                     echo json_encode(['success' => true, 'node_id' => $nodeId]);
                 } else {
-                    echo json_encode(['success' => false, 'message' => 'Erreur lors de l\'ajout (ID null)']);
+                    echo json_encode(['success' => false, 'message' => 'Erreur lors de l\'ajout']);
                 }
             } catch (\Exception $e) {
                 echo json_encode(['success' => false, 'message' => 'Exception: ' . $e->getMessage()]);
@@ -211,10 +226,15 @@ class AdminDialogueController
             }
             
             $choiceText = !empty($data['choice_text']) ? trim($data['choice_text']) : null;
+            $actionType = $data['action_type'] ?? 'NONE';
+            $actionValue = $data['action_value'] ?? null;
+            $conditionType = $data['condition_type'] ?? 'NONE';
+            $conditionValue = $data['condition_value'] ?? null;
             
             $stmt = $this->db->prepare("
                 UPDATE dialogues 
-                SET text = ?, choice_text = ?, order_index = ?
+                SET text = ?, choice_text = ?, order_index = ?,
+                    action_type = ?, action_value = ?, condition_type = ?, condition_value = ?
                 WHERE id = ?
             ");
             
@@ -222,14 +242,17 @@ class AdminDialogueController
             $id = (int)$data['id'];
             
             $stmt->bind_param(
-                "ssii",
+                "ssissssi",
                 $text,
                 $choiceText,
                 $orderIndex,
+                $actionType,
+                $actionValue,
+                $conditionType,
+                $conditionValue,
                 $id
             );
             
-           
             if ($stmt->execute()) {
                 echo json_encode(['success' => true]);
             } else {

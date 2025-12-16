@@ -34,6 +34,21 @@ ob_start();
                 </div>
             </div>
             
+            <!-- Faction -->
+            <div>
+                <label for="faction_id" class="block text-sm font-medium text-gray-300 mb-2">Faction</label>
+                <select id="faction_id" name="faction_id" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors">
+                    <option value="">-- Aucune (Neutre) --</option>
+                    <?php if (!empty($factions)): ?>
+                        <?php foreach ($factions as $faction): ?>
+                            <option value="<?= $faction['id'] ?>" <?= ($npc['faction_id'] == $faction['id']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($faction['name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </select>
+            </div>
+
             <!-- Texture Upload -->
             <div class="col-span-2">
                 <label class="form-label">Texture du PNJ</label>

@@ -49,6 +49,11 @@ class AdminNPCController
     {
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $dialogueTrees = $this->dialogueModel->getAll();
+            
+            // Get Factions
+            $factionModel = new \App\Models\Faction();
+            $factions = $factionModel->getAll();
+            
             require_once __DIR__ . '/../Views/admin/npcs/create.php';
             return;
         }
@@ -88,6 +93,7 @@ class AdminNPCController
         $data = [
             'name' => $_POST['name'],
             'role' => $rolesStr,
+            'faction_id' => !empty($_POST['faction_id']) ? $_POST['faction_id'] : null,
             'texture' => $texturePath,
             'merchant_seed' => $_POST['merchant_seed'] ?? null,
             'buy_rate_own' => $_POST['buy_rate_own'] ?? 0.05,
@@ -128,6 +134,10 @@ class AdminNPCController
             $dialogueTrees = $this->dialogueModel->getAll();
             $assignedTrees = $this->npcModel->getDialogueTrees($id);
             $merchantInventory = $this->npcModel->getMerchantInventory($id);
+            
+            // Load factions
+            $factionModel = new \App\Models\Faction();
+            $factions = $factionModel->getAll();
             
             // Load quests
             $allQuests = $this->questModel->getAll();
@@ -176,6 +186,7 @@ class AdminNPCController
         $data = [
             'name' => $_POST['name'],
             'role' => $rolesStr,
+            'faction_id' => !empty($_POST['faction_id']) ? $_POST['faction_id'] : null,
             'texture' => $texturePath,
             'merchant_seed' => $_POST['merchant_seed'] ?? null,
             'buy_rate_own' => $_POST['buy_rate_own'] ?? 0.05,

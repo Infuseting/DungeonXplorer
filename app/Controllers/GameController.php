@@ -619,6 +619,166 @@ class GameController
     }
 
     /**
+     * Handle dialogue choice selection
+     */
+    public function selectDialogueOption()
+    {
+        header('Content-Type: application/json');
+        
+        if (!isset($_SESSION['character_id'])) {
+            echo json_encode(['success' => false, 'message' => 'Personnage non sélectionné']);
+            exit;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $dialogueId = $input['dialogue_id'] ?? null;
+        
+        if (!$dialogueId) {
+            echo json_encode(['success' => false, 'message' => 'ID de dialogue manquant']);
+            exit;
+        }
+
+        $db = \App\Config\Database::getInstance()->getConnection();
+        
+        // 1. Fetch dialogue node
+        $stmt = $db->prepare("SELECT * FROM dialogues WHERE id = ?");
+        $stmt->bind_param("i", $dialogueId);
+        $stmt->execute();
+        $dialogue = $stmt->get_result()->fetch_assoc();
+
+        if (!$dialogue) {
+            echo json_encode(['success' => false, 'message' => 'Dialogue introuvable']);
+            exit;
+        }
+
+        $characterId = $_SESSION['character_id'];
+
+        // 2. Validate Condition
+        if (!$this->validateCondition($characterId, $dialogue['condition_type'], $dialogue['condition_value'])) {
+             echo json_encode(['success' => false, 'message' => 'Condition non remplie pour ce choix']);
+             exit;
+        }
+
+        // 3. Execute Action
+        $actionResult = $this->executeAction($characterId, $dialogue['action_type'], $dialogue['action_value']);
+
+        // 4. Return success + result
+        echo json_encode([
+            'success' => true,
+            'action_result' => $actionResult,
+            'next_dialogue_id' => $dialogueId // Frontend can use this to fetch children or just close if leaf
+        ]);
+        exit;
+    }
+
+    private function validateCondition($characterId, $type, $value)
+    {
+        if ($type === 'NONE') return true;
+        
+        $characterModel = new \App\Models\Character();
+        $invModel = new \App\Models\Inventory();
+        $pqModel = new \App\Models\PlayerQuest();
+
+        switch ($type) {
+            case 'MIN_LEVEL':
+                $char = $characterModel->findById($characterId);
+                return ($char['level'] ?? 1) >= (int)$value;
+                
+            case 'HAS_ITEM':
+                $inv = $invModel->getCharacterInventory($characterId);
+                // Search in inventory or equipped
+                foreach ($inv['inventory'] as $item) {
+                     if ($item['item_id'] == $value) return true;
+                }
+                foreach ($inv['equipped'] as $item) {
+                     if ($item['item_id'] == $value) return true;
+                }
+                return false;
+
+            case 'QUEST_ACTIVE':
+                return $pqModel->getQuestStatus($characterId, $value) === 'ACTIVE';
+
+            case 'QUEST_COMPLETED':
+                return $pqModel->getQuestStatus($characterId, $value) === 'COMPLETED';
+            
+            case 'QUEST_NOT_STARTED':
+                return $pqModel->getQuestStatus($characterId, $value) === 'NOT_STARTED';
+        }
+        
+        return true;
+    }
+
+    private function executeAction($characterId, $type, $value)
+    {
+        if ($type === 'NONE') return null;
+
+        $characterModel = new \App\Models\Character();
+        $invModel = new \App\Models\Inventory();
+        $pqModel = new \App\Models\PlayerQuest();
+        $char = $characterModel->findById($characterId); // Hydrate model
+
+        switch ($type) {
+            case 'TRIGGER_QUEST':
+                return $pqModel->startQuest($characterId, $value);
+
+            case 'GIVE_ITEM':
+                return $invModel->addItem($characterId, $value);
+
+            case 'REMOVE_ITEM':
+                // Need to find inventory_id for the item_id
+                $valid = $this->validateCondition($characterId, 'HAS_ITEM', $value); // Check exist
+                if($valid) {
+                     // Get inventory ID. 
+                     // This is tricky as we need the inventory row ID, not item ID.
+                     // Simple implementation: Remove first found.
+                     // TODO: Add removeByItemId in Inventory model
+                     // Workaround:
+                     $inv = $invModel->getCharacterInventory($characterId);
+                     foreach ($inv['inventory'] as $item) {
+                         if ($item['item_id'] == $value) {
+                             return $invModel->deleteItem($characterId, $item['id']);
+                         }
+                     }
+                }
+                return false;
+
+            case 'HEAL':
+                $characterModel->heal($characterId, (int)$value);
+                return ['healed' => $value];
+
+            case 'DAMAGE':
+                 $characterModel->reduceVitality((int)$value);
+                 return ['damage' => $value];
+
+            case 'GIVE_GOLD':
+                $characterModel->addGold((int)$value);
+                return ['gold_added' => $value];
+
+            case 'REMOVE_GOLD':
+                $characterModel->addGold(-(int)$value);
+                return ['gold_removed' => $value];
+
+            case 'FORCE_FIGHT':
+                return ['force_fight' => $value];
+
+            case 'MODIFY_REPUTATION':
+                // Value format: "faction_id:amount"
+                $parts = explode(':', $value);
+                if (count($parts) === 2) {
+                    $factionId = (int)$parts[0];
+                    $amount = (int)$parts[1];
+                    $repService = new \App\Services\ReputationService();
+                    if ($repService->modifyReputation($characterId, $factionId, $amount)) {
+                         return ['reputation_modified' => $amount, 'faction_id' => $factionId];
+                    }
+                }
+                return false;
+        }
+
+        return null;
+    }
+
+    /**
      * Check for available quests and add has_quest flag to points
      */
     private function enrichPointsWithQuestStatus($points, $characterId)

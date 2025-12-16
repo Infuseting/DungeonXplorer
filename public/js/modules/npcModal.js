@@ -359,8 +359,74 @@ function displayDialogue(dialogue) {
 /**
  * Select dialogue choice
  */
-function selectChoice(choice) {
-    // If choice has children, display next dialogue
+async function selectChoice(choice) {
+    // 1. Execute Action via Backend
+    try {
+        const response = await fetch('/game/dialogue/select', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ dialogue_id: choice.id })
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+            // Show error (e.g. Condition unmet)
+            const { showToast } = await import('./toast.js');
+            showToast('⛔ ' + data.message, 'error');
+            return; // Do not proceed
+        }
+
+        // 2. Handle Action Result (Visual Feedback)
+        if (data.action_result) {
+            const res = data.action_result;
+            const { showToast } = await import('./toast.js');
+            const { playSound } = await import('./soundManager.js');
+
+            if (res.gold_added) {
+                playSound('coins');
+                showToast(`+${res.gold_added} Or`, 'success');
+            }
+            if (res.gold_removed) {
+                playSound('coins');
+                showToast(`-${res.gold_removed} Or`, 'warning');
+            }
+            if (res.healed) {
+                playSound('heal');
+                showToast(`+${res.healed} PV`, 'heal');
+            }
+            if (res.damage) {
+                playSound('hit');
+                showToast(`-${res.damage} PV`, 'damage');
+            }
+            if (res.force_fight) {
+                // Trigger Fight
+                showToast('⚔️ Combat !', 'warning');
+                // Redirect or trigger modal?
+                // For now simple refresh to trigger encounter if logic handles it, or explicit call.
+                // Given the flow, we might need a specific '/game/combat/start/{monsterId}' endpoint or similar.
+                // But typically combat is random or story driven.
+                // Let's assume we just note it for now, user didn't specific combat flow for dialogue yet.
+            }
+            if (res.reputation_modified) {
+                const amount = res.reputation_modified;
+                if (amount > 0) {
+                    showToast(`+${amount} Réputation`, 'success');
+                } else {
+                    showToast(`${amount} Réputation`, 'warning');
+                }
+            }
+
+            // Allow Quest triggers to show notifications via verifyQuest (or handled by backend logic/toast)
+            // The backend startQuest returns ID, we might want to check returned updates.
+        }
+
+    } catch (e) {
+        console.error('Dialogue action error:', e);
+        return;
+    }
+
+    // 3. Proceed to Next Dialogue (Children)
     if (choice.children && choice.children.length > 0) {
         const nextDialogue = choice.children.find(c => !c.is_player_choice);
         if (nextDialogue) {

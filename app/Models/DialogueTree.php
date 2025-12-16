@@ -123,14 +123,14 @@ class DialogueTree
     /**
      * Add dialogue node
      */
-    public function addDialogue($treeId, $text, $parentId = null, $isPlayerChoice = false, $choiceText = null, $orderIndex = 0)
+    public function addDialogue($treeId, $text, $parentId = null, $isPlayerChoice = false, $choiceText = null, $orderIndex = 0, $actionType='NONE', $actionValue=null, $conditionType='NONE', $conditionValue=null)
     {
         $stmt = $this->db->prepare("
-            INSERT INTO dialogues (tree_id, parent_id, text, is_player_choice, choice_text, order_index)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO dialogues (tree_id, parent_id, text, is_player_choice, choice_text, order_index, action_type, action_value, condition_type, condition_value)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         
-        $stmt->bind_param("iisisi", $treeId, $parentId, $text, $isPlayerChoice, $choiceText, $orderIndex);
+        $stmt->bind_param("iisisissss", $treeId, $parentId, $text, $isPlayerChoice, $choiceText, $orderIndex, $actionType, $actionValue, $conditionType, $conditionValue);
         
         if ($stmt->execute()) {
             return $this->db->insert_id;

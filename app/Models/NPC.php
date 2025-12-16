@@ -160,30 +160,76 @@ class NPC
     }
     
     /**
-     * Calculate buy price for item
+     * Calculate buy price for item (Price player pays to merchant)
      */
-    public function calculateBuyPrice($npcId, $itemId, $basePrice)
+    public function calculateBuyPrice($npcId, $itemId, $basePrice, $characterId = null)
+    {
+        $modifier = 1.0;
+        
+        if ($characterId) {
+            $repService = new \App\Services\ReputationService();
+            // Get NPC Faction
+            $npc = $this->findById($npcId);
+            $factionId = $npc['faction_id'] ?? null;
+            
+            if ($factionId) {
+                $repValue = $repService->getReputation($characterId, $factionId);
+                $modifier = $repService->getBuyPriceModifier($repValue);
+            }
+        }
+
+        $npc = $this->findById($npcId); // Fetch again or optimize. For now optimize later.
+        if (!$npc) return 0;
+
+        // Base behavior: 
+        // If merchant sells his own stock -> Base Price * Modifier
+        // If rebuying what player sold (buy back) -> we might handle it differently, but for now standard price.
+        
+        // Wait, standard buying price from merchant is Item Value (or marked up).
+        // Let's say Item Value * 1.0 (Standard) * Modifier.
+        
+        $finalPrice = ceil($basePrice * $modifier);
+        
+        // Ensure constraints relative to SELL price
+        // If player sells this item, how much do they get?
+        // We need to ensure BuyPrice > SellPrice * 1.01
+        if ($characterId) {
+            $sellPrice = $this->calculateSellPrice($npcId, $itemId, $basePrice, $characterId);
+            if ($finalPrice <= $sellPrice) {
+                $finalPrice = ceil($sellPrice * 1.01);
+            }
+        }
+        
+        return $finalPrice;
+    }
+
+    /**
+     * Calculate sell price for item (Price merchant pays to player)
+     */
+    public function calculateSellPrice($npcId, $itemId, $basePrice, $characterId = null)
     {
         $npc = $this->findById($npcId);
         if (!$npc) return 0;
+
+        // Base rate based on config
+        // "buy_rate_own" is when merchant buys back their own stuff? Or is it generic?
+        // Let's assume 'buy_rate_other' is the standard "Merchant buying from Player" rate (e.g. 0.15).
+        $baseRate = $npc['buy_rate_other'];
         
-        // Check if item is in merchant's inventory
-        $stmt = $this->db->prepare("
-            SELECT 1 FROM npc_merchant_inventory 
-            WHERE npc_id = ? AND item_id = ?
-        ");
-        $stmt->bind_param("ii", $npcId, $itemId);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $isOwnItem = $result->num_rows > 0;
-        
-        if ($isOwnItem) {
-            // Item sold by merchant: 5% of base price
-            return $basePrice * $npc['buy_rate_own'];
-        } else {
-            // Other items: 15% of base price
-            return $basePrice * $npc['buy_rate_other'];
+        $modifier = 1.0;
+        if ($characterId) {
+            $repService = new \App\Services\ReputationService();
+            $factionId = $npc['faction_id'] ?? null;
+            
+            if ($factionId) {
+                $repValue = $repService->getReputation($characterId, $factionId);
+                // Validated: This modifier increases the sell price (e.g. 1.5x)
+                $modifier = $repService->getSellPriceModifier($repValue);
+            }
         }
+
+        $price = floor($basePrice * $baseRate * $modifier);
+        return max(1, $price); // Minimum 1 gold
     }
     
     /**

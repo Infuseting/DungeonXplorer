@@ -70,6 +70,51 @@ ob_start();
                 >
             </div>
             
+            <!-- Actions & Conditions (Collapsible or always visible?) -->
+            <div class="border-t border-gray-700 pt-4 mt-4">
+                <h4 class="text-sm uppercase text-gray-400 font-bold mb-3">Conséquences & Conditions</h4>
+                
+                <div class="grid grid-cols-2 gap-4">
+                     <!-- Action -->
+                    <div>
+                        <label class="block mb-1 text-sm text-gray-300">Action Type</label>
+                        <select id="action-type" class="w-full p-2 bg-gray-900 border border-gray-700 rounded text-gray-100 text-sm">
+                            <option value="NONE">Aucune</option>
+                            <option value="TRIGGER_QUEST">Démarrer Quête (ID)</option>
+                            <option value="GIVE_ITEM">Donner Objet (ID)</option>
+                            <option value="REMOVE_ITEM">Retirer Objet (ID)</option>
+                            <option value="HEAL">Soigner (PV)</option>
+                            <option value="DAMAGE">Dégâts (PV)</option>
+                            <option value="GIVE_GOLD">Donner Or</option>
+                            <option value="REMOVE_GOLD">Retirer Or</option>
+                            <option value="FORCE_FIGHT">Forcer Combat (ID Monstre)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block mb-1 text-sm text-gray-300">Valeur Action</label>
+                        <input type="text" id="action-value" class="w-full p-2 bg-gray-900 border border-gray-700 rounded text-gray-100 text-sm" placeholder="Ex: 10, 50...">
+                    </div>
+                    
+                    <!-- Condition -->
+                    <div>
+                        <label class="block mb-1 text-sm text-gray-300">Condition Type</label>
+                        <select id="condition-type" class="w-full p-2 bg-gray-900 border border-gray-700 rounded text-gray-100 text-sm">
+                            <option value="NONE">Aucune</option>
+                            <option value="MIN_LEVEL">Niveau Min</option>
+                            <option value="HAS_ITEM">Possède Objet (ID)</option>
+                            <option value="QUEST_ACTIVE">Quête Active (ID)</option>
+                            <option value="QUEST_COMPLETED">Quête Terminée (ID)</option>
+                            <option value="QUEST_NOT_STARTED">Quête Non Commencée (ID)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block mb-1 text-sm text-gray-300">Valeur Condition</label>
+                        <input type="text" id="condition-value" class="w-full p-2 bg-gray-900 border border-gray-700 rounded text-gray-100 text-sm" placeholder="Ex: 5, 101...">
+                    </div>
+                </div>
+            </div>
+
+            
             <div class="flex gap-4 justify-end">
                 <button type="button" class="btn btn-secondary" onclick="closeModal()">
                     Annuler
@@ -166,6 +211,12 @@ function openModal(title, node = null, parentId = null, isPlayerChoice = 0) {
     document.getElementById('node-text').value = node ? node.text : '';
     document.getElementById('choice-text').value = node ? (node.choice_text || '') : '';
     
+    // Actions / Conditions
+    document.getElementById('action-type').value = node ? (node.action_type || 'NONE') : 'NONE';
+    document.getElementById('action-value').value = node ? (node.action_value || '') : '';
+    document.getElementById('condition-type').value = node ? (node.condition_type || 'NONE') : 'NONE';
+    document.getElementById('condition-value').value = node ? (node.condition_value || '') : '';
+    
     const choiceGroup = document.getElementById('choice-text-group');
     if ((node ? node.is_player_choice : isPlayerChoice)) {
         choiceGroup.classList.remove('hidden');
@@ -197,7 +248,12 @@ document.getElementById('node-form').addEventListener('submit', async (e) => {
         text: document.getElementById('node-text').value,
         is_player_choice: parseInt(document.getElementById('is-player-choice').value),
         choice_text: document.getElementById('choice-text').value || null,
-        order_index: 0
+        order_index: 0,
+        // New fields
+        action_type: document.getElementById('action-type').value,
+        action_value: document.getElementById('action-value').value,
+        condition_type: document.getElementById('condition-type').value,
+        condition_value: document.getElementById('condition-value').value
     };
     
     const url = nodeId ? '/admin/dialogues/node/update' : '/admin/dialogues/node/add';
