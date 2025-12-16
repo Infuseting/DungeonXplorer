@@ -124,7 +124,8 @@ class CombatController
     $combat = $_SESSION['combat'];
 
     // Tour du joueur
-    $playerMessage = $combat->playerTurn($action);
+    $skillId = $_POST['skill_id'] ?? null;
+    $playerMessage = $combat->playerTurn($action, $skillId);
 
    
 

@@ -23,6 +23,7 @@ class Character
     private array $appearance = [];
     private $className;
     private $currentHp; // Added currentHp
+    private $skillPoints;
 
      // caches
     private array $inventoryCache = [];
@@ -51,7 +52,7 @@ class Character
 
     public function findById($id)
     {
-        $stmt = $this->db->prepare("SELECT c.id, c.user_id, cl.name as class_name,c.name,c.appearance, c.class_id, c.gold, cs.level, cs.xp, cs.strength,cs.dexterity,cs.intelligence,cs.vitality, cs.current_hp FROM characters c  Join character_stats cs on c.id=cs.character_id join classes cl on cl.id = c.class_id WHERE c.id = ?");
+        $stmt = $this->db->prepare("SELECT c.id, c.user_id, cl.name as class_name,c.name,c.appearance, c.class_id, c.gold, cs.level, cs.xp, cs.strength,cs.dexterity,cs.intelligence,cs.vitality, cs.current_hp, cs.skill_points FROM characters c  Join character_stats cs on c.id=cs.character_id join classes cl on cl.id = c.class_id WHERE c.id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
         $data= $stmt->get_result()->fetch_assoc();
@@ -64,12 +65,25 @@ class Character
             $this->gold = $data['gold'];
             $this->level = $data['level'];
             $this->xp = $data['xp'];
+            $this->skillPoints = $data['skill_points'] ?? 0;
             $this->strength = $data['strength'];
             $this->vitality = $data['vitality'];
             $this->intelligence = $data['intelligence'];
             $this->dexterity = $data['dexterity'];
             $this->appearance = json_decode($data['appearance'] ?? '[]', true);
             $this->currentHp = $data['current_hp'] ?? $data['vitality']; // Default to vitality if null
+
+            // Load Effective Stats (Base + Equipment + Skills)
+            // This ensures combat uses the boosting values
+            $statsModel = new \App\Models\CharacterStats();
+            $effective = $statsModel->getEffectiveStats($this->id);
+            if ($effective && isset($effective['stats'])) {
+                $this->strength = $effective['stats']['strength'];
+                $this->dexterity = $effective['stats']['dexterity'];
+                $this->intelligence = $effective['stats']['intelligence'];
+                $this->vitality = $effective['stats']['vitality'];
+            }
+
             return $this;
         }
         return null; // Return null if not found
@@ -193,7 +207,11 @@ public function toArray(): array {
     public function getName()
     {
         return $this->name;
-    }   
+    } 
+    public function getCurrentHp() 
+    {
+        return $this->currentHp ?? $this->vitality;
+    }  
     public function getStrength()
     {
         return $this->strength;

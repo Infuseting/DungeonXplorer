@@ -186,6 +186,14 @@
                         </li>
 
                         <li>
+                        <?php 
+                            $skillModel = new \App\Models\Skill();
+                            $unlockedSkills = $skillModel->getUnlockedSkills($character->getId());
+                            // Filter Active
+                            $actives = array_filter($unlockedSkills, function($s) { return $s['type'] === 'active'; });
+                            
+                            if (empty($actives)):
+                        ?>
                         <button id="btn-special" onclick="sendAction('specialCapacity')"
                             class="
                             w-full px-3 py-2 text-sm uppercase font-medium
@@ -195,6 +203,19 @@
                             ">
                             Spécial
                         </button>
+                        <?php else: ?>
+                            <?php foreach($actives as $skill): ?>
+                            <button onclick="sendAction('use_skill', <?= $skill['id'] ?>)"
+                                class="
+                                w-full px-3 py-2 text-sm uppercase font-medium mb-2
+                                bg-gray-700/50 text-violet-300 border border-violet-500 rounded
+                                hover:bg-violet-900/40 hover:text-white transition duration-150
+                                shadow-md shadow-violet-500/30
+                                ">
+                                <?= htmlspecialchars($skill['name']) ?>
+                            </button>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                         </li>
                         
                     </ul>
@@ -264,14 +285,17 @@
                 btnRun.disabled = false;
             }
 
-            function sendAction(action) {
+            function sendAction(action, skillId = null) {
                 disableActions();
                  dice.textContent = "🎲 "; 
+
+                let body = "action=" + encodeURIComponent(action);
+                if (skillId) body += "&skill_id=" + encodeURIComponent(skillId);
 
                 fetch("/game/combat/action", {
                     method: "POST",
                     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                    body: "action=" + encodeURIComponent(action)
+                    body: body
                 })
                 .then(res => res.text())
                 .then(text => {

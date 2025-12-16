@@ -137,6 +137,10 @@ $router->mount('/game', function() use ($router) {
     $router->post('/shop/buy', 'App\Controllers\ShopController@buy');
     $router->post('/shop/sell', 'App\Controllers\ShopController@sell');
 
+    // Skills API
+    $router->get('/skills', 'App\Controllers\SkillsController@index');
+    $router->post('/skills/unlock', 'App\Controllers\SkillsController@unlock');
+
 });
 
 // Story Routes (Protected)

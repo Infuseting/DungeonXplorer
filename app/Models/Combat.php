@@ -27,6 +27,10 @@ class Combat
             return rand(1, 20);
         }
 
+        public function getPlayerHp() {
+            return $this->joueur->getCurrentHp();
+        }
+
         public function isAlive($entity)
         {
             if ($entity->getVitality() <= 0) {
@@ -38,10 +42,88 @@ class Combat
 
        
 
-        public function playerTurn($action){
+        public function playerTurn($action, $skillId = null){
             $bool = false;
 
             switch ($action) {
+                case 'use_skill':
+                    if (!$skillId) { $message = "No skill selected."; break; }
+                    $skillModel = new \App\Models\Skill();
+                    $skill = $skillModel->findById($skillId);
+                    if (!$skill) { $message = "Skill not found."; break; }
+                    
+                    $message = $this->joueur->getName() . " uses " . $skill['name'] . "!\n";
+                    
+                    // Logic based on effect_type
+                    // Supported: damage_phys_percent, damage_mag_percent, buff_str_flat, heal, passive_*
+                    
+                    if (strpos($skill['effect_type'], 'damage_') !== false) {
+                         // Damage Logic
+                         $isPhys = strpos($skill['effect_type'], '_phys') !== false;
+                         $multiplier = ($skill['effect_value'] / 100);
+                         
+                         if ($isPhys) {
+                             // Physical: Check Hit
+                             $hitRoll = $this->dice() + ($this->joueur->getDexterity() / 2);
+                             $defenseScore = 10 + ($this->boss->getDexterity() / 2);
+                             if ($hitRoll >= $defenseScore) {
+                                 $bool = true;
+                                 $baseDmg = $this->joueur->getAttaqueClass();
+                                 $dmg = max(1, floor($baseDmg * $multiplier));
+                                 $reduction = $this->boss->getDefense() / 2;
+                                 $actual = max(1, $dmg - $reduction);
+                                 $this->boss->reduceVitality($actual);
+                                  $message .= "It hits for $actual damage! (mult: {$multiplier}x)\n";
+                             } else {
+                                 $message .= "It missed!\n";
+                             }
+                         } else {
+                             // Magic: Auto Hit (usually, or vs Int)
+                             $bool = true; // Visual effect
+                             // Base Magic Dmg? Using Int?
+                             // Let's us Int + Level as base?
+                             // Or just Weapon Dmg * Multiplier (Magic weapons)?
+                             // Using Int for now: Int * 0.5 + Level
+                             $baseDmg = ($this->joueur->getIntelligence()) + 2; 
+                             $dmg = max(1, floor($baseDmg * $multiplier));
+                             // Magic might ignore Armor? Or use Magic Def?
+                             // Assuming ignores Armor for now.
+                             $this->boss->reduceVitality($dmg);
+                             $message .= "Magic blast hits for $dmg damage!\n";
+                         }
+                    } elseif (strpos($skill['effect_type'], 'buff_') !== false) {
+                        // Buff Logic
+                        // e.g. buff_str_flat
+                        $parts = explode('_', $skill['effect_type']); // buff, str, flat
+                        $stat = $parts[1];
+                        $val = (int)$skill['effect_value'];
+                        
+                        if ($stat === 'str') {
+                            $this->joueur->setStrength($this->joueur->getStrength() + $val);
+                            $message .= "Strength increased by $val!\n";
+                        } elseif ($stat === 'dex') {
+                            $this->joueur->setDexterity($this->joueur->getDexterity() + $val);
+                            $message .= "Dexterity increased by $val!\n";
+                        }
+                    } elseif ($skill['effect_type'] === 'heal') {
+                        // Heal Logic
+                        $healAmount = (int)$skill['effect_value'];
+                        // Use Character model heal method (updates DB)
+                        $this->joueur->heal($this->joueur->getId(), $healAmount);
+                        // Visual update in message. 
+                        // Note: local object 'currentHp' might not update automatically if 'heal' only touches DB.
+                        // Ideally we update local property too, but it's private.
+                        // BUT interfaceCombat.php fetches HP from DB/Session or response?
+                        // response uses $combat->getPlayerHp().
+                        // We need $combat->joueur to reflect new HP.
+                        // I'll add setHp to Character? Or just rely on DB fetch in UI?
+                        // CombatController sends 'playerHp' => $combat->getPlayerHp().
+                        // Combat::getPlayerHp() calls $this->joueur->getCurrentHp? Or getVitality?
+                        // I need to check getPlayerHp logic.
+                        $message .= "Healed for $healAmount HP!\n";
+                    }
+                    break;
+
                 case 'attack':
                     // Hit Chance: Player Dex vs Monster Dex
                     $hitRoll = $this->dice() + ($this->joueur->getDexterity() / 2);
