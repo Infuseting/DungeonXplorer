@@ -129,15 +129,34 @@
                         ?>
                         <!--object-cover w-full h-full -->
                         <!-- Cercle au centre -->
-                       <div class="w-full md:w-1/3 flex items-center justify-center relative mb-4 md:mb-0">
-                            <div id='character'class="w-48 h-48 rounded-full border-4 border-violet-500 bg-gray-700 overflow-hidden flex items-center justify-center">
+                       <div class="w-full md:w-1/3 flex flex-col items-center justify-center relative mb-4 md:mb-0">
+                            <!-- Avatar -->
+                            <div id='character' class="w-48 h-48 rounded-full border-4 border-violet-500 bg-gray-700 overflow-hidden flex items-center justify-center relative">
                                 <?= renderCharacter($character, [
                                     'size' => 'full',
                                     'showFilter' => true,
                                     'id' => 'character',
                                     'class' => 'object-cover w-full h-full drop-shadow-2xl hover:brightness-110 transition duration-500'
                                 ]); ?>
+                            </div>
 
+                            <!-- Status Effects Container -->
+                            <div id="status-effects-container" class="mt-4 flex flex-wrap gap-2 justify-center min-h-[40px] w-full px-2">
+                                <?php
+                                    $buffModel = new \App\Models\CharacterBuff();
+                                    $activeBuffs = $buffModel->getActiveBuffs($characterModel->getId());
+                                    
+                                    if(empty($activeBuffs)):
+                                ?>
+                                    <span id="no-status" class="text-xs text-gray-500 italic">Aucun effet actif</span>
+                                <?php else: ?>
+                                    <?php foreach($activeBuffs as $buff): ?>
+                                        <div class="px-2 py-1 bg-gray-800 border border-gray-600 rounded text-xs text-violet-300 flex items-center gap-1" title="<?= htmlspecialchars($buff['name']) ?>">
+                                            <span><?= htmlspecialchars($buff['name']) ?></span>
+                                            <span class="text-gray-500 text-[10px]">(<?= $buff['duration_remaining'] ?>)</span>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
                             </div>
                         </div>
 

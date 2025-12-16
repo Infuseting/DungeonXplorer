@@ -99,100 +99,104 @@ class CombatController
     }
 }
 
-  public function performAction() {
-    header('Content-Type: application/json; charset=utf-8');
-    ob_clean(); // supprime tout ce qui aurait pu être envoyé avant
+    public function performAction() {
+        header('Content-Type: application/json; charset=utf-8');
+        ob_clean(); // supprime tout ce qui aurait pu être envoyé avant
 
 
-    if (!isset($_SESSION['combat'])) {
-        http_response_code(400);
-        echo json_encode(["success" => false, "message" => "Aucun combat en cours"]);
-        return;
-    }
+        if (!isset($_SESSION['combat'])) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "Aucun combat en cours"]);
+            return;
+        }
 
-    if (!isset($_SESSION['diceRoll'])) {
-        echo json_encode(["success" => false, "message" => "Vous devez lancer le dé avant d'agir"]);
-        return;
-    }
+        if (!isset($_SESSION['diceRoll'])) {
+            echo json_encode(["success" => false, "message" => "Vous devez lancer le dé avant d'agir"]);
+            return;
+        }
 
-    $action = $_POST['action'] ?? null;
-    if (!$action) {
-        echo json_encode(["success" => false, "message" => "Aucune action reçue"]);
-        return;
-    }
+        $action = $_POST['action'] ?? null;
+        if (!$action) {
+            echo json_encode(["success" => false, "message" => "Aucune action reçue"]);
+            return;
+        }
 
-    $combat = $_SESSION['combat'];
+        $combat = $_SESSION['combat'];
+        $charId = $_SESSION['character_id'];
 
-    // Tour du joueur
-    $skillId = $_POST['skill_id'] ?? null;
-    $playerMessage = $combat->playerTurn($action, $skillId);
+        // --- STATUS EFFECT PROCESSING (PLAYER TURN START) ---
+        $statusService = new \App\Services\StatusEffectService();
+        $statusResult = $statusService->processTurn($charId);
+        
+        $statusMessages = $statusResult['messages'];
+        $preventAction = $statusResult['prevent_action'];
 
-   
+        $playerMessage = ["", 0];
+        
+        // If Stunned, skip player action logic
+        if ($preventAction) {
+             $playerMessage[0] = implode("<br>", $statusMessages) . "<br><strong>Vous ne pouvez pas agir !</strong>";
+        } else {
+             // Normal Turn
+             $skillId = $_POST['skill_id'] ?? null;
+             $playerMessage = $combat->playerTurn($action, $skillId);
+             
+             // Prepend status messages (e.g. Poison damage)
+             if (!empty($statusMessages)) {
+                 $playerMessage[0] = implode("<br>", $statusMessages) . "<br>" . $playerMessage[0];
+             }
+        }
+       
 
-    // Tour du monstre (si combat pas fini)
-    $monsterMessage = null;
-    if (!$combat->isEnd()) {
-        $monsterMessage = $combat->monsterTurn();
-    }
-    if (isset($_SESSION['initialDefence'])) {
-    $combat->getJoueur()->setArmorClass($_SESSION['initialDefence']);
-    unset($_SESSION['initialDefence']); // supprimer pour éviter que ça reste
-    }
-     // Consommer le dé
-    unset($_SESSION['diceRoll']);
+        // Tour du monstre (si combat pas fini)
+        $monsterMessage = null;
+        if (!$combat->isEnd()) {
+            $monsterMessage = $combat->monsterTurn();
+        }
+        
+        if (isset($_SESSION['initialDefence'])) {
+            $combat->getJoueur()->setArmorClass($_SESSION['initialDefence']);
+            unset($_SESSION['initialDefence']); // supprimer pour éviter que ça reste
+        }
+         // Consommer le dé
+        unset($_SESSION['diceRoll']);
 
-    // Check Victory
-    $rewards = [];
-    if (!$combat->isMonsterAlive()) {
-         $monsterModel = $combat->getMonster();
-         $calc = $this->calculateRewards($combat, $monsterModel);
-         
-         $charModel = $combat->getJoueur();
-         // Refresh DB connection on model if needed? findById closes/unsets DB?
-         // Character::findById unsets DB? No, it unsets NOTHING. 
-         // Wait, CombatController lines 19/26 call unsetDb().
-         // This removes the internal DB connection property?
-         // Character.php line 35 `__construct` opens it.
-         // If we unset it, we might need to reconnect.
-         // Let's check Character.php: `unsetDb` wasn't shown in Step 1976... 
-         // Monster.php line 158 has `unsetDb`.
-         // CombatController Step 1979 line 19 calls `$characterModel->unsetDb()`.
-         // I suspect `Character.php` has it or I missed it.
-         // If `unsetDb` is called, `addXp` which uses `$this->db` will fail.
-         // I should instantiate a NEW Character model to save? Or Re-connect?
-         // Or just instantiate new model for saving.
-         
-         $saveChar = new Character();
-         $saveChar->findById($_SESSION['character_id']);
-         $xpRes = $saveChar->addXp($calc['xp']);
-         $saveChar->addGold($calc['gold']);
-         
-         // Loot
-         $loot = $this->generateLoot($_SESSION['character_id'], $monsterModel);
-         
-         $rewards = [
-             'xp' => $calc['xp'],
-             'gold' => $calc['gold'],
-             'levels_gained' => $xpRes['levels_gained'],
-             'loot' => $loot
-         ];
-    }
+        // Check Victory
+        $rewards = [];
+        if (!$combat->isMonsterAlive()) {
+             $monsterModel = $combat->getMonster();
+             $calc = $this->calculateRewards($combat, $monsterModel);
+             
+             $charModel = $combat->getJoueur();
+             
+             $saveChar = new Character();
+             $saveChar->findById($_SESSION['character_id']);
+             $xpRes = $saveChar->addXp($calc['xp']);
+             $saveChar->addGold($calc['gold']);
+             
+             // Loot
+             $loot = $this->generateLoot($_SESSION['character_id'], $monsterModel);
+             
+             $rewards = [
+                 'xp' => $calc['xp'],
+                 'gold' => $calc['gold'],
+                 'levels_gained' => $xpRes['levels_gained'],
+                 'loot' => $loot
+             ];
+        }
 
-    echo json_encode([
-        "success" => true,
-        "player"  => $playerMessage[0],
-        "monster" => $monsterMessage[0],
-        "playerHp" => $combat->getPlayerHp(), // This uses local object, might not reflect full heal from level up unless refreshed? 
-                                            // The UI uses this for bar. saveChar->addXp restored HP in DB.
-                                            // $combat->getJoueur() is the OLD object (no DB access).
-                                            // I should update it? Or just send 'maxHpPlayer' update?
-        "win" => !$combat->isMonsterAlive(),
-        "newTurn" => !$combat->isEnd(),
-        "damageM" => $playerMessage[1],
-        "damageJ" => $monsterMessage[1],
-        "rewards" => $rewards
-    ]);
-} 
+        echo json_encode([
+            "success" => true,
+            "player"  => $playerMessage[0],
+            "monster" => $monsterMessage ? $monsterMessage[0] : "",
+            "playerHp" => $combat->getPlayerHp(), 
+            "win" => !$combat->isMonsterAlive(),
+            "newTurn" => !$combat->isEnd(),
+            "damageM" => $playerMessage[1],
+            "damageJ" => $monsterMessage ? $monsterMessage[1] : 0,
+            "rewards" => $rewards
+        ]);
+    } 
 
     private function calculateRewards(Combat $combat, Monster $monsterModel) {
         // Simplified formulas
