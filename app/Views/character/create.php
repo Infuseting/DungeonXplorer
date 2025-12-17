@@ -79,7 +79,7 @@ ob_start();
                         
                         <div class="flex items-center gap-4">
                             <div class="w-12 h-12 md:w-16 md:h-16 rounded bg-gray-800 border border-gray-600 flex items-center justify-center group-hover:border-violet-500 transition overflow-hidden flex-shrink-0">
-                                <img src="/assets/images/<?= $className ?>/icon_<?= strtolower($className) ?>.png" 
+                                <img src="/assets/images/<?= strtolower($className) ?>/icon_<?= strtolower($className) ?>.png" 
                                      alt="<?= $class['name'] ?>" 
                                      class="w-full h-full object-contain">
                             </div>
