@@ -38,12 +38,6 @@ $router->post('/game/saves', 'App\Controllers\SaveController@listSaves');
 // Dialogue Routes
 $router->post('/game/dialogue/select', 'App\Controllers\GameController@selectDialogueOption');
 
-if ($_SERVER['REQUEST_URI'] === '/migrate-consumables') {
-    require_once __DIR__ . '/../migration_consumables_buffs.php';
-    exit;
-}
-
-
 session_start();
 
 $router->get('/', 'App\Controllers\HomeController@index');
