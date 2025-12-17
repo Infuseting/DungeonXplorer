@@ -83,7 +83,7 @@ ob_start();
                         <div class="character-card char-card-<?= $char['id'] ?> cursor-pointer bg-gray-800 border border-gray-700 p-3 rounded-lg flex items-center gap-4 <?= ($char['id'] === $selectedCharacter['id']) ? 'border-violet-500 ring-1 ring-violet-500' : '' ?>"
                              onclick="selectCharacter(<?= $char['id'] ?>)">
                             <div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden border border-gray-600 flex-shrink-0">
-                                <img src="/assets/images/<?= $char['class_name'] ?>/icon_<?= $char['class_name'] ?>.png"  class="w-full h-full object-cover">
+                                <img src="/assets/images/<?= $char['class_name'] ?>/icon_<?= strtolower($char['class_name']) ?>.png"  class="w-full h-full object-cover">
                             </div>
                             <div>
                                 <div class="text-white font-bold"><?= htmlspecialchars($char['name']) ?></div>
@@ -166,7 +166,7 @@ ob_start();
                     <div class="character-card char-card-<?= $char['id'] ?> cursor-pointer bg-gray-800/80 backdrop-blur border border-gray-700 p-4 rounded-lg flex items-center gap-4 <?= ($char['id'] === $selectedCharacter['id']) ? 'border-violet-500 ring-1 ring-violet-500 bg-gray-800' : 'hover:border-gray-500' ?>"
                          onclick="selectCharacter(<?= $char['id'] ?>)">
                         <div class="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden border border-gray-600">
-                            <img src="/assets/images/<?= $char['class_name'] ?>/icon_<?= $char['class_name'] ?>.png" 
+                            <img src="/assets/images/<?= $char['class_name'] ?>/icon_<?= strtolower($char['class_name']) ?>.png" 
                                      alt="<?= $char['class_name'] ?>" 
                                      class="w-full h-full object-contain">
                         </div>
