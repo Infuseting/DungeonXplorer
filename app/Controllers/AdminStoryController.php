@@ -104,13 +104,11 @@ class AdminStoryController
 
         $nodes = $this->nodeModel->getByStoryId($id);
         
-        // Get full data for each node (connections, etc)
-        foreach ($nodes as &$node) {
+                foreach ($nodes as &$node) {
             $node['connections'] = $this->nodeModel->getConnections($node['id']);
         }
 
-        // Fetch available entities for the editor
-        $monsterModel = new Monster();
+                $monsterModel = new Monster();
         $npcModel = new NPC();
         $itemModel = new Item();
 
@@ -193,32 +191,27 @@ class AdminStoryController
 
         $file = $_FILES['image'];
         
-        // Validate file type
-        $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+                $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
         if (!in_array($file['type'], $allowedTypes)) {
             echo json_encode(['success' => false, 'message' => 'Type de fichier non autorisé']);
             exit;
         }
 
-        // Validate file size (max 5MB)
-        if ($file['size'] > 5 * 1024 * 1024) {
+                if ($file['size'] > 5 * 1024 * 1024) {
             echo json_encode(['success' => false, 'message' => 'Fichier trop volumineux (max 5MB)']);
             exit;
         }
 
-        // Generate unique filename
-        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+                $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
         $filename = uniqid('story_') . '.' . $extension;
         $uploadPath = __DIR__ . '/../../public/assets/story-images/' . $filename;
         
-        // Create directory if it doesn't exist
-        $directory = dirname($uploadPath);
+                $directory = dirname($uploadPath);
         if (!is_dir($directory)) {
             mkdir($directory, 0755, true);
         }
 
-        // Move uploaded file
-        if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
+                if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
             $imagePath = '/assets/story-images/' . $filename;
             echo json_encode([
                 'success' => true,
@@ -330,8 +323,7 @@ class AdminStoryController
         exit;
     }
 
-    // --- Entity Management API ---
-
+    
     public function getNodeEntities($nodeId)
     {
         header('Content-Type: application/json');
@@ -372,34 +364,23 @@ class AdminStoryController
 
         switch ($type) {
             case 'monster':
-                // For monsters, we verify we have the base monster ID to copy stats, OR directly passed stats
-                // Here we assume we pass a monster_id from the selection list, and we fetch that monster to allow manual override?
-                // Or simplified: We just pass base params.
-                // Let's implement getting data from a "monster_id" to auto-fill if not provided, but simplified for now:
-                
+              
                 $monsterData = [
                     'name' => $_POST['monster_name'] ?? 'Monstre',
                     'level' => $_POST['monster_level'] ?? 1,
                     'quantity' => $_POST['quantity'] ?? 1,
                     'is_boss' => isset($_POST['is_boss']) ? 1 : 0,
                     'can_flee' => isset($_POST['can_flee']) ? 1 : 0,
-                    'stats' => [] // Could be expanded to allow custom stats override
-                ];
+                    'stats' => []                 ];
                 
-                // If a template ID is provided, we could fetch it here, but let's trust the frontend or Controller to handle "Add from Template" vs "Custom" logic.
-                // For now, let's assume the frontend sends the name/level.
-                
-                // Wait, the Requirement is to CRUD "Monsters". So we should select a Monster ID and add it.
-                // But the `story_node_monsters` table has `monster_name`, `monster_level`, `monster_stats`. It does NOT have `monster_id` foreign key.
-                // So we MUST copy data.
+             
                 
                 if (!empty($_POST['template_id'])) {
                     $monsterModel = new Monster();
                     $template = $monsterModel->findById($_POST['template_id']);
                     if ($template) {
                         $monsterData['name'] = $template['name'];
-                        $monsterData['level'] = $template['level_min']; // Default to min level
-                        $monsterData['stats'] = json_decode($template['base_stats_json'], true);
+                        $monsterData['level'] = $template['level_min'];                         $monsterData['stats'] = json_decode($template['base_stats_json'], true);
                     }
                 }
                 

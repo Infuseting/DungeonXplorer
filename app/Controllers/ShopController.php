@@ -9,6 +9,10 @@ use App\Models\User;
 
 class ShopController
 {
+    /**
+     * Récupère les données du magasin pour un PNJ donné.
+     * Inclut l'inventaire du marchand (avec prix) et celui du joueur (avec prix de vente estimés).
+     */
     public function getShop($npcId)
     {
         if (!isset($_SESSION['user_id']) || !isset($_SESSION['character_id'])) {
@@ -26,39 +30,29 @@ class ShopController
             exit;
         }
 
-        // Get NPC inventory
+        // Récupération de l'inventaire du marchand
         $merchantInventory = $npcModel->getMerchantInventory($npcId);
         
-        // Calculate prices for the player
+        // Initialisation des prix d'achat
         foreach ($merchantInventory as &$item) {
-            // Buying from NPC: Base Price * Multiplier (e.g. 1.0 or higher)
-            // For now, let's assume a standard markup or just use base price
-            // The NPC model has calculateBuyPrice but that seems to be for the NPC buying FROM the player?
-            // Let's check NPC model again.
-            // Ah, calculateBuyPrice in NPC.php uses buy_rate_own/other. That sounds like what the NPC pays.
-            // So we need a sell_rate (what NPC sells for).
-            // For now, let's assume NPC sells at base price * 1.5 or something, or just base price.
-            // Let's use base price for simplicity for now, or add a multiplier.
-            $item['buy_price'] = $item['price']; // Price player pays to buy FROM NPC
+             // Pour l'instant, le prix d'achat est le prix de base.
+             // TODO: Implémenter des modificateurs basés sur la réputation ou le charisme.
+             $item['buy_price'] = $item['price'];         
         }
 
-        // Get Player Inventory
+        // Récupération de l'inventaire du joueur
         $inventoryModel = new Inventory();
         $playerInventory = $inventoryModel->getCharacterInventory($_SESSION['character_id']);
 
-        // Calculate sell prices for player items (what NPC pays)
+        // Calcul du prix de revente pour chaque objet du joueur
         if (isset($playerInventory['inventory'])) {
             foreach ($playerInventory['inventory'] as &$item) {
                 $item['sell_price'] = $npcModel->calculateBuyPrice($npcId, $item['item_id'], $item['price']);
             }
         }
 
-        // Get Player Money (Gold)
-        // Assuming gold is stored in characters table or inventory?
-        // Let's check Character model or User model.
-        // Wait, I haven't checked where gold is stored.
-        // I'll assume it's on the character for now.
-        $db = Database::getInstance()->getConnection();
+        // Récupération de l'or actuel du personnage
+        $db = \Database::getInstance()->getConnection();
         $stmt = $db->prepare("SELECT gold FROM characters WHERE id = ?");
         $stmt->bind_param("i", $_SESSION['character_id']);
         $stmt->execute();
@@ -69,11 +63,15 @@ class ShopController
             'success' => true,
             'npc' => $npc,
             'merchant_inventory' => $merchantInventory,
-            'player_inventory' => $playerInventory, // Send full structure for UI to render
+            'player_inventory' => $playerInventory,             
             'player_gold' => $playerGold
         ]);
     }
 
+    /**
+     * Traite l'achat d'un objet par le joueur.
+     * Vérifie la disponibilité de l'objet et les fonds du joueur.
+     */
     public function buy()
     {
         if (!isset($_SESSION['user_id']) || !isset($_SESSION['character_id'])) {
@@ -91,12 +89,11 @@ class ShopController
             exit;
         }
 
-        $db = Database::getInstance()->getConnection();
+        $db = \Database::getInstance()->getConnection();
         $npcModel = new NPC();
         $inventoryModel = new Inventory();
 
-        // 1. Verify Item exists in NPC inventory
-        // We check if the NPC sells this item. Quantity is ignored as stock is unlimited.
+        // Vérifie si le PNJ vend bien cet objet
         $stmt = $db->prepare("SELECT 1 FROM npc_merchant_inventory WHERE npc_id = ? AND item_id = ?");
         $stmt->bind_param("ii", $npcId, $itemId);
         $stmt->execute();
@@ -107,12 +104,12 @@ class ShopController
             exit;
         }
 
-        // 2. Get Item Price
+        // Récupère le prix de l'objet
         $itemModel = new Item();
         $itemData = $itemModel->findById($itemId);
-        $price = $itemData['price']; // Player pays full price (or markup)
-
-        // 3. Check Player Gold
+        $price = $itemData['price']; 
+        
+        // Vérifie l'or du joueur
         $stmt = $db->prepare("SELECT gold FROM characters WHERE id = ?");
         $stmt->bind_param("i", $_SESSION['character_id']);
         $stmt->execute();
@@ -123,16 +120,7 @@ class ShopController
             exit;
         }
 
-        // 4. Add Item to Player Inventory
-        // We need to find a free slot.
-        // Using a helper method in Inventory model would be good, but for now let's try to find a spot.
-        // Actually, Inventory::moveItem checks bounds, but doesn't "add" new items.
-        // We need an "addItem" method in Inventory model.
-        // I'll check if it exists or create it.
-        // For now, I'll implement a basic "find first free slot" logic here or assume Inventory model has it.
-        // Wait, I viewed Inventory.php and it didn't have `addItem`. I should add it.
-        
-        // Let's assume I'll add `addItem` to Inventory model.
+        // Ajout de l'objet à l'inventaire du joueur
         $addResult = $inventoryModel->addItem($_SESSION['character_id'], $itemId);
         
         if (!$addResult['success']) {
@@ -140,26 +128,29 @@ class ShopController
             exit;
         }
 
-        // 5. Deduct Gold
+        // Déduction de l'or
         $newGold = $charData['gold'] - $price;
         $stmt = $db->prepare("UPDATE characters SET gold = ? WHERE id = ?");
         $stmt->bind_param("ii", $newGold, $_SESSION['character_id']);
         $stmt->execute();
 
-        // 6. Decrease NPC Inventory - REMOVED (Unlimited Stock)
-
-        // Log Action
-        $logger = new LoggerService();
-        $logger->logGameplay($_SESSION['user_id'], $_SESSION['character_id'], 'NPC_BUY', [
-            'npc_id' => $npcId,
-            'item_id' => $itemId,
-            'price' => $price,
-            'gold_remaining' => $newGold
-        ]);
-
+        // Logging de la transaction (si LoggerService existe)
+        if (class_exists('App\Services\LoggerService')) {
+             $logger = new \App\Services\LoggerService();
+             $logger->logGameplay($_SESSION['user_id'], $_SESSION['character_id'], 'NPC_BUY', [
+                'npc_id' => $npcId,
+                'item_id' => $itemId,
+                'price' => $price,
+                'gold_remaining' => $newGold
+            ]);
+        }
+        
         echo json_encode(['success' => true, 'message' => 'Item purchased', 'new_gold' => $newGold]);
     }
 
+    /**
+     * Traite la vente d'un objet par le joueur au PNJ.
+     */
     public function sell()
     {
         if (!isset($_SESSION['user_id']) || !isset($_SESSION['character_id'])) {
@@ -170,17 +161,16 @@ class ShopController
 
         $input = json_decode(file_get_contents('php://input'), true);
         $npcId = $input['npc_id'] ?? null;
-        $inventoryItemId = $input['item_id'] ?? null; // This is the ID in character_inventory, not item_id
-
+        $inventoryItemId = $input['item_id'] ?? null; 
         if (!$npcId || !$inventoryItemId) {
             echo json_encode(['success' => false, 'message' => 'Missing parameters']);
             exit;
         }
 
-        $db = Database::getInstance()->getConnection();
+        $db = \Database::getInstance()->getConnection();
         $npcModel = new NPC();
         
-        // 1. Get Item from Player Inventory
+        // Vérifie que le joueur possède bien l'objet (via l'ID unique d'inventaire)
         $stmt = $db->prepare("
             SELECT ci.*, i.price, i.id as real_item_id 
             FROM character_inventory ci 
@@ -196,29 +186,29 @@ class ShopController
             exit;
         }
 
-        // 2. Calculate Sell Price
+        // Calcul du prix de reprise
         $sellPrice = $npcModel->calculateBuyPrice($npcId, $item['real_item_id'], $item['price']);
 
-        // 3. Remove Item from Player Inventory
+        // Suppression de l'objet de l'inventaire
         $stmt = $db->prepare("DELETE FROM character_inventory WHERE id = ?");
         $stmt->bind_param("i", $inventoryItemId);
         $stmt->execute();
 
-        // 4. Add Gold to Player
+        // Ajout de l'or au joueur
         $stmt = $db->prepare("UPDATE characters SET gold = gold + ? WHERE id = ?");
         $stmt->bind_param("ii", $sellPrice, $_SESSION['character_id']);
         $stmt->execute();
 
-        // 5. Add to NPC Inventory - REMOVED (No Buyback)
-
-        // Log Action
-        $logger = new LoggerService();
-        $logger->logGameplay($_SESSION['user_id'], $_SESSION['character_id'], 'NPC_SELL', [
-            'npc_id' => $npcId,
-            'item_id' => $item['real_item_id'],
-            'price' => $sellPrice,
-            'gold_earned' => $sellPrice
-        ]);
+         // Logging de la transaction
+        if (class_exists('App\Services\LoggerService')) {
+            $logger = new \App\Services\LoggerService();
+            $logger->logGameplay($_SESSION['user_id'], $_SESSION['character_id'], 'NPC_SELL', [
+                'npc_id' => $npcId,
+                'item_id' => $item['real_item_id'],
+                'price' => $sellPrice,
+                'gold_earned' => $sellPrice
+            ]);
+        }
 
         echo json_encode(['success' => true, 'message' => 'Item sold', 'gold_earned' => $sellPrice]);
     }

@@ -13,27 +13,23 @@ class AdminController
         $userModel = new User();
         $characterModel = new Character();
         
-        // Get stats for dashboard
-        $stats = [
+                $stats = [
             'total_users' => $this->getTotalUsers(),
             'total_characters' => $this->getTotalCharacters(),
             'total_maps' => $this->getTotalMaps(),
             'total_npcs' => $this->getTotalNPCs(),
         ];
         
-        // Get recent activity
-        $recentCharacters = $this->getRecentCharacters(5);
+                $recentCharacters = $this->getRecentCharacters(5);
         
         require_once __DIR__ . '/../Views/admin/dashboard.php';
     }
 
-    // API endpoint for dashboard charts
-    public function stats()
+        public function stats()
     {
         $db = Database::getInstance()->getConnection();
 
-        // Class distribution
-        $classes = [];
+                $classes = [];
         $res = $db->query("SELECT cl.name, COUNT(*) as count FROM characters c JOIN classes cl ON c.class_id = cl.id GROUP BY cl.id");
         if ($res) {
             while ($row = $res->fetch_assoc()) {
@@ -44,8 +40,7 @@ class AdminController
             }
         }
 
-        // Activity last 7 days (inclusive)
-        $activity = [];
+                $activity = [];
         $stmt = $db->prepare("SELECT DATE(created_at) as date, COUNT(*) as count FROM characters WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) GROUP BY DATE(created_at) ORDER BY DATE(created_at)");
         if ($stmt) {
             $stmt->execute();
@@ -55,8 +50,7 @@ class AdminController
                 $map[$r['date']] = (int)$r['count'];
             }
 
-            // Fill missing days
-            for ($i = 6; $i >= 0; $i--) {
+                        for ($i = 6; $i >= 0; $i--) {
                 $date = date('Y-m-d', strtotime("-{$i} days"));
                 $activity[] = [
                     'date' => $date,

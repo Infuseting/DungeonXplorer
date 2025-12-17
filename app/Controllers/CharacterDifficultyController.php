@@ -15,8 +15,7 @@ class CharacterDifficultyController
             exit;
         }
 
-        // Must have character in progress
-        if (!isset($_SESSION['temp_character'])) {
+                if (!isset($_SESSION['temp_character'])) {
             header('Location: /personnage/create');
             exit;
         }
@@ -42,16 +41,11 @@ class CharacterDifficultyController
         }
 
         $difficulty = $_POST['difficulty'] ?? DifficultyService::NORMAL;
-        // If IronMan difficulty selected, force is_ironman flag. 
-        // Or if checkbox is checked.
-        $isIronman = isset($_POST['is_ironman']) || $difficulty === DifficultyService::IRONMAN;
+                        $isIronman = isset($_POST['is_ironman']) || $difficulty === DifficultyService::IRONMAN;
         
-        // Finalize Character Creation
-        $tempChar = $_SESSION['temp_character'];
-        $appearance = $tempChar['appearance'] ?? []; // Retrieve appearance from session
-        
-        // Create Character in DB
-        $characterModel = new Character();
+                $tempChar = $_SESSION['temp_character'];
+        $appearance = $tempChar['appearance'] ?? [];         
+                $characterModel = new Character();
         $newCharacterId = $characterModel->create(
             $_SESSION['user_id'],
             $tempChar['class_id'],
@@ -65,21 +59,16 @@ class CharacterDifficultyController
             exit;
         }
 
-        // Create Stats
-        $statsModel = new CharacterStats();
+                $statsModel = new CharacterStats();
         $statsModel->create($newCharacterId, $tempChar['class_id']);
 
-        // Save Appearance
-        // Make sure we have the appearance data correctly
-        if (!empty($appearance)) {
+                        if (!empty($appearance)) {
             $characterModel->updateAppearance($newCharacterId, $appearance);
         }
 
-        // Clean session
-        unset($_SESSION['temp_character']);
+                unset($_SESSION['temp_character']);
 
-        // Redirect to Hub
-        header('Location: /personnage');
+                header('Location: /personnage');
         exit;
     }
 }

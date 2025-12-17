@@ -134,10 +134,8 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // ... (existing code)
-
-        // Fetch Connected Accounts
-        async function loadConnectedAccounts() {
+        
+                async function loadConnectedAccounts() {
              try {
                 const response = await fetch('/user/connected-accounts');
                 const data = await response.json();
@@ -160,17 +158,14 @@
             }
         }
         
-        // Load on open profile tab
-        // Note: profileTabBtn is defined below in the unified block to avoid duplicates
-        
+                        
         const audioTabBtn = document.getElementById('tab-audio-btn');
         const profileTabBtn = document.getElementById('tab-profile-btn');
         const audioContent = document.getElementById('tab-audio-content');
         const profileContent = document.getElementById('tab-profile-content');
         const settingsModal = document.getElementById('settings-modal');
 
-        // Tab Switching
-        function switchTab(tab) {
+                function switchTab(tab) {
             if (tab === 'audio') {
                 audioContent.classList.remove('hidden');
                 profileContent.classList.add('hidden');
@@ -186,16 +181,14 @@
                 audioTabBtn.classList.add('text-gray-400', 'border-transparent');
                 audioTabBtn.classList.remove('text-white', 'border-violet-500');
                 
-                // Load data when switching to profile
-                loadConnectedAccounts();
+                                loadConnectedAccounts();
             }
         }
 
         if(audioTabBtn) audioTabBtn.addEventListener('click', () => switchTab('audio'));
         if(profileTabBtn) profileTabBtn.addEventListener('click', () => switchTab('profile'));
         
-        // Auto-open from URL
-        const urlParams = new URLSearchParams(window.location.search);
+                const urlParams = new URLSearchParams(window.location.search);
         const settingsParam = urlParams.get('settings');
         if (settingsParam === 'profile') {
             settingsModal.classList.remove('hidden');
@@ -204,8 +197,7 @@
              settingsModal.classList.remove('hidden');
         }
 
-        // Profile Forms Handling
-        async function handleFormSubmit(formId, url) {
+                async function handleFormSubmit(formId, url) {
             const form = document.getElementById(formId);
             if (!form) return;
 
@@ -213,8 +205,7 @@
                 e.preventDefault();
                 const formData = new FormData(form);
                 
-                // Import toast if available, or fallback
-                let showToast = (msg, type) => alert(msg);
+                                let showToast = (msg, type) => alert(msg);
                 try {
                     const module = await import('/js/modules/toast.js');
                     showToast = module.showToast;
@@ -231,8 +222,7 @@
                         showToast(data.message, 'success');
                         if (formId === 'form-update-password') form.reset();
                         
-                        // If username changed, update UI
-                        if (formId === 'form-update-profile' && formData.get('username')) {
+                                                if (formId === 'form-update-profile' && formData.get('username')) {
                             const menuBtn = document.getElementById('user-menu-button');
                             if(menuBtn) menuBtn.innerText = formData.get('username').charAt(0).toUpperCase();
                         }

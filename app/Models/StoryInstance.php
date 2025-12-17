@@ -37,8 +37,7 @@ class StoryInstance
      */
     public function getByStoryAndCharacter($storyId, $characterId)
     {
-        // First check for character-specific instance
-        $stmt = $this->db->prepare(
+                $stmt = $this->db->prepare(
             "SELECT * FROM story_instances 
              WHERE story_id = ? AND instance_type = 'character' AND character_id = ? 
              AND (expires_at IS NULL OR expires_at > NOW())"
@@ -51,8 +50,7 @@ class StoryInstance
             return $instance;
         }
         
-        // Then check for shared instance
-        $stmt = $this->db->prepare(
+                $stmt = $this->db->prepare(
             "SELECT * FROM story_instances 
              WHERE story_id = ? AND instance_type = 'shared' 
              AND (expires_at IS NULL OR expires_at > NOW()) 
@@ -76,8 +74,7 @@ class StoryInstance
      */
     public function create($storyId, $characterId, $seed, $instanceType = 'character')
     {
-        // Default expiration: 48 hours
-        $expiresAt = date('Y-m-d H:i:s', strtotime('+48 hours'));
+                $expiresAt = date('Y-m-d H:i:s', strtotime('+48 hours'));
         
         $stmt = $this->db->prepare(
             "INSERT INTO story_instances (story_id, character_id, seed, instance_type, generated_at, expires_at) 

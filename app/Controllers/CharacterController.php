@@ -26,16 +26,12 @@ class CharacterController
             exit;
         }
 
-        // Enrichir chaque personnage avec les données de classe ET les stats
-        foreach ($characters as &$character) {
-            // Récupérer la classe complète
-            $character['class'] = $classModel->findById($character['class_id']);
+                foreach ($characters as &$character) {
+                        $character['class'] = $classModel->findById($character['class_id']);
             
-            // Récupérer les stats du personnage
-            $character['stats'] = $statsModel->findByCharacterId($character['id']);
+                        $character['stats'] = $statsModel->findByCharacterId($character['id']);
             
-            // Si pas de stats en BDD, utiliser les stats de base
-            if (!$character['stats']) {
+                        if (!$character['stats']) {
                 $baseStats = json_decode($character['class']['base_stats_json'], true);
                 $character['stats'] = [
                     'strength' => $baseStats['strength'] ?? 10,
@@ -46,8 +42,7 @@ class CharacterController
                 ];
             }
             
-            // Fusionner les stats au niveau principal
-            $character['strength'] = $character['stats']['strength'];
+                        $character['strength'] = $character['stats']['strength'];
             $character['dexterity'] = $character['stats']['dexterity'];
             $character['intelligence'] = $character['stats']['intelligence'];
             $character['vitality'] = $character['stats']['vitality'];
@@ -82,14 +77,12 @@ class CharacterController
         $name = $_POST['name'] ?? '';
         $classId = $_POST['class_id'] ?? '';
         
-        // Basic validation
-        if (empty($name) || empty($classId)) {
+                if (empty($name) || empty($classId)) {
             header('Location: /personnage/create?error=missing_fields');
             exit;
         }
 
-        // Get class info
-        $classModel = new CharacterClass();
+                $classModel = new CharacterClass();
         $class = $classModel->findById($classId);
         
         if (!$class) {
@@ -97,8 +90,7 @@ class CharacterController
             exit;
         }
 
-        // Store character data in session temporarily
-        $_SESSION['temp_character'] = [
+                $_SESSION['temp_character'] = [
             'name' => $name,
             'class_id' => $classId,
             'class' => $class,
@@ -117,8 +109,7 @@ class CharacterController
             ]
         ];
 
-        // Redirect to appearance customization
-        header('Location: /personnage/apparence/preview');
+                header('Location: /personnage/apparence/preview');
         exit;
     }
 

@@ -51,8 +51,7 @@ class PlayerQuest
      */
     public function startQuest($characterId, $questId)
     {
-        // Get first stage
-        $stmt = $this->db->prepare("SELECT id FROM quest_stages WHERE quest_id = ? ORDER BY order_index ASC LIMIT 1");
+                $stmt = $this->db->prepare("SELECT id FROM quest_stages WHERE quest_id = ? ORDER BY order_index ASC LIMIT 1");
         $stmt->bind_param("i", $questId);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -60,15 +59,13 @@ class PlayerQuest
         
         if (!$firstStage) return false;
         
-        // Create player quest
-        $stmt = $this->db->prepare("INSERT INTO player_quests (character_id, quest_id, current_stage_id, status) VALUES (?, ?, ?, 'ACTIVE')");
+                $stmt = $this->db->prepare("INSERT INTO player_quests (character_id, quest_id, current_stage_id, status) VALUES (?, ?, ?, 'ACTIVE')");
         $stmt->bind_param("iii", $characterId, $questId, $firstStage['id']);
         
         if ($stmt->execute()) {
             $playerQuestId = $this->db->insert_id;
             
-            // Initialize progress for all objectives in first stage
-            $this->initializeStageProgress($playerQuestId, $firstStage['id']);
+                        $this->initializeStageProgress($playerQuestId, $firstStage['id']);
             
             return $playerQuestId;
         }
@@ -114,8 +111,7 @@ class PlayerQuest
             'objective_description' => ''
         ];
 
-        // Get Quest Name and Objective Description
-        $stmt = $this->db->prepare("
+                $stmt = $this->db->prepare("
             SELECT q.name as quest_name, qo.description as objective_description
             FROM player_quests pq
             JOIN quests q ON pq.quest_id = q.id
@@ -130,12 +126,10 @@ class PlayerQuest
             $events['objective_description'] = $row['objective_description'];
         }
         
-        // Check if objective is completed
-        if ($this->checkObjectiveCompletion($playerQuestId, $objectiveId)) {
+                if ($this->checkObjectiveCompletion($playerQuestId, $objectiveId)) {
             $events['objective_completed'] = true;
             
-            // Check if stage is completed
-            $stageEvents = $this->checkStageCompletion($playerQuestId);
+                        $stageEvents = $this->checkStageCompletion($playerQuestId);
             $events['quest_completed'] = $stageEvents['quest_completed'];
             $events['unlocked_points'] = $stageEvents['unlocked_points'];
         }
@@ -189,11 +183,9 @@ class PlayerQuest
         $data = $result->fetch_assoc();
         
         if ($data['total'] == $data['completed']) {
-            // Unlock map points for this stage
-            $events['unlocked_points'] = $this->unlockMapPointsForStage($playerQuestId);
+                        $events['unlocked_points'] = $this->unlockMapPointsForStage($playerQuestId);
             
-            // Move to next stage or complete quest
-            $events['quest_completed'] = $this->advanceToNextStage($playerQuestId);
+                        $events['quest_completed'] = $this->advanceToNextStage($playerQuestId);
         }
         
         return $events;
@@ -206,8 +198,7 @@ class PlayerQuest
     {
         $unlockedPoints = [];
 
-        // Get character_id and current_stage_id
-        $stmt = $this->db->prepare("SELECT character_id, current_stage_id FROM player_quests WHERE id = ?");
+                $stmt = $this->db->prepare("SELECT character_id, current_stage_id FROM player_quests WHERE id = ?");
         $stmt->bind_param("i", $playerQuestId);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -215,8 +206,7 @@ class PlayerQuest
         
         if (!$pq || !$pq['current_stage_id']) return [];
         
-        // Get unlocks for this stage
-        $questStageModel = new QuestStage();
+                $questStageModel = new QuestStage();
         $unlocks = $questStageModel->getMapUnlocks($pq['current_stage_id']);
         
         if (empty($unlocks)) return [];
@@ -236,15 +226,13 @@ class PlayerQuest
      */
     private function advanceToNextStage($playerQuestId)
     {
-        // Get current stage
-        $stmt = $this->db->prepare("SELECT quest_id, current_stage_id FROM player_quests WHERE id = ?");
+                $stmt = $this->db->prepare("SELECT quest_id, current_stage_id FROM player_quests WHERE id = ?");
         $stmt->bind_param("i", $playerQuestId);
         $stmt->execute();
         $result = $stmt->get_result();
         $playerQuest = $result->fetch_assoc();
         
-        // Get next stage
-        $stmt = $this->db->prepare("
+                $stmt = $this->db->prepare("
             SELECT qs.id, qs.order_index
             FROM quest_stages qs
             WHERE qs.quest_id = ? AND qs.order_index > (
@@ -259,22 +247,18 @@ class PlayerQuest
         $nextStage = $result->fetch_assoc();
         
         if ($nextStage) {
-            // Move to next stage
-            $updateStmt = $this->db->prepare("UPDATE player_quests SET current_stage_id = ? WHERE id = ?");
+                        $updateStmt = $this->db->prepare("UPDATE player_quests SET current_stage_id = ? WHERE id = ?");
             $updateStmt->bind_param("ii", $nextStage['id'], $playerQuestId);
             $updateStmt->execute();
             
-            // Initialize progress for new stage
-            $this->initializeStageProgress($playerQuestId, $nextStage['id']);
+                        $this->initializeStageProgress($playerQuestId, $nextStage['id']);
             return false;
         } else {
-            // Complete quest
-            $updateStmt = $this->db->prepare("UPDATE player_quests SET status = 'COMPLETED', completed_at = NOW() WHERE id = ?");
+                        $updateStmt = $this->db->prepare("UPDATE player_quests SET status = 'COMPLETED', completed_at = NOW() WHERE id = ?");
             $updateStmt->bind_param("i", $playerQuestId);
             $updateStmt->execute();
             
-            // Grant Rewards
-            $this->grantRewards($playerQuestId);
+                        $this->grantRewards($playerQuestId);
             
             return true;
         }
@@ -285,21 +269,17 @@ class PlayerQuest
      */
     private function grantRewards($playerQuestId)
     {
-        // Get Quest ID and Character ID
-        $stmt = $this->db->prepare("SELECT quest_id, character_id FROM player_quests WHERE id = ?");
+                $stmt = $this->db->prepare("SELECT quest_id, character_id FROM player_quests WHERE id = ?");
         $stmt->bind_param("i", $playerQuestId);
         $stmt->execute();
         $pq = $stmt->get_result()->fetch_assoc();
         
         if (!$pq) return;
         
-        // Get Rewards
-        $questModel = new Quest();
-        $quest = $questModel->findById($pq['quest_id']); // get XP/Gold
-        $rewardItems = $questModel->getRewardItems($pq['quest_id']);
+                $questModel = new Quest();
+        $quest = $questModel->findById($pq['quest_id']);         $rewardItems = $questModel->getRewardItems($pq['quest_id']);
         
-        // Grant XP & Gold
-        if (($quest['xp_reward'] ?? 0) > 0 || ($quest['gold_reward'] ?? 0) > 0) {
+                if (($quest['xp_reward'] ?? 0) > 0 || ($quest['gold_reward'] ?? 0) > 0) {
             $sql = "UPDATE characters SET experience = experience + ?, gold = gold + ? WHERE id = ?";
             $xp = $quest['xp_reward'] ?? 0;
             $gold = $quest['gold_reward'] ?? 0;
@@ -308,8 +288,7 @@ class PlayerQuest
             $upd->execute();
         }
         
-        // Grant Items
-        if (!empty($rewardItems)) {
+                if (!empty($rewardItems)) {
             $invModel = new Inventory();
             foreach ($rewardItems as $reward) {
                 $qty = $reward['quantity'] ?? 1;
@@ -325,8 +304,7 @@ class PlayerQuest
      */
     public function getQuestLog($characterId)
     {
-        // 1. Get all player quests (Active & Completed)
-        $stmt = $this->db->prepare("
+                $stmt = $this->db->prepare("
             SELECT pq.*, q.name, q.description, q.min_level,
                    qs.order_index as current_stage_order
             FROM player_quests pq
@@ -352,8 +330,7 @@ class PlayerQuest
                 'stages' => []
             ];
             
-            // 2. Get all stages for this quest
-            $stmt = $this->db->prepare("
+                        $stmt = $this->db->prepare("
                 SELECT qs.* 
                 FROM quest_stages qs 
                 WHERE qs.quest_id = ? 
@@ -364,9 +341,7 @@ class PlayerQuest
             $stages = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
             
             foreach ($stages as $stage) {
-                // Determine stage status relative to player progress
-                $stageStatus = 'LOCKED'; // Default hidden/future
-                
+                                $stageStatus = 'LOCKED';                 
                 if ($quest['status'] === 'COMPLETED') {
                     $stageStatus = 'COMPLETED';
                 } elseif ($stage['order_index'] < $quest['current_stage_order']) {
@@ -375,8 +350,7 @@ class PlayerQuest
                     $stageStatus = 'ACTIVE';
                 }
                 
-                // Skip future stages (as requested)
-                if ($stageStatus === 'LOCKED') continue;
+                                if ($stageStatus === 'LOCKED') continue;
                 
                 $stageData = [
                     'id' => $stage['id'],
@@ -386,10 +360,8 @@ class PlayerQuest
                     'objectives' => []
                 ];
                 
-                // 3. Get objectives and progress if active or completed
-                if ($stageStatus === 'ACTIVE') {
-                    // Get real-time progress for active stage
-                    $stmt = $this->db->prepare("
+                                if ($stageStatus === 'ACTIVE') {
+                                        $stmt = $this->db->prepare("
                         SELECT qo.*, pqp.count_current, pqp.is_completed
                         FROM quest_objectives qo
                         LEFT JOIN player_quest_progress pqp ON qo.id = pqp.objective_id AND pqp.player_quest_id = ?
@@ -397,8 +369,7 @@ class PlayerQuest
                     ");
                     $stmt->bind_param("ii", $quest['id'], $stage['id']);
                 } else {
-                    // For completed stages, just show objectives as done
-                    $stmt = $this->db->prepare("SELECT *, count_required as count_current, 1 as is_completed FROM quest_objectives WHERE stage_id = ?");
+                                        $stmt = $this->db->prepare("SELECT *, count_required as count_current, 1 as is_completed FROM quest_objectives WHERE stage_id = ?");
                     $stmt->bind_param("i", $stage['id']);
                 }
                 
@@ -418,9 +389,7 @@ class PlayerQuest
      */
     public function onMonsterKilled($characterId, $monsterId)
     {
-        // Find all active objectives that target this monster
-        // Assuming objective types: 'KILL_MONSTER' or 'KILL' and target_id is the monster ID
-        $stmt = $this->db->prepare("
+                        $stmt = $this->db->prepare("
             SELECT pqp.player_quest_id, pqp.objective_id, qo.description
             FROM player_quest_progress pqp
             JOIN quest_objectives qo ON pqp.objective_id = qo.id
@@ -436,8 +405,7 @@ class PlayerQuest
         
         $updates = [];
         while ($row = $result->fetch_assoc()) {
-            // Update progress for each matching objective
-            $event = $this->updateProgress($row['player_quest_id'], $row['objective_id'], 1);
+                        $event = $this->updateProgress($row['player_quest_id'], $row['objective_id'], 1);
             $event['original_description'] = $row['description'];
             $updates[] = $event;
         }

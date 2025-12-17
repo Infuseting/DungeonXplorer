@@ -90,8 +90,7 @@ class AdminProceduralController
         }
     }
 
-    // Monster Pools
-    public function monsterPools($id)
+        public function monsterPools($id)
     {
         $template = $this->templateModel->findById($id);
         if (!$template) {
@@ -105,10 +104,7 @@ class AdminProceduralController
     public function addMonsterPool($templateId)
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Logic to add monster pool
-            // Need to add method to ProceduralTemplate model or create ProceduralMonsterPool model
-            // For simplicity, I'll use raw DB in model or add specific method
-            $this->templateModel->addMonsterPool($templateId, $_POST);
+                                                $this->templateModel->addMonsterPool($templateId, $_POST);
             header('Location: /admin/procedural/' . $templateId . '/monsters');
             exit;
         }
@@ -118,15 +114,12 @@ class AdminProceduralController
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->templateModel->deleteMonsterPool($poolId);
-            // Redirect back? Need template ID. 
-            // I'll assume referer or pass it.
-            header('Location: ' . $_SERVER['HTTP_REFERER']);
+                                    header('Location: ' . $_SERVER['HTTP_REFERER']);
             exit;
         }
     }
 
-    // Loot Pools
-    public function lootPools($id)
+        public function lootPools($id)
     {
         $template = $this->templateModel->findById($id);
         if (!$template) {
@@ -134,10 +127,7 @@ class AdminProceduralController
             exit;
         }
         $pools = $this->templateModel->getLootPools($id);
-        // Need items list for dropdown
-        $itemModel = new Item(); // Assuming Item model exists
-        $items = $itemModel->getAll(); // Assuming getAll exists
-        
+                $itemModel = new Item();         $items = $itemModel->getAll();         
         $this->render('admin/procedural/loot-pools', ['template' => $template, 'pools' => $pools, 'items' => $items]);
     }
 

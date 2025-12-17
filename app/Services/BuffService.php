@@ -49,8 +49,7 @@ class BuffService
      */
     public function processTurn(int $characterId)
     {
-        // Decrement turn-based buffs
-        $stmt = $this->db->prepare("
+                $stmt = $this->db->prepare("
             UPDATE character_buffs 
             SET duration_remaining = duration_remaining - 1 
             WHERE character_id = ? AND duration_type = 'turns'
@@ -58,8 +57,7 @@ class BuffService
         $stmt->bind_param("i", $characterId);
         $stmt->execute();
 
-        // Remove expired turn-based buffs
-        $this->removeExpiredBuffs($characterId);
+                $this->removeExpiredBuffs($characterId);
     }
 
     /**
@@ -67,15 +65,12 @@ class BuffService
      */
     public function cleanExpired(int $characterId)
     {
-        // Update expiry for seconds-based buffs is handled by timestamp check in query,
-        // but we should clean up rows.
-        $this->removeExpiredBuffs($characterId);
+                        $this->removeExpiredBuffs($characterId);
     }
 
     private function removeExpiredBuffs(int $characterId)
     {
-        // Delete where duration_remaining <= 0 OR (type='seconds' AND expires_at < NOW())
-        $stmt = $this->db->prepare("
+                $stmt = $this->db->prepare("
             DELETE FROM character_buffs 
             WHERE character_id = ? 
             AND (
@@ -92,8 +87,7 @@ class BuffService
      */
     public function getActiveBuffs(int $characterId)
     {
-        // First clean
-        $this->cleanExpired($characterId);
+                $this->cleanExpired($characterId);
 
         $stmt = $this->db->prepare("SELECT * FROM character_buffs WHERE character_id = ?");
         $stmt->bind_param("i", $characterId);
@@ -106,8 +100,7 @@ class BuffService
             'vitality' => 0,
             'dexterity' => 0,
             'intelligence' => 0,
-            'hp_max' => 0 // Potential future use
-        ];
+            'hp_max' => 0         ];
 
         while ($row = $result->fetch_assoc()) {
             $modifiers = json_decode($row['stat_modifiers'], true);

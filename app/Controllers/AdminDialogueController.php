@@ -24,8 +24,7 @@ class AdminDialogueController
         $dialogueModel = new DialogueTree();
         $npcModel = new NPC();
         
-        // Get all trees with node count
-        $query = "SELECT dt.*, 
+                $query = "SELECT dt.*, 
                   (SELECT COUNT(*) FROM dialogues WHERE tree_id = dt.id) as node_count
                   FROM dialogue_trees dt WHERE 1=1";
         $params = [];
@@ -50,12 +49,10 @@ class AdminDialogueController
             $trees = $result->fetch_all(MYSQLI_ASSOC);
         }
         
-        // Get NPC count for each tree
-        foreach ($trees as &$tree) {
+                foreach ($trees as &$tree) {
             $tree['npc_count'] = count($dialogueModel->getNPCsUsingTree($tree['id']));
         }
-        unset($tree); // Destroy reference to avoid issues
-        
+        unset($tree);         
         require_once __DIR__ . '/../Views/admin/dialogues/index.php';
     }
     
@@ -133,8 +130,7 @@ class AdminDialogueController
             exit;
         }
         
-        // Get tree structure
-        $dialogueTree = $dialogueModel->getDialogueTree($id);
+                $dialogueTree = $dialogueModel->getDialogueTree($id);
         
         require_once __DIR__ . '/../Views/admin/dialogues/tree.php';
     }
@@ -165,8 +161,7 @@ class AdminDialogueController
             $parentId = !empty($data['parent_id']) ? (int)$data['parent_id'] : null;
             $choiceText = !empty($data['choice_text']) ? trim($data['choice_text']) : null;
             
-            // New fields
-            $actionType = $data['action_type'] ?? 'NONE';
+                        $actionType = $data['action_type'] ?? 'NONE';
             $actionValue = $data['action_value'] ?? null;
             $conditionType = $data['condition_type'] ?? 'NONE';
             $conditionValue = $data['condition_value'] ?? null;
@@ -174,13 +169,7 @@ class AdminDialogueController
             $dialogueModel = new DialogueTree();
             
             try {
-                // Modified to pass new fields (requires Model update too, but we can do raw SQL insert here if Model doesn't support it yet)
-                // Let's assume Model needs update. I'll check Model next.
-                // For now, I'll direct inject via Model's method if it accepts array or I'll override it here? 
-                // Better to update Model. But for this step I'll assume I update Model's addDialogue.
-                // Wait, `addDialogue` in Model probably takes explicit args.
-                // I should verify Model first. I'll assume I update Model later.
-                
+                                                                                                                
                 $nodeId = $dialogueModel->addDialogue(
                     (int)$data['tree_id'],
                     $text,

@@ -913,37 +913,28 @@ const eyeColorSelect = document.getElementById('eyeColorSelect');
 const className = '<?= $className ?>';
 const imageBase = '<?= $imageBase ?>';
 
-// Options disponibles
 const eyeOptions = <?= json_encode($appearanceOptions['eyes']) ?>;
 const makeupOptions = <?= json_encode(array_keys($appearanceOptions['makeup'])) ?>;
 
 const hairNaturalCheckbox = document.getElementById('hairNaturalCheckbox');
 const hairCustomization = document.getElementById('hairCustomization');
 
-// Gestion de l'option cheveux naturels
 function toggleHairNatural(isNatural) {
     if (isNatural) {
-        // Cacher le layer des cheveux
-        hairImage.style.display = 'none';
-        // Désactiver les contrôles
-        hairCustomization.style.opacity = '0.5';
+                hairImage.style.display = 'none';
+                hairCustomization.style.opacity = '0.5';
         hairCustomization.style.pointerEvents = 'none';
-        // Désactiver les sliders
-        redCyanSlider.disabled = true;
+                redCyanSlider.disabled = true;
         greenMagentaSlider.disabled = true;
         blueYellowSlider.disabled = true;
     } else {
-        // Afficher le layer des cheveux
-        hairImage.style.display = 'block';
-        // Réactiver les contrôles
-        hairCustomization.style.opacity = '1';
+                hairImage.style.display = 'block';
+                hairCustomization.style.opacity = '1';
         hairCustomization.style.pointerEvents = 'auto';
-        // Réactiver les sliders
-        redCyanSlider.disabled = false;
+                redCyanSlider.disabled = false;
         greenMagentaSlider.disabled = false;
         blueYellowSlider.disabled = false;
-        // Appliquer le filtre
-        updateFilter();
+                updateFilter();
     }
 }
 
@@ -961,7 +952,6 @@ const presets = {
     pink: { redCyan: 200, greenMagenta: 30, blueYellow: 110 }
 };
 
-// Gestion des cheveux
 function updateFilter() {
     if (!hairImage) return;
     
@@ -1028,21 +1018,17 @@ document.querySelectorAll('.preset-btn').forEach(btn => {
     });
 });
 
-// Gestion des yeux - Création dynamique
 let currentEyeLayer = null;
 
 function setEyeColor(eyeColor) {
-    // Supprimer l'ancien layer
-    if (currentEyeLayer) {
+        if (currentEyeLayer) {
         currentEyeLayer.remove();
         currentEyeLayer = null;
     }
     
-    // Si brown, ne rien créer
-    if (eyeColor === 'brown') return;
+        if (eyeColor === 'brown') return;
     
-    // Créer le nouveau layer
-    const eyeImg = document.createElement('img');
+        const eyeImg = document.createElement('img');
     eyeImg.src = `${imageBase}/eyes/eyes_${eyeColor}.png`;
     eyeImg.alt = `Yeux ${eyeColor}`;
     eyeImg.className = 'character-layer-eyes absolute top-0 left-0 w-full h-full object-contain';
@@ -1056,13 +1042,11 @@ eyeColorSelect?.addEventListener('change', function() {
     setEyeColor(this.value);
 });
 
-// Gestion du maquillage - Création dynamique
 const activeMakeupLayers = new Map();
 
 function toggleMakeup(makeupFile, isChecked) {
     if (isChecked) {
-        // Créer le layer si coché
-        if (!activeMakeupLayers.has(makeupFile)) {
+                if (!activeMakeupLayers.has(makeupFile)) {
             const makeupImg = document.createElement('img');
             makeupImg.src = `${imageBase}/makeup/${makeupFile}.png`;
             makeupImg.alt = 'Maquillage';
@@ -1073,8 +1057,7 @@ function toggleMakeup(makeupFile, isChecked) {
             activeMakeupLayers.set(makeupFile, makeupImg);
         }
     } else {
-        // Supprimer le layer si décoché
-        const layer = activeMakeupLayers.get(makeupFile);
+                const layer = activeMakeupLayers.get(makeupFile);
         if (layer) {
             layer.remove();
             activeMakeupLayers.delete(makeupFile);
@@ -1082,7 +1065,6 @@ function toggleMakeup(makeupFile, isChecked) {
     }
 }
 
-// Tabs avec zoom
 document.querySelectorAll('.tab-item').forEach(tab => {
     tab.addEventListener('click', () => {
         document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
@@ -1100,7 +1082,6 @@ document.querySelectorAll('.tab-item').forEach(tab => {
     });
 });
 
-// Gestion des radios de couleur d'yeux
 document.querySelectorAll('.eye-radio').forEach(radio => {
     radio.addEventListener('change', function() {
         if (this.checked) {
@@ -1110,22 +1091,18 @@ document.querySelectorAll('.eye-radio').forEach(radio => {
     });
 });
 
-// Initialisation - Charger l'apparence sauvegardée
 function initAppearance() {
     updateFilter();
     
-    // Charger l'option cheveux naturels
-    const isNatural = <?= isset($character['appearance']['hair']['natural']) && $character['appearance']['hair']['natural'] === true ? 'true' : 'false' ?>;
+        const isNatural = <?= isset($character['appearance']['hair']['natural']) && $character['appearance']['hair']['natural'] === true ? 'true' : 'false' ?>;
     if (isNatural) {
         toggleHairNatural(true);
     }
     
-    // Charger les yeux sauvegardés
-    const savedEyeColor = '<?= $character['appearance']['eyes']['color'] ?? 'brown' ?>';
+        const savedEyeColor = '<?= $character['appearance']['eyes']['color'] ?? 'brown' ?>';
     setEyeColor(savedEyeColor);
     
-    // Charger les maquillages sauvegardés
-    <?php if (isset($character['appearance']['makeup']) && is_array($character['appearance']['makeup'])): ?>
+        <?php if (isset($character['appearance']['makeup']) && is_array($character['appearance']['makeup'])): ?>
         <?php foreach ($character['appearance']['makeup'] as $makeupFile => $isActive): ?>
             <?php if ($isActive === true): ?>
                 toggleMakeup('<?= htmlspecialchars($makeupFile) ?>', true);
@@ -1134,7 +1111,6 @@ function initAppearance() {
     <?php endif; ?>
 }
 
-// Lancer l'initialisation
 initAppearance();
 </script>
 

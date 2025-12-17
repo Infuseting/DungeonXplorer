@@ -57,13 +57,11 @@
     </main>
 
     <script>
-        // Data populated from PHP
-        const CHARACTER_LEVEL = <?= $character->getLevel() ?>;
+                const CHARACTER_LEVEL = <?= $character->getLevel() ?>;
         const SKILL_POINTS = <?= $character->getSkillPoints() ?>;
         const UNLOCKED_IDS = <?= json_encode($unlockedIds) ?>;
         
-        // Prepare Skill Data with Status
-        const SKILLS = <?= json_encode(array_map(function($s) use ($character, $unlockedIds) {
+                const SKILLS = <?= json_encode(array_map(function($s) use ($character, $unlockedIds) {
             $isUnlocked = in_array($s['id'], $unlockedIds);
             $canAfford = $character->getSkillPoints() >= $s['cost_sp'];
             $levelMet = $character->getLevel() >= $s['min_level'];
@@ -93,9 +91,7 @@
             },
 
             centerView() {
-                // Find bounds or just center 0,0 ? Usually start nodes around 100,100
-                // For now just consistent default
-                this.pan = { x: 20, y: 20 };
+                                                this.pan = { x: 20, y: 20 };
                 this.updateTransform();
             },
 
@@ -114,8 +110,7 @@
 
             renderNode(skill) {
                 const el = document.createElement('div');
-                // Base classes
-                let classes = "absolute w-44 p-3 rounded-lg border-2 transition-all duration-300 select-none flex flex-col gap-1";
+                                let classes = "absolute w-44 p-3 rounded-lg border-2 transition-all duration-300 select-none flex flex-col gap-1";
                 let statusIcon = "";
                 
                 if (skill.status === 'unlocked') {
@@ -152,21 +147,12 @@
             },
 
             renderConnection(parent, child) {
-                const startX = parseInt(parent.node_x) + 88; // Center X
-                const startY = parseInt(parent.node_y) + 80; // Bottom (approx)
-                const endX = parseInt(child.node_x) + 88;   // Center X
-                const endY = parseInt(child.node_y);        // Top
-
+                const startX = parseInt(parent.node_x) + 88;                 const startY = parseInt(parent.node_y) + 80;                 const endX = parseInt(child.node_x) + 88;                   const endY = parseInt(child.node_y);        
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                // Curvy connection
-                const d = `M ${startX} ${startY} C ${startX} ${startY + 50}, ${endX} ${endY - 50}, ${endX} ${endY}`;
+                                const d = `M ${startX} ${startY} C ${startX} ${startY + 50}, ${endX} ${endY - 50}, ${endX} ${endY}`;
                 
                 path.setAttribute('d', d);
-                // Style based on child status (if child is unlocked/available, line is brighter)
-                let stroke = "#374151"; // gray-700
-                if (child.status === 'unlocked') stroke = "#d97706"; // amber-600
-                else if (child.status === 'available') stroke = "#9ca3af"; // gray-400
-
+                                let stroke = "#374151";                 if (child.status === 'unlocked') stroke = "#d97706";                 else if (child.status === 'available') stroke = "#9ca3af"; 
                 path.setAttribute('stroke', stroke);
                 path.setAttribute('stroke-width', '2');
                 path.setAttribute('fill', 'none');
@@ -219,7 +205,6 @@
             }
         };
 
-        // Init on load
-        tree.init();
+                tree.init();
 </body>
 </html>

@@ -169,23 +169,18 @@ ob_start();
     import { initSoundManager, playSound } from '/js/modules/soundManager.js';
     import GameRouter from '/js/gameRouter.js';
 
-    // Make character ID available globally
-    window.characterId = <?= $character->getId() ?>;
+        window.characterId = <?= $character->getId() ?>;
 
-    // Initialize on DOM ready
-    document.addEventListener('DOMContentLoaded', async () => {
+        document.addEventListener('DOMContentLoaded', async () => {
         console.log('Initializing game...');
 
-        // Initialize Router
-        window.GameRouter = GameRouter;
+                window.GameRouter = GameRouter;
         GameRouter.init();
 
         <?php if (isset($activeStory) && $activeStory): ?>
-            // Auto-navigate to active story
-            console.log('Resuming active story: <?= $activeStory['story_id'] ?>');
+                        console.log('Resuming active story: <?= $activeStory['story_id'] ?>');
             
-            // Show a toast to confirm detection
-             import('/js/modules/toast.js').then(m => {
+                         import('/js/modules/toast.js').then(m => {
                  m.showToast('Reprise de l\'histoire...', 'info');
              });
 
@@ -194,24 +189,19 @@ ob_start();
             }, 100); 
         <?php endif; ?>
         
-        // Initialize sound manager first
-        await initSoundManager();
+                await initSoundManager();
         console.log('Sound manager initialized');
         
-        // Initialize inventory system
-        initInventory();
+                initInventory();
         console.log('Inventory initialized');
         
-        // Initialize map panel controls
-        initPanelControls();
+                initPanelControls();
         console.log('Panel controls initialized');
         
-        // Initialize NPC modal
-        initNPCModal();
+                initNPCModal();
         console.log('NPC modal initialized');
         
-        // Initialize Quest Journal
-        const questJournalBtn = document.getElementById('quest-journal-toggle');
+                const questJournalBtn = document.getElementById('quest-journal-toggle');
         if (questJournalBtn) {
             questJournalBtn.addEventListener('click', () => {
                 playSound('click');
@@ -220,20 +210,17 @@ ob_start();
         }
         console.log('Quest Journal initialized');
         
-        // Initialize Shop
-        initShop();
+                initShop();
         console.log('Shop initialized');
         
-        // Add sound to inventory toggle button
-        const inventoryToggle = document.getElementById('inventory-toggle');
+                const inventoryToggle = document.getElementById('inventory-toggle');
         if (inventoryToggle) {
             inventoryToggle.addEventListener('click', () => {
                 playSound('click');
             });
         }
         
-        // Add back button handler
-        const backButton = document.getElementById('back-to-parent-map');
+                const backButton = document.getElementById('back-to-parent-map');
         if (backButton) {
             backButton.addEventListener('click', async () => {
                 playSound('click');
@@ -241,8 +228,7 @@ ob_start();
             });
         }
         
-        // User menu dropdown
-        const userMenuButton = document.getElementById('user-menu-button');
+                const userMenuButton = document.getElementById('user-menu-button');
         const userDropdown = document.getElementById('user-dropdown');
         if (userMenuButton && userDropdown) {
             userMenuButton.addEventListener('click', (e) => {
@@ -251,8 +237,7 @@ ob_start();
                 userDropdown.classList.toggle('hidden');
             });
             
-            // Close dropdown when clicking outside
-            document.addEventListener('click', (e) => {
+                        document.addEventListener('click', (e) => {
                 if (!userMenuButton.contains(e.target) && !userDropdown.contains(e.target)) {
                     userDropdown.classList.add('hidden');
                 }
@@ -261,8 +246,7 @@ ob_start();
         
         
         
-        // Load Game Button
-        const loadSaveBtn = document.getElementById('load-save-button');
+                const loadSaveBtn = document.getElementById('load-save-button');
         if (loadSaveBtn) {
             loadSaveBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -272,8 +256,7 @@ ob_start();
             });
         }
         
-        // Settings modal
-        const settingsButton = document.getElementById('settings-button');
+                const settingsButton = document.getElementById('settings-button');
         const settingsModal = document.getElementById('settings-modal');
         const settingsCloseBtn = document.getElementById('settings-close-btn');
         const settingsSaveBtn = document.getElementById('settings-save-btn');
@@ -284,8 +267,7 @@ ob_start();
                 userDropdown.classList.add('hidden');
                 settingsModal.classList.remove('hidden');
                 
-                // Load current volumes
-                const { getVolumes } = await import('/js/modules/soundManager.js');
+                                const { getVolumes } = await import('/js/modules/soundManager.js');
                 const volumes = getVolumes();
                 document.getElementById('master-volume').value = Math.round(volumes.master * 100);
                 document.getElementById('music-volume').value = Math.round(volumes.music * 100);
@@ -301,8 +283,7 @@ ob_start();
             });
         }
         
-        // Volume sliders
-        const masterVolumeSlider = document.getElementById('master-volume');
+                const masterVolumeSlider = document.getElementById('master-volume');
         const musicVolumeSlider = document.getElementById('music-volume');
         const sfxVolumeSlider = document.getElementById('sfx-volume');
         
@@ -322,8 +303,7 @@ ob_start();
             sfxVolumeSlider.addEventListener('input', updateVolumeDisplays);
         }
         
-        // Save settings
-        if (settingsSaveBtn) {
+                if (settingsSaveBtn) {
             settingsSaveBtn.addEventListener('click', async () => {
                 playSound('click');
                 
@@ -334,22 +314,19 @@ ob_start();
                 
                 settingsModal.classList.add('hidden');
                 
-                // Show toast
-                const { showToast } = await import('/js/modules/toast.js');
+                                const { showToast } = await import('/js/modules/toast.js');
                 showToast('Paramètres sauvegardés !', 'success');
             });
         }
 
-        // Save and Action Handler
-        async function handleSaveAndAction(actionUrl) {
+                async function handleSaveAndAction(actionUrl) {
             const { showToast } = await import('/js/modules/toast.js');
             const { playSound } = await import('/js/modules/soundManager.js');
             
             playSound('click');
             showToast('Sauvegarde en cours...', 'info');
             
-            // Real Save Call
-            try {
+                        try {
                 const formData = new FormData();
                 formData.append('name', 'AutoSave ' + new Date().toLocaleString());
                 
@@ -374,19 +351,16 @@ ob_start();
             }, 800);
         }
 
-        // Manual Save Button (Opens Modal)
-        const manualSaveBtn = document.getElementById('manual-save-button');
+                const manualSaveBtn = document.getElementById('manual-save-button');
         if (manualSaveBtn) {
             manualSaveBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 playSound('click');
-                userDropdown.classList.add('hidden'); // Close dropdown
-                SaveSystem.open('save');
+                userDropdown.classList.add('hidden');                 SaveSystem.open('save');
             });
         }
 
-        // Return to Menu
-        const returnMenuBtn = document.getElementById('return-menu-button');
+                const returnMenuBtn = document.getElementById('return-menu-button');
         if (returnMenuBtn) {
             returnMenuBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -394,8 +368,7 @@ ob_start();
             });
         }
 
-        // Logout
-        const logoutBtn = document.getElementById('logout-button');
+                const logoutBtn = document.getElementById('logout-button');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -403,54 +376,32 @@ ob_start();
             });
         }
         
-        // Global SFX Handler
-        document.addEventListener('click', (e) => {
-            // Check if element or parent is clickable
-            // We exclude elements that might already have specific handlers if needed, 
-            // but playing 'click' generally is safe.
-            // Specific targets: buttons, links, inventory slots, quest items, map markers
-            const target = e.target.closest('button, a, .slot, .quest-item, .leaflet-interactive');
+                document.addEventListener('click', (e) => {
+                                                            const target = e.target.closest('button, a, .slot, .quest-item, .leaflet-interactive');
             
             if (target) {
-                // Avoid double playing if the element has a specific listener that also plays sound
-                // But since we are adding this globally, it's a catch-all.
-                // To prevent double sounds, we could check a data attribute or class, 
-                // but for now we'll assume the specific handlers might be removed or coexist.
-                // Actually, many specific handlers already play 'click'. 
-                // To avoid double sounds, we should probably remove the specific 'playSound' calls 
-                // or make this handler smart. 
-                // Given the instruction "tu regardes tout les boutons... et tu fais joué le SFX dessus",
-                // a global handler is best, but we should be careful about duplication.
-                
-                // For now, let's play it. If it's too much, we can refine.
-                // Note: Leaflet markers might stop propagation, so we might need to attach to map events instead for them.
-                // But .leaflet-interactive usually bubbles click if not stopped.
-                
+                                                                                                                                                                
+                                                                
                 playSound('click');
             }
         });
 
-        // Initialize map
-        try {
+                try {
             const map = await initMap();
             console.log('Map initialized:', map);
             
-            // Load map points dynamically for main map (ID = 1)
-            await loadMapPoints(1, window.characterId);
+                        await loadMapPoints(1, window.characterId);
             console.log('Map points loaded');
             
-            // Initialize currentMapData for the main map (important for navigation)
-            const { loadMap, getCurrentMapId } = await import('/js/modules/map.js');
-            // Set initial map data without adding to history
-            window.currentMapData = {
+                        const { loadMap, getCurrentMapId } = await import('/js/modules/map.js');
+                        window.currentMapData = {
                 mapId: 1,
                 configUrl: '/assets/map/main/map_config.json',
                 tilesPath: '/assets/map/main',
                 mapName: 'Carte Principale'
             };
             
-            // Make sure back button is hidden on main map
-            const backButton = document.getElementById('back-to-parent-map');
+                        const backButton = document.getElementById('back-to-parent-map');
             if (backButton) {
                 backButton.classList.add('hidden');
             }

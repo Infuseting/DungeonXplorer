@@ -176,8 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
             maxBoundsViscosity: 1.0
         });
 
-        // Determine tile path from config path
-        const basePath = selectedMapConfig.substring(0, selectedMapConfig.lastIndexOf('/'));
+                const basePath = selectedMapConfig.substring(0, selectedMapConfig.lastIndexOf('/'));
         L.tileLayer(basePath + '/{z}/{x}/{y}.png', {
             tileSize: tileSize,
             minZoom: maxZoom - 3,
@@ -194,25 +193,21 @@ document.addEventListener('DOMContentLoaded', () => {
         adminMap.setMaxBounds(bounds);
         adminMap.fitBounds(bounds);
 
-        // Click to place marker
-        adminMap.on('click', function(e) {
+                adminMap.on('click', function(e) {
             const lat = e.latlng.lat;
             const lng = e.latlng.lng;
             
-            // Update form inputs
-            document.getElementById('input-x').value = lng.toFixed(8);
+                        document.getElementById('input-x').value = lng.toFixed(8);
             document.getElementById('input-y').value = lat.toFixed(8);
             
-            // Remove previous temp marker
-            if (tempMarker) {
+                        if (tempMarker) {
                 adminMap.removeLayer(tempMarker);
             }
             if (radiusCircle) {
                 adminMap.removeLayer(radiusCircle);
             }
             
-            // Add new temp marker
-            tempMarker = L.circleMarker(e.latlng, {
+                        tempMarker = L.circleMarker(e.latlng, {
                 radius: 8,
                 fillColor: '#6366f1',
                 color: '#4f46e5',
@@ -221,12 +216,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 fillOpacity: 0.6
             }).addTo(adminMap);
             
-            // Add radius circle
-            updateRadiusCircle(e.latlng);
+                        updateRadiusCircle(e.latlng);
         });
 
-        // Load existing points
-        <?php if (!empty($mapPoints)): ?>
+                <?php if (!empty($mapPoints)): ?>
             <?php foreach ($mapPoints as $point): ?>
                 const marker<?= $point['id'] ?> = L.circleMarker([<?= $point['y'] ?>, <?= $point['x'] ?>], {
                     radius: 6,
@@ -250,7 +243,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Update radius circle when radius input changes
 document.getElementById('input-radius').addEventListener('input', function() {
     if (tempMarker) {
         const lat = parseFloat(document.getElementById('input-y').value);
@@ -266,9 +258,7 @@ function updateRadiusCircle(latlng) {
         adminMap.removeLayer(radiusCircle);
     }
     
-    // Convert pixel radius to map units (approximate)
-    const mapRadius = radius / 10; // Adjust this factor based on your map scale
-    
+        const mapRadius = radius / 10;     
     radiusCircle = L.circle(latlng, {
         radius: mapRadius,
         color: '#6366f1',

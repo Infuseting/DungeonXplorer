@@ -16,8 +16,7 @@ class CharacterAppearanceController
             exit;
         }
 
-        // Mode preview : personnage temporaire en session
-        if ($characterId === 'preview') {
+                if ($characterId === 'preview') {
             if (!isset($_SESSION['temp_character'])) {
                 header('Location: /personnage/create');
                 exit;
@@ -27,8 +26,7 @@ class CharacterAppearanceController
             $character['id'] = 'preview';
             $isPreview = true;
         } 
-        // Mode édition : personnage existant en BDD
-        else {
+                else {
             $characterModel = new Character();
             $character = $characterModel->findById($characterId);
             
@@ -46,16 +44,14 @@ class CharacterAppearanceController
             $isPreview = false;
         }
         
-        // Vérifier que $character['class'] existe
-        if (!isset($character['class']) || !is_array($character['class'])) {
+                if (!isset($character['class']) || !is_array($character['class'])) {
             error_log("Error: character class not found or invalid");
             error_log("Character data: " . print_r($character, true));
             header('Location: /personnage/create?error=invalid_class');
             exit;
         }
         
-        // Charger les options d'apparence disponibles pour cette classe
-        $className = strtolower($character['class']['name']);
+                $className = strtolower($character['class']['name']);
         $appearanceOptions = $this->getAppearanceOptions($className);
         
         require __DIR__ . '/../Views/character/appearance.php';
@@ -76,32 +72,16 @@ class CharacterAppearanceController
             exit;
         }
         
-        // Convert object to array for renderCharacter
-        $characterData = $character->toArray();
+                $characterData = $character->toArray();
         
-        // Add User ID manually if needed or just ensure structure matches
-        $characterData['user_id'] = $character->getUserId();
+                $characterData['user_id'] = $character->getUserId();
 
-        // Récupérer la classe complète
-        $classModel = new CharacterClass();
-        $characterData['class'] = $classModel->findById($characterData['class']['name'] ?? 'Warrior'); // Wait, toArray has class name?
-        // Actually toArray returns ['class' => ['name' => ...]]
-        // But we need the ID to fetch full class?
-        // findById on Character loaded classId.
-        // We can just use the class info present in character object if available, OR fetch again.
-        // Character object has classId.
-        // Let's add getClassId to Character model or use internal property if public (it's private).
-        // Let's assume we can fetch by class Name or similar, OR add getClassId method.
-        // For now, simpler: Character::findById query ALREADY joined classes and got `class_name`.
-        // `renderCharacter` uses `$character['class']['name']` OR `$character['class_name']`.
-        // `toArray` returns `class_name` and `class` nested. this should be enough for name.
-        
-        // Récupérer les stats
-        $statsModel = new CharacterStats();
+                $classModel = new CharacterClass();
+        $characterData['class'] = $classModel->findById($characterData['class']['name'] ?? 'Warrior');                                                                                         
+                $statsModel = new CharacterStats();
         $characterData['stats'] = $statsModel->findByCharacterId($characterId);
         
-        // Rendre le personnage
-        echo renderCharacter($characterData, [
+                echo renderCharacter($characterData, [
             'size' => 'full',
             'showFilter' => true,
             'id' => 'character-' . $characterData['id'],
@@ -117,8 +97,7 @@ class CharacterAppearanceController
             'makeup' => []
         ];
         
-        // Scanner le dossier eyes
-        $eyesPath = $basePath . '/eyes';
+                $eyesPath = $basePath . '/eyes';
         if (is_dir($eyesPath)) {
             $eyeFiles = glob($eyesPath . '/eyes_*.png');
             if ($eyeFiles) {
@@ -130,8 +109,7 @@ class CharacterAppearanceController
             }
         }
         
-        // Scanner le dossier makeup
-        $makeupPath = $basePath . '/makeup';
+                $makeupPath = $basePath . '/makeup';
         if (is_dir($makeupPath)) {
             $makeupFiles = glob($makeupPath . '/*.png');
             if ($makeupFiles) {
@@ -158,12 +136,10 @@ class CharacterAppearanceController
             exit;
         }
         
-        // Récupérer les maquillages cochés
-        $selectedMakeups = $_POST['makeup'] ?? [];
+                $selectedMakeups = $_POST['makeup'] ?? [];
         $makeupData = [];
         
-        // Convertir le tableau en format associatif
-        foreach ($selectedMakeups as $makeupFile) {
+                foreach ($selectedMakeups as $makeupFile) {
             $makeupData[$makeupFile] = true;
         }
         
@@ -182,22 +158,18 @@ class CharacterAppearanceController
             'makeup' => $makeupData
         ];
         
-        // Mode preview : save appearance to session and redirect to difficulty
-        if ($characterId === 'preview') {
+                if ($characterId === 'preview') {
             if (!isset($_SESSION['temp_character'])) {
                 header('Location: /personnage/create');
                 exit;
             }
 
-            // Update session with appearance data
-            $_SESSION['temp_character']['appearance'] = $appearance;
+                        $_SESSION['temp_character']['appearance'] = $appearance;
 
-            // Redirect to Difficulty Selection
-            header('Location: /personnage/difficulty');
+                        header('Location: /personnage/difficulty');
             exit;
         }
-        // Mode édition : mettre à jour un personnage existant
-        else {
+                else {
             $characterModel = new Character();
             $character = $characterModel->findById($characterId);
             

@@ -527,7 +527,6 @@ function getObjectiveIcon($type) {
 <script>
 const questId = <?= $quest['id'] ?>;
 
-// Tab switching
 function switchTab(tabName) {
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
@@ -536,7 +535,6 @@ function switchTab(tabName) {
     document.getElementById('tab-' + tabName).classList.add('active');
 }
 
-// Stage Management
 function addStage() {
     document.getElementById('stage-modal-title').textContent = 'Ajouter une Étape';
     document.getElementById('stage-form').reset();
@@ -545,8 +543,7 @@ function addStage() {
 }
 
 function editStage(stageId) {
-    // TODO: Load stage data and populate form
-    document.getElementById('stage-modal-title').textContent = 'Éditer l\'Étape';
+        document.getElementById('stage-modal-title').textContent = 'Éditer l\'Étape';
     document.getElementById('stage-id').value = stageId;
     document.getElementById('stage-modal').classList.add('active');
 }
@@ -599,7 +596,6 @@ async function deleteStage(stageId) {
     }
 }
 
-// Objective Management
 function addObjective(stageId) {
     document.getElementById('objective-modal-title').textContent = 'Ajouter un Objectif';
     document.getElementById('objective-form').reset();
@@ -609,8 +605,7 @@ function addObjective(stageId) {
 }
 
 function editObjective(objectiveId) {
-    // Find objective data from the page
-    const objectives = <?= json_encode($objectives ?? []) ?>;
+        const objectives = <?= json_encode($objectives ?? []) ?>;
     const objective = objectives.find(o => o.id == objectiveId);
     
     if (!objective) {
@@ -618,31 +613,26 @@ function editObjective(objectiveId) {
         return;
     }
     
-    // Populate form fields
-    document.getElementById('objective-modal-title').textContent = 'Éditer l\'Objectif';
+        document.getElementById('objective-modal-title').textContent = 'Éditer l\'Objectif';
     document.getElementById('objective-id').value = objectiveId;
     document.getElementById('objective-stage-id').value = objective.stage_id;
     document.getElementById('objective-type').value = objective.type;
     document.getElementById('objective-description').value = objective.description;
     document.getElementById('objective-count').value = objective.count_required;
     
-    // Handle type-specific fields
-    const npcGroup = document.getElementById('objective-npc-group');
+        const npcGroup = document.getElementById('objective-npc-group');
     const dialogueGroup = document.getElementById('objective-dialogue-group');
     const targetGroup = document.getElementById('objective-target-group');
     
     if (objective.type === 'TALK_NPC') {
-        // Show NPC and dialogue fields
-        npcGroup.style.display = 'block';
+                npcGroup.style.display = 'block';
         dialogueGroup.style.display = 'block';
         targetGroup.style.display = 'none';
         
-        // Populate NPC and dialogue
-        document.getElementById('objective-npc').value = objective.target_id || '';
+                document.getElementById('objective-npc').value = objective.target_id || '';
         document.getElementById('objective-dialogue').value = objective.dialogue_tree_id || '';
     } else {
-        // Show generic target field
-        npcGroup.style.display = 'none';
+                npcGroup.style.display = 'none';
         dialogueGroup.style.display = 'none';
         targetGroup.style.display = 'block';
         
@@ -655,8 +645,7 @@ function editObjective(objectiveId) {
 function closeObjectiveModal() {
     document.getElementById('objective-modal').classList.remove('active');
     
-    // Reset form fields
-    document.getElementById('objective-id').value = '';
+        document.getElementById('objective-id').value = '';
     document.getElementById('objective-type').value = 'KILL';
     document.getElementById('objective-description').value = '';
     document.getElementById('objective-count').value = '1';
@@ -664,8 +653,7 @@ function closeObjectiveModal() {
     document.getElementById('objective-npc').value = '';
     document.getElementById('objective-dialogue').value = '';
     
-    // Reset visibility
-    document.getElementById('objective-npc-group').style.display = 'none';
+        document.getElementById('objective-npc-group').style.display = 'none';
     document.getElementById('objective-dialogue-group').style.display = 'none';
     document.getElementById('objective-target-group').style.display = 'block';
 }
@@ -676,8 +664,7 @@ document.getElementById('objective-form').addEventListener('submit', async (e) =
     const objectiveId = document.getElementById('objective-id').value;
     const objectiveType = document.getElementById('objective-type').value;
     
-    // For TALK_NPC, use NPC dropdown value as target_id
-    let targetId = null;
+        let targetId = null;
     if (objectiveType === 'TALK_NPC') {
         targetId = document.getElementById('objective-npc').value || null;
     } else {
@@ -711,7 +698,6 @@ document.getElementById('objective-form').addEventListener('submit', async (e) =
     }
 });
 
-// Show/hide fields based on objective type
 document.getElementById('objective-type').addEventListener('change', function() {
     const type = this.value;
     const npcGroup = document.getElementById('objective-npc-group');
@@ -744,7 +730,6 @@ async function deleteObjective(objectiveId) {
     }
 }
 
-// Prerequisites
 async function addPrerequisite() {
     const select = document.getElementById('prerequisite-select');
     const requiredQuestId = select.value;
@@ -789,7 +774,6 @@ async function removePrerequisite(requiredQuestId) {
     }
 }
 
-// Map Unlocks
 async function addMapUnlock(stageId) {
     const select = document.getElementById('unlock-select-' + stageId);
     const mapPointId = select.value;

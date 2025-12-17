@@ -16,8 +16,7 @@ class AuthController
 
     public function register()
     {
-        // If already logged in, redirect
-        if ($this->checkAuth()) {
+                if ($this->checkAuth()) {
             header('Location: /personnage');
             exit;
         }
@@ -26,8 +25,7 @@ class AuthController
 
     public function login()
     {
-        // If already logged in, redirect
-        if ($this->checkAuth()) {
+                if ($this->checkAuth()) {
             header('Location: /personnage');
             exit;
         }
@@ -72,18 +70,14 @@ class AuthController
 
         if ($user && $userModel->verifyPassword($password, $user['password'])) {
             
-            // Generate Tokens
-            $accessToken = $this->tokenService->generateAccessToken($user['id']);
+                        $accessToken = $this->tokenService->generateAccessToken($user['id']);
             $refreshToken = $this->tokenService->generateRefreshToken();
             
-            // Store Refresh Token (hashed)
-            $selector = bin2hex(random_bytes(12));
-            $expiresAt = date('Y-m-d H:i:s', time() + 86400 * 30); // 30 days
-            
+                        $selector = bin2hex(random_bytes(12));
+            $expiresAt = date('Y-m-d H:i:s', time() + 86400 * 30);             
             $userModel->createRememberToken($user['id'], $selector, $refreshToken, $expiresAt);
 
-            // Set Cookies
-            setcookie('access_token', $accessToken, [
+                        setcookie('access_token', $accessToken, [
                 'expires' => time() + 900,
                 'path' => '/',
                 'secure' => false,
@@ -112,8 +106,7 @@ class AuthController
 
     public function logout()
     {
-        // Remove Refresh Token from DB
-        if (isset($_COOKIE['refresh_token'])) {
+                if (isset($_COOKIE['refresh_token'])) {
             $parts = explode(':', $_COOKIE['refresh_token']);
             if (count($parts) === 2) {
                 $userModel = new User();
@@ -121,12 +114,10 @@ class AuthController
             }
         }
 
-        // Clear Cookies
-        setcookie('access_token', '', time() - 3600, '/');
+                setcookie('access_token', '', time() - 3600, '/');
         setcookie('refresh_token', '', time() - 3600, '/');
         
-        // Destroy Session
-        session_destroy();
+                session_destroy();
 
         header('Location: /login');
         exit;
@@ -162,8 +153,7 @@ class AuthController
 
         if ($reset) {
             if ($userModel->updatePassword($user['id'], $newPassword)) {
-                // Invalidate the code
-                $resetModel->deleteUserCodes($user['id']);
+                                $resetModel->deleteUserCodes($user['id']);
                 header('Location: /login?success=password_reset');
                 exit;
             }
@@ -175,15 +165,13 @@ class AuthController
 
     private function checkAuth()
     {
-        // Check Access Token validity
-        if (isset($_COOKIE['access_token'])) {
+                if (isset($_COOKIE['access_token'])) {
             if ($this->tokenService->validateToken($_COOKIE['access_token'])) {
                 return true;
             }
         }
 
-        // Check Refresh Token existence
-        if (isset($_COOKIE['refresh_token'])) {
+                if (isset($_COOKIE['refresh_token'])) {
              $parts = explode(':', $_COOKIE['refresh_token']);
              if (count($parts) === 2) {
                  return true;

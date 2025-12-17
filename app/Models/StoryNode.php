@@ -166,9 +166,7 @@ class StoryNode
      */
     public function getReturnConnections($nodeId)
     {
-        // We want to find connections that point TO this node, where allow_return is true.
-        // The "target" of the return is the FROM node of the original connection.
-        $stmt = $this->db->prepare(
+                        $stmt = $this->db->prepare(
             "SELECT c.*, n.name as to_node_name, 1 as is_return
              FROM story_node_connections c
              JOIN story_nodes n ON c.from_node_id = n.id
@@ -179,13 +177,10 @@ class StoryNode
         $result = $stmt->get_result();
         $connections = $result->fetch_all(MYSQLI_ASSOC);
         
-        // Fix the IDs for the frontend: 
-        // For a return connection, the "destination" (to_node_id) from the player's perspective is the from_node_id of the connection
-        foreach ($connections as &$conn) {
+                        foreach ($connections as &$conn) {
             $conn['to_node_id'] = $conn['from_node_id'];
             
-            // Use return_text if available, otherwise fallback
-            $displayText = !empty($conn['return_text']) ? $conn['return_text'] : ("Retour : " . ($conn['action_text'] ?: $conn['to_node_name']));
+                        $displayText = !empty($conn['return_text']) ? $conn['return_text'] : ("Retour : " . ($conn['action_text'] ?: $conn['to_node_name']));
             
             $conn['action_text'] = $displayText;
             $conn['direction_text'] = $displayText;
@@ -230,8 +225,7 @@ class StoryNode
         $result = $stmt->get_result();
         $monsters = $result->fetch_all(MYSQLI_ASSOC);
         
-        // Decode JSON stats
-        foreach ($monsters as &$monster) {
+                foreach ($monsters as &$monster) {
             if ($monster['monster_stats']) {
                 $monster['monster_stats'] = json_decode($monster['monster_stats'], true);
             }
@@ -302,8 +296,7 @@ class StoryNode
         return $result->fetch_assoc();
     }
 
-    // --- Entity Management Methods ---
-
+    
     /**
      * Add a monster to a node
      */
@@ -317,8 +310,7 @@ class StoryNode
         $statsJson = json_encode($monsterData['stats'] ?? []);
         $quantity = $monsterData['quantity'] ?? 1;
         $isBoss = $monsterData['is_boss'] ?? 0;
-        $canFlee = isset($monsterData['can_flee']) ? $monsterData['can_flee'] : 1; // Default to true (1)
-        
+        $canFlee = isset($monsterData['can_flee']) ? $monsterData['can_flee'] : 1;         
         $stmt->bind_param(
             "isssiii", 
             $nodeId, 

@@ -135,8 +135,7 @@ class AdminClassController
             exit;
         }
         $class = $this->classModel->findById($skill['class_id']);
-        $classSkills = $this->skillModel->getSkillsByClass($skill['class_id']); // For parent selection
-        
+        $classSkills = $this->skillModel->getSkillsByClass($skill['class_id']);         
         require __DIR__ . '/../Views/admin/classes/skills/form.php';
     }
 
@@ -155,8 +154,7 @@ class AdminClassController
             'parent_skill_id' => !empty($_POST['parent_skill_id']) ? $_POST['parent_skill_id'] : null
         ];
 
-        $skill = $this->skillModel->findById($skillId); // To get class_id for redirect
-
+        $skill = $this->skillModel->findById($skillId); 
         if ($this->skillModel->update($skillId, $data)) {
             header('Location: /admin/classes/edit/' . $skill['class_id'] . '?success=skill_updated');
         } else {

@@ -92,26 +92,21 @@ class NPC
      */
     public function generateMerchantInventory($seed)
     {
-        // Initialize random generator with SEED
-        mt_srand($seed);
+                mt_srand($seed);
         
-        // Get all items with price
-        $result = $this->db->query("SELECT * FROM items WHERE price IS NOT NULL AND price > 0");
+                $result = $this->db->query("SELECT * FROM items WHERE price IS NOT NULL AND price > 0");
         $availableItems = $result->fetch_all(MYSQLI_ASSOC);
         
         if (empty($availableItems)) {
             return [];
         }
         
-        // Random count between 10 and 20
-        $count = mt_rand(10, min(20, count($availableItems)));
+                $count = mt_rand(10, min(20, count($availableItems)));
         
-        // Shuffle and select items
-        shuffle($availableItems);
+                shuffle($availableItems);
         $selectedItems = array_slice($availableItems, 0, $count);
         
-        // Reset random generator
-        mt_srand();
+                mt_srand();
         
         return $selectedItems;
     }
@@ -138,13 +133,11 @@ class NPC
      */
     public function saveMerchantInventory($npcId, $items)
     {
-        // Clear existing inventory
-        $stmt = $this->db->prepare("DELETE FROM npc_merchant_inventory WHERE npc_id = ?");
+                $stmt = $this->db->prepare("DELETE FROM npc_merchant_inventory WHERE npc_id = ?");
         $stmt->bind_param("i", $npcId);
         $stmt->execute();
         
-        // Insert new inventory
-        $stmt = $this->db->prepare("
+                $stmt = $this->db->prepare("
             INSERT INTO npc_merchant_inventory (npc_id, item_id, quantity)
             VALUES (?, ?, ?)
         ");
@@ -168,8 +161,7 @@ class NPC
         
         if ($characterId) {
             $repService = new ReputationService();
-            // Get NPC Faction
-            $npc = $this->findById($npcId);
+                        $npc = $this->findById($npcId);
             $factionId = $npc['faction_id'] ?? null;
             
             if ($factionId) {
@@ -178,29 +170,19 @@ class NPC
             }
         }
 
-        // Apply Difficulty Modifier
-        if (isset($_SESSION['current_difficulty'])) {
+                if (isset($_SESSION['current_difficulty'])) {
              $diffService = new DifficultyService();
              $diffMod = $diffService->getPriceModifier($_SESSION['current_difficulty']);
              $modifier *= $diffMod;
         }
 
-        $npc = $this->findById($npcId); // Fetch again or optimize. For now optimize later.
-        if (!$npc) return 0;
+        $npc = $this->findById($npcId);         if (!$npc) return 0;
 
-        // Base behavior: 
-        // If merchant sells his own stock -> Base Price * Modifier
-        // If rebuying what player sold (buy back) -> we might handle it differently, but for now standard price.
-        
-        // Wait, standard buying price from merchant is Item Value (or marked up).
-        // Let's say Item Value * 1.0 (Standard) * Modifier.
-        
+                                
+                        
         $finalPrice = ceil($basePrice * $modifier);
         
-        // Ensure constraints relative to SELL price
-        // If player sells this item, how much do they get?
-        // We need to ensure BuyPrice > SellPrice * 1.01
-        if ($characterId) {
+                                if ($characterId) {
             $sellPrice = $this->calculateSellPrice($npcId, $itemId, $basePrice, $characterId);
             if ($finalPrice <= $sellPrice) {
                 $finalPrice = ceil($sellPrice * 1.01);
@@ -218,10 +200,7 @@ class NPC
         $npc = $this->findById($npcId);
         if (!$npc) return 0;
 
-        // Base rate based on config
-        // "buy_rate_own" is when merchant buys back their own stuff? Or is it generic?
-        // Let's assume 'buy_rate_other' is the standard "Merchant buying from Player" rate (e.g. 0.15).
-        $baseRate = $npc['buy_rate_other'];
+                                $baseRate = $npc['buy_rate_other'];
         
         $modifier = 1.0;
         if ($characterId) {
@@ -230,14 +209,12 @@ class NPC
             
             if ($factionId) {
                 $repValue = $repService->getReputation($characterId, $factionId);
-                // Validated: This modifier increases the sell price (e.g. 1.5x)
-                $modifier = $repService->getSellPriceModifier($repValue);
+                                $modifier = $repService->getSellPriceModifier($repValue);
             }
         }
 
         $price = floor($basePrice * $baseRate * $modifier);
-        return max(1, $price); // Minimum 1 gold
-    }
+        return max(1, $price);     }
     
     /**
      * Get dialogue trees assigned to NPC

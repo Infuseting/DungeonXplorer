@@ -126,8 +126,7 @@ class Quest
             $result = $stmt->get_result();
             $stage['objectives'] = $result->fetch_all(MYSQLI_ASSOC);
         }
-        unset($stage); // Important: destroy the reference to avoid issues
-        
+        unset($stage);         
         $quest['stages'] = $stages;
         $quest['reward_items'] = $this->getRewardItems($questId);
         

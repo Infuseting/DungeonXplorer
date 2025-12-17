@@ -78,17 +78,13 @@ class Combat
                     
                     $message = $this->joueur->getName() . " uses " . $skill['name'] . "!\n";
                     
-                    // Logic based on effect_type
-                    // Supported: damage_phys_percent, damage_mag_percent, buff_str_flat, heal, passive_*
-                    
+                                                            
                     if (strpos($skill['effect_type'], 'damage_') !== false) {
-                         // Damage Logic
-                         $isPhys = strpos($skill['effect_type'], '_phys') !== false;
+                                                  $isPhys = strpos($skill['effect_type'], '_phys') !== false;
                          $multiplier = ($skill['effect_value'] / 100);
                          
                          if ($isPhys) {
-                             // Physical: Check Hit
-                             $hitRoll = $this->dice() + ($this->joueur->getDexterity() / 2);
+                                                          $hitRoll = $this->dice() + ($this->joueur->getDexterity() / 2);
                              $defenseScore = 10 + ($this->boss->getDexterity() / 2);
                              if ($hitRoll >= $defenseScore) {
                                  $bool = true;
@@ -102,24 +98,13 @@ class Combat
                                  $message .= "It missed!\n";
                              }
                          } else {
-                             // Magic: Auto Hit (usually, or vs Int)
-                             $bool = true; // Visual effect
-                             // Base Magic Dmg? Using Int?
-                             // Let's us Int + Level as base?
-                             // Or just Weapon Dmg * Multiplier (Magic weapons)?
-                             // Using Int for now: Int * 0.5 + Level
-                             $baseDmg = ($this->joueur->getIntelligence()) + 2; 
+                                                          $bool = true;                                                                                                                                                  $baseDmg = ($this->joueur->getIntelligence()) + 2; 
                              $dmg = max(1, floor($baseDmg * $multiplier));
-                             // Magic might ignore Armor? Or use Magic Def?
-                             // Assuming ignores Armor for now.
-                             $this->boss->reduceVitality($dmg);
+                                                                                       $this->boss->reduceVitality($dmg);
                              $message .= "Magic blast hits for $dmg damage!\n";
                          }
                     } elseif (strpos($skill['effect_type'], 'buff_') !== false) {
-                        // Buff Logic
-                        // e.g. buff_str_flat
-                        $parts = explode('_', $skill['effect_type']); // buff, str, flat
-                        $stat = $parts[1];
+                                                                        $parts = explode('_', $skill['effect_type']);                         $stat = $parts[1];
                         $val = (int)$skill['effect_value'];
                         
                         if ($stat === 'str') {
@@ -130,68 +115,40 @@ class Combat
                             $message .= "Dexterity increased by $val!\n";
                         }
                     } elseif ($skill['effect_type'] === 'heal') {
-                        // Heal Logic
-                        $healAmount = (int)$skill['effect_value'];
-                        // Use Character model heal method (updates DB)
-                        $this->joueur->heal($this->joueur->getId(), $healAmount);
-                        // Visual update in message. 
-                        // Note: local object 'currentHp' might not update automatically if 'heal' only touches DB.
-                        // Ideally we update local property too, but it's private.
-                        // BUT interfaceCombat.php fetches HP from DB/Session or response?
-                        // response uses $combat->getPlayerHp().
-                        // We need $combat->joueur to reflect new HP.
-                        // I'll add setHp to Character? Or just rely on DB fetch in UI?
-                        // CombatController sends 'playerHp' => $combat->getPlayerHp().
-                        // Combat::getPlayerHp() calls $this->joueur->getCurrentHp? Or getVitality?
-                        // I need to check getPlayerHp logic.
-                        $message .= "Healed for $healAmount HP!\n";
+                                                $healAmount = (int)$skill['effect_value'];
+                                                $this->joueur->heal($this->joueur->getId(), $healAmount);
+                                                                                                                                                                                                                                                                        $message .= "Healed for $healAmount HP!\n";
                     }
                     break;
 
                 case 'attack':
-                    // Hit Chance: Player Dex vs Monster Dex
-                    $hitRoll = $this->dice() + ($this->joueur->getDexterity() / 2);
-                    $defenseScore = 10 + ($this->boss->getDexterity() / 2); // Base AC 10 + Dex Mod
-                    
+                                        $hitRoll = $this->dice() + ($this->joueur->getDexterity() / 2);
+                    $defenseScore = 10 + ($this->boss->getDexterity() / 2);                     
                     if ($hitRoll >= $defenseScore) {
                         $bool = true;
                         
-                        // Damage: Player Str + Weapon Damage (included in getAttaqueClass or separate?)
-                        // getAttaqueClass currently seems to be Str + DamageStat? Let's check Character.php
-                        // Assuming getAttaqueClass returns total Attack Power (Str + Weapon)
-                        $rawDamage = $this->joueur->getAttaqueClass(); 
+                                                                                                $rawDamage = $this->joueur->getAttaqueClass(); 
                         
-                        // Defense: Monster Defense Stat
-                        $reduction = $this->boss->getDefense() / 2;
-                        $actualDamage = max(1, $rawDamage - $reduction); // Min 1 damage
+                                                $reduction = $this->boss->getDefense() / 2;
+                        $actualDamage = max(1, $rawDamage - $reduction);                         
+                                                                        $damageType = 'physical'; 
                         
-                        // --- Affinity / Weakness Check ---
-                        // Default damage type is 'physical' for now
-                        $damageType = 'physical'; 
-                        
-                        // Check modifiers
-                        $affinity = $this->boss->getAffinityModifier($damageType);
+                                                $affinity = $this->boss->getAffinityModifier($damageType);
                         if ($affinity) {
-                            $type = $affinity['type'] ?? 'percent'; // percent or flat
-                            $value = floatval($affinity['value'] ?? 0);
+                            $type = $affinity['type'] ?? 'percent';                             $value = floatval($affinity['value'] ?? 0);
                             
                             if ($type === 'percent') {
-                                // Value is % (e.g. -50 for 50% resistance, +50 for 50% weakness)
-                                $modifier = 1 + ($value / 100);
+                                                                $modifier = 1 + ($value / 100);
                                 $actualDamage *= $modifier;
                                 $message .= " (Weakness/Resist: {$value}%)";
                             } else {
-                                // Flat value
-                                $actualDamage += $value;
+                                                                $actualDamage += $value;
                                 $message .= " (Weakness/Resist: {$value} flat)";
                             }
                         }
                         
-                        // Check Creature Type Bonus? (Not implemented on player items yet)
-                        // ...
-                        
-                        $actualDamage = max(1, floor($actualDamage)); // Ensure integer >= 1
-                        
+                                                                        
+                        $actualDamage = max(1, floor($actualDamage));                         
                         $this->boss->reduceVitality($actualDamage);
                         $message = $this->joueur->getName() . " hits " . $this->boss->getName() . " for " . $actualDamage . " damage! (Roll: $hitRoll vs AC: $defenseScore - Reduct: $reduction)\n";
                     } else {
@@ -200,43 +157,17 @@ class Combat
                     break;
 
                 case 'defend':
-                    // Temp bonus to Defense (AC)
-                    // We can boost Dex or Defense stat temporarily?
-                    // Let's boost Armor Class used for Hit detection or Damage reduction?
-                    // User asked for "Defense (Reduction des dégâts)"
-                    // "Agilité (Chance de toucher, Esquive)"
-                    // So Defend should boost Reduction (Defense) or Evasion (Agility)?
-                    // "Defend" usually implies blocking/parrying -> Mitigation or Evasion.
-                    // Let's boost Evasion (Dex) + Defense for this turn.
-                    
-                    $_SESSION['temp_defense_bonus'] = $_SESSION['diceRoll']; // Use dice roll as bonus
-                    
+                                                                                                                                                                                    
+                    $_SESSION['temp_defense_bonus'] = $_SESSION['diceRoll'];                     
                     $message = $this->joueur->getName() . " takes a defensive stance!\n";
                     break;
                     
                 case 'usePotion':
-                    // Potion logic (restore HP)
-                    // Use max HP session var
-                    $restore = 20; // Default potion?
-                    $maxHp = $_SESSION['maxHpPlayer'];
-                    $current = $this->joueur->getVitality(); // Actually currentHp via getter
-                    $newHp = min($maxHp, $current + $restore);
+                                                            $restore = 20;                     $maxHp = $_SESSION['maxHpPlayer'];
+                    $current = $this->joueur->getVitality();                     $newHp = min($maxHp, $current + $restore);
                     
-                    // We need a setCurrentHp on Character? 
-                    // Character::heal() adds to current_hp.
-                    $this->joueur->heal($_SESSION['character_id'], $restore); // Use DB method
-                    
-                    // Sync local cache if possible or trust DB for next fetch?
-                    // Combat loop might keep object in memory.
-                    // We should probably update the local object too if methods allow.
-                    // Character::heal updates DB.
-                    // Character model currently uses 'vitality' property for max HP in getVitality()? 
-                    // No, getVitality returns the Stat.
-                    // Combat logic relies on getVitality() returning HP?
-                    // In Character.php check: getVitality() returns stat. 
-                    // This is a disconnect. 'isAlive' checks 'currentHp' or 'vitality'.
-                    // Fixing this: Combat should use 'getCurrentHp' and 'getMaxHp'.
-                    
+                                                            $this->joueur->heal($_SESSION['character_id'], $restore);                     
+                                                                                                                                                                                                                            
                     $message = $this->joueur->getName() . " drinks a potion (+20 HP)!\n";
                     break;
 
@@ -258,65 +189,46 @@ class Combat
             $bool = false;
             $message = "";
 
-            // Check if player is already dead before acting
-            if (!$this->joueur->isAlive()) {
+                        if (!$this->joueur->isAlive()) {
                  $message = $this->joueur->getName() . " is already down! " . $this->boss->getName() . " looms over...";
                  $this->endCombat();
                  return [$message, false];
             }
 
             if($this->boss->isAlive()) {
-                // Calculation
-                // Hit Chance: Monster Dex vs Player Dex
-                $hitRoll = $this->dice() + ($this->boss->getDexterity() / 2);
+                                                $hitRoll = $this->dice() + ($this->boss->getDexterity() / 2);
                 
-                // Player evasion
-                $playerDex = $this->joueur->getDexterity();
-                // Check if Defend action active? (Bonus to AC?)
-                 $bonusEvasion = 0;
-                 // If we had a dodge action...
-                
+                                $playerDex = $this->joueur->getDexterity();
+                                 $bonusEvasion = 0;
+                                 
                 $defenseScore = 10 + ($playerDex / 2) + $bonusEvasion;
                 
                 if($hitRoll >= $defenseScore) {
                     $bool = true;
                     
-                    // Damage: Monster Str/Attack
-                    $rawDamage = $this->boss->getAttaqueClass(); // Assuming this is Attack Power
-                    
-                    // Mitigation: Player Defense
-                    $playerDef = $this->joueur->getArmorClass(); // getArmorClass in Character uses Str/2 + Equipped Defense?
-                    // Let's stick to using stats directly if possible or the helper methods.
-                    // Character::getArmorClass() = Str/2 + EquippedDefense. 
-                    // This is effectively "Defense".
-                    
+                                        $rawDamage = $this->boss->getAttaqueClass();                     
+                                        $playerDef = $this->joueur->getArmorClass();                                                                                 
                     $reduction = $playerDef / 2;
                     
-                    // Defend Action Bonus?
-                    if (isset($_SESSION['temp_defense_bonus'])) {
+                                        if (isset($_SESSION['temp_defense_bonus'])) {
                         $reduction += $_SESSION['temp_defense_bonus'];
                         unset($_SESSION['temp_defense_bonus']);
                     }
 
                     $actualDamage = max(0, $rawDamage - $reduction);
 
-                    // Difficulty Modifier (Incoming Damage)
-                    if (isset($_SESSION['current_difficulty'])) {
+                                        if (isset($_SESSION['current_difficulty'])) {
                         $diffService = new DifficultyService(); 
-                        // Note: Unserializing service from session might be better if strictly needed, 
-                        // but instantiating new one is cheap here.
-                        $dmgMod = $diffService->getDamageModifier($_SESSION['current_difficulty']);
+                                                                        $dmgMod = $diffService->getDamageModifier($_SESSION['current_difficulty']);
                         $actualDamage = floor($actualDamage * $dmgMod);
-                        // Ensure at least 1 dmg if raw was high enough to penetrate armor
-                        if (($rawDamage - $reduction) > 0) $actualDamage = max(1, $actualDamage);
+                                                if (($rawDamage - $reduction) > 0) $actualDamage = max(1, $actualDamage);
                     }
                     
                     $this->joueur->reduceVitality($actualDamage);
                     $message = $this->boss->getName() . " hits " . $this->joueur->getName() . " for " . $actualDamage . " damage! (Roll: $hitRoll vs AC: $defenseScore)\n";
                 } else {
                     $message =  $this->boss->getName() . " misses " . $this->joueur->getName() . "! (Roll: $hitRoll vs AC: $defenseScore)\n";
-                    // If defend was active, clear it
-                    if (isset($_SESSION['temp_defense_bonus'])) unset($_SESSION['temp_defense_bonus']);
+                                        if (isset($_SESSION['temp_defense_bonus'])) unset($_SESSION['temp_defense_bonus']);
                 }
 
                 if(!$this->joueur->isAlive()) {

@@ -108,7 +108,6 @@ ob_start();
 </div>
 
 <script>
-// Search and filter
 let searchTimeout;
 
 document.getElementById('search-input').addEventListener('input', function() {

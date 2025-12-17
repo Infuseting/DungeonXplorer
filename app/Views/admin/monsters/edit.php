@@ -71,8 +71,7 @@ ob_start();
                         <?php 
                         $affinities = $monster['affinities_data'] ?? [];
                         foreach ($affinities as $element => $data): 
-                             // Simplify old numeric Structure if present, but we defined it as [type, value]
-                             $type = $data['type'] ?? 'percent';
+                                                          $type = $data['type'] ?? 'percent';
                              $value = $data['value'] ?? 0;
                         ?>
                         <div class="flex items-center gap-2 bg-gray-800/50 p-2 rounded border border-gray-700">

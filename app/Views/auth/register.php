@@ -25,8 +25,7 @@ ob_start();
     </div>
 
     <?php
-    // Display error messages
-    $errorMessages = [
+        $errorMessages = [
         'missing_fields' => 'Veuillez remplir tous les champs.',
         'email_exists' => 'Cette adresse email est déjà utilisée.',
         'email_already_exists' => 'Cette adresse email est déjà utilisée.',

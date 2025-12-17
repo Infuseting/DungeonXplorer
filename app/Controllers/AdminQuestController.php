@@ -107,12 +107,10 @@ class AdminQuestController
             exit;
         }
         
-        // Get NPCs for assignment
-        $npcModel = new NPC();
+                $npcModel = new NPC();
         $npcs = $npcModel->getAll();
         
-        // Get assigned NPCs
-        $stmt = $this->db->prepare("
+                $stmt = $this->db->prepare("
             SELECT n.*, nq.type 
             FROM npc_quests nq
             JOIN npcs n ON nq.npc_id = n.id
@@ -123,35 +121,28 @@ class AdminQuestController
         $result = $stmt->get_result();
         $assignedNPCs = $result->fetch_all(MYSQLI_ASSOC);
         
-        // Get map points for unlock selection
-        $mapPointModel = new MapPoint();
+                $mapPointModel = new MapPoint();
         $stmt = $this->db->prepare("SELECT id, name, map_id FROM map_points ORDER BY map_id, name");
         $stmt->execute();
         $allMapPoints = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-        // Load unlocks for each stage
-        $stageModel = new QuestStage();
+                $stageModel = new QuestStage();
         if (!empty($quest['stages'])) {
             foreach ($quest['stages'] as &$stage) {
                 $stage['unlocks'] = $stageModel->getMapUnlocks($stage['id']);
             }
-            unset($stage); // Important: destroy the reference to avoid issues
-        }
+            unset($stage);         }
 
-        // Load prerequisites
-        $prerequisites = $questModel->getPrerequisites($id);
+                $prerequisites = $questModel->getPrerequisites($id);
         $allQuests = $questModel->getAll();
         
-        // Load dialogue trees for objective assignment
-        $dialogueModel = new DialogueTree();
+                $dialogueModel = new DialogueTree();
         $dialogueTrees = $dialogueModel->getAll();
         
-        // Load NPCs for TALK_NPC objectives
-        $npcModel = new NPC();
+                $npcModel = new NPC();
         $allNPCs = $npcModel->getAll();
 
-        // Load all items for rewards selection
-        $itemModel = new Item();
+                $itemModel = new Item();
         $allItems = $itemModel->getAll();
         
         require_once __DIR__ . '/../Views/admin/quests/edit.php';

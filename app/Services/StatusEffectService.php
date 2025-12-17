@@ -21,9 +21,7 @@ class StatusEffectService
      */
     public function applyEffect($characterId, $name, $duration, $modifiers = [], $durationType = 'turns')
     {
-        // Prevent duplicate effects if needed, or stack?
-        // Simple logic: Add new buff.
-        return $this->buffModel->create($characterId, $name, $modifiers, $durationType, $duration);
+                        return $this->buffModel->create($characterId, $name, $modifiers, $durationType, $duration);
     }
 
     /**
@@ -40,27 +38,21 @@ class StatusEffectService
             $name = $buff['name'];
             $modifiers = $buff['stat_modifiers'];
 
-            // Handle DOTs (Damage Over Time)
-            if (isset($modifiers['dot_damage'])) {
+                        if (isset($modifiers['dot_damage'])) {
                 $dmg = $modifiers['dot_damage'];
-                // Apply damage directly to character
-                // We need to instantiate Character to use methods
-                $this->characterModel->findById($characterId);
+                                                $this->characterModel->findById($characterId);
                 $this->characterModel->reduceVitality($dmg);
                 $messages[] = "Vous subissez $dmg dégâts de $name !";
             }
 
-            // Handle Stun
-            if (isset($modifiers['stun']) && $modifiers['stun'] === true) {
+                        if (isset($modifiers['stun']) && $modifiers['stun'] === true) {
                 $preventAction = true;
                 $messages[] = "Vous êtes étourdi par $name et ne pouvez pas agir !";
             }
 
-            // Decrease duration
-            $this->buffModel->decreaseDuration($buff['id']);
+                        $this->buffModel->decreaseDuration($buff['id']);
             
-            // Check expiry
-            if ($buff['duration_remaining'] - 1 <= 0) {
+                        if ($buff['duration_remaining'] - 1 <= 0) {
                 $messages[] = "L'effet $name s'est dissipé.";
                 $this->buffModel->remove($buff['id']);
             }

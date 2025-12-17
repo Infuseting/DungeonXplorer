@@ -68,7 +68,6 @@ class CharacterBuff
     }
     
     public function removeExpired() {
-        // Optional cleanup
-        $this->db->query("DELETE FROM character_buffs WHERE duration_remaining <= 0");
+                $this->db->query("DELETE FROM character_buffs WHERE duration_remaining <= 0");
     }
 }

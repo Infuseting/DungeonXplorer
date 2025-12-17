@@ -65,8 +65,7 @@ class AdminMonsterController
             exit;
         }
         
-        // Decode stats for the view
-        if (!empty($monster['base_stats_json'])) {
+                if (!empty($monster['base_stats_json'])) {
             $monster['stats'] = json_decode($monster['base_stats_json'], true);
         } else {
             $monster['stats'] = [];

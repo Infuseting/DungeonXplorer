@@ -16,8 +16,7 @@ class TokenService
         $header = json_encode(['typ' => 'JWT', 'alg' => 'HS256']);
         $payload = json_encode([
             'user_id' => $userId,
-            'exp' => time() + 900 // 15 minutes
-        ]);
+            'exp' => time() + 900         ]);
 
         $base64UrlHeader = $this->base64UrlEncode($header);
         $base64UrlPayload = $this->base64UrlEncode($payload);

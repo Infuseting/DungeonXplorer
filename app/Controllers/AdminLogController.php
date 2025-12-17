@@ -27,8 +27,7 @@ class AdminLogController
             'date_to' => $_GET['date_to'] ?? null,
         ];
 
-        // Clean empty filters
-        $filters = array_filter($filters, function($v) { return $v !== '' && $v !== null; });
+                $filters = array_filter($filters, function($v) { return $v !== '' && $v !== null; });
 
         $logs = $this->logger->getLogs($filters, $limit, $offset);
         $totalLogs = $this->logger->getTotalLogs($filters);

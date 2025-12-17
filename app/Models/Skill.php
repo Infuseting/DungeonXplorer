@@ -42,17 +42,14 @@ class Skill
 
     public function unlock($characterId, $skillId)
     {
-        // Check if already unlocked
-        $stmtCheck = $this->db->prepare("SELECT id FROM character_skills WHERE character_id = ? AND skill_id = ?");
+                $stmtCheck = $this->db->prepare("SELECT id FROM character_skills WHERE character_id = ? AND skill_id = ?");
         $stmtCheck->bind_param("ii", $characterId, $skillId);
         $stmtCheck->execute();
         if ($stmtCheck->get_result()->num_rows > 0) {
             return ['success' => false, 'message' => 'Already unlocked'];
         }
 
-        // Check prerequisites (Cost, Parent, Level) - Logic usually in Controller, but can be here.
-        // For now, just the Insert.
-        $stmt = $this->db->prepare("INSERT INTO character_skills (character_id, skill_id) VALUES (?, ?)");
+                        $stmt = $this->db->prepare("INSERT INTO character_skills (character_id, skill_id) VALUES (?, ?)");
         $stmt->bind_param("ii", $characterId, $skillId);
         
         if ($stmt->execute()) {
@@ -61,8 +58,7 @@ class Skill
         return ['success' => false, 'message' => $stmt->error];
     }
     
-    // Helper to get Passive Bonuses
-    public function getPassiveBonuses($characterId)
+        public function getPassiveBonuses($characterId)
     {
         $sql = "SELECT s.effect_type, s.effect_value 
                 FROM skills s 

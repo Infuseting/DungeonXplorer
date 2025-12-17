@@ -43,15 +43,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('skills-modal');
     const backdrop = document.getElementById('skills-backdrop');
     const closeBtn = document.getElementById('skills-close-btn');
-    const toggleBtn = document.getElementById('skills-toggle'); // Should be updated in index.php
-    
-    // Skill Data from PHP (injected in index.php or here if this file is included)
-    // We assume $playerSkillsJson is prepared in GameController
-    const CHARACTER_LEVEL = <?= $character->getLevel() ?>;
+    const toggleBtn = document.getElementById('skills-toggle');     
+            const CHARACTER_LEVEL = <?= $character->getLevel() ?>;
     const SKILLS_DATA = <?= $playerSkillsJson ?? '[]' ?>; 
 
-    // Tree Logic Namespace
-    const SkillTree = {
+        const SkillTree = {
         container: document.getElementById('skill-tree-container'),
         nodesLayer: document.getElementById('skill-nodes-layer'),
         connectionsLayer: document.getElementById('skill-connections-layer'),
@@ -74,8 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         open() {
             modal.classList.remove('hidden');
-            // Slight delay/animation logic if needed
-        },
+                    },
 
         close() {
             modal.classList.add('hidden');
@@ -170,9 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
             window.addEventListener('mouseup', () => this.isDragging = false);
 
             this.container.addEventListener('wheel', e => {
-                // Only zoom if dragging over container? or always? 
-                // Careful not to scroll page (if modal fits screen it shouldn't scroll anyway)
-                if (modal.classList.contains('hidden')) return;
+                                                if (modal.classList.contains('hidden')) return;
                 e.preventDefault();
                 const delta = e.deltaY > 0 ? 0.9 : 1.1;
                 this.scale = Math.min(Math.max(0.5, this.scale * delta), 2);
@@ -197,29 +190,24 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(res => res.json())
             .then(data => {
                 if(data.success) {
-                    // Ideally we update the specific node status and SP display without reload
-                    location.reload(); 
+                                        location.reload(); 
                 }
                 else alert('Erreur: ' + data.message);
             });
         }
     };
 
-    // Initialize logic
-    SkillTree.init();
+        SkillTree.init();
 
-    // Modal Events
-    if (toggleBtn) {
+        if (toggleBtn) {
         toggleBtn.addEventListener('click', (e) => {
-            e.preventDefault(); // Prevent navigation if href was set
-            SkillTree.open();
+            e.preventDefault();             SkillTree.open();
         });
     }
     closeBtn.addEventListener('click', () => SkillTree.close());
     backdrop.addEventListener('click', () => SkillTree.close());
     
-    // Allow closing with Esc
-    document.addEventListener('keydown', (e) => {
+        document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
             SkillTree.close();
         }

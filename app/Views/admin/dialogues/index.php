@@ -77,7 +77,6 @@ ob_start();
 </div>
 
 <script>
-// Search functionality
 let searchTimeout;
 document.getElementById('search-input').addEventListener('input', function() {
     clearTimeout(searchTimeout);
@@ -87,7 +86,6 @@ document.getElementById('search-input').addEventListener('input', function() {
     }, 500);
 });
 
-// Delete tree
 function deleteTree(id) {
     if (!confirm('Supprimer cet arbre de dialogue ? Tous les nœuds seront également supprimés.')) return;
     

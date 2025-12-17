@@ -4,10 +4,6 @@ use App\Models\Character;
 use App\Models\Stats;
 use App\Models\Skill;
 
-// Expected variables:
-// $monsterModel (Monster)
-// $characterModel (Character)
-// $initialData (array|null)
 ?>
 <div id="combat-scene" class="absolute inset-0 w-full h-full bg-gray-900 overflow-y-auto z-50 p-4 md:p-8"
      data-max-hp="<?= (int)$characterModel->getVitality() ?>"
@@ -167,8 +163,7 @@ use App\Models\Skill;
                         <!-- Skills Button -->
                         <li>
                             <?php 
-                                // Filter Active Skills
-                                $actives = array_filter($skills ?? [], function($s) { return $s['type'] === 'active'; });
+                                                                $actives = array_filter($skills ?? [], function($s) { return $s['type'] === 'active'; });
                             ?>
                             <button id="btn-skills-menu" onclick="window.toggleActionMenu('skills')" disabled
                                 class="

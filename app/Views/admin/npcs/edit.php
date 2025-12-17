@@ -180,7 +180,6 @@ ob_start();
 </div>
 
 <script>
-// Show/hide merchant and quest fields
 const merchantFields = document.getElementById('merchant-fields');
 const merchantSeed = document.getElementById('merchant-seed');
 const questFields = document.getElementById('quest-fields');
@@ -199,7 +198,6 @@ function updateRoleFields() {
 roleCheckboxes.forEach(cb => cb.addEventListener('change', updateRoleFields));
 updateRoleFields();
 
-// Regenerate inventory
 function regenerateInventory() {
     if (!confirm('Régénérer l\'inventaire ? Cela remplacera l\'inventaire actuel.')) return;
     
@@ -210,7 +208,6 @@ function regenerateInventory() {
     });
 }
 
-// Texture preview
 const textureInput = document.getElementById('texture-input');
 const texturePreview = document.getElementById('texture-preview');
 
@@ -225,7 +222,6 @@ textureInput.addEventListener('change', function(e) {
     }
 });
 
-// Convert percentages to decimals before submit
 document.querySelector('form').addEventListener('submit', function(e) {
     const buyRateOwn = document.querySelector('[name="buy_rate_own"]');
     const buyRateOther = document.querySelector('[name="buy_rate_other"]');

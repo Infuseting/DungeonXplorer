@@ -422,9 +422,7 @@
                     const tooltip = document.getElementById('item-tooltip');
                     let items = Array.from(document.querySelectorAll('.inventory-item-slot'));
 
-                    // Tooltip Logic
-                    const paperDollSlots = document.querySelectorAll('.slot'); // Equipped slots
-
+                                        const paperDollSlots = document.querySelectorAll('.slot'); 
                     function showTooltip(e, itemElement) {
                         const stats = JSON.parse(itemElement.dataset.stats || '{}');
                         const name = itemElement.dataset.name;
@@ -435,24 +433,15 @@
                         
                         console.log('Hover Item:', name, slotType, itemId);
 
-                        // Check for equipped item
-                        let equippedItem = null;
+                                                let equippedItem = null;
                         
                         let targetSlotName = null;
                         if (['head', 'shoulders', 'amulet', 'chest', 'legs', 'boots', 'gloves', 'bracers', 'belt'].includes(slotType)) {
                             targetSlotName = slotType;
                         } else if (slotType === 'ring') {
-                            // Smart ring checking
-                            if (document.querySelector(`.slot[data-slot="ring_1"] .item-icon`)) {
+                                                        if (document.querySelector(`.slot[data-slot="ring_1"] .item-icon`)) {
                                 targetSlotName = 'ring_1';
-                                // If 1 is full, check 2 just to see if we should compare with 2 instead? 
-                                // For now, default to 1, or maybe 2 if 1 is empty? 
-                                // Actually better: If Ring 1 is empty and Ring 2 is full, compare with Ring 2? 
-                                // But usually we compare with the "primary" or "first available".
-                                // If I have a ring equipped in Slot 2, and Slot 1 is empty, and I hover a new ring... 
-                                // It should probably compare with Slot 2.
-                                // Let's refine:
-                                const r1 = document.querySelector(`.slot[data-slot="ring_1"] .item-icon`);
+                                                                                                                                                                                                                                                                const r1 = document.querySelector(`.slot[data-slot="ring_1"] .item-icon`);
                                 const r2 = document.querySelector(`.slot[data-slot="ring_2"] .item-icon`);
                                 if (!r1 && r2) targetSlotName = 'ring_2';
                                 else targetSlotName = 'ring_1';
@@ -470,10 +459,7 @@
                         if (targetSlotName) {
                             const equippedSlot = document.querySelector(`.slot[data-slot="${targetSlotName}"] .item-icon`);
                             if (equippedSlot) {
-                                // Compare DOM elements to ensure we don't compare self to self (if hovering equipped item)
-                                // itemElement might be the DIV in grid, equippedSlot is IMG in paper doll.
-                                // Check IDs.
-                                if (equippedSlot.dataset.id !== itemId) {
+                                                                                                                                if (equippedSlot.dataset.id !== itemId) {
                                      equippedItem = {
                                         name: equippedSlot.dataset.name,
                                         type: equippedSlot.dataset.type,
@@ -484,20 +470,17 @@
                             }
                         }
 
-                        // Render Tooltip
-                        if (equippedItem) {
+                                                if (equippedItem) {
                             renderComparisonTooltip(name, type, stats, desc, equippedItem);
                         } else {
                             renderSingleTooltip(name, type, stats, desc);
                         }
 
-                        // Position
-                        const rect = itemElement.getBoundingClientRect();
+                                                const rect = itemElement.getBoundingClientRect();
                         tooltip.style.left = `${rect.right + 10}px`;
                         tooltip.style.top = `${rect.top}px`;
                         
-                        // Boundary checks
-                        tooltip.classList.remove('hidden');
+                                                tooltip.classList.remove('hidden');
                         const tooltipRect = tooltip.getBoundingClientRect();
                         if (tooltipRect.right > window.innerWidth) {
                             tooltip.style.left = `${rect.left - tooltipRect.width - 10}px`;
@@ -577,14 +560,12 @@
                          }).join('');
                     }
 
-                    // Context Menu Logic
-                    const ctxMenu = document.getElementById('item-context-menu');
+                                        const ctxMenu = document.getElementById('item-context-menu');
                     const btnEquip = document.getElementById('ctx-equip');
                     const btnUnequip = document.getElementById('ctx-unequip');
                     const btnDrop = document.getElementById('ctx-drop');
                     
-                    // NEW: Consume Button (Created dynamically or toggled)
-                    let btnConsume = document.getElementById('ctx-consume');
+                                        let btnConsume = document.getElementById('ctx-consume');
                     if (!btnConsume) {
                         btnConsume = document.createElement('button');
                         btnConsume.id = 'ctx-consume';
@@ -595,23 +576,16 @@
                             </svg>
                             Consommer
                         `;
-                        // Insert before drop
-                        btnDrop.parentNode.insertBefore(btnConsume, btnDrop.parentNode.lastElementChild); // Before divider?
-                        // Actually ctx-menu structure is buttons then divider then drop.
-                        // Insert after unequip.
-                        btnUnequip.after(btnConsume);
+                                                btnDrop.parentNode.insertBefore(btnConsume, btnDrop.parentNode.lastElementChild);                                                                         btnUnequip.after(btnConsume);
                     }
 
                     let currentCtxItem = null;
 
                     document.addEventListener('contextmenu', (e) => {
-                        // ... existing check for item-icon or inventory-item-slot
-                        const slot = e.target.closest('.inventory-item-slot') || e.target.closest('.slot');
+                                                const slot = e.target.closest('.inventory-item-slot') || e.target.closest('.slot');
                         const img = e.target.closest('.item-icon');
                         
-                        // We need the data attributes.
-                        // If it's a slot, check if it has item data (e.g. data-id)
-                        let target = null;
+                                                                        let target = null;
 
                         if (e.target.closest('.inventory-item-slot')) {
                             target = e.target.closest('.inventory-item-slot');
@@ -628,17 +602,14 @@
                         }
                     });
 
-                    // Hide on click elsewhere
-                    document.addEventListener('click', (e) => {
+                                        document.addEventListener('click', (e) => {
                         if (!ctxMenu.contains(e.target)) hideContextMenu();
                     });
 
                     function showContextMenu(x, y, item) {
-                        const isEquipped = item.closest('.slot') !== null; // If inside a paper doll slot
-                        const type = item.dataset.type;
+                        const isEquipped = item.closest('.slot') !== null;                         const type = item.dataset.type;
                         
-                        // Reset buttons
-                        btnEquip.classList.add('hidden');
+                                                btnEquip.classList.add('hidden');
                         btnUnequip.classList.add('hidden');
                         btnConsume.classList.add('hidden');
 
@@ -662,22 +633,13 @@
                         currentCtxItem = null;
                     }
 
-                    // Equip Action
-                    btnEquip.addEventListener('click', () => {
+                                        btnEquip.addEventListener('click', () => {
                         if (!currentCtxItem) return;
-                        // ... (Existing Equip Logic)
-                        // TODO: Verify if existing logic uses specific function or just redirects?
-                        // Assuming existing logic handles equip via separate event listeners or we need to implement it here?
-                        // The file view didn't show the previous context menu event listeners fully.
-                        // I'll rewrite the equip listener to be safe or check if I need to preserve logic.
-                        // Previous code showed buttons but I didn't see the JS for them in the snippet.
-                        // I will assume standard fetch call.
-                        equipItem(currentCtxItem.dataset.id);
+                                                                                                                                                                                                equipItem(currentCtxItem.dataset.id);
                         hideContextMenu();
                     });
                     
-                    // Consume Action
-                    btnConsume.addEventListener('click', () => {
+                                        btnConsume.addEventListener('click', () => {
                         if (!currentCtxItem) return;
                         consumeItem(currentCtxItem.dataset.id);
                         hideContextMenu();
@@ -692,20 +654,11 @@
                         .then(r => r.json())
                         .then(data => {
                             if (data.success) {
-                                // Remove item from grid or decrement
-                                // Simplest: Reload page or remove element.
-                                // Ideal: Update UI.
-                                if (currentCtxItem) {
-                                    // Check quantity? Not stored in dataset currently but could be.
-                                    // For now remove element.
-                                    currentCtxItem.remove(); 
+                                                                                                                                if (currentCtxItem) {
+                                                                                                            currentCtxItem.remove(); 
                                 }
-                                // Show message/effect
-                                alert(data.message); // Should use a nice toast
-                                // Update stats if returned
-                                if (data.new_stats) {
-                                     // Update UI stats if possible, or reload.
-                                     location.reload(); 
+                                                                alert(data.message);                                                                 if (data.new_stats) {
+                                                                          location.reload(); 
                                 }
                             } else {
                                 alert(data.message);
@@ -713,16 +666,8 @@
                         });
                     }
 
-                    // Existing equip logic helper (placeholder if not visible)
-                    function equipItem(id) {
-                         // ... implementation to call /game/equip ...
-                         // Since I don't see the original valid implementation, I'll rely on the user having it 
-                         // or I should implement it. 
-                         // Actually, I should check the existing file content for Context Menu listeners.
-                         // The view ended at line 712 with the HTML for context menu.
-                         // But the JS for it was inside `document.addEventListener`.
-                         // I will implement a basic equip fetch here.
-                         fetch('/game/equip-item', { 
+                                        function equipItem(id) {
+                                                                                                                                                                                                        fetch('/game/equip-item', { 
                              method: 'POST', 
                              headers: { 'Content-Type': 'application/json' },
                              body: JSON.stringify({ item_id: id })
@@ -731,8 +676,7 @@
 
 
 
-                    // ... (Existing Sort/Filter Logic) ...
-                    function filterItems(type) {
+                                        function filterItems(type) {
                         items.forEach(item => {
                             const itemType = item.dataset.type;
                             if (type === 'all' || itemType === type || (type === 'armor' && ['head', 'chest', 'legs', 'boots', 'gloves', 'shoulders'].includes(itemType))) {
@@ -759,8 +703,7 @@
                             }
                         });
                         sorted.forEach(item => container.appendChild(item));
-                        // Re-attach because DOM moved? Actually listeners stick to elements, so it's fine.
-                    }
+                                            }
 
                     sortSelect.addEventListener('change', (e) => sortItems(e.target.value));
 

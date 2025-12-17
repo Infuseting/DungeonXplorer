@@ -1,6 +1,4 @@
 <?php
-// Partial View for Story Scene (SPA)
-// Expected variables: $story (array), $inventory (array)
 ?>
 <div id="story-scene" data-story-id="<?= $story['id'] ?>" class="absolute inset-0 w-full h-full">
     
@@ -116,8 +114,7 @@
             const data = await response.json();
             
             if (data.success) {
-                // Return to Map via Router
-                if(window.GameRouter) {
+                                if(window.GameRouter) {
                     window.GameRouter.showMap();
                 } else {
                     window.location.href = '/game';
@@ -131,5 +128,4 @@
         }
     };
     
-    // Re-attach drawer toggle if needed handled by initUI in story.js
-</script>
+    </script>

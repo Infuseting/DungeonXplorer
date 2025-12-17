@@ -220,7 +220,6 @@ ob_start();
 </div>
 
 <script>
-// Show/hide two-handed checkbox based on slot type
 const slotTypeSelect = document.getElementById('slot-type');
 const twoHandedGroup = document.getElementById('two-handed-group');
 
@@ -233,7 +232,6 @@ function updateTwoHandedVisibility() {
 slotTypeSelect.addEventListener('change', updateTwoHandedVisibility);
 updateTwoHandedVisibility();
 
-// Image preview
 const imageInput = document.getElementById('item-image');
 const imagePreview = document.getElementById('image-preview');
 
@@ -248,7 +246,6 @@ imageInput.addEventListener('change', function(e) {
     }
 });
 
-// Consumable Type Logic
 const typeSelect = document.querySelector('select[name="type"]');
 const consumableProps = document.getElementById('consumable-properties');
 

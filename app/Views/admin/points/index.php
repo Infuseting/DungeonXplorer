@@ -215,7 +215,6 @@ ob_start();
 </div>
 
 <script>
-// Search and filter functionality
 let searchTimeout;
 
 document.getElementById('search-input').addEventListener('input', function() {
@@ -243,11 +242,8 @@ function resetFilters() {
     window.location.href = '/admin/points';
 }
 
-// Update visibility
 function toggleVisibility(pointId, isVisible) {
-    // isVisible is true if checked (Visible), so is_hidden should be 0
-    // isVisible is false if unchecked (Hidden), so is_hidden should be 1
-    const isHidden = isVisible ? 0 : 1;
+            const isHidden = isVisible ? 0 : 1;
     
     fetch('/admin/points/update-visibility', {
         method: 'POST',
@@ -263,16 +259,14 @@ function toggleVisibility(pointId, isVisible) {
     .then(data => {
         if (data.success) {
             showToast(data.message, 'success');
-            // Update text label
-            const row = document.querySelector(`input[onchange*="${pointId}"]`).closest('td');
+                        const row = document.querySelector(`input[onchange*="${pointId}"]`).closest('td');
             const label = row.querySelector('small');
             if (label) {
                 label.textContent = isHidden ? 'Caché' : 'Visible';
             }
         } else {
             showToast(data.message, 'error');
-            // Revert checkbox state
-            const checkbox = document.querySelector(`input[onchange*="${pointId}"]`);
+                        const checkbox = document.querySelector(`input[onchange*="${pointId}"]`);
             checkbox.checked = !isVisible;
         }
     })
@@ -282,7 +276,6 @@ function toggleVisibility(pointId, isVisible) {
     });
 }
 
-// Update sub-map assignment
 function updateSubMap(pointId, subMapId) {
     fetch('/admin/points/update-submap', {
         method: 'POST',
@@ -308,7 +301,6 @@ function updateSubMap(pointId, subMapId) {
     });
 }
 
-// Update NPC assignment
 function updateNPC(pointId, npcId) {
     fetch('/admin/points/update-npc', {
         method: 'POST',
@@ -335,7 +327,6 @@ function updateNPC(pointId, npcId) {
     });
 }
 
-// Delete point
 function deletePoint(id) {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce point ?')) return;
     
@@ -346,7 +337,6 @@ function deletePoint(id) {
     });
 }
 
-// Toast notification
 function showToast(message, type = 'success') {
     const toast = document.createElement('div');
     toast.className = `fixed bottom-8 right-8 px-6 py-4 bg-gray-900 border rounded-lg text-gray-100 shadow-[0_10px_25px_rgba(0,0,0,0.3)] animate-[slideIn_0.3s_ease-out] z-[1000] ${type === 'success' ? 'border-green-500' : 'border-red-500'}`;

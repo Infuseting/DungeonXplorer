@@ -30,8 +30,7 @@ class AdminNPCController
         
         $npcs = $this->npcModel->getAll();
         
-        // Apply filters
-        if ($search || $roleFilter) {
+                if ($search || $roleFilter) {
             $npcs = array_filter($npcs, function($npc) use ($search, $roleFilter) {
                 $matchSearch = empty($search) || stripos($npc['name'], $search) !== false;
                 if (empty($roleFilter)) {
@@ -55,19 +54,16 @@ class AdminNPCController
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $dialogueTrees = $this->dialogueModel->getAll();
             
-            // Get Factions
-            $factionModel = new Faction();
+                        $factionModel = new Faction();
             $factions = $factionModel->getAll();
             
             require_once __DIR__ . '/../Views/admin/npcs/create.php';
             return;
         }
         
-        // POST - Create NPC
-        $texturePath = null;
+                $texturePath = null;
         
-        // Handle texture upload
-        if (isset($_FILES['texture']) && $_FILES['texture']['error'] === UPLOAD_ERR_OK) {
+                if (isset($_FILES['texture']) && $_FILES['texture']['error'] === UPLOAD_ERR_OK) {
             $uploadDir = __DIR__ . '/../../public/assets/npcs/';
             if (!file_exists($uploadDir)) {
                 mkdir($uploadDir, 0755, true);
@@ -86,12 +82,10 @@ class AdminNPCController
             }
         }
         
-        // Support multiple roles (array -> CSV)
-        $rolesArr = $_POST['roles'] ?? (isset($_POST['role']) ? [$_POST['role']] : []);
+                $rolesArr = $_POST['roles'] ?? (isset($_POST['role']) ? [$_POST['role']] : []);
         $rolesStr = implode(',', array_filter(array_map('trim', $rolesArr)));
         
-        // Ensure role is not empty - default to 'npc' if no role specified
-        if (empty($rolesStr)) {
+                if (empty($rolesStr)) {
             $rolesStr = 'npc';
         }
 
@@ -107,14 +101,12 @@ class AdminNPCController
         
         $npcId = $this->npcModel->create($data);
 
-        // If merchant role included, generate inventory
-        if ($npcId && in_array('merchant', explode(',', $data['role'])) && !empty($_POST['merchant_seed'])) {
+                if ($npcId && in_array('merchant', explode(',', $data['role'])) && !empty($_POST['merchant_seed'])) {
             $inventory = $this->npcModel->generateMerchantInventory($_POST['merchant_seed']);
             $this->npcModel->saveMerchantInventory($npcId, $inventory);
         }
         
-        // Assign dialogue trees
-        if (!empty($_POST['dialogue_trees'])) {
+                if (!empty($_POST['dialogue_trees'])) {
             foreach ($_POST['dialogue_trees'] as $treeId) {
                 $this->npcModel->assignDialogueTree($npcId, $treeId);
             }
@@ -140,23 +132,19 @@ class AdminNPCController
             $assignedTrees = $this->npcModel->getDialogueTrees($id);
             $merchantInventory = $this->npcModel->getMerchantInventory($id);
             
-            // Load factions
-            $factionModel = new Faction();
+                        $factionModel = new Faction();
             $factions = $factionModel->getAll();
             
-            // Load quests
-            $allQuests = $this->questModel->getAll();
+                        $allQuests = $this->questModel->getAll();
             $assignedQuests = $this->npcModel->getQuests($id);
 
             require_once __DIR__ . '/../Views/admin/npcs/edit.php';
             return;
         }
         
-        // POST - Update NPC
-        $texturePath = $npc['texture'];
+                $texturePath = $npc['texture'];
         
-        // Handle texture upload
-        if (isset($_FILES['texture']) && $_FILES['texture']['error'] === UPLOAD_ERR_OK) {
+                if (isset($_FILES['texture']) && $_FILES['texture']['error'] === UPLOAD_ERR_OK) {
             $uploadDir = __DIR__ . '/../../public/assets/npcs/';
             if (!file_exists($uploadDir)) {
                 mkdir($uploadDir, 0755, true);
@@ -170,8 +158,7 @@ class AdminNPCController
                 $targetPath = $uploadDir . $fileName;
                 
                 if (move_uploaded_file($_FILES['texture']['tmp_name'], $targetPath)) {
-                    // Delete old texture
-                    if ($npc['texture'] && file_exists(__DIR__ . '/../../public/' . $npc['texture'])) {
+                                        if ($npc['texture'] && file_exists(__DIR__ . '/../../public/' . $npc['texture'])) {
                         unlink(__DIR__ . '/../../public/' . $npc['texture']);
                     }
                     $texturePath = 'assets/npcs/' . $fileName;
@@ -179,12 +166,10 @@ class AdminNPCController
             }
         }
         
-        // Support multiple roles
-        $rolesArr = $_POST['roles'] ?? (isset($_POST['role']) ? [$_POST['role']] : []);
+                $rolesArr = $_POST['roles'] ?? (isset($_POST['role']) ? [$_POST['role']] : []);
         $rolesStr = implode(',', array_filter(array_map('trim', $rolesArr)));
         
-        // Ensure role is not empty - default to 'npc' if no role specified
-        if (empty($rolesStr)) {
+                if (empty($rolesStr)) {
             $rolesStr = 'npc';
         }
 
@@ -200,47 +185,40 @@ class AdminNPCController
 
         $this->npcModel->update($id, $data);
 
-        // Update dialogue assignments
-        $existing = $this->npcModel->getDialogueTrees($id);
+                $existing = $this->npcModel->getDialogueTrees($id);
         $existingIds = array_column($existing, 'id');
         $newIds = $_POST['dialogue_trees'] ?? [];
 
-        // Remove deselected
-        foreach ($existingIds as $eid) {
+                foreach ($existingIds as $eid) {
             if (!in_array($eid, $newIds)) {
                 $this->npcModel->removeDialogueTree($id, $eid);
             }
         }
 
-        // Add newly selected
-        foreach ($newIds as $nid) {
+                foreach ($newIds as $nid) {
             if (!in_array($nid, $existingIds)) {
                 $this->npcModel->assignDialogueTree($id, $nid);
             }
         }
         
-        // Log Admin Action
-        $logger = new LoggerService();
+                $logger = new LoggerService();
         $logger->logCritical($_SESSION['user_id'], 'ADMIN_NPC_UPDATE', [
             'npc_id' => $id,
             'name' => $data['name'],
             'role' => $data['role']
         ]);
 
-        // Update quest assignments
-        $existingQuests = $this->npcModel->getQuests($id);
+                $existingQuests = $this->npcModel->getQuests($id);
         $existingQuestIds = array_column($existingQuests, 'id');
         $newQuestIds = $_POST['quests'] ?? [];
         
-        // Remove deselected quests
-        foreach ($existingQuestIds as $qid) {
+                foreach ($existingQuestIds as $qid) {
             if (!in_array($qid, $newQuestIds)) {
                 $this->npcModel->removeQuest($id, $qid);
             }
         }
         
-        // Add newly selected quests
-        foreach ($newQuestIds as $qid) {
+                foreach ($newQuestIds as $qid) {
             if (!in_array($qid, $existingQuestIds)) {
                 $this->npcModel->assignQuest($id, $qid);
             }

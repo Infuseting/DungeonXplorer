@@ -17,28 +17,21 @@ class AdminMapController
     
     public function index()
     {
-        // Get selected map ID from query parameter, default to lowest ID
-        $selectedMapId = isset($_GET['map_id']) ? (int)$_GET['map_id'] : null;
+                $selectedMapId = isset($_GET['map_id']) ? (int)$_GET['map_id'] : null;
         
-        // Ensure at least one map exists
-        $defaultMapId = $this->ensureMainMapExists();
+                $defaultMapId = $this->ensureMainMapExists();
         
-        // If no map selected, use the default (lowest ID)
-        if (!$selectedMapId) {
+                if (!$selectedMapId) {
             $selectedMapId = $defaultMapId;
         }
         
-        // Get all maps for dropdown
-        $maps = $this->getAllMaps();
+                $maps = $this->getAllMaps();
         
-        // Get selected map details
-        $selectedMap = $this->getMapById($selectedMapId);
+                $selectedMap = $this->getMapById($selectedMapId);
         
-        // Get map points for the selected map
-        $mapPoints = $this->getMapPoints($selectedMapId);
+                $mapPoints = $this->getMapPoints($selectedMapId);
         
-        // Get Factions
-        $factionModel = new Faction();
+                $factionModel = new Faction();
         $factions = $factionModel->getAll();
 
         require_once __DIR__ . '/../Views/admin/map/index.php';
@@ -67,24 +60,19 @@ class AdminMapController
     
     public function managePoints()
     {
-        // Get search/filter parameters
-        $search = $_GET['search'] ?? '';
+                $search = $_GET['search'] ?? '';
         $typeFilter = $_GET['type'] ?? '';
         $mapFilter = $_GET['map_id'] ?? '';
         
-        // Get all maps for filters and dropdowns
-        $maps = $this->getAllMaps();
+                $maps = $this->getAllMaps();
         
-        // Get all NPCs for assignment dropdown
-        $npcModel = new NPC();
+                $npcModel = new NPC();
         $npcs = $npcModel->getAll();
         
-        // Get all stories for assignment dropdown
-        $storyModel = new Story();
+                $storyModel = new Story();
         $stories = $storyModel->getAll();
         
-        // Build query with filters
-        $query = "SELECT mp.*, m.name as map_name FROM map_points mp 
+                $query = "SELECT mp.*, m.name as map_name FROM map_points mp 
                   LEFT JOIN maps m ON mp.map_id = m.id WHERE 1=1";
         $params = [];
         $types = '';
@@ -137,8 +125,7 @@ class AdminMapController
                 exit;
             }
             
-            // Allow null for sub_map_id (to unassign)
-            $stmt = $this->db->prepare("UPDATE map_points SET sub_map_id = ? WHERE id = ?");
+                        $stmt = $this->db->prepare("UPDATE map_points SET sub_map_id = ? WHERE id = ?");
             $stmt->bind_param("ii", $subMapId, $pointId);
             
             if ($stmt->execute()) {
@@ -164,8 +151,7 @@ class AdminMapController
                 exit;
             }
             
-            // Allow null for npc_id (to unassign)
-            $stmt = $this->db->prepare("UPDATE map_points SET target_id = ? WHERE id = ?");
+                        $stmt = $this->db->prepare("UPDATE map_points SET target_id = ? WHERE id = ?");
             $stmt->bind_param("ii", $npcId, $pointId);
             
             if ($stmt->execute()) {
@@ -217,8 +203,7 @@ class AdminMapController
                 exit;
             }
             
-            // Allow null for story_id (to unassign)
-            $stmt = $this->db->prepare("UPDATE map_points SET story_id = ? WHERE id = ?");
+                        $stmt = $this->db->prepare("UPDATE map_points SET story_id = ? WHERE id = ?");
             $stmt->bind_param("ii", $storyId, $pointId);
             
             if ($stmt->execute()) {
@@ -233,8 +218,7 @@ class AdminMapController
     public function createPoint()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Ensure main map exists and get its ID
-            $mainMapId = $this->ensureMainMapExists();
+                        $mainMapId = $this->ensureMainMapExists();
             
             $data = [
                 'map_id' => $_POST['map_id'] ?? $mainMapId,
@@ -350,15 +334,13 @@ class AdminMapController
     
     private function ensureMainMapExists()
     {
-        // Check if any map exists
-        $result = $this->db->query("SELECT id FROM maps ORDER BY id ASC LIMIT 1");
+                $result = $this->db->query("SELECT id FROM maps ORDER BY id ASC LIMIT 1");
         if ($result && $result->num_rows > 0) {
             $row = $result->fetch_assoc();
             return $row['id'];
         }
         
-        // No map exists, create the main map
-        $stmt = $this->db->prepare("INSERT INTO maps (name, description, image_path) VALUES (?, ?, ?)");
+                $stmt = $this->db->prepare("INSERT INTO maps (name, description, image_path) VALUES (?, ?, ?)");
         $name = 'Main World';
         $desc = 'The main game world';
         $path = '/assets/map/main/map_config.json';
@@ -368,7 +350,6 @@ class AdminMapController
             return $this->db->insert_id;
         }
         
-        // Fallback to 1 if something goes wrong
-        return 1;
+                return 1;
     }
 }

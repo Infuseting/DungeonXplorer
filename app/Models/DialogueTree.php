@@ -144,8 +144,7 @@ class DialogueTree
      */
     public function deleteDialogue($dialogueId)
     {
-        // CASCADE delete will handle children
-        $stmt = $this->db->prepare("DELETE FROM dialogues WHERE id = ?");
+                $stmt = $this->db->prepare("DELETE FROM dialogues WHERE id = ?");
         $stmt->bind_param("i", $dialogueId);
         return $stmt->execute();
     }

@@ -11,8 +11,7 @@ class Monster
 {
     private $db;
     
-    // Properties for Combat Logic
-    private $id;
+        private $id;
     private $name;
     private $strength;
     private $vitality;
@@ -39,8 +38,7 @@ class Monster
         $result = $stmt->get_result()->fetch_assoc();
         
         if ($result) {
-            // Populate Object Properties (Combat Mode)
-            $this->id = $result['id'];
+                        $this->id = $result['id'];
             $this->name = $result['name'];
             $this->imagePath = $result['image_path'];
             $this->sallePath = $result['salle_path'];
@@ -54,8 +52,7 @@ class Monster
             $this->defense = $stats['defense'] ?? 0;
             $this->attaque = $stats['attaque'] ?? 0;
 
-            // New Properties
-            $this->creatureType = $result['creature_type'] ?? 'neutral';
+                        $this->creatureType = $result['creature_type'] ?? 'neutral';
             $this->affinities = !empty($result['affinities']) ? json_decode($result['affinities'], true) : [];
         }
 
@@ -119,8 +116,7 @@ class Monster
         return $stmt->execute();
     }
     
-    // ... (delete method unchanged) ...
-
+    
     public function delete($id)
     {
         $stmt = $this->db->prepare("DELETE FROM monsters WHERE id = ?");
@@ -129,10 +125,7 @@ class Monster
     }
 
 
-    // ==========================================
-    // COMBAT METHODS (Getters & Logic)
-    // ==========================================
-
+            
     public function getCreatureType()
     {
         return $this->creatureType;
@@ -150,10 +143,7 @@ class Monster
      */
     public function getAffinityModifier($damageType)
     {
-        // affinities structure: e.g. [{"element": "fire", "type": "percent", "value": -50}]
-        // Actually simple Key-Value might be easier? {"fire": {"type": "percent", "value": -50}}
-        // Let's assume KV, simpler to lookup.
-        
+                                
         if (isset($this->affinities[$damageType])) {
             return $this->affinities[$damageType];
         }
@@ -165,8 +155,7 @@ class Monster
         $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         return $result;
     }
-    // ... (existing getters: getName, etc.)
-    public function getId() { return $this->id; }
+        public function getId() { return $this->id; }
     public function getName() { return $this->name; }
     public function getSallePath() { return $this->sallePath; }
     public function getImagePath() { return $this->imagePath; }

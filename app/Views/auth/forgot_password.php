@@ -22,8 +22,7 @@ ob_start();
     </div>
 
     <?php
-    // Display error messages
-    $errorMessages = [
+        $errorMessages = [
         'passwords_do_not_match' => 'Les mots de passe ne correspondent pas.',
         'invalid_email' => 'Aucun compte associé à cet email.',
         'invalid_code' => 'Code invalide ou expiré.',

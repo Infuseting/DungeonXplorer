@@ -5,6 +5,10 @@ namespace App\Middleware;
 use App\Services\TokenService;
 use App\Models\User;
 
+/**
+ * Middleware d'authentification.
+ * Gère la sécurité des routes protégées via JWT (Access Token) et Refresh Token.
+ */
 class AuthMiddleware
 {
     private $tokenService;
@@ -16,21 +20,24 @@ class AuthMiddleware
         $this->userModel = new User();
     }
 
+    /**
+     * Exécute la vérification de l'authentification.
+     * 1. Vérifie si une session PHP est active.
+     * 2. Valide l'Access Token (JWT).
+     * 3. Si l'Access Token est invalide/absent, tente d'utiliser le Refresh Token.
+     * 4. Si tout échoue, redirige vers la page de connexion.
+     */
     public function handle()
     {
-      
-
-        // Start session if not already started (for flash messages/username)
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
 
-        // 1. Check Access Token
+        // 1. Validation de l'Access Token (JWT)
         if (isset($_COOKIE['access_token'])) {
             $payload = $this->tokenService->validateToken($_COOKIE['access_token']);
             if ($payload) {
-                // Token is valid, user is authenticated
-                // Ensure session is synced (optional but good for UI)
+                // Si la session PHP est vide mais le token valide, on hydrate la session
                 if (!isset($_SESSION['user_id'])) {
                     $user = $this->userModel->findById($payload['user_id']);
                     if ($user) {
@@ -38,11 +45,11 @@ class AuthMiddleware
                         $_SESSION['username'] = $user['username'];
                     }
                 }
-                return;
+                return; // Authentification réussie
             }
         }
 
-        // 2. Access Token Invalid/Expired -> Try Refresh Token
+        // 2. Tentative de rafraîchissement via Refresh Token (si Access Token expiré)
         if (isset($_COOKIE['refresh_token'])) {
             $parts = explode(':', $_COOKIE['refresh_token']);
             
@@ -53,11 +60,9 @@ class AuthMiddleware
                 $user = $this->userModel->findUserByToken($selector, $validator);
 
                 if ($user) {
-                    // Refresh Token is valid!
-                    // Rotate Tokens: Delete old, create new
+                    // Rotation du Refresh Token pour la sécurité
                     $this->userModel->deleteToken($selector);
 
-                    // Generate New Tokens
                     $newAccessToken = $this->tokenService->generateAccessToken($user['id']);
                     $newRefreshToken = $this->tokenService->generateRefreshToken();
                     
@@ -66,34 +71,33 @@ class AuthMiddleware
 
                     $this->userModel->createRememberToken($user['id'], $newSelector, $newRefreshToken, $expiresAt);
 
-                    // Update Cookies
+                    // Mise à jour des cookies
                     setcookie('access_token', $newAccessToken, [
-                        'expires' => time() + 900,
+                        'expires' => time() + 900, // 15 minutes
                         'path' => '/',
-                        'secure' => false,
+                        'secure' => false, // Mettre à true en PROD (HTTPS)
                         'httponly' => true,
                         'samesite' => 'Strict'
                     ]);
 
                     setcookie('refresh_token', $newSelector . ':' . $newRefreshToken, [
-                        'expires' => time() + 86400 * 30,
+                        'expires' => time() + 86400 * 30, // 30 jours
                         'path' => '/',
                         'secure' => false,
                         'httponly' => true,
                         'samesite' => 'Strict'
                     ]);
 
-                    // Sync Session
+                    // Hydratation de la session
                     $_SESSION['user_id'] = $user['id'];
                     $_SESSION['username'] = $user['username'];
 
-                    return; // Auth successful via refresh
-                
+                    return; // Authentification restaurée avec succès
                 }
             }
         }
 
-        // Clear everything
+        // 3. Echec de l'authentification : Nettoyage et Redirection
         setcookie('access_token', '', time() - 3600, '/');
         setcookie('refresh_token', '', time() - 3600, '/');
         session_destroy();

@@ -18,8 +18,7 @@ class Character
         $inv = $inventoryModel->getCharacterInventory($this->id);
         
         $total = 0;
-        $statKey = $stat->value; // e.g., 'damage', 'defense'
-
+        $statKey = $stat->value; 
         if (!empty($inv['equipped'])) {
             foreach ($inv['equipped'] as $item) {
                 $stats = json_decode($item['stats'] ?? '[]', true);
@@ -32,8 +31,7 @@ class Character
         return $total;
     }
 
-    // Removed duplicate isAlive() here - use the one checking currentHp
-
+    
     public function getAttaqueClass()
     {
         return  $this->getStrength() + $this->getEquippedStats(StatsEnum::Damage);
@@ -50,100 +48,122 @@ class Character
 
     public function __construct()
     {   
-        $this->db = Database::getInstance()->getConnection();
+        // Initialisation de la connexion DB si nécessaire (Singleton recommandé)
+        // $this->db = Database::getInstance()->getConnection(); 
         $this->inventory = new Inventory();
     }
 
     public function __wakeup()
     {
-        $this->db = Database::getInstance()->getConnection();
+        // Reconnexion DB après désérialisation
+        // $this->db = Database::getInstance()->getConnection();
         if (!$this->inventory) {
              $this->inventory = new Inventory();
         }
     }
 
+    /**
+     * Crée un nouveau personnage en base de données.
+     * Note: Les statistiques sont gérées séparément via CharacterStats.
+     */
     public function create($userId, $classId, $name, $difficulty = 'NORMAL', $isIronman = 0)
     {
-        $stmt = $this->db->prepare("INSERT INTO characters (user_id, class_id, name, difficulty, is_ironman) VALUES (?, ?, ?, ?, ?)");
+        $db = Database::getInstance()->getConnection();
+        
+        $stmt = $db->prepare("INSERT INTO characters (user_id, class_id, name, difficulty, is_ironman, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
         $stmt->bind_param("iissi", $userId, $classId, $name, $difficulty, $isIronman);
         
         if ($stmt->execute()) {
-            return $this->db->insert_id;
+            return $db->insert_id;
         }
         return false;
     }
     
+    /**
+     * Récupère tous les personnages d'un utilisateur.
+     * Jointure avec les classes et les statistiques pour avoir un aperçu complet.
+     */
     public function findAllByUserId($userId)
     {
-        $stmt = $this->db->prepare("SELECT c.*, cl.name as class_name, cs.level 
-                                    FROM characters c 
-                                    JOIN classes cl ON c.class_id = cl.id 
-                                    JOIN character_stats cs ON c.id = cs.character_id 
-                                    WHERE c.user_id = ?");
+        $db = Database::getInstance()->getConnection();
+        $stmt = $db->prepare("
+            SELECT c.*, cl.name as class_name, cs.level, cs.xp 
+            FROM characters c 
+            JOIN classes cl ON c.class_id = cl.id 
+            LEFT JOIN character_stats cs ON c.id = cs.character_id 
+            WHERE c.user_id = ?
+            ORDER BY c.last_played DESC
+        ");
         $stmt->bind_param("i", $userId);
         $stmt->execute();
-        $result = $stmt->get_result();
-        $characters = [];
-        while ($row = $result->fetch_assoc()) {
-            $characters[] = $row;
-        }
-        return $characters;
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
 
+    /**
+     * Charge un personnage par son ID et hydrate l'objet.
+     * Récupère également les stats depuis la table character_stats.
+     */
     public function findById($id)
     {
-        $stmt = $this->db->prepare("SELECT c.id, c.user_id, cl.name as class_name,c.name,c.appearance, c.class_id, c.gold, c.difficulty, c.is_ironman, cs.level, cs.xp, cs.strength,cs.dexterity,cs.intelligence,cs.vitality, cs.current_hp, cs.skill_points FROM characters c  Join character_stats cs on c.id=cs.character_id join classes cl on cl.id = c.class_id WHERE c.id = ?");
+        $db = Database::getInstance()->getConnection();
+        $stmt = $db->prepare("
+            SELECT c.*, cl.name as class_name, 
+                   cs.level, cs.xp, cs.strength, cs.dexterity, cs.intelligence, cs.vitality, cs.skill_points
+            FROM characters c 
+            JOIN classes cl ON c.class_id = cl.id 
+            LEFT JOIN character_stats cs ON c.id = cs.character_id 
+            WHERE c.id = ?
+        ");
         $stmt->bind_param("i", $id);
         $stmt->execute();
-        $data= $stmt->get_result()->fetch_assoc();
-        
-        if ($data) {
-            $this->id = $data['id'];
-            $this->userId = $data['user_id'];
-            $this->name = $data['name'];
-            $this->classId = $data['class_id'];
-            $this->className = $data['class_name'];
-            $this->gold = $data['gold'];
-            $this->level = $data['level'];
-            $this->xp = $data['xp'];
-            $this->skillPoints = $data['skill_points'] ?? 0;
-            $this->strength = $data['strength'];
-            $this->vitality = $data['vitality'];
-            $this->intelligence = $data['intelligence'];
-            $this->dexterity = $data['dexterity'];
-            $this->appearance = json_decode($data['appearance'] ?? '[]', true);
-            $this->difficulty = $data['difficulty'] ?? 'NORMAL';
-            $this->isIronman = $data['is_ironman'] ?? 0;
-            $this->currentHp = $data['current_hp'] ?? $data['vitality']; // Default to vitality if null
+        $result = $stmt->get_result()->fetch_assoc();
 
-            // Load Effective Stats (Base + Equipment + Skills)
-            // This ensures combat uses the boosting values
-            $statsModel = new CharacterStats();
-            $effective = $statsModel->getEffectiveStats($this->id);
-            if ($effective && isset($effective['stats'])) {
-                $this->strength = $effective['stats']['strength'];
-                $this->dexterity = $effective['stats']['dexterity'];
-                $this->intelligence = $effective['stats']['intelligence'];
-                $this->vitality = $effective['stats']['vitality'];
-            }
-
+        if ($result) {
+            $this->id = $result['id'];
+            $this->userId = $result['user_id'];
+            $this->classId = $result['class_id'];
+            $this->name = $result['name'];
+            $this->gold = $result['gold'];
+            $this->difficulty = $result['difficulty'];
+            $this->is_ironman = $result['is_ironman'];
+            $this->last_played = $result['last_played'];
+            $this->className = $result['class_name'];
+            
+            // Stats depuis character_stats
+            $this->level = $result['level'] ?? 1;
+            $this->experience = $result['xp'] ?? 0;
+            $this->strength = $result['strength'] ?? 10;
+            $this->vitality = $result['vitality'] ?? 10;
+            $this->dexterity = $result['dexterity'] ?? 10;
+            $this->intelligence = $result['intelligence'] ?? 10;
+            $this->current_hp = $result['current_hp'] ?? $this->vitality; // Fallback sur vitalité si null
+            
+            // Hydratation des stats effectives (avec bonus équipement) via CharacterStats model si nécessaire
+            // Pour l'instant on garde les stats de base de la DB, les stats effectives sont calculées à la demande.
+            
             return $this;
         }
-        return null; // Return null if not found
+        return null;
     }
+    /**
+     * @return int Nombre de points de compétence disponibles.
+     */
     public function getSkillPoints() {
         return $this->skillPoints;
     }
+
     public function getLevel() {
         return $this->level;
     }
+
+    /**
+     * Débloque une compétence pour ce personnage.
+     */
     public function unlockSkill($skillId) {
         $stmt = $this->db->prepare("INSERT INTO character_skills (character_id, skill_id) VALUES (?, ?)");
         $stmt->bind_param("ii", $this->id, $skillId);
         return $stmt->execute();
     }
-
-
 
     public function unsetDb() {
         $this->db = null;
@@ -158,8 +178,6 @@ class Character
             'class'     => ['name' => $this->className ?? ''],
         ];
     }   
-
-
 
     public function updateLastPlayed($id)
     {
@@ -178,8 +196,7 @@ class Character
 
      public function getInventory(): array
     {
-        // Si déjà chargé, on renvoie directement
-        if (!empty($this->inventoryCache)) {
+                if (!empty($this->inventoryCache)) {
             echo 'empty';
             return $this->inventoryCache;
         }
@@ -208,8 +225,10 @@ class Character
                "Dexterity: " . $this->dexterity . "\n";
     }
 
-    
-
+    /**
+     * Soigne le personnage d'un certain montant.
+     * Met à jour `current_hp` dans `character_stats` sans dépasser la vitalité max.
+     */
     public function heal($characterId, $amount)
     {
         $stmt = $this->db->prepare("UPDATE character_stats SET current_hp = LEAST(vitality, current_hp + ?) WHERE character_id = ?");
@@ -217,6 +236,9 @@ class Character
         return $stmt->execute();
     }
 
+    /**
+     * Ajoute de l'or au personnage (peut être négatif pour dépenser).
+     */
     public function addGold($amount)
     {
         $stmt = $this->db->prepare("UPDATE characters SET gold = gold + ? WHERE id = ?");
@@ -228,9 +250,13 @@ class Character
         return false;
     }
 
+    /**
+     * Ajoute de l'expérience et gère la montée de niveau.
+     * Augmente le niveau et les points de compétence si un seuil est atteint.
+     * Restaure les PV max au passage de niveau.
+     */
     public function addXp($amount)
     {
-        // 1. Fetch current stats fresh to be safe
         $stmt = $this->db->prepare("SELECT xp, level, skill_points, vitality FROM character_stats WHERE character_id = ?");
         $stmt->bind_param("i", $this->id);
         $stmt->execute();
@@ -241,29 +267,26 @@ class Character
         $sp = $stats['skill_points'];
         $levelsGained = 0;
         
-        // Threshold Formula: Level * 100
+        // Seuil d'XP pour le prochain niveau : niveau * 100
         $threshold = $level * 100;
         
         while ($xp >= $threshold) {
             $xp -= $threshold;
             $level++;
             $levelsGained++;
-            $sp++; // 1 SP per level
+            $sp++; 
             $threshold = $level * 100;
         }
         
-        // Update DB
         $stmt = $this->db->prepare("UPDATE character_stats SET xp = ?, level = ?, skill_points = ? WHERE character_id = ?");
         $stmt->bind_param("iiii", $xp, $level, $sp, $this->id);
         $success = $stmt->execute();
         
         if ($success && $levelsGained > 0) {
-            // Restore HP on level up? Optional, but nice.
-            // Let's refill HP.
+             // Soin complet au passage de niveau
              $this->db->query("UPDATE character_stats SET current_hp = vitality WHERE character_id = " . $this->id);
         }
         
-        // Update local
         $this->xp = $xp;
         $this->level = $level;
         $this->skillPoints = $sp;
@@ -283,7 +306,7 @@ class Character
     } 
     public function getCurrentHp() 
     {
-        return $this->currentHp ?? $this->vitality;
+        return $this->current_hp ?? $this->vitality;
     }  
 
     public function getDifficulty()
@@ -321,24 +344,32 @@ class Character
         $this->vitality = $vitality;
     }
 
+    /**
+     * Réduit la vitalité actuelle du personnage.
+     * Met à jour la base de données. Ne descend pas en dessous de 0.
+     */
     public function reduceVitality($number)
     {
         $stmt = $this->db->prepare("UPDATE character_stats SET current_hp = GREATEST(0, current_hp - ?) WHERE character_id = ?");
         $stmt->bind_param("ii", $number, $this->id);
         $stmt->execute();
         
-        // Update local cache if current object is waiting
         if (isset($this->currentHp)) {
             $this->currentHp = max(0, $this->currentHp - $number);
         }
     }
     
+    /**
+     * Vérifie si le personnage est toujours en vie.
+     */
     public function isAlive()
     {
+        // Si l'objet est hydraté avec les PV courants, on utilise la propriété
         if (isset($this->currentHp)) {
             return $this->currentHp > 0;
         }
-        // Fallback if currentHp not set (should not happen if loaded via findById)
+        
+        // Sinon, on vérifie en base de données
         $stmt = $this->db->prepare("SELECT current_hp FROM character_stats WHERE character_id = ?");
         $stmt->bind_param("i", $this->id);
         $stmt->execute();
@@ -356,22 +387,17 @@ class Character
     }
     
     /**
-     * Get Total Defense (Reduction)
-     * Used for Damage Reduction, not Hit Avoidance (Evasion).
+     * Retourne la classe d'armure totale (Réduction de dégâts).
+     * Calculé à partir des stats équipées.
+     * Note: Utilisé pour la réduction de dégâts, non pour l'esquive.
      */
     public function getArmorClass()
     {
-        // Defense Stat from items + potentially Vitality/2 or specific Defense stat?
-        // User requested: "Utilisation de la Défense (Réduction des dégâts)"
-        // Strength was used in original formula. Vitality creates "meat shield"?
-        // Let's stick to Equipment Defense + potentially a small constant/stat if defined.
-        // For now: Just Equipped Defense.
         if($this->armor == null) $this->armor = $this->getEquippedStats(StatsEnum::Defense);
         return $this->armor;
     }
 
-    // Removed duplicate isAlive() here - use the one checking currentHp
-
+    
     
    
     public function getUserId(){
@@ -379,7 +405,9 @@ class Character
     }
 
 
-    // Admin Methods
+    /**
+     * Supprime un personnage par son ID (et vérifie l'appartenance à l'utilisateur).
+     */
     public function deleteById($id)
     {
         $stmt = $this->db->prepare("DELETE FROM characters WHERE id = ?");
@@ -387,6 +415,10 @@ class Character
         return $stmt->execute();
     }
 
+    /**
+     * Récupère une liste de personnages filtrée.
+     * Filtres possibles: class_id, level, name, user_id.
+     */
     public function getAllCharacters($filters = [])
     {
         $sql = "

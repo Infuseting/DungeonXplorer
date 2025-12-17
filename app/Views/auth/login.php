@@ -25,8 +25,7 @@ ob_start();
     </div>
 
     <?php
-    // Display error messages
-    $errorMessages = [
+        $errorMessages = [
         'invalid_credentials' => 'Email ou mot de passe incorrect.',
         'missing_fields' => 'Veuillez remplir tous les champs.',
         'password_reset' => 'Mot de passe réinitialisé avec succès !',
@@ -36,8 +35,7 @@ ob_start();
         'already_linked' => 'Ce compte social est déjà lié à un autre utilisateur.',
     ];
     
-    // Display success messages
-    $successMessages = [
+        $successMessages = [
         'registered' => 'Inscription réussie ! Vous pouvez maintenant vous connecter.',
         'password_reset' => 'Mot de passe réinitialisé avec succès !',
     ];

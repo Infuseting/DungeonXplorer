@@ -148,11 +148,9 @@ function updateClassPreview(input, className, desc) {
     const previewImage = document.getElementById('preview-image');
     const placeholder = document.getElementById('preview-placeholder');
     
-    // Update image source
-    const imagePath = '/assets/images/' + className + '/' + className + '.png';
+        const imagePath = '/assets/images/' + className + '/' + className + '.png';
     
-    // Afficher l'image
-    previewImage.src = imagePath;
+        previewImage.src = imagePath;
     previewImage.classList.remove('brightness-0', 'invert', 'opacity-20');
     placeholder.style.display = 'none';
 }
@@ -162,8 +160,7 @@ function submitWithDesktopName() {
     const mobileInput = document.querySelector('input[name="name"]');
     const form = document.querySelector('form');
     
-    // Copier la valeur de l'input desktop vers mobile
-    if (desktopInput.value.trim()) {
+        if (desktopInput.value.trim()) {
         mobileInput.value = desktopInput.value;
         form.submit();
     } else {

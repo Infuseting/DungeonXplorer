@@ -279,18 +279,14 @@ class MapPoint
      */
     public function isVisibleForCharacter($pointId, $characterId)
     {
-        // Get point details
-        $point = $this->findById($pointId);
+                $point = $this->findById($pointId);
         if (!$point) return false;
         
-        // If locked by admin, never visible
-        if ($point['is_locked']) return false;
+                if ($point['is_locked']) return false;
         
-        // If not hidden, it's visible
-        if (!$point['is_hidden']) return true;
+                if (!$point['is_hidden']) return true;
         
-        // If hidden, check if unlocked for character
-        $stmt = $this->db->prepare(
+                $stmt = $this->db->prepare(
             "SELECT 1 FROM character_map_unlocks WHERE character_id = ? AND map_point_id = ?"
         );
         $stmt->bind_param("ii", $characterId, $pointId);

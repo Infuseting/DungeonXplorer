@@ -131,7 +131,6 @@ ob_start();
 const treeId = <?= $tree['id'] ?>;
 let treeData = <?= json_encode($dialogueTree ?? []) ?>;
 
-// Render tree
 function renderTree() {
     const container = document.getElementById('tree-container');
     container.innerHTML = '';
@@ -146,7 +145,6 @@ function renderTree() {
     });
 }
 
-// Render single node
 function renderNode(node, level) {
     const div = document.createElement('div');
     div.className = `my-2 p-4 bg-gray-800 border-2 border-gray-700 rounded-lg transition-all duration-200 hover:border-indigo-500 ${node.is_player_choice ? 'border-l-4 border-l-amber-400' : 'border-l-4 border-l-indigo-500'}`;
@@ -183,18 +181,15 @@ function renderNode(node, level) {
     return div;
 }
 
-// Add root node
 function addRootNode() {
     openModal('Ajouter nœud racine (PNJ)', null, null, 0);
 }
 
-// Add child node
 function addChildNode(parentId, isPlayerChoice) {
     const type = isPlayerChoice ? 'Joueur' : 'PNJ';
     openModal(`Ajouter réponse ${type}`, null, parentId, isPlayerChoice);
 }
 
-// Edit node
 function editNode(nodeId) {
     const node = findNode(treeData, nodeId);
     if (!node) return;
@@ -202,7 +197,6 @@ function editNode(nodeId) {
     openModal('Modifier le nœud', node);
 }
 
-// Open modal
 function openModal(title, node = null, parentId = null, isPlayerChoice = 0) {
     document.getElementById('modal-title').textContent = title;
     document.getElementById('node-id').value = node ? node.id : '';
@@ -211,8 +205,7 @@ function openModal(title, node = null, parentId = null, isPlayerChoice = 0) {
     document.getElementById('node-text').value = node ? node.text : '';
     document.getElementById('choice-text').value = node ? (node.choice_text || '') : '';
     
-    // Actions / Conditions
-    document.getElementById('action-type').value = node ? (node.action_type || 'NONE') : 'NONE';
+        document.getElementById('action-type').value = node ? (node.action_type || 'NONE') : 'NONE';
     document.getElementById('action-value').value = node ? (node.action_value || '') : '';
     document.getElementById('condition-type').value = node ? (node.condition_type || 'NONE') : 'NONE';
     document.getElementById('condition-value').value = node ? (node.condition_value || '') : '';
@@ -230,14 +223,12 @@ function openModal(title, node = null, parentId = null, isPlayerChoice = 0) {
     document.getElementById('node-modal').classList.add('flex');
 }
 
-// Close modal
 function closeModal() {
     document.getElementById('node-modal').classList.remove('flex');
     document.getElementById('node-modal').classList.add('hidden');
     document.getElementById('node-form').reset();
 }
 
-// Save node
 document.getElementById('node-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -249,8 +240,7 @@ document.getElementById('node-form').addEventListener('submit', async (e) => {
         is_player_choice: parseInt(document.getElementById('is-player-choice').value),
         choice_text: document.getElementById('choice-text').value || null,
         order_index: 0,
-        // New fields
-        action_type: document.getElementById('action-type').value,
+                action_type: document.getElementById('action-type').value,
         action_value: document.getElementById('action-value').value,
         condition_type: document.getElementById('condition-type').value,
         condition_value: document.getElementById('condition-value').value
@@ -272,7 +262,6 @@ document.getElementById('node-form').addEventListener('submit', async (e) => {
     }
 });
 
-// Delete node
 async function deleteNode(nodeId) {
     if (!confirm('Supprimer ce nœud et tous ses enfants ?')) return;
     
@@ -288,7 +277,6 @@ async function deleteNode(nodeId) {
     }
 }
 
-// Helper functions
 function findNode(nodes, id) {
     for (const node of nodes) {
         if (node.id === id) return node;
@@ -306,7 +294,6 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Initial render
 renderTree();
 </script>
 

@@ -17,13 +17,10 @@ class AdminSkillController
 
     public function editor()
     {
-        $classId = $_GET['class_id'] ?? 1; // Default to first class if not specified
+        $classId = $_GET['class_id'] ?? 1;         
+        $classes = $this->classModel->getAll();         $skills = $this->skillModel->getSkillsByClass($classId);
         
-        $classes = $this->classModel->getAll(); // Need to implement getAll in CharacterClass if missing
-        $skills = $this->skillModel->getSkillsByClass($classId);
-        
-        // Ensure coordinates
-        foreach ($skills as &$skill) {
+                foreach ($skills as &$skill) {
             $skill['node_x'] = $skill['node_x'] ?? 100;
             $skill['node_y'] = $skill['node_y'] ?? 100;
         }

@@ -98,8 +98,7 @@ ob_start();
                      <?php 
                      if (isset($classSkills)): 
                         foreach ($classSkills as $s): 
-                            if ($isEdit && $s['id'] == $skill['id']) continue; // Cannot depend on self
-                     ?>
+                            if ($isEdit && $s['id'] == $skill['id']) continue;                      ?>
                         <option value="<?= $s['id'] ?>" <?= $parentId == $s['id'] ? 'selected' : '' ?>>
                             Lvl <?= $s['min_level'] ?> - <?= htmlspecialchars($s['name']) ?>
                         </option>

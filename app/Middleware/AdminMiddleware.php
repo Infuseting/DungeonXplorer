@@ -11,8 +11,7 @@ class AdminMiddleware
             exit;
         }
 
-        // Get user from database to check role
-        $userModel = new User();
+                $userModel = new User();
         $user = $userModel->findById($_SESSION['user_id']);
 
         if (!$user || $user['role'] !== 'admin') {

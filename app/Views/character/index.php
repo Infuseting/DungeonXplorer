@@ -230,10 +230,8 @@ const characters = <?= json_encode($characters) ?>;
 const classImages = <?= json_encode($classImages) ?>;
 let statsChart = null;
 
-// User Menu & Settings Logic AND Stats Chart Init
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Chart Initialization
-    const char = characters.find(c => c.id === parseInt(document.getElementById('selected-character-id').value));
+        const char = characters.find(c => c.id === parseInt(document.getElementById('selected-character-id').value));
     if (char) {
         updateStatsChart(
             char.strength || 10,
@@ -243,8 +241,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         );
     }
 
-    // 2. User menu dropdown
-    const userMenuButton = document.getElementById('user-menu-button');
+        const userMenuButton = document.getElementById('user-menu-button');
     const userDropdown = document.getElementById('user-dropdown');
     
     if (userMenuButton && userDropdown) {
@@ -253,16 +250,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             userDropdown.classList.toggle('hidden');
         });
         
-        // Close dropdown when clicking outside
-        document.addEventListener('click', (e) => {
+                document.addEventListener('click', (e) => {
             if (!userMenuButton.contains(e.target) && !userDropdown.contains(e.target)) {
                 userDropdown.classList.add('hidden');
             }
         });
     }
     
-    // 3. Settings modal
-    const settingsButton = document.getElementById('settings-button');
+        const settingsButton = document.getElementById('settings-button');
     const settingsModal = document.getElementById('settings-modal');
     const settingsCloseBtn = document.getElementById('settings-close-btn');
     const settingsSaveBtn = document.getElementById('settings-save-btn');
@@ -272,8 +267,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             userDropdown.classList.add('hidden');
             settingsModal.classList.remove('hidden');
             
-            // Load current volumes
-            try {
+                        try {
                 const { getVolumes } = await import('/js/modules/soundManager.js');
                 const volumes = getVolumes();
                 document.getElementById('master-volume').value = Math.round(volumes.master * 100);
@@ -292,8 +286,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
     
-    // Volume sliders
-    const masterVolumeSlider = document.getElementById('master-volume');
+        const masterVolumeSlider = document.getElementById('master-volume');
     const musicVolumeSlider = document.getElementById('music-volume');
     const sfxVolumeSlider = document.getElementById('sfx-volume');
     
@@ -307,8 +300,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (musicVolumeSlider) musicVolumeSlider.addEventListener('input', updateVolumeDisplays);
     if (sfxVolumeSlider) sfxVolumeSlider.addEventListener('input', updateVolumeDisplays);
     
-    // Save settings
-    if (settingsSaveBtn) {
+        if (settingsSaveBtn) {
         settingsSaveBtn.addEventListener('click', async () => {
             try {
                 const { setMasterVolume, setMusicVolume, setSFXVolume } = await import('/js/modules/soundManager.js');
@@ -318,8 +310,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 settingsModal.classList.add('hidden');
                 
-                // Show toast
-                const { showToast } = await import('/js/modules/toast.js');
+                                const { showToast } = await import('/js/modules/toast.js');
                 showToast('Paramètres sauvegardés !', 'success');
             } catch (e) {
                 console.error('Error saving settings:', e);
@@ -327,10 +318,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Global SFX Handler
-    document.addEventListener('click', async (e) => {
-        // Check if element or parent is clickable
-        const target = e.target.closest('button, a, .character-card, .slot, .quest-item, .leaflet-interactive');
+        document.addEventListener('click', async (e) => {
+                const target = e.target.closest('button, a, .character-card, .slot, .quest-item, .leaflet-interactive');
         
         if (target) {
             try {
@@ -341,18 +330,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 });
 
-// Fonction pour créer/mettre à jour le graphique radar
 function updateStatsChart(strength, dexterity, intelligence, vitality) {
     const ctx = document.getElementById('statsRadarChart');
     if (!ctx) return;
     
-    // Détruire l'ancien graphique s'il existe
-    if (statsChart) {
+        if (statsChart) {
         statsChart.destroy();
     }
     
-    // Créer le nouveau graphique
-    statsChart = new Chart(ctx, {
+        statsChart = new Chart(ctx, {
         type: 'radar',
         data: {
             labels: ['Force', 'Dextérité', 'Intelligence', 'Vitalité'],
@@ -434,17 +420,14 @@ function selectCharacter(id) {
     const char = characters.find(c => c.id === id);
     if (!char) return;
 
-    // Update Info
-    document.getElementById('character-name').textContent = char.name;
+        document.getElementById('character-name').textContent = char.name;
     document.getElementById('character-details').textContent = `Niveau ${char.level} ${char.class_name}`;
     
-    // Update Hidden Inputs
-    document.getElementById('selected-character-id').value = char.id;
+        document.getElementById('selected-character-id').value = char.id;
     const mobileInputs = document.querySelectorAll('.mobile-character-id');
     mobileInputs.forEach(input => input.value = char.id);
 
-    // Update Selection Visuals
-    document.querySelectorAll('.character-card').forEach(card => {
+        document.querySelectorAll('.character-card').forEach(card => {
         card.classList.remove('border-violet-500', 'ring-1', 'ring-violet-500', 'bg-gray-800');
         card.classList.add('hover:border-gray-500');
     });
@@ -455,8 +438,7 @@ function selectCharacter(id) {
         card.classList.add('border-violet-500', 'ring-1', 'ring-violet-500', 'bg-gray-800');
     });
 
-    // Recharger le personnage
-    fetch(`/api/character/${id}/render`)
+        fetch(`/api/character/${id}/render`)
         .then(response => {
             if (!response.ok) throw new Error('HTTP error ' + response.status);
             return response.text();
@@ -470,8 +452,7 @@ function selectCharacter(id) {
                 renderer.initAll();
             }
             
-            // Update Chart
-            updateStatsChart(
+                        updateStatsChart(
                 char.strength || 10,
                 char.dexterity || 10,
                 char.intelligence || 10,
@@ -489,8 +470,7 @@ function selectCharacter(id) {
             );
         });
 
-    // Close mobile menu
-    const menu = document.getElementById('mobile-menu');
+        const menu = document.getElementById('mobile-menu');
     if (!menu.classList.contains('-translate-x-full')) {
         toggleCharacterMenu();
     }
@@ -514,8 +494,7 @@ function openDeleteModal() {
     document.getElementById('modal-character-id').value = charId;
     
     modal.classList.remove('hidden');
-    // Trigger reflow
-    void modal.offsetWidth;
+        void modal.offsetWidth;
     
     backdrop.classList.remove('opacity-0');
     content.classList.remove('scale-95', 'opacity-0');

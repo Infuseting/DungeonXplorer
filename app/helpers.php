@@ -8,16 +8,13 @@
  * @param string $layout Layout to use (default: 'base')
  */
 function view($view, $data = [], $layout = 'base') {
-    // Extract data to variables
-    extract($data);
+        extract($data);
     
-    // Start output buffering for the view content
-    ob_start();
+        ob_start();
     require __DIR__ . "/../Views/{$view}.php";
     $content = ob_get_clean();
     
-    // Render with layout
-    require __DIR__ . "/../Views/layouts/{$layout}.php";
+        require __DIR__ . "/../Views/layouts/{$layout}.php";
 }
 
 /**
@@ -49,11 +46,9 @@ function renderCharacter($character, $options = []) {
     $options = array_merge($defaults, $options);
     
     $className = strtolower($character['class']['name'] ?? $character['class_name'] ?? 'guerrier');
-    $imageBase = "/assets/images/{$className}";  // ← Retiré le slash final
-    $appearance = $character['appearance'] ?? [];
+    $imageBase = "/assets/images/{$className}";      $appearance = $character['appearance'] ?? [];
     
-    // Size classes
-    $sizeClasses = [
+        $sizeClasses = [
         'small' => 'w-32 h-32',
         'medium' => 'w-64 h-64',
         'large' => 'w-96 h-96',
@@ -62,16 +57,13 @@ function renderCharacter($character, $options = []) {
     
     $sizeClass = $sizeClasses[$options['size']] ?? $sizeClasses['medium'];
     
-    // Hair color values
-    $hairRedCyan = $appearance['hair']['redCyan'] ?? 100;
+        $hairRedCyan = $appearance['hair']['redCyan'] ?? 100;
     $hairGreenMagenta = $appearance['hair']['greenMagenta'] ?? 100;
     $hairBlueYellow = $appearance['hair']['blueYellow'] ?? 100;
     
-    // Eye color
-    $eyeColor = $appearance['eyes']['color'] ?? 'brown';
+        $eyeColor = $appearance['eyes']['color'] ?? 'brown';
     
-    // Makeup type
-    $makeupType = $appearance['makeup']['type'] ?? 'none';
+        $makeupType = $appearance['makeup']['type'] ?? 'none';
     
     ob_start();
     ?>

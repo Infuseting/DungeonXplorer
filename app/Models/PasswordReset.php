@@ -15,8 +15,7 @@ class PasswordReset
 
     public function create($userId, $code, $expiresAt)
     {
-        // Invalidate existing codes for this user
-        $this->deleteUserCodes($userId);
+                $this->deleteUserCodes($userId);
 
         $stmt = $this->db->prepare("INSERT INTO password_resets (user_id, code, expires_at) VALUES (?, ?, ?)");
         $stmt->bind_param("iss", $userId, $code, $expiresAt);

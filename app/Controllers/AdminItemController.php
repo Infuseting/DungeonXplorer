@@ -13,13 +13,11 @@ class AdminItemController
     
     public function index()
     {
-        // Get search/filter parameters
-        $search = $_GET['search'] ?? '';
+                $search = $_GET['search'] ?? '';
         $typeFilter = $_GET['type'] ?? '';
         $slotFilter = $_GET['slot'] ?? '';
         
-        // Build query with filters
-        $query = "SELECT * FROM items WHERE 1=1";
+                $query = "SELECT * FROM items WHERE 1=1";
         $params = [];
         $types = '';
         
@@ -64,11 +62,9 @@ class AdminItemController
             return;
         }
         
-        // POST - Create item
-        $iconPath = null;
+                $iconPath = null;
         
-        // Handle image upload
-        if (isset($_FILES['item_image']) && $_FILES['item_image']['error'] === UPLOAD_ERR_OK) {
+                if (isset($_FILES['item_image']) && $_FILES['item_image']['error'] === UPLOAD_ERR_OK) {
             $uploadDir = __DIR__ . '/../../public/assets/items/';
             if (!file_exists($uploadDir)) {
                 mkdir($uploadDir, 0755, true);
@@ -115,30 +111,25 @@ class AdminItemController
         $twoHanded = isset($_POST['two_handed']) ? 1 : 0;
         $finalIcon = $iconPath ?? ($_POST['icon'] ?? null);
 
-        // Prepare variables for bind_param (must be variables, not expressions)
-        $p_name = $_POST['name'] ?? '';
+                $p_name = $_POST['name'] ?? '';
         $p_description = $_POST['description'] ?? '';
         $p_type = $_POST['type'] ?? '';
         $p_slot_type = $_POST['slot_type'] ?? '';
         $p_two_handed = (int)$twoHanded;
         $p_width = (int)($_POST['width'] ?? 0);
         $p_height = (int)($_POST['height'] ?? 0);
-        $p_weight = (float)($_POST['weight'] ?? 0); // Changed to float
-        $p_icon = $finalIcon;
+        $p_weight = (float)($_POST['weight'] ?? 0);         $p_icon = $finalIcon;
         $p_stat_ranges = $statRangesJson;
         $p_max_stack = (int)($_POST['max_stack'] ?? 1);
         $p_price = ($_POST['price'] === '' || !isset($_POST['price'])) ? null : $_POST['price'];
         $p_is_purchasable = isset($_POST['is_purchasable']) ? 1 : 0;
         
-        // New Consumable Fields
-        $p_effect_type = $_POST['effect_type'] ?? 'none';
+                $p_effect_type = $_POST['effect_type'] ?? 'none';
         $p_duration_type = $_POST['duration_type'] ?? 'instant';
         $p_duration_value = (int)($_POST['duration_value'] ?? 0);
         $p_effect_value = (int)($_POST['effect_value'] ?? 0);
 
-        $types = "ssssiiidiississii"; // name,desc,type,slot | two_handed,width,height,weight | icon,stat_ranges,max_stack,price,is_purchasable | effect_type, duration_type, duration_value, effect_value
-        // Note: weight is double (d).
-        
+        $types = "ssssiiidiississii";                 
         $stmt->bind_param(
             $types,
             $p_name,
@@ -187,11 +178,8 @@ class AdminItemController
             return;
         }
         
-        // POST - Update item
-        $iconPath = $item['icon']; // Keep existing icon by default
-        
-        // Handle image upload
-        if (isset($_FILES['item_image']) && $_FILES['item_image']['error'] === UPLOAD_ERR_OK) {
+                $iconPath = $item['icon'];         
+                if (isset($_FILES['item_image']) && $_FILES['item_image']['error'] === UPLOAD_ERR_OK) {
             $uploadDir = __DIR__ . '/../../public/assets/items/';
             if (!file_exists($uploadDir)) {
                 mkdir($uploadDir, 0755, true);
@@ -205,8 +193,7 @@ class AdminItemController
                 $targetPath = $uploadDir . $fileName;
                 
                 if (move_uploaded_file($_FILES['item_image']['tmp_name'], $targetPath)) {
-                    // Delete old image if exists
-                    if ($item['icon'] && file_exists(__DIR__ . '/../../public/' . $item['icon'])) {
+                                        if ($item['icon'] && file_exists(__DIR__ . '/../../public/' . $item['icon'])) {
                         unlink(__DIR__ . '/../../public/' . $item['icon']);
                     }
                     $iconPath = 'assets/items/' . $fileName;
@@ -244,8 +231,7 @@ class AdminItemController
         $statRangesJson = json_encode($statRanges);
         $twoHanded = isset($_POST['two_handed']) ? 1 : 0;
 
-        // Prepare variables for bind_param (must be variables, not expressions)
-        $p_name = $_POST['name'] ?? $item['name'];
+                $p_name = $_POST['name'] ?? $item['name'];
         $p_description = $_POST['description'] ?? $item['description'];
         $p_type = $_POST['type'] ?? $item['type'];
         $p_slot_type = $_POST['slot_type'] ?? $item['slot_type'];
@@ -260,14 +246,12 @@ class AdminItemController
         $p_is_purchasable = isset($_POST['is_purchasable']) ? 1 : 0;
         $p_id = (int)$id;
 
-        // New Consumable Fields
-        $p_effect_type = $_POST['effect_type'] ?? 'none';
+                $p_effect_type = $_POST['effect_type'] ?? 'none';
         $p_duration_type = $_POST['duration_type'] ?? 'instant';
         $p_duration_value = (int)($_POST['duration_value'] ?? 0);
         $p_effect_value = (int)($_POST['effect_value'] ?? 0);
 
-        $types = "ssssiiidiississiisii"; // name,desc,type,slot | two_handed,width,height,weight | icon,stat_ranges,max_stack,price,is_purchasable | effect_type, duration_type, duration_value, effect_value | id
-        $stmt->bind_param(
+        $types = "ssssiiidiississiisii";         $stmt->bind_param(
             $types,
             $p_name,
             $p_description,

@@ -123,7 +123,6 @@ ob_start();
 </div>
 
 <script>
-// Show/hide merchant fields
 const merchantFields = document.getElementById('merchant-fields');
 const merchantSeed = document.getElementById('merchant-seed');
 const roleCheckboxes = document.querySelectorAll('[name="roles[]"]');
@@ -137,13 +136,11 @@ function updateMerchantFields() {
 roleCheckboxes.forEach(cb => cb.addEventListener('change', updateMerchantFields));
 updateMerchantFields();
 
-// Generate random SEED
 function generateRandomSeed() {
     const seed = Math.floor(Math.random() * 1000000);
     document.getElementById('merchant-seed').value = seed;
 }
 
-// Texture preview
 const textureInput = document.getElementById('texture-input');
 const texturePreview = document.getElementById('texture-preview');
 
@@ -158,7 +155,6 @@ textureInput.addEventListener('change', function(e) {
     }
 });
 
-// Convert percentages to decimals before submit
 document.querySelector('form').addEventListener('submit', function(e) {
     const buyRateOwn = document.querySelector('[name="buy_rate_own"]');
     const buyRateOther = document.querySelector('[name="buy_rate_other"]');

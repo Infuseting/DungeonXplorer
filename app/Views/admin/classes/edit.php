@@ -154,8 +154,7 @@ ob_start();
     window.skillNodes = <?= json_encode($skills ?? []) ?>;
 
     function switchTab(tab) {
-        // Toggle Buttons
-        const btnDetails = document.getElementById('tab-details');
+                const btnDetails = document.getElementById('tab-details');
         const btnTree = document.getElementById('tab-tree');
         
         if (tab === 'details') {
@@ -168,8 +167,7 @@ ob_start();
             btnTree.className = 'border-b-2 border-indigo-500 py-4 px-1 text-sm font-medium text-indigo-400';
             document.getElementById('content-details').classList.add('hidden');
             document.getElementById('content-tree').classList.remove('hidden');
-            // Trigger Resize for Canvas
-            window.dispatchEvent(new Event('resize'));
+                        window.dispatchEvent(new Event('resize'));
         }
     }
 </script>

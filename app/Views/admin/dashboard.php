@@ -78,8 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Class Distribution Chart
-            const classLabels = data.class_distribution.map(c => c.name);
+                        const classLabels = data.class_distribution.map(c => c.name);
             const classData = data.class_distribution.map(c => c.count);
             const classCtx = document.getElementById('classChart').getContext('2d');
             new Chart(classCtx, {
@@ -119,10 +118,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // Activity Chart (last 7 days)
-            const activityLabels = data.activity.map(a => {
-                // Convert YYYY-MM-DD to localized short weekday
-                const d = new Date(a.date + 'T00:00:00');
+                        const activityLabels = data.activity.map(a => {
+                                const d = new Date(a.date + 'T00:00:00');
                 return d.toLocaleDateString('fr-FR', { weekday: 'short' });
             });
             const activityData = data.activity.map(a => a.count);

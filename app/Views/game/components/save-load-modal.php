@@ -80,8 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const refreshBtn = document.getElementById('btn-refresh-saves');
     const savesContainer = document.getElementById('saves-list-container');
     
-    // Namespace
-    window.SaveSystem = {
+        window.SaveSystem = {
         open(mode = 'save') {
             modal.classList.remove('hidden');
             this.switchTab(mode);
@@ -98,8 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         switchTab(tabName) {
-            // Update Headers
-            tabs.forEach(t => {
+                        tabs.forEach(t => {
                 if(t.dataset.tab === tabName) {
                     t.classList.add('text-purple-400', 'border-purple-500');
                     t.classList.remove('text-gray-400', 'border-transparent');
@@ -109,8 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // Update Content
-            Object.values(tabContents).forEach(el => el.classList.add('hidden'));
+                        Object.values(tabContents).forEach(el => el.classList.add('hidden'));
             tabContents[tabName].classList.remove('hidden');
 
             if(tabName === 'load') this.loadSaves();
@@ -183,13 +180,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if(!confirm("Charger cette sauvegarde ? Toute progression non sauvegardée sera perdue.")) return;
 
             const { showToast } = await import('/js/modules/toast.js');
-            const { playSound } = await import('/js/modules/soundManager.js'); // Assuming we can verify this imports correctly? actually we are inside module maybe? No, script tag.
-            
-            // Dynamic import usually works in module scripts, but here plain script. 
-            // We'll rely on global or re-import if possible.
-            // Since this is plain script, we can't use top-level await for imports unless type=module.
-            // But this function is async, so `await import` works inside it.
-            
+            const { playSound } = await import('/js/modules/soundManager.js');             
+                                                            
             showToast('Chargement en cours...', 'info');
 
             try {
@@ -215,14 +207,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Events
-    closeBtn.addEventListener('click', () => SaveSystem.close());
+        closeBtn.addEventListener('click', () => SaveSystem.close());
     tabs.forEach(t => t.addEventListener('click', () => SaveSystem.switchTab(t.dataset.tab)));
     createSaveBtn.addEventListener('click', () => SaveSystem.createSave());
     refreshBtn.addEventListener('click', () => SaveSystem.loadSaves());
 
-    // Close on escape
-    document.addEventListener('keydown', (e) => {
+        document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
             SaveSystem.close();
         }

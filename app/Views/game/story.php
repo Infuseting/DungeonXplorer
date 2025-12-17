@@ -167,8 +167,7 @@
 <script>
     const STORY_ID = <?= $story['id'] ?>;
 
-    // Drawer Toggle Logic
-    document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', () => {
         const drawer = document.getElementById('choices-drawer');
         const toggleBtn = document.getElementById('choices-toggle');
         const toggleIcon = document.getElementById('toggle-icon');
@@ -185,8 +184,7 @@
             }
         });
         
-        // User Menu Dropdown
-        const userMenuBtn = document.getElementById('user-menu-button');
+                const userMenuBtn = document.getElementById('user-menu-button');
         const userDropdown = document.getElementById('user-dropdown');
         
         if (userMenuBtn && userDropdown) {
@@ -195,16 +193,14 @@
                 userDropdown.classList.toggle('hidden');
             });
             
-            // Close dropdown when clicking outside
-            document.addEventListener('click', (e) => {
+                        document.addEventListener('click', (e) => {
                 if (!userDropdown.contains(e.target) && e.target !== userMenuBtn) {
                     userDropdown.classList.add('hidden');
                 }
             });
         }
         
-        // Settings button
-        const settingsBtn = document.getElementById('settings-button');
+                const settingsBtn = document.getElementById('settings-button');
         const settingsModal = document.getElementById('settings-modal');
         
         if (settingsBtn && settingsModal) {
@@ -212,8 +208,7 @@
                 userDropdown.classList.add('hidden');
                 settingsModal.classList.remove('hidden');
                 
-                // Load current volumes
-                const { getVolumes } = await import('/js/modules/soundManager.js');
+                                const { getVolumes } = await import('/js/modules/soundManager.js');
                 const volumes = getVolumes();
                 const masterSlider = document.getElementById('master-volume');
                 const musicSlider = document.getElementById('music-volume');
@@ -223,21 +218,18 @@
                 if (musicSlider) musicSlider.value = Math.round(volumes.music * 100);
                 if (sfxSlider) sfxSlider.value = Math.round(volumes.sfx * 100);
                 
-                // Update displays
-                updateVolumeDisplays();
+                                updateVolumeDisplays();
             });
         }
         
-        // Settings modal close button
-        const settingsCloseBtn = document.getElementById('settings-close-btn');
+                const settingsCloseBtn = document.getElementById('settings-close-btn');
         if (settingsCloseBtn && settingsModal) {
             settingsCloseBtn.addEventListener('click', () => {
                 settingsModal.classList.add('hidden');
             });
         }
         
-        // Volume sliders
-        const masterVolumeSlider = document.getElementById('master-volume');
+                const masterVolumeSlider = document.getElementById('master-volume');
         const musicVolumeSlider = document.getElementById('music-volume');
         const sfxVolumeSlider = document.getElementById('sfx-volume');
         
@@ -261,8 +253,7 @@
             sfxVolumeSlider.addEventListener('input', updateVolumeDisplays);
         }
         
-        // Save settings button
-        const settingsSaveBtn = document.getElementById('settings-save-btn');
+                const settingsSaveBtn = document.getElementById('settings-save-btn');
         if (settingsSaveBtn && settingsModal) {
             settingsSaveBtn.addEventListener('click', async () => {
                 const { setMasterVolume, setMusicVolume, setSFXVolume } = await import('/js/modules/soundManager.js');
@@ -273,8 +264,7 @@
                 
                 settingsModal.classList.add('hidden');
                 
-                // Show toast if available
-                try {
+                                try {
                     const { showToast } = await import('/js/modules/toast.js');
                     showToast('Paramètres sauvegardés !', 'success');
                 } catch (e) {
@@ -283,8 +273,7 @@
             });
         }
         
-        // Manual Save Button
-        const manualSaveBtn = document.getElementById('manual-save-button');
+                const manualSaveBtn = document.getElementById('manual-save-button');
         if (manualSaveBtn) {
             manualSaveBtn.addEventListener('click', async (e) => {
                 e.stopPropagation();
@@ -302,28 +291,23 @@
             });
         }
 
-        // Return to menu button
-        const returnMenuBtn = document.getElementById('return-menu-button');
+                const returnMenuBtn = document.getElementById('return-menu-button');
         if (returnMenuBtn) {
             returnMenuBtn.addEventListener('click', async () => {
-                // Save game first
-                await fetch('/game/save', { method: 'POST' });
+                                await fetch('/game/save', { method: 'POST' });
                 window.location.href = '/personnage';
             });
         }
         
-        // Logout button
-        const logoutBtn = document.getElementById('logout-button');
+                const logoutBtn = document.getElementById('logout-button');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', async () => {
-                // Save game first
-                await fetch('/game/save', { method: 'POST' });
+                                await fetch('/game/save', { method: 'POST' });
                 window.location.href = '/logout';
             });
         }
         
-        // Exit Dungeon Button
-        const exitDungeonBtn = document.getElementById('exit-dungeon-btn');
+                const exitDungeonBtn = document.getElementById('exit-dungeon-btn');
         if (exitDungeonBtn) {
             exitDungeonBtn.addEventListener('click', exitDungeon);
         }
@@ -358,22 +342,17 @@
     import { initInventory } from '/js/modules/inventory.js';
     import { openQuestJournal } from '/js/modules/questJournal.js';
 
-    // Make character ID available globally
-    window.characterId = <?= $_SESSION['character_id'] ?>;
+        window.characterId = <?= $_SESSION['character_id'] ?>;
 
-    // Initialize modules after DOM is ready
-    document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', () => {
         console.log('Initializing story modules...');
         
-        // Initialize inventory system
-        initInventory();
+                initInventory();
         console.log('Inventory initialized');
         
-        // Quest Journal - override the toggle to use the module
-        const questJournalBtn = document.getElementById('quest-journal-toggle');
+                const questJournalBtn = document.getElementById('quest-journal-toggle');
         if (questJournalBtn) {
-            // Remove existing listeners by cloning
-            const newQuestBtn = questJournalBtn.cloneNode(true);
+                        const newQuestBtn = questJournalBtn.cloneNode(true);
             questJournalBtn.parentNode.replaceChild(newQuestBtn, questJournalBtn);
             
             newQuestBtn.addEventListener('click', () => {

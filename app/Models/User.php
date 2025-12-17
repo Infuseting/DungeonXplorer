@@ -45,8 +45,7 @@ class User
         return password_verify($password, $hash);
     }
 
-    // Token Management Functionality
-    public function createRememberToken($userId, $selector, $validator, $expiresAt)
+        public function createRememberToken($userId, $selector, $validator, $expiresAt)
     {
         $hashedValidator = hash('sha256', $validator);
         $stmt = $this->db->prepare("INSERT INTO user_tokens (user_id, selector, hashed_validator, expires_at) VALUES (?, ?, ?, ?)");
@@ -83,8 +82,7 @@ class User
         return $stmt->execute();
     }
 
-    // Admin Methods
-    public function getAllUsers()
+        public function getAllUsers()
     {
         $result = $this->db->query("
             SELECT u.*, 

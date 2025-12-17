@@ -24,8 +24,7 @@ class UserController
 
         $userModel = new User();
         if ($userModel->updateProfile($userId, $username)) {
-            $_SESSION['username'] = $username; // Update session
-            echo json_encode(['success' => true, 'message' => 'Profil mis à jour']);
+            $_SESSION['username'] = $username;             echo json_encode(['success' => true, 'message' => 'Profil mis à jour']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Erreur lors de la mise à jour']);
         }
@@ -49,8 +48,7 @@ class UserController
 
         $userModel = new User();
         
-        // Check uniqueness
-        $existing = $userModel->findByEmail($email);
+                $existing = $userModel->findByEmail($email);
         if ($existing && $existing['id'] != $userId) {
             echo json_encode(['success' => false, 'message' => 'Cet email est déjà utilisé']);
             return;

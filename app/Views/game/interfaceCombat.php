@@ -211,8 +211,7 @@ use App\Models\Skill
                         <?php 
                             $skillModel = new Skill();
                             $unlockedSkills = $skillModel->getUnlockedSkills($characterModel->getId());
-                            // Filter Active
-                            $actives = array_filter($unlockedSkills, function($s) { return $s['type'] === 'active'; });
+                                                        $actives = array_filter($unlockedSkills, function($s) { return $s['type'] === 'active'; });
                             
                             if (empty($actives)):
                         ?>
@@ -266,8 +265,7 @@ use App\Models\Skill
             window.updateCombatSound = updateCombatState;
             window.changeMusicCategory = changeMusicCategory;
             
-            // Start combat music immediately
-            changeMusicCategory('combat');
+                        changeMusicCategory('combat');
         </script>
 
         <script>
@@ -285,8 +283,7 @@ use App\Models\Skill
             const monster = document.getElementById("monster");
             const character = document.getElementById('character');
             
-            // Initial Sound Check
-            setTimeout(() => {
+                        setTimeout(() => {
                 if(window.updateCombatSound) {
                     const currentHp = parseInt(document.getElementById('player-hp').textContent) || MAX_HP;
                     window.updateCombatSound(currentHp, MAX_HP);
@@ -328,17 +325,14 @@ use App\Models\Skill
 
                         log.innerHTML = "";
 
-                        if (data.player) {//Affichage du message joueur et animation des dégats pris par le monstre si l'attaque a touchée
-                            log.innerHTML += `<p class="text-blue-400 font-semibold mb-1">${data.player}</p>`;
+                        if (data.player) {                            log.innerHTML += `<p class="text-blue-400 font-semibold mb-1">${data.player}</p>`;
                              if(data.damageM){
                                 ennemyHit();
                              }
                         }
 
-                        //Délai d'une seconde entre les deux affichage ( gestion flux informations)
-                        setTimeout(() => {
-                             if (data.monster) { //Affichage du message monstre et animation des degat pris par le joueur si attaque a touchée
-                                log.innerHTML += `<p class="text-red-400 font-semibold mb-1">${data.monster}</p>`;
+                                                setTimeout(() => {
+                             if (data.monster) {                                 log.innerHTML += `<p class="text-red-400 font-semibold mb-1">${data.monster}</p>`;
                                 if(data.damageJ){
                                     playerHit();
                                 }
@@ -356,12 +350,10 @@ use App\Models\Skill
                             end  = true;
                             playerWin(data.rewards);
                         }
-                        // Mettre à jour les HP du joueur
-                        if (typeof data.playerHp !== "undefined") {
+                                                if (typeof data.playerHp !== "undefined") {
                             document.getElementById('player-hp').innerHTML = "";
                             
-                            // Audio Update
-                            if (window.updateCombatSound) {
+                                                        if (window.updateCombatSound) {
                                 window.updateCombatSound(data.playerHp, MAX_HP);
                             }
 
@@ -389,9 +381,7 @@ use App\Models\Skill
                 
                 let result = Math.floor(Math.random() * 20) + 1;
 
-                dice.textContent = "🎲 "; // effet suspense
-                dice.classList.add("animate-spin"); // rotation Tailwind
-
+                dice.textContent = "🎲 ";                 dice.classList.add("animate-spin"); 
                 setTimeout(() => {
                     dice.classList.remove("animate-spin");
                     dice.textContent = "🎲 " + result;
@@ -471,8 +461,7 @@ use App\Models\Skill
                     bg.classList.add("sepia", "saturate-200", "hue-rotate-[-50deg]", "brightness-75");
                     winOrLoss.classList.add("text-red-600", "animate-pulse");
                     
-                    // Fetch Saves
-                    fetch('/game/saves')
+                                        fetch('/game/saves')
                     .then(r => r.json())
                     .then(data => {
                         let savesHtml = '<div class="mt-4 p-4 bg-gray-900/90 rounded text-center"><p class="text-white mb-2">Charger une sauvegarde :</p>';
@@ -510,11 +499,9 @@ use App\Models\Skill
                     }
                 });
             }
-            //animation plus graphique
-            function ennemyHit(){
+                        function ennemyHit(){
                     gsap.from(monster, {
-                    x: "-8",     // recul
-                    duration: 0.1,
+                    x: "-8",                         duration: 0.1,
                     yoyo: true, 
                     repeat: 2,
                     ease: "power2.out"
@@ -522,8 +509,7 @@ use App\Models\Skill
                 }
             function playerHit(){
                    gsap.from(character, {
-                    x: "-8",     // recul
-                    duration: 0.1,
+                    x: "-8",                         duration: 0.1,
                     yoyo: true,
                     repeat: 2,
                     ease: "power2.out"
@@ -536,8 +522,7 @@ use App\Models\Skill
                     { x: -10 }, 
                     { x: 10, duration: 0.05, repeat: 10, yoyo: true }
                 );
-               // window.location.href('')
-            }
+                           }
             function bossDie() {
                 gsap.fromTo("body", 
                     { x: -10 }, 
@@ -565,8 +550,7 @@ use App\Models\Skill
                 });
             }  
 
-            // Initial Combat Data Injection
-            <?php if (isset($initialData) && $initialData): ?>
+                        <?php if (isset($initialData) && $initialData): ?>
                 const initialData = <?php echo json_encode($initialData); ?>;
                 setTimeout(() => {
                     const log = document.getElementById("combat-log");
@@ -579,8 +563,7 @@ use App\Models\Skill
                     
                     if (initialData.hit) {
                         playerHit();
-                        // Update HP immediately
-                        document.getElementById('player-hp').textContent = "<?php echo htmlspecialchars($characterModel->getVitality()); ?>";
+                                                document.getElementById('player-hp').textContent = "<?php echo htmlspecialchars($characterModel->getVitality()); ?>";
                     }
                 }, 500);
             <?php endif; ?>

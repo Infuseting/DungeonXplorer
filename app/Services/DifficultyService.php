@@ -106,8 +106,7 @@ class DifficultyService
     {
         switch ($difficulty) {
             case self::STORY:
-                return 1.5; // 50% more chance to crit
-            default:
+                return 1.5;             default:
                 return 1.0;
         }
     }

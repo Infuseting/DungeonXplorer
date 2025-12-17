@@ -7,8 +7,7 @@ class LoggerService
 {
     private $db;
     
-    // Categories
-    const CAT_CRITICAL = 'CRITICAL';
+        const CAT_CRITICAL = 'CRITICAL';
     const CAT_GAMEPLAY = 'GAMEPLAY';
     const CAT_SECURITY = 'SECURITY';
     const CAT_SYSTEM   = 'SYSTEM';
@@ -18,7 +17,7 @@ class LoggerService
     }
 
     /**
-     * Generic Log Function
+     * Fonction générique d'enregistrement des logs en base de données.
      */
     public function log(string $category, string $actionType, ?int $userId, ?int $charId, array $details = [])
     {
@@ -32,7 +31,7 @@ class LoggerService
     }
 
     /**
-     * Log Critical Admin Action
+     * Enregistre une action critique d'administration (ex: Ban, Modif config).
      */
     public function logCritical(int $adminUserId, string $actionType, array $details = [])
     {
@@ -40,7 +39,7 @@ class LoggerService
     }
 
     /**
-     * Log Gameplay Action (Character focused)
+     * Enregistre une action de jeu liée à un personnage (Combat, Quête, Progression, Mort).
      */
     public function logGameplay(int $userId, int $charId, string $actionType, array $details = [])
     {
@@ -48,7 +47,7 @@ class LoggerService
     }
 
     /**
-     * Log Security Event
+     * Enregistre un événement de sécurité (Connexion échouée, Changement MDP, etc.).
      */
     public function logSecurity(?int $userId, string $actionType, array $details = [])
     {
@@ -56,7 +55,7 @@ class LoggerService
     }
 
     /**
-     * Fetch Logs with Filters
+     * Récupère les logs avec filtrage (Catégorie, Action, Utilisateur, Dates, Personnage) et pagination.
      */
     public function getLogs(array $filters = [], int $limit = 100, int $offset = 0)
     {
@@ -126,7 +125,6 @@ class LoggerService
         $params = [];
         $types = "";
 
-        // Same filters as above (simplified duplication for speed, ideally refactor criteria builder)
         if (!empty($filters['category'])) { $sql .= " AND l.category = ?"; $params[] = $filters['category']; $types .= "s"; }
         if (!empty($filters['action_type'])) { $sql .= " AND l.action_type LIKE ?"; $params[] = "%".$filters['action_type']."%"; $types .= "s"; }
         if (!empty($filters['user_id'])) { $sql .= " AND l.user_id = ?"; $params[] = $filters['user_id']; $types .= "i"; }

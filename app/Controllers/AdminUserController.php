@@ -27,8 +27,7 @@ class AdminUserController
         }
 
         $code = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
-        $expiresAt = date('Y-m-d H:i:s', time() + 86400); // 24 hours
-
+        $expiresAt = date('Y-m-d H:i:s', time() + 86400); 
         $resetModel = new PasswordReset();
         if ($resetModel->create($id, $code, $expiresAt)) {
             header('Content-Type: application/json');

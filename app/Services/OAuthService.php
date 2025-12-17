@@ -52,9 +52,7 @@ class OAuthService
             'redirect_uri' => $cfg['redirect_uri'],
             'response_type' => 'code',
             'scope' => $cfg['scope'],
-            'access_type' => 'offline', // For refresh tokens
-            'prompt' => 'consent' // Force consent
-        ];
+            'access_type' => 'offline',             'prompt' => 'consent'         ];
         
         if ($provider === 'apple') {
             $params['response_mode'] = 'form_post';
@@ -71,8 +69,7 @@ class OAuthService
 
         $cfg = $this->config[$provider];
 
-        // 1. Exchange Code for Token
-        $params = [
+                $params = [
             'client_id' => $cfg['client_id'],
             'client_secret' => $cfg['client_secret'],
             'redirect_uri' => $cfg['redirect_uri'],
@@ -86,8 +83,7 @@ class OAuthService
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         
-        // Headers for GitHub
-        $headers = ['Accept: application/json'];
+                $headers = ['Accept: application/json'];
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         $response = curl_exec($ch);
@@ -96,20 +92,17 @@ class OAuthService
         $data = json_decode($response, true);
         
         if (!isset($data['access_token'])) {
-            // Debug failure if needed but return null for safey
-            return null;
+                        return null;
         }
 
         $accessToken = $data['access_token'];
 
-        // 2. Get User Info
-        $ch = curl_init();
+                $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $cfg['user_url']);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             "Authorization: Bearer $accessToken",
-            "User-Agent: DungeonXplorer" // GitHub requires User-Agent
-        ]);
+            "User-Agent: DungeonXplorer"         ]);
 
         $response = curl_exec($ch);
         curl_close($ch);
@@ -120,8 +113,7 @@ class OAuthService
             return null;
         }
 
-        // Normalize User Data
-        $normalized = [
+                $normalized = [
             'id' => null,
             'email' => null,
             'name' => null
@@ -137,8 +129,7 @@ class OAuthService
             $normalized['name'] = $userData['username'] ?? null;
         } elseif ($provider === 'github') {
             $normalized['id'] = $userData['id'] ?? null;
-            // GitHub email might be private, need separate call if null, but let's try basic first
-            $normalized['email'] = $userData['email'] ?? null; 
+                        $normalized['email'] = $userData['email'] ?? null; 
             $normalized['name'] = $userData['login'] ?? null;
         }
 

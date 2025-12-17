@@ -139,14 +139,12 @@ ob_start();
     diffRadios.forEach(radio => {
         radio.addEventListener('change', (e) => {
             if (e.target.value === 'IRONMAN') {
-                // Force check IronMan and disable toggle
-                ironmanCheckbox.checked = true;
+                                ironmanCheckbox.checked = true;
                 ironmanCheckbox.disabled = true;
                 ironmanContainer.style.opacity = '0.5';
                 ironmanContainer.title = "Inclus dans 'Le Destin de Fer'";
             } else {
-                // Re-enable toggle
-                ironmanCheckbox.disabled = false;
+                                ironmanCheckbox.disabled = false;
                 ironmanContainer.style.opacity = '1';
                 ironmanContainer.title = "";
             }

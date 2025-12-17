@@ -72,8 +72,7 @@
                 this.nodesLayer.innerHTML = '';
                 this.connectionsLayer.innerHTML = '';
 
-                // Render Nodes
-                SKILLS.forEach(skill => {
+                                SKILLS.forEach(skill => {
                     const el = document.createElement('div');
                     el.className = 'skill-node';
                     el.style.left = `${skill.node_x}px`;
@@ -84,16 +83,14 @@
                         <div class="text-xs text-gray-500 truncate">${skill.type}</div>
                     `;
                     
-                    // Drag logic
-                    el.addEventListener('mousedown', (e) => {
+                                        el.addEventListener('mousedown', (e) => {
                         e.stopPropagation();
                         this.startDrag(originalEvent = e, skill, el);
                     });
 
                     this.nodesLayer.appendChild(el);
 
-                    // Render Connections (Lines to parents)
-                    if (skill.parent_skill_id) {
+                                        if (skill.parent_skill_id) {
                         const parent = SKILLS.find(s => s.id == skill.parent_skill_id);
                         if (parent) {
                             this.drawConnection(parent, skill);
@@ -103,14 +100,9 @@
             },
 
             drawConnection(parent, child) {
-                const startX = parseInt(parent.node_x) + 90; // Center X (approx width/2)
-                const startY = parseInt(parent.node_y) + 60; // Bottom (approx height)
-                const endX = parseInt(child.node_x) + 90;   // Center X
-                const endY = parseInt(child.node_y);        // Top
-
+                const startX = parseInt(parent.node_x) + 90;                 const startY = parseInt(parent.node_y) + 60;                 const endX = parseInt(child.node_x) + 90;                   const endY = parseInt(child.node_y);        
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                // Curvy line
-                const d = `M ${startX} ${startY} C ${startX} ${startY + 50}, ${endX} ${endY - 50}, ${endX} ${endY}`;
+                                const d = `M ${startX} ${startY} C ${startX} ${startY + 50}, ${endX} ${endY - 50}, ${endX} ${endY}`;
                 
                 path.setAttribute('d', d);
                 path.setAttribute('class', 'connection');
@@ -130,8 +122,7 @@
                     skill.node_y = startNodeY + dy;
                     el.style.left = `${skill.node_x}px`;
                     el.style.top = `${skill.node_y}px`;
-                    this.render(); // Re-render lines
-                };
+                    this.render();                 };
 
                 const upHandler = () => {
                     window.removeEventListener('mousemove', moveHandler);
@@ -160,8 +151,7 @@
             },
 
             setupEvents() {
-                // Panning (optional, simplified for now)
-            }
+                            }
         };
 
         editor.init();

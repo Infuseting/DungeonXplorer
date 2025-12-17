@@ -13,45 +13,49 @@ use App\Models\Inventory;
 
 class CombatController
 {
-    public function startCombat( $monsterId)
+    /**
+     * Initie un combat contre un monstre donné.
+     * Prépare les objets Combat, Monster et Character, détermine l'initiative,
+     * et charge la vue de combat (ou renvoie le HTML via AJAX).
+     */
+    public function startCombat($monsterId)
     {
         if (!isset($_SESSION['user_id'])) {
             header('Location: /login');
             exit;
         }
 
-        
-
+        // Chargement du personnage sans garder la connexion DB active dans l'objet
         $characterModel = new Character();
         $characterModel->findById($_SESSION['character_id']);
         $characterModel->unsetDb();
         
-
-    
+        // Sauvegarde des PV max pour le calcul des pourcentages côté client
         $_SESSION['maxHpPlayer'] = $characterModel->getVitality();
+        
+        // Chargement du monstre
         $monsterModel = new Monster();
         $monsterModel->findById($monsterId);
         $monsterModel->unsetDb();
+        
+        // Création de l'instance de combat
         $combat = new Combat($characterModel, $monsterModel);
-    
         $_SESSION['combat'] = $combat;
         
-        // Log Combat Start
+        // Logging du début du combat
         $logger = new LoggerService();
         $logger->logGameplay($_SESSION['user_id'], $_SESSION['character_id'], 'COMBAT_START', [
             'monster_id' => $monsterId,
             'monster_name' => $monsterModel->getName()
         ]);
         
-        // Difficulty handling
+        // Initialisation de la difficulté et des règles (Ironman)
         $difficultyService = new DifficultyService();
         $_SESSION['difficulty_service'] = serialize($difficultyService);
         $_SESSION['current_difficulty'] = $characterModel->getDifficulty();
         $_SESSION['is_ironman'] = $characterModel->isIronman();
 
-        // Initiative System
-
-        // Initiative System
+        // Calcul de l'initiative (1d20 + Mod Dex)
         $statsModel = new CharacterStats();
         $playerStats = $statsModel->getEffectiveStats($_SESSION['character_id']);
         $playerDex = $playerStats['stats']['dexterity'] ?? 10;
@@ -60,11 +64,10 @@ class CombatController
         $monsterDex = $monsterModel->getDexterity();
         $monsterInit = rand(1, 20) + floor(($monsterDex - 10) / 2);
 
-        // Determine who starts
         $monsterStarts = false;
         $initMessage = "";
 
-        // Check forced initiative (Failed Flee)
+        // Vérification si le monstre a l'initiative forcée (ex: fuite ratée précédemment)
         if (isset($_SESSION['combat_initiative']) && $_SESSION['combat_initiative'] === 'enemy') {
             $monsterStarts = true;
             $initMessage = "Vous avez échoué à fuir ! Le monstre attaque en premier.";
@@ -78,9 +81,8 @@ class CombatController
 
         $initialData = null;
         if ($monsterStarts) {
-            // Run Monster Turn Immediately
+            // Le monstre attaque immédiatement si c'est son tour
             $monsterResult = $combat->monsterTurn();
-            // $monsterResult is [$message, $bool]
             
             $initialData = [
                 'message' => $initMessage . " <br>" . $monsterResult[0],
@@ -95,28 +97,18 @@ class CombatController
             ];
         }
 
-        // Fetch Potions (Consumables) from Inventory
+        // Préparation des potions pour l'interface de combat
         $inventoryModel = new \App\Models\Inventory();
         $inventoryData = $inventoryModel->getCharacterInventory($_SESSION['character_id']);
         
         $potions = [];
         if (!empty($inventoryData['inventory'])) {
             foreach ($inventoryData['inventory'] as $item) {
-                // Determine if consumable - Assuming 'consumable' type or specific categorization
-                // Adjust this check based on your actual Item definition
                 if (isset($item['type']) && $item['type'] === 'consumable') {
-                    // Group by Item ID to handle quantities if needed, or pass individual stacks
-                    // The Inventory Model returns items. If they are stacked in DB, good. 
-                    // If multiple stacks exist, we should group them for display if desired.
-                    // For now, let's pass them as is or aggregated.
                     $id = $item['item_id'];
                     if (!isset($potions[$id])) {
                         $potions[$id] = $item;
                         $potions[$id]['count'] = 1; 
-                        // If item has a 'quantity' field in inventory, use it. 
-                        // The current Inventory::getCharacterInventory output doesn't seem to have explicit 'quantity' column in the SELECT, 
-                        // unless it's added dynamically or we missed it. 
-                        // Let's assume singular items for now or check if duplicates exist.
                     } else {
                         $potions[$id]['count']++;
                     }
@@ -124,13 +116,13 @@ class CombatController
             }
         }
         
-        // Fetch Unlocked Skills
+        // Chargement des compétences débloquées
         $skillModel = new \App\Models\Skill();
         $skills = $skillModel->getUnlockedSkills($_SESSION['character_id']);
 
+        // Réponse AJAX pour charger le contenu du combat sans recharger la page
         if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
-             // Render Partial
-            extract([
+             extract([
                 'characterModel' => $characterModel,
                 'monsterModel' => $monsterModel,
                 'initialData' => $initialData,
@@ -142,43 +134,45 @@ class CombatController
             exit;
         }
 
-        // Fallback for direct access: Redirect to Game (or show full view if you really want)
-        // ideally direct access should be handled by the router on client side, but here we enforce SPA.
-        // If we redirect to /game, we lose the "start combat" intent unless we store it.
-        // For now, let's just show the full view if not AJAX for debugging, OR redirect.
-        // A hard redirect to /game means "Cancel Combat Entry".
+        // Fallback redirection classique
         header('Location: /game');
         exit;
     }
+    /**
+     * Gère le lancer de dé (d20) via AJAX.
+     * La valeur est stockée en session pour être utilisée lors de l'action suivante.
+     */
     public function rollDice() {
-    // Toujours démarrer la session si elle n'est pas déjà active
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        header('Content-Type: application/json; charset=utf-8');
+
+        if (!empty($_POST['diceRoll'])) {
+            $diceRoll = (int) $_POST['diceRoll'];
+            $_SESSION['diceRoll'] = $diceRoll;
+
+            echo json_encode([
+                "success" => true,
+                "value"   => $diceRoll
+            ]);
+        } else {
+            http_response_code(400); 
+            echo json_encode([
+                "success" => false,
+                "message" => "Aucune valeur reçue"
+            ]);
+        }
     }
 
-    header('Content-Type: application/json; charset=utf-8');
-
-    if (!empty($_POST['diceRoll'])) {
-        $diceRoll = (int) $_POST['diceRoll'];
-        $_SESSION['diceRoll'] = $diceRoll;
-
-        echo json_encode([
-            "success" => true,
-            "value"   => $diceRoll
-        ]);
-    } else {
-        http_response_code(400); // code HTTP explicite
-        echo json_encode([
-            "success" => false,
-            "message" => "Aucune valeur reçue"
-        ]);
-    }
-}
-
+    /**
+     * Exécute un tour de combat complet (Action Joueur + Action Monstre).
+     * Gère les effets de statut, les attaques et les sorts.
+     */
     public function performAction() {
         header('Content-Type: application/json; charset=utf-8');
-        ob_clean(); // supprime tout ce qui aurait pu être envoyé avant
-
+        ob_clean(); 
 
         if (!isset($_SESSION['combat'])) {
             http_response_code(400);
@@ -200,7 +194,7 @@ class CombatController
         $combat = $_SESSION['combat'];
         $charId = $_SESSION['character_id'];
 
-        // --- STATUS EFFECT PROCESSING (PLAYER TURN START) ---
+        // Gestion des effets de statut (Poison, étourdissement, etc.)
         $statusService = new StatusEffectService();
         $statusResult = $statusService->processTurn($charId);
         
@@ -209,38 +203,40 @@ class CombatController
 
         $playerMessage = ["", 0];
         
-        // If Stunned, skip player action logic
+        // Tour du Joueur
         if ($preventAction) {
              $playerMessage[0] = implode("<br>", $statusMessages) . "<br><strong>Vous ne pouvez pas agir !</strong>";
         } else {
-             // Normal Turn
              $skillId = $_POST['skill_id'] ?? null;
+             // Exécution de l'action du joueur (Attaque physique ou Compétence)
              $playerMessage = $combat->playerTurn($action, $skillId);
              
-             // Prepend status messages (e.g. Poison damage)
              if (!empty($statusMessages)) {
                  $playerMessage[0] = implode("<br>", $statusMessages) . "<br>" . $playerMessage[0];
              }
         }
        
-
-        // Tour du monstre (si combat pas fini)
+        // Tour du Monstre (si le combat n'est pas fini)
         $monsterMessage = null;
         if (!$combat->isEnd()) {
             $monsterMessage = $combat->monsterTurn();
         }
         
+        // Reset des bonus temporaires de défense (par exemple après un sort de type "Bouclier")
         if (isset($_SESSION['initialDefence'])) {
             $combat->getJoueur()->setArmorClass($_SESSION['initialDefence']);
-            unset($_SESSION['initialDefence']); // supprimer pour éviter que ça reste
+            unset($_SESSION['initialDefence']); 
         }
-         // Consommer le dé
+        
+        // Consommation du jet de dé
         unset($_SESSION['diceRoll']);
 
-        // Check Victory
+        // Gestion de la Victoire
         $rewards = [];
         if (!$combat->isMonsterAlive()) {
              $monsterModel = $combat->getMonster();
+             
+             // Calcul de l'XP et de l'or
              $calc = $this->calculateRewards($combat, $monsterModel);
              
              $charModel = $combat->getJoueur();
@@ -250,10 +246,10 @@ class CombatController
              $xpRes = $saveChar->addXp($calc['xp']);
              $saveChar->addGold($calc['gold']);
              
-             // Loot
+             // Génération du butin
              $loot = $this->generateLoot($_SESSION['character_id'], $monsterModel);
              
-             // Check Quests
+             // Mise à jour des quêtes ("Tuer X monstres")
              $pqModel = new \App\Models\PlayerQuest();
              $questUpdates = $pqModel->onMonsterKilled($_SESSION['character_id'], $monsterModel->getId());
              
@@ -265,7 +261,7 @@ class CombatController
                  'quests' => $questUpdates
              ];
 
-             // Log Victory
+             // Logs de victoire
              $logger = new LoggerService();
              $logger->logGameplay($_SESSION['user_id'], $_SESSION['character_id'], 'COMBAT_WIN', [
                  'monster_id' => $monsterModel->getId(),
@@ -274,19 +270,18 @@ class CombatController
                  'loot' => $loot
              ]);
              
-             // Update Story Progress if applicable
+             // Détermination de l'ID d'histoire pour le retour au jeu
              if (isset($_GET['story_id']) || isset($_POST['return_story_id']) || isset($_SESSION['combat_story_id'])) {
-                 // Try to find story ID
-                 $storyId = $_GET['story_id'] ?? ($_POST['return_story_id'] ?? ($_SESSION['combat_story_id'] ?? null));
+                  $storyId = $_GET['story_id'] ?? ($_POST['return_story_id'] ?? ($_SESSION['combat_story_id'] ?? null));
              }
              
-             // If we don't have it directly, try to fetch active story from DB
              if (!isset($storyId)) {
                  $progModel = new \App\Models\StoryProgress();
                  $active = $progModel->getActiveStory($_SESSION['character_id']);
                  if ($active) $storyId = $active['story_id'];
              }
              
+             // Marquage du monstre comme "tué" dans la session pour ne pas le re-combattre
              if (isset($storyId)) {
                  $progModel = new \App\Models\StoryProgress();
                  $progress = $progModel->getProgress($_SESSION['character_id'], $storyId);
@@ -295,7 +290,6 @@ class CombatController
                      $nodeId = $progress['current_node_id'];
                      $monsterId = $monsterModel->getId();
                      
-                     // session storage for individual kills (finer granularity than node_cleared)
                      $sessionKey = 'killed_monsters_' . $nodeId;
                      if (!isset($_SESSION[$sessionKey])) {
                          $_SESSION[$sessionKey] = [];
@@ -303,21 +297,42 @@ class CombatController
                      if (!in_array($monsterId, $_SESSION[$sessionKey])) {
                          $_SESSION[$sessionKey][] = $monsterId;
                      }
-                     
-                     // Optimization: Check if all monsters in node are dead?
-                     // Requires NodeModel. For now, StoryController will check on load.
                  }
              }
         }
 
-        // Output Construction
-        // We'll replace newlines to ensure clean JSON
+        // Nettoyage des messages pour éviter les erreurs JSON
         $pMsg = $playerMessage[0] ?? '';
-        $pMsg = str_replace(["\r\n", "\r", "\n"], ' ', $pMsg); // Replace newlines with space
-        
+        $pMsg = str_replace(["\r\n", "\r", "\n"], ' ', $pMsg);         
         $mMsg = ($monsterMessage ? $monsterMessage[0] : null);
         if ($mMsg) {
              $mMsg = str_replace(["\r\n", "\r", "\n"], ' ', $mMsg);
+        }
+
+        // Gestion de la Défaite (Joueur mort)
+        if (!$combat->isAlive($combat->getJoueur())) {
+             $logger = new LoggerService();
+             $logger->logGameplay($_SESSION['user_id'], $_SESSION['character_id'], 'COMBAT_LOSS', [
+                 'monster_id' => $monsterModel->getId()
+             ]);
+
+             if ($_SESSION['is_ironman']) {
+                 $charModel = new Character();
+                 $charModel->deleteById($charId);
+                 
+                 echo json_encode([
+                    "success" => true,
+                    "player" => $pMsg,
+                    "monster" => $mMsg,
+                    "playerHp" => 0,
+                    "win" => false,
+                    "gameOver" => true,
+                    "ironmanDeath" => true,
+                    "redirect" => "/personnage/create?error=permadeath" 
+                 ]);
+                 unset($_SESSION['combat']);
+                 exit;
+             }
         }
 
         echo json_encode([
@@ -327,52 +342,24 @@ class CombatController
             "playerHp" => $combat->getPlayerHp(), 
             "win" => (!$combat->isMonsterAlive()),
             "newTurn" => ($combat->isMonsterAlive() && !$preventAction),
-            "damageM" => $playerMessage[1] ?? false,
-            "damageJ" => $monsterMessage ? $monsterMessage[1] : false,
+            "damageM" => $playerMessage[1] ?? false, 
+            "damageJ" => $monsterMessage ? $monsterMessage[1] : false, 
             "rewards" => $rewards 
         ]);
         exit;
-
-        // Check Defeat
-        if (!$combat->isAlive($combat->getJoueur())) {
-
-             // Log Stats
-             $logger = new LoggerService();
-             $logger->logGameplay($_SESSION['user_id'], $_SESSION['character_id'], 'COMBAT_LOSS', [
-                 'monster_id' => $monsterModel->getId()
-             ]);
-
-             if ($_SESSION['is_ironman']) {
-                 $charModel = new Character();
-                 $charModel->deleteById($charId);
-                 // Redirect handled in JS or via specific response flag?
-                 // JS expects JSON.
-                 echo json_encode([
-                    "success" => true,
-                    "player" => $playerMessage[0],
-                    "monster" => $monsterMessage ? $monsterMessage[0] : "",
-                    "playerHp" => 0,
-                    "win" => false,
-                    "gameOver" => true,
-                    "ironmanDeath" => true,
-                    "redirect" => "/personnage/create?error=permadeath" 
-                 ]);
-                 unset($_SESSION['combat']);
-                 return;
-             }
-        }
-
     } 
 
+    /**
+     * Calcule l'XP et l'Or gagnés lors du combat.
+     * Prend en compte la force/vitalité du monstre et la difficulté du jeu.
+     */
     private function calculateRewards(Combat $combat, Monster $monsterModel) {
-        // Simplified formulas
         $str = $monsterModel->getStrength();
         $vit = $monsterModel->getVitality();
         
         $xp = 50 + ($str * 2) + ($vit * 2);
         $gold = rand(5, 15) + $str;
         
-        // Difficulty Modifier
         $difficulty = $_SESSION['current_difficulty'] ?? 'NORMAL';
         $diffService = new DifficultyService();
         $xpModifier = $diffService->getXpModifier($difficulty);
@@ -380,12 +367,15 @@ class CombatController
         return ['xp' => (int)($xp * $xpModifier), 'gold' => (int)$gold];
     }
     
+    /**
+     * Génère un butin aléatoire basé sur la chance et la difficulté.
+     * Ajoute l'objet directement à l'inventaire du personnage.
+     */
     private function generateLoot($characterId, $monsterModel) {
         $db = Database::getInstance()->getConnection();
         $inventoryModel = new Inventory();
         $loot = [];
         
-        // 30% Chance * Difficulty Modifier
         $difficulty = $_SESSION['current_difficulty'] ?? 'NORMAL';
         $diffService = new DifficultyService();
         $lootModifier = $diffService->getLootChanceModifier($difficulty);
@@ -400,6 +390,10 @@ class CombatController
         }
         return $loot;
     }
+
+    /**
+     * Termine proprement la session de combat.
+     */
     public function endCombat() {
         unset($_SESSION['combat']); 
     }

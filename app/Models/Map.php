@@ -43,8 +43,7 @@ class Map
             return null;
         }
 
-        // Return configuration data
-        return [
+                return [
             'id' => $map['id'],
             'name' => $map['name'],
             'tile_path' => $map['tile_path'] ?? '/assets/tiles',

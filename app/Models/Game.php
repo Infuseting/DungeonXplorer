@@ -4,8 +4,7 @@ namespace App\Models;
 
 class Game
 {
-    // Placeholder for Game logic
-    public function getGameData()
+        public function getGameData()
     {
         return [
             'title' => 'DungeonXplorer',

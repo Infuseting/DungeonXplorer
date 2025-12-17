@@ -22,8 +22,7 @@ class AdminCharacterController
 
         $characters = $characterModel->getAllCharacters($filters);
         
-        // Get data for filters
-        $db = Database::getInstance()->getConnection();
+                $db = Database::getInstance()->getConnection();
         $classes = $db->query("SELECT * FROM classes")->fetch_all(MYSQLI_ASSOC);
         $users = $userModel->getAllUsers();
 

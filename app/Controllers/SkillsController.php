@@ -20,11 +20,9 @@ class SkillsController
         $classSkills = $skillModel->getSkillsByClass($character->getClassId());
         $unlocked = $skillModel->getUnlockedSkills($character->getId());
         
-        // Map unlocked IDs for easy lookup
-        $unlockedIds = array_map(function($s) { return $s['id']; }, $unlocked);
+                $unlockedIds = array_map(function($s) { return $s['id']; }, $unlocked);
         
-        // Prepare data for view
-        require_once __DIR__ . '/../Views/game/skills.php';
+                require_once __DIR__ . '/../Views/game/skills.php';
     }
 
     public function unlock()

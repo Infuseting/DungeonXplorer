@@ -27,8 +27,7 @@ class CharacterClass
         $stmt->execute();
         $result = $stmt->get_result()->fetch_assoc();
         
-        // Décoder le JSON pour faciliter l'accès
-        if ($result && !empty($result['base_stats_json'])) {
+                if ($result && !empty($result['base_stats_json'])) {
             $result['base_stats'] = json_decode($result['base_stats_json'], true);
         }
         
