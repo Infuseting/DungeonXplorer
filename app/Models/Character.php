@@ -92,7 +92,7 @@ class Character
             JOIN classes cl ON c.class_id = cl.id 
             LEFT JOIN character_stats cs ON c.id = cs.character_id 
             WHERE c.user_id = ?
-            ORDER BY c.last_played DESC
+            ORDER BY c.last_played_at DESC
         ");
         $stmt->bind_param("i", $userId);
         $stmt->execute();
