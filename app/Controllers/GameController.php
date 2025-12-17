@@ -14,7 +14,7 @@ use App\Models\NPC;
 use App\Models\CharacterStats;
 use App\Models\Skill;
 use App\Services\TokenService;
-
+use App\Config\Database ;
 
 class GameController
 {
