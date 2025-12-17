@@ -7,8 +7,13 @@ ob_start();
 ?>
 
 <div class="relative w-full h-screen bg-gray-900 overflow-hidden">
-    <!-- Map Component -->
-    <?php require __DIR__ . '/components/map.php'; ?>
+    <!-- Map & Scene Container -->
+    <div id="map-container" class="absolute inset-0 z-0">
+        <?php require __DIR__ . '/components/map.php'; ?>
+    </div>
+    
+    <!-- Story/Game Scene Container (SPA) -->
+    <div id="game-scene" class="absolute inset-0 z-20 hidden"></div>
 
     <!-- User Menu (Top Left) -->
     <div class="absolute top-4 left-4 z-50">
@@ -162,6 +167,7 @@ ob_start();
     import { openQuestJournal } from '/js/modules/questJournal.js';
     import { initShop } from '/js/modules/shop.js';
     import { initSoundManager, playSound } from '/js/modules/soundManager.js';
+    import GameRouter from '/js/gameRouter.js';
 
     // Make character ID available globally
     window.characterId = <?= $character->getId() ?>;
@@ -169,6 +175,24 @@ ob_start();
     // Initialize on DOM ready
     document.addEventListener('DOMContentLoaded', async () => {
         console.log('Initializing game...');
+
+        // Initialize Router
+        window.GameRouter = GameRouter;
+        GameRouter.init();
+
+        <?php if (isset($activeStory) && $activeStory): ?>
+            // Auto-navigate to active story
+            console.log('Resuming active story: <?= $activeStory['story_id'] ?>');
+            
+            // Show a toast to confirm detection
+             import('/js/modules/toast.js').then(m => {
+                 m.showToast('Reprise de l\'histoire...', 'info');
+             });
+
+            setTimeout(() => {
+                 GameRouter.navigate('/story/enter/<?= $activeStory['story_id'] ?>');
+            }, 100); 
+        <?php endif; ?>
         
         // Initialize sound manager first
         await initSoundManager();

@@ -3,10 +3,13 @@ namespace App\Controllers;
 use App\Services\LoggerService;
 use App\Services\DifficultyService;
 use App\Services\StatusEffectService;
+use App\Config\Database;
 use App\Models\Character;
 use App\Models\Monster;
 use App\Models\Combat;
 use App\Models\CharacterStats;
+use App\Models\Inventory;
+
 
 class CombatController
 {
@@ -92,9 +95,62 @@ class CombatController
             ];
         }
 
-        require_once __DIR__ . '/../Views/game/interfaceCombat.php';
+        // Fetch Potions (Consumables) from Inventory
+        $inventoryModel = new \App\Models\Inventory();
+        $inventoryData = $inventoryModel->getCharacterInventory($_SESSION['character_id']);
+        
+        $potions = [];
+        if (!empty($inventoryData['inventory'])) {
+            foreach ($inventoryData['inventory'] as $item) {
+                // Determine if consumable - Assuming 'consumable' type or specific categorization
+                // Adjust this check based on your actual Item definition
+                if (isset($item['type']) && $item['type'] === 'consumable') {
+                    // Group by Item ID to handle quantities if needed, or pass individual stacks
+                    // The Inventory Model returns items. If they are stacked in DB, good. 
+                    // If multiple stacks exist, we should group them for display if desired.
+                    // For now, let's pass them as is or aggregated.
+                    $id = $item['item_id'];
+                    if (!isset($potions[$id])) {
+                        $potions[$id] = $item;
+                        $potions[$id]['count'] = 1; 
+                        // If item has a 'quantity' field in inventory, use it. 
+                        // The current Inventory::getCharacterInventory output doesn't seem to have explicit 'quantity' column in the SELECT, 
+                        // unless it's added dynamically or we missed it. 
+                        // Let's assume singular items for now or check if duplicates exist.
+                    } else {
+                        $potions[$id]['count']++;
+                    }
+                }
+            }
+        }
+        
+        // Fetch Unlocked Skills
+        $skillModel = new \App\Models\Skill();
+        $skills = $skillModel->getUnlockedSkills($_SESSION['character_id']);
+
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+             // Render Partial
+            extract([
+                'characterModel' => $characterModel,
+                'monsterModel' => $monsterModel,
+                'initialData' => $initialData,
+                'potions' => $potions,
+                'skills' => $skills,
+                'returnStoryId' => $_GET['story_id'] ?? null
+            ]);
+            require __DIR__ . '/../Views/game/partials/combat_content.php';
+            exit;
+        }
+
+        // Fallback for direct access: Redirect to Game (or show full view if you really want)
+        // ideally direct access should be handled by the router on client side, but here we enforce SPA.
+        // If we redirect to /game, we lose the "start combat" intent unless we store it.
+        // For now, let's just show the full view if not AJAX for debugging, OR redirect.
+        // A hard redirect to /game means "Cancel Combat Entry".
+        header('Location: /game');
+        exit;
     }
- public function rollDice() {
+    public function rollDice() {
     // Toujours démarrer la session si elle n'est pas déjà active
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
@@ -197,11 +253,16 @@ class CombatController
              // Loot
              $loot = $this->generateLoot($_SESSION['character_id'], $monsterModel);
              
+             // Check Quests
+             $pqModel = new \App\Models\PlayerQuest();
+             $questUpdates = $pqModel->onMonsterKilled($_SESSION['character_id'], $monsterModel->getId());
+             
              $rewards = [
                  'xp' => $calc['xp'],
                  'gold' => $calc['gold'],
                  'levels_gained' => $xpRes['levels_gained'],
-                 'loot' => $loot
+                 'loot' => $loot,
+                 'quests' => $questUpdates
              ];
 
              // Log Victory
@@ -212,7 +273,65 @@ class CombatController
                  'gold_gained' => $calc['gold'],
                  'loot' => $loot
              ]);
+             
+             // Update Story Progress if applicable
+             if (isset($_GET['story_id']) || isset($_POST['return_story_id']) || isset($_SESSION['combat_story_id'])) {
+                 // Try to find story ID
+                 $storyId = $_GET['story_id'] ?? ($_POST['return_story_id'] ?? ($_SESSION['combat_story_id'] ?? null));
+             }
+             
+             // If we don't have it directly, try to fetch active story from DB
+             if (!isset($storyId)) {
+                 $progModel = new \App\Models\StoryProgress();
+                 $active = $progModel->getActiveStory($_SESSION['character_id']);
+                 if ($active) $storyId = $active['story_id'];
+             }
+             
+             if (isset($storyId)) {
+                 $progModel = new \App\Models\StoryProgress();
+                 $progress = $progModel->getProgress($_SESSION['character_id'], $storyId);
+                 
+                 if ($progress) {
+                     $nodeId = $progress['current_node_id'];
+                     $monsterId = $monsterModel->getId();
+                     
+                     // session storage for individual kills (finer granularity than node_cleared)
+                     $sessionKey = 'killed_monsters_' . $nodeId;
+                     if (!isset($_SESSION[$sessionKey])) {
+                         $_SESSION[$sessionKey] = [];
+                     }
+                     if (!in_array($monsterId, $_SESSION[$sessionKey])) {
+                         $_SESSION[$sessionKey][] = $monsterId;
+                     }
+                     
+                     // Optimization: Check if all monsters in node are dead?
+                     // Requires NodeModel. For now, StoryController will check on load.
+                 }
+             }
         }
+
+        // Output Construction
+        // We'll replace newlines to ensure clean JSON
+        $pMsg = $playerMessage[0] ?? '';
+        $pMsg = str_replace(["\r\n", "\r", "\n"], ' ', $pMsg); // Replace newlines with space
+        
+        $mMsg = ($monsterMessage ? $monsterMessage[0] : null);
+        if ($mMsg) {
+             $mMsg = str_replace(["\r\n", "\r", "\n"], ' ', $mMsg);
+        }
+
+        echo json_encode([
+            "success" => true,
+            "player" => $pMsg,
+            "monster" => $mMsg,
+            "playerHp" => $combat->getPlayerHp(), 
+            "win" => (!$combat->isMonsterAlive()),
+            "newTurn" => ($combat->isMonsterAlive() && !$preventAction),
+            "damageM" => $playerMessage[1] ?? false,
+            "damageJ" => $monsterMessage ? $monsterMessage[1] : false,
+            "rewards" => $rewards 
+        ]);
+        exit;
 
         // Check Defeat
         if (!$combat->isAlive($combat->getJoueur())) {
@@ -243,17 +362,6 @@ class CombatController
              }
         }
 
-        echo json_encode([
-            "success" => true,
-            "player"  => $playerMessage[0],
-            "monster" => $monsterMessage ? $monsterMessage[0] : "",
-            "playerHp" => $combat->getPlayerHp(), 
-            "win" => !$combat->isMonsterAlive(),
-            "newTurn" => !$combat->isEnd(),
-            "damageM" => $playerMessage[1],
-            "damageJ" => $monsterMessage ? $monsterMessage[1] : 0,
-            "rewards" => $rewards
-        ]);
     } 
 
     private function calculateRewards(Combat $combat, Monster $monsterModel) {

@@ -52,15 +52,18 @@ class StoryNode
     public function create($data)
     {
         $stmt = $this->db->prepare(
-            "INSERT INTO story_nodes (story_id, story_instance_id, name, description, image_path, is_start_node, is_end_node, can_exit, node_x, node_y) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            "INSERT INTO story_nodes (story_id, story_instance_id, name, description, image_path, is_start_node, is_end_node, can_exit, node_x, node_y, is_searchable, exit_condition_type, exit_condition_value) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         );
         
         $instanceId = !empty($data['story_instance_id']) ? $data['story_instance_id'] : null;
         $canExit = $data['can_exit'] ?? 0;
+        $isSearchable = $data['is_searchable'] ?? 1;
+        $exitType = $data['exit_condition_type'] ?? 'none';
+        $exitValue = $data['exit_condition_value'] ?? null;
         
         $stmt->bind_param(
-            "iisssiiiii", 
+            "iisssiiiiisss", 
             $data['story_id'], 
             $instanceId,
             $data['name'], 
@@ -70,7 +73,10 @@ class StoryNode
             $data['is_end_node'],
             $canExit,
             $data['node_x'],
-            $data['node_y']
+            $data['node_y'],
+            $isSearchable,
+            $exitType,
+            $exitValue
         );
         
         if ($stmt->execute()) {
@@ -90,14 +96,17 @@ class StoryNode
     {
         $stmt = $this->db->prepare(
             "UPDATE story_nodes 
-             SET name = ?, description = ?, image_path = ?, is_start_node = ?, is_end_node = ?, can_exit = ?, node_x = ?, node_y = ? 
+             SET name = ?, description = ?, image_path = ?, is_start_node = ?, is_end_node = ?, can_exit = ?, node_x = ?, node_y = ?, is_searchable = ?, exit_condition_type = ?, exit_condition_value = ? 
              WHERE id = ?"
         );
         
         $canExit = $data['can_exit'] ?? 0;
+        $isSearchable = $data['is_searchable'] ?? 1;
+        $exitType = $data['exit_condition_type'] ?? 'none';
+        $exitValue = $data['exit_condition_value'] ?? null;
         
         $stmt->bind_param(
-            "sssiiiiii", 
+            "sssiiiiisssi", 
             $data['name'], 
             $data['description'], 
             $data['image_path'], 
@@ -106,6 +115,9 @@ class StoryNode
             $canExit,
             $data['node_x'],
             $data['node_y'],
+            $isSearchable,
+            $exitType,
+            $exitValue,
             $id
         );
         

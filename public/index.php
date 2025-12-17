@@ -11,6 +11,10 @@ ini_set('error_log', __DIR__ . '/../var/log/php_errors.log');
 require __DIR__ . '/../vendor/autoload.php';
 use App\Middleware\AuthMiddleware;
 use App\Middleware\AdminMiddleware;
+
+// DEBUG: Log all requests
+file_put_contents(__DIR__ . '/../var/log/request_access.log', "[" . date('Y-m-d H:i:s') . "] " . $_SERVER['REQUEST_URI'] . "\n", FILE_APPEND);
+
 // Load environment variables
 try {
     $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
@@ -278,6 +282,21 @@ $router->mount('/admin', function() use ($router) {
     $router->get('/stories/nodes/(\d+)/entities', 'App\Controllers\AdminStoryController@getNodeEntities');
     $router->post('/stories/nodes/entities/add', 'App\Controllers\AdminStoryController@addNodeEntity');
     $router->post('/stories/nodes/entities/remove', 'App\Controllers\AdminStoryController@removeNodeEntity');
+
+    // Classes & Skills Management
+    $router->get('/classes', 'App\Controllers\AdminClassController@index');
+    $router->match('GET|POST', '/classes/create', 'App\Controllers\AdminClassController@create');
+    $router->post('/classes/store', 'App\Controllers\AdminClassController@store');
+    $router->match('GET|POST', '/classes/edit/(\d+)', 'App\Controllers\AdminClassController@edit');
+    $router->post('/classes/update/(\d+)', 'App\Controllers\AdminClassController@update');
+    $router->post('/classes/delete/(\d+)', 'App\Controllers\AdminClassController@delete');
+
+    $router->match('GET|POST', '/classes/skills/add/(\d+)', 'App\Controllers\AdminClassController@addSkill');
+    $router->post('/classes/skills/store/(\d+)', 'App\Controllers\AdminClassController@storeSkill');
+    $router->match('GET|POST', '/classes/skills/edit/(\d+)', 'App\Controllers\AdminClassController@editSkill');
+    $router->post('/classes/skills/update/(\d+)', 'App\Controllers\AdminClassController@updateSkill');
+    $router->post('/classes/skills/delete/(\d+)', 'App\Controllers\AdminClassController@deleteSkill');
+    $router->post('/classes/skills/save-positions', 'App\Controllers\AdminClassController@updateSkillPositions');
 });
 
 $router->set404('App\Controllers\ErrorController@error404');

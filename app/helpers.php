@@ -75,7 +75,7 @@ function renderCharacter($character, $options = []) {
     
     ob_start();
     ?>
-    <div class="character-preview <?= $sizeClass ?> <?= htmlspecialchars($options['class']) ?> relative inline-block" data-character-id="<?= htmlspecialchars($options['id']) ?>">
+    <div id="<?= htmlspecialchars($options['id']) ?>" class="character-preview <?= $sizeClass ?> <?= htmlspecialchars($options['class']) ?> relative inline-block" data-character-id="<?= htmlspecialchars($options['id']) ?>">
         <img src="<?= $imageBase ?>/<?= $className ?>.png" 
              alt="<?= htmlspecialchars($character['name'] ?? 'Personnage') ?>" 
              class="character-base w-full h-full object-contain">

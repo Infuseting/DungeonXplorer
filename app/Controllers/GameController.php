@@ -54,8 +54,8 @@ class GameController
         $activeStory = $storyProgressModel->getActiveStory($characterId);
         
         if ($activeStory) {
-            header('Location: /story/enter/' . $activeStory['story_id']);
-            exit;
+            // header('Location: /story/enter/' . $activeStory['story_id']);
+            // exit;
         }
 
         // Load map configuration and points using models

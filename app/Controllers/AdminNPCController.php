@@ -1,6 +1,11 @@
 <?php
 
 namespace App\Controllers;
+use App\Config\Database;
+use App\Models\NPC;
+use App\Models\DialogueTree;
+use App\Models\Quest;
+use App\Service\LoggerService;
 
 class AdminNPCController
 {
@@ -208,6 +213,7 @@ class AdminNPCController
         }
 
         // Add newly selected
+        foreach ($newIds as $nid) {
             if (!in_array($nid, $existingIds)) {
                 $this->npcModel->assignDialogueTree($id, $nid);
             }

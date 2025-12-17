@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Controllers;
-
+use App\Config\Database;
 class AdminItemController
 {
     private $db;

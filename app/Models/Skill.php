@@ -79,4 +79,48 @@ class Skill
         $stmt->bind_param("iii", $x, $y, $id);
         return $stmt->execute();
     }
+    public function create($data)
+    {
+        $stmt = $this->db->prepare("INSERT INTO skills (class_id, name, description, type, cost_mp, cost_sp, cooldown, effect_type, effect_value, min_level, parent_skill_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("isssiiisiii", 
+            $data['class_id'], 
+            $data['name'], 
+            $data['description'], 
+            $data['type'], 
+            $data['cost_mp'], 
+            $data['cost_sp'], 
+            $data['cooldown'], 
+            $data['effect_type'], 
+            $data['effect_value'], 
+            $data['min_level'], 
+            $data['parent_skill_id']
+        );
+        return $stmt->execute();
+    }
+
+    public function update($id, $data)
+    {
+        $stmt = $this->db->prepare("UPDATE skills SET name = ?, description = ?, type = ?, cost_mp = ?, cost_sp = ?, cooldown = ?, effect_type = ?, effect_value = ?, min_level = ?, parent_skill_id = ? WHERE id = ?");
+        $stmt->bind_param("sssiisiiiii", 
+            $data['name'], 
+            $data['description'], 
+            $data['type'], 
+            $data['cost_mp'], 
+            $data['cost_sp'], 
+            $data['cooldown'], 
+            $data['effect_type'], 
+            $data['effect_value'], 
+            $data['min_level'], 
+            $data['parent_skill_id'],
+            $id
+        );
+        return $stmt->execute();
+    }
+
+    public function delete($id)
+    {
+        $stmt = $this->db->prepare("DELETE FROM skills WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        return $stmt->execute();
+    }
 }

@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Models;
-
+use App\Config\Database;
 class PlayerQuest
 {
     private $db;
@@ -412,5 +412,36 @@ class PlayerQuest
         }
         
         return $log;
+    }
+    /**
+     * Handle Monster Kill Event for Quests
+     */
+    public function onMonsterKilled($characterId, $monsterId)
+    {
+        // Find all active objectives that target this monster
+        // Assuming objective types: 'KILL_MONSTER' or 'KILL' and target_id is the monster ID
+        $stmt = $this->db->prepare("
+            SELECT pqp.player_quest_id, pqp.objective_id, qo.description
+            FROM player_quest_progress pqp
+            JOIN quest_objectives qo ON pqp.objective_id = qo.id
+            JOIN player_quests pq ON pqp.player_quest_id = pq.id
+            WHERE pq.character_id = ? 
+              AND pq.status = 'ACTIVE'
+              AND (qo.type = 'KILL_MONSTER' OR qo.type = 'KILL')
+              AND qo.target_id = ?
+        ");
+        $stmt->bind_param("ii", $characterId, $monsterId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $updates = [];
+        while ($row = $result->fetch_assoc()) {
+            // Update progress for each matching objective
+            $event = $this->updateProgress($row['player_quest_id'], $row['objective_id'], 1);
+            $event['original_description'] = $row['description'];
+            $updates[] = $event;
+        }
+        
+        return $updates;
     }
 }

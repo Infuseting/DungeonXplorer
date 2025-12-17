@@ -34,4 +34,26 @@ class CharacterClass
         
         return $result;
     }
+    public function create($data)
+    {
+        $stmt = $this->db->prepare("INSERT INTO classes (name, description, base_stats_json) VALUES (?, ?, ?)");
+        $jsonStats = json_encode($data['base_stats'] ?? []);
+        $stmt->bind_param("sss", $data['name'], $data['description'], $jsonStats);
+        return $stmt->execute();
+    }
+
+    public function update($id, $data)
+    {
+        $stmt = $this->db->prepare("UPDATE classes SET name = ?, description = ?, base_stats_json = ? WHERE id = ?");
+        $jsonStats = json_encode($data['base_stats'] ?? []);
+        $stmt->bind_param("sssi", $data['name'], $data['description'], $jsonStats, $id);
+        return $stmt->execute();
+    }
+
+    public function delete($id)
+    {
+        $stmt = $this->db->prepare("DELETE FROM classes WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        return $stmt->execute();
+    }
 }

@@ -5,6 +5,10 @@ namespace App\Controllers;
 use App\Models\Story;
 use App\Models\StoryNode;
 use App\Models\ProceduralTemplate;
+use App\Models\Monster;
+use App\Models\NPC;
+use App\Models\Item;
+use App\Models\Quest;
 
 class AdminStoryController
 {

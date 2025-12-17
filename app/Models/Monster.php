@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Config\Database;
 use App\Models\CharacterStats;
+use App\Models\Inventory;
     
 
 class Monster
@@ -11,6 +12,7 @@ class Monster
     private $db;
     
     // Properties for Combat Logic
+    private $id;
     private $name;
     private $strength;
     private $vitality;
@@ -38,6 +40,7 @@ class Monster
         
         if ($result) {
             // Populate Object Properties (Combat Mode)
+            $this->id = $result['id'];
             $this->name = $result['name'];
             $this->imagePath = $result['image_path'];
             $this->sallePath = $result['salle_path'];
@@ -156,8 +159,14 @@ class Monster
         }
         return null;
     }
-
+    public function getAll() {
+        $stmt = $this->db->prepare("SELECT * FROM monsters");
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        return $result;
+    }
     // ... (existing getters: getName, etc.)
+    public function getId() { return $this->id; }
     public function getName() { return $this->name; }
     public function getSallePath() { return $this->sallePath; }
     public function getImagePath() { return $this->imagePath; }

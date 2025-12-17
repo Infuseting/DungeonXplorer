@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Middleware;
-
+use App\Models\User;
 class AdminMiddleware
 {
     public function handle()
@@ -16,8 +16,7 @@ class AdminMiddleware
         $user = $userModel->findById($_SESSION['user_id']);
 
         if (!$user || $user['role'] !== 'admin') {
-            http_response_code(403);
-            echo "Access Denied: Admin privileges required.";
+            header('Location: /');
             exit;
         }
     }

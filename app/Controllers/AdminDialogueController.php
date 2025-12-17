@@ -1,6 +1,9 @@
 <?php
 
 namespace App\Controllers;
+use App\Config\Database;
+use App\Models\DialogueTree;
+use App\Models\NPC;
 
 class AdminDialogueController
 {

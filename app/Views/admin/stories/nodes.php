@@ -59,7 +59,7 @@ ob_start();
     const AVAILABLE_NPCS = <?= json_encode($availableNPCs ?? []) ?>;
     const AVAILABLE_ITEMS = <?= json_encode($availableItems ?? []) ?>;
 </script>
-<script src="/assets/js/admin/story-editor.js"></script>
+<script src="/js/admin/story-editor.js"></script>
 
 <?php
 $content = ob_get_clean();

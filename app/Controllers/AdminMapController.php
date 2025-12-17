@@ -1,6 +1,10 @@
 <?php
 
 namespace App\Controllers;
+use App\Config\Database;
+use App\Models\Faction;
+use App\Models\NPC;
+use App\Models\Story;
 
 class AdminMapController
 {

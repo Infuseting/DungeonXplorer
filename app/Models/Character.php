@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Config\Database;
 use App\Models\Inventory;
 use App\Models\Stats as StatsEnum; 
+
+#[\AllowDynamicProperties]
 class Character
 {
     public function getId() {
@@ -135,7 +137,11 @@ class Character
     public function getLevel() {
         return $this->level;
     }
-
+    public function unlockSkill($skillId) {
+        $stmt = $this->db->prepare("INSERT INTO character_skills (character_id, skill_id) VALUES (?, ?)");
+        $stmt->bind_param("ii", $this->id, $skillId);
+        return $stmt->execute();
+    }
 
 
 
@@ -213,7 +219,6 @@ class Character
 
     public function addGold($amount)
     {
-        $this->ensureDb();
         $stmt = $this->db->prepare("UPDATE characters SET gold = gold + ? WHERE id = ?");
         $stmt->bind_param("ii", $amount, $this->id);
         if ($stmt->execute()) {
@@ -225,7 +230,6 @@ class Character
 
     public function addXp($amount)
     {
-        $this->ensureDb();
         // 1. Fetch current stats fresh to be safe
         $stmt = $this->db->prepare("SELECT xp, level, skill_points, vitality FROM character_stats WHERE character_id = ?");
         $stmt->bind_param("i", $this->id);

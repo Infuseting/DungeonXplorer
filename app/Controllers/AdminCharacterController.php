@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\Character;
 use App\Models\User;
+use App\Config\Database;
 
 class AdminCharacterController
 {

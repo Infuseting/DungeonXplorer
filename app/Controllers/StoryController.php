@@ -8,7 +8,8 @@ use App\Models\StoryProgress;
 use App\Models\StoryInstance;
 use App\Models\Character;
 use App\Models\Inventory;
-use App\Models\CharacterStats;  
+use App\Models\CharacterStats;
+use App\Config\Database;
 
 class StoryController
 {
@@ -89,14 +90,21 @@ class StoryController
             }
         }
 
-        // Load inventory for the view
-        $inventory = $this->inventoryModel->getCharacterInventory($characterId);
+        // Check if AJAX request (SPA)
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+            // Render Partial View (without html/body shell)
+             extract([
+                'story' => $story,
+                'inventory' => $this->inventoryModel->getCharacterInventory($characterId)
+            ]);
+            require __DIR__ . '/../Views/game/partials/story_content.php';
+            exit;
+        }
 
-        // Redirect to story view
-        $this->render('game/story', [
-            'story' => $story,
-            'inventory' => $inventory
-        ]);
+        // Direct access: Redirect to /game (SPA Shell)
+        // The Shell will detect the active story and load it via Router
+        header('Location: /game');
+        exit;
 
         // Log Entry
         $logger = new LoggerService();
@@ -139,8 +147,12 @@ class StoryController
         }
 
         // Get fled monsters for this session/node
-        $sessionKey = 'fled_monsters_' . $node['id'];
-        $fledMonsters = $_SESSION[$sessionKey] ?? [];
+        $sessionKeyFled = 'fled_monsters_' . $node['id'];
+        $fledMonsters = $_SESSION[$sessionKeyFled] ?? [];
+
+        // Get killed monsters
+        $sessionKeyKilled = 'killed_monsters_' . $node['id'];
+        $killedMonsters = $_SESSION[$sessionKeyKilled] ?? [];
 
         // Filter loots: remove already collected ones
         if (!empty($node['loots'])) {
@@ -152,19 +164,62 @@ class StoryController
             $node['loots'] = array_values($node['loots']);
         }
 
-        // Filter monsters: remove if cleared
+        // Filter monsters: remove if cleared OR killed individually
         if ($nodeStatus && $nodeStatus['monsters_cleared']) {
             $node['monsters'] = [];
         } else {
+            if (!empty($node['monsters'])) {
+                foreach ($node['monsters'] as $key => $m) {
+                    if (in_array($m['id'], $killedMonsters)) {
+                        unset($node['monsters'][$key]);
+                    }
+                }
+                $node['monsters'] = array_values($node['monsters']);
+            
+                // If all monsters killed/cleared now, update DB status
+                if (empty($node['monsters'])) {
+                    $this->progressModel->markNodeCleared($characterId, $node['id']);
+                    // Refresh status
+                    $nodeStatus = $this->progressModel->getNodeStatus($characterId, $node['id']);
+                }
+            }
+
             // Enforce Order: Monsters > NPCs > Loot
             // If monsters are present and not cleared, hide NPCs and Loot
             if (!empty($node['monsters'])) {
-                $node['npcs'] = [];
-                $node['loots'] = [];
+                // Check if all remaining are fled?
+                // StoryController::renderInteractions handles fled visualization.
+                // But we should probably hide generic loot if active monsters exist.
+                $allFled = true;
+                foreach($node['monsters'] as $m) {
+                    if (!in_array($m['id'], $fledMonsters)) {
+                        $allFled = false; break;
+                    }
+                }
+                
+                if (!$allFled) {
+                    $node['npcs'] = [];
+                    $node['loots'] = [];
+                }
                 
                 // Add can_flee info if missing (it should be in * usually)
                 // Assuming story_node_monsters has the column, it's already in $node['monsters']
             }
+        }
+
+        // Get Interacted NPCs
+        $sessionKeyNPC = 'npc_interacted_' . $node['id'];
+        $interactedNPCs = $_SESSION[$sessionKeyNPC] ?? [];
+        // Support legacy boolean true (treat as "all") - though we just switched to array
+        if ($interactedNPCs === true) $interactedNPCs = array_column($node['npcs'], 'id');
+        
+        if (!empty($node['npcs'])) {
+            foreach ($node['npcs'] as $key => $n) {
+                if (in_array($n['id'], $interactedNPCs)) {
+                    unset($node['npcs'][$key]);
+                }
+            }
+            $node['npcs'] = array_values($node['npcs']);
         }
 
         // Get traps
@@ -672,6 +727,9 @@ class StoryController
     /**
      * Exit story
      */
+    /**
+     * Exit story
+     */
     public function exitStory()
     {
         $characterId = $_SESSION['character_id'];
@@ -693,6 +751,42 @@ class StoryController
         if ($progress) {
             $node = $this->nodeModel->findById($progress['current_node_id']);
             if ($node && $node['can_exit']) {
+                // CHECK EXIT CONDITIONS
+                if (!empty($node['exit_condition_type']) && $node['exit_condition_type'] !== 'none') {
+                    $canExit = true;
+                    $reason = "Condition de sortie non remplie";
+
+                    switch($node['exit_condition_type']) {
+                        case 'monster_cleared':
+                            $nodeStatus = $this->progressModel->getNodeStatus($characterId, $node['id']);
+                            if (!$nodeStatus || !$nodeStatus['monsters_cleared']) {
+                                $canExit = false;
+                                $reason = "Vous devez vaincre les monstres avant de sortir !";
+                            }
+                            break;
+                            
+                        // Placeholder for NPC interaction
+                        // We will need to implement tracking later or use a workaround
+                         case 'npc_talked':
+                            // For now, if monsters are cleared, we allow it? 
+                            // Or default to FALSE to force implementation? 
+                            // Let's assume there is NO easy way to track "talked" yet without extra DB.
+                            // However, we can use session hacking or just check if monsters are cleared as a proxy if user clears room first?
+                            // User specifically asked for this. 
+                            // Let's check session for 'npc_interacted_{nodeId}'
+                            if (!isset($_SESSION['npc_interacted_' . $node['id']])) {
+                                $canExit = false;
+                                $reason = "Vous devez parler à la personne présente avant de partir !";
+                            }
+                            break;
+                    }
+
+                    if (!$canExit) {
+                         echo json_encode(['success' => false, 'message' => $reason]);
+                         exit;
+                    }
+                }
+
                 $this->progressModel->exitDungeon($characterId, $storyId);
                 echo json_encode(['success' => true]);
                 exit;
@@ -700,5 +794,27 @@ class StoryController
         }
         
         echo json_encode(['success' => false, 'message' => 'Sortie impossible ici']);
+    }
+    /**
+     * Interact with NPC (sets flag for exit condition)
+     */
+    public function interactWithNPC()
+    {
+        $characterId = $_SESSION['character_id'];
+        $storyId = $_POST['story_id'];
+        $nodeId = $_POST['node_id'];
+        $npcId = $_POST['npc_id'];
+        
+        // Mark as interacted in session for this node (Array support)
+        $sessionKey = 'npc_interacted_' . $nodeId;
+        if (!isset($_SESSION[$sessionKey]) || !is_array($_SESSION[$sessionKey])) {
+            $_SESSION[$sessionKey] = [];
+        }
+        
+        if (!in_array($npcId, $_SESSION[$sessionKey])) {
+            $_SESSION[$sessionKey][] = $npcId;
+        }
+        
+        echo json_encode(['success' => true]);
     }
 }

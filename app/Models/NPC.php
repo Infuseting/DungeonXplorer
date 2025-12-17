@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Models;
-
+use App\Config\Database;
 class NPC
 {
     private $db;

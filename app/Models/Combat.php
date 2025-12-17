@@ -258,6 +258,13 @@ class Combat
             $bool = false;
             $message = "";
 
+            // Check if player is already dead before acting
+            if (!$this->joueur->isAlive()) {
+                 $message = $this->joueur->getName() . " is already down! " . $this->boss->getName() . " looms over...";
+                 $this->endCombat();
+                 return [$message, false];
+            }
+
             if($this->boss->isAlive()) {
                 // Calculation
                 // Hit Chance: Monster Dex vs Player Dex

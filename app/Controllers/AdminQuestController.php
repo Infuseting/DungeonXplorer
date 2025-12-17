@@ -1,6 +1,9 @@
 <?php
 
 namespace App\Controllers;
+use App\Config\Database;
+use App\Models\Quest;
+use App\Models\QuestStage;
 
 class AdminQuestController
 {

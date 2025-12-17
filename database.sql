@@ -897,7 +897,8 @@ CREATE TABLE `user_tokens` (
   `selector` varchar(24) COLLATE utf8mb4_unicode_ci NOT NULL,
   `hashed_validator` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
   `expires_at` datetime NOT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY `idx_selector` (`selector`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
