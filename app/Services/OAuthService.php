@@ -8,13 +8,11 @@ class OAuthService
 
     public function __construct()
     {
-        // In a real app, these would come from .env
-        // We will use placeholders for now as agreed
         $this->config = [
             'google' => [
                 'client_id' => $_ENV['GOOGLE_CLIENT_ID'] ?? 'PLACEHOLDER_GOOGLE_ID',
                 'client_secret' => $_ENV['GOOGLE_CLIENT_SECRET'] ?? 'PLACEHOLDER_GOOGLE_SECRET',
-                'redirect_uri' => 'http://localhost:8000/oauth/callback/google',
+                'redirect_uri' => $_ENV['GOOGLE_REDIRECT_URI'] ?? 'https://dungeonxplorer.infuseting.fr/oauth/callback/google',
                 'auth_url' => 'https://accounts.google.com/o/oauth2/v2/auth',
                 'token_url' => 'https://oauth2.googleapis.com/token',
                 'user_url' => 'https://www.googleapis.com/oauth2/v2/userinfo',
@@ -23,7 +21,7 @@ class OAuthService
             'discord' => [
                 'client_id' => $_ENV['DISCORD_CLIENT_ID'] ?? 'PLACEHOLDER_DISCORD_ID',
                 'client_secret' => $_ENV['DISCORD_CLIENT_SECRET'] ?? 'PLACEHOLDER_DISCORD_SECRET',
-                'redirect_uri' => 'http://localhost:8000/oauth/callback/discord',
+                'redirect_uri' => $_ENV['DISCORD_REDIRECT_URI'] ?? 'http://dungeonxplorer.infuseting.fr/oauth/callback/discord',
                 'auth_url' => 'https://discord.com/api/oauth2/authorize',
                 'token_url' => 'https://discord.com/api/oauth2/token',
                 'user_url' => 'https://discord.com/api/users/@me',
@@ -32,7 +30,7 @@ class OAuthService
             'github' => [
                 'client_id' => $_ENV['GITHUB_CLIENT_ID'] ?? 'PLACEHOLDER_GITHUB_ID',
                 'client_secret' => $_ENV['GITHUB_CLIENT_SECRET'] ?? 'PLACEHOLDER_GITHUB_SECRET',
-                'redirect_uri' => 'http://localhost:8000/oauth/callback/github',
+                'redirect_uri' => $_ENV['GITHUB_REDIRECT_URI'] ?? 'http://dungeonxplorer.infuseting.fr/oauth/callback/github',
                 'auth_url' => 'https://github.com/login/oauth/authorize',
                 'token_url' => 'https://github.com/login/oauth/access_token',
                 'user_url' => 'https://api.github.com/user',
