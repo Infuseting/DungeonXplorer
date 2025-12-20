@@ -94,7 +94,6 @@ function createShopSlot(item, action) {
     img.className = 'w-12 h-12 object-contain item-icon';
 
     // Add data attributes for tooltip
-    console.log(item);
     img.dataset.name = item.name;
     img.dataset.type = item.type;
     img.dataset.description = item.description;

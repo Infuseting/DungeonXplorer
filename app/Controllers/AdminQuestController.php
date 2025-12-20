@@ -1,8 +1,14 @@
 <?php
 
 namespace App\Controllers;
+
 use App\Config\Database;
+use App\Models\DialogueTree;
+use App\Models\Item;
+use App\Models\MapPoint;
+use App\Models\NPC;
 use App\Models\Quest;
+use App\Models\QuestObjective;
 use App\Models\QuestStage;
 
 class AdminQuestController
@@ -24,8 +30,8 @@ class AdminQuestController
         $questModel = new Quest();
         
         $query = "SELECT q.*, 
-                  (SELECT COUNT(*) FROM quest_stages WHERE quest_id = q.id) as stage_count
-                  FROM quests q WHERE 1=1";
+            (SELECT COUNT(*) FROM quest_stages WHERE quest_id = q.id) as stage_count
+            FROM quests q WHERE 1=1";
         $params = [];
         $types = '';
         
@@ -107,10 +113,10 @@ class AdminQuestController
             exit;
         }
         
-                $npcModel = new NPC();
+        $npcModel = new NPC();
         $npcs = $npcModel->getAll();
         
-                $stmt = $this->db->prepare("
+        $stmt = $this->db->prepare("
             SELECT n.*, nq.type 
             FROM npc_quests nq
             JOIN npcs n ON nq.npc_id = n.id
@@ -121,28 +127,29 @@ class AdminQuestController
         $result = $stmt->get_result();
         $assignedNPCs = $result->fetch_all(MYSQLI_ASSOC);
         
-                $mapPointModel = new MapPoint();
+        $mapPointModel = new MapPoint();
         $stmt = $this->db->prepare("SELECT id, name, map_id FROM map_points ORDER BY map_id, name");
         $stmt->execute();
         $allMapPoints = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-                $stageModel = new QuestStage();
+        $stageModel = new QuestStage();
         if (!empty($quest['stages'])) {
             foreach ($quest['stages'] as &$stage) {
                 $stage['unlocks'] = $stageModel->getMapUnlocks($stage['id']);
             }
-            unset($stage);         }
+            unset($stage);
+        }
 
-                $prerequisites = $questModel->getPrerequisites($id);
+        $prerequisites = $questModel->getPrerequisites($id);
         $allQuests = $questModel->getAll();
         
-                $dialogueModel = new DialogueTree();
+        $dialogueModel = new DialogueTree();
         $dialogueTrees = $dialogueModel->getAll();
         
-                $npcModel = new NPC();
+        $npcModel = new NPC();
         $allNPCs = $npcModel->getAll();
 
-                $itemModel = new Item();
+        $itemModel = new Item();
         $allItems = $itemModel->getAll();
         
         require_once __DIR__ . '/../Views/admin/quests/edit.php';

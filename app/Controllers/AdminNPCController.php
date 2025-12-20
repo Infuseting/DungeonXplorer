@@ -4,6 +4,7 @@ namespace App\Controllers;
 use App\Config\Database;
 use App\Models\NPC;
 use App\Models\DialogueTree;
+use App\Models\Faction;
 use App\Models\Quest;
 use App\Service\LoggerService;
 
@@ -30,7 +31,7 @@ class AdminNPCController
         
         $npcs = $this->npcModel->getAll();
         
-                if ($search || $roleFilter) {
+        if ($search || $roleFilter) {
             $npcs = array_filter($npcs, function($npc) use ($search, $roleFilter) {
                 $matchSearch = empty($search) || stripos($npc['name'], $search) !== false;
                 if (empty($roleFilter)) {
@@ -54,7 +55,7 @@ class AdminNPCController
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $dialogueTrees = $this->dialogueModel->getAll();
             
-                        $factionModel = new Faction();
+            $factionModel = new Faction();
             $factions = $factionModel->getAll();
             
             require_once __DIR__ . '/../Views/admin/npcs/create.php';
@@ -63,7 +64,7 @@ class AdminNPCController
         
                 $texturePath = null;
         
-                if (isset($_FILES['texture']) && $_FILES['texture']['error'] === UPLOAD_ERR_OK) {
+        if (isset($_FILES['texture']) && $_FILES['texture']['error'] === UPLOAD_ERR_OK) {
             $uploadDir = __DIR__ . '/../../public/assets/npcs/';
             if (!file_exists($uploadDir)) {
                 mkdir($uploadDir, 0755, true);
@@ -82,10 +83,10 @@ class AdminNPCController
             }
         }
         
-                $rolesArr = $_POST['roles'] ?? (isset($_POST['role']) ? [$_POST['role']] : []);
+        $rolesArr = $_POST['roles'] ?? (isset($_POST['role']) ? [$_POST['role']] : []);
         $rolesStr = implode(',', array_filter(array_map('trim', $rolesArr)));
         
-                if (empty($rolesStr)) {
+        if (empty($rolesStr)) {
             $rolesStr = 'npc';
         }
 
@@ -101,12 +102,12 @@ class AdminNPCController
         
         $npcId = $this->npcModel->create($data);
 
-                if ($npcId && in_array('merchant', explode(',', $data['role'])) && !empty($_POST['merchant_seed'])) {
+        if ($npcId && in_array('merchant', explode(',', $data['role'])) && !empty($_POST['merchant_seed'])) {
             $inventory = $this->npcModel->generateMerchantInventory($_POST['merchant_seed']);
             $this->npcModel->saveMerchantInventory($npcId, $inventory);
         }
         
-                if (!empty($_POST['dialogue_trees'])) {
+        if (!empty($_POST['dialogue_trees'])) {
             foreach ($_POST['dialogue_trees'] as $treeId) {
                 $this->npcModel->assignDialogueTree($npcId, $treeId);
             }
@@ -122,6 +123,7 @@ class AdminNPCController
     public function edit($id)
     {
         $npc = $this->npcModel->findById($id);
+
         if (!$npc) {
             header('Location: /admin/npcs?error=notfound');
             exit;
@@ -131,20 +133,22 @@ class AdminNPCController
             $dialogueTrees = $this->dialogueModel->getAll();
             $assignedTrees = $this->npcModel->getDialogueTrees($id);
             $merchantInventory = $this->npcModel->getMerchantInventory($id);
+
             
-                        $factionModel = new Faction();
+            $factionModel = new Faction();
             $factions = $factionModel->getAll();
+
             
-                        $allQuests = $this->questModel->getAll();
+            $allQuests = $this->questModel->getAll();
             $assignedQuests = $this->npcModel->getQuests($id);
 
             require_once __DIR__ . '/../Views/admin/npcs/edit.php';
             return;
         }
         
-                $texturePath = $npc['texture'];
+        $texturePath = $npc['texture'];
         
-                if (isset($_FILES['texture']) && $_FILES['texture']['error'] === UPLOAD_ERR_OK) {
+        if (isset($_FILES['texture']) && $_FILES['texture']['error'] === UPLOAD_ERR_OK) {
             $uploadDir = __DIR__ . '/../../public/assets/npcs/';
             if (!file_exists($uploadDir)) {
                 mkdir($uploadDir, 0755, true);
@@ -166,10 +170,10 @@ class AdminNPCController
             }
         }
         
-                $rolesArr = $_POST['roles'] ?? (isset($_POST['role']) ? [$_POST['role']] : []);
+        $rolesArr = $_POST['roles'] ?? (isset($_POST['role']) ? [$_POST['role']] : []);
         $rolesStr = implode(',', array_filter(array_map('trim', $rolesArr)));
         
-                if (empty($rolesStr)) {
+        if (empty($rolesStr)) {
             $rolesStr = 'npc';
         }
 
@@ -185,40 +189,40 @@ class AdminNPCController
 
         $this->npcModel->update($id, $data);
 
-                $existing = $this->npcModel->getDialogueTrees($id);
+        $existing = $this->npcModel->getDialogueTrees($id);
         $existingIds = array_column($existing, 'id');
         $newIds = $_POST['dialogue_trees'] ?? [];
 
-                foreach ($existingIds as $eid) {
+        foreach ($existingIds as $eid) {
             if (!in_array($eid, $newIds)) {
                 $this->npcModel->removeDialogueTree($id, $eid);
             }
         }
 
-                foreach ($newIds as $nid) {
+        foreach ($newIds as $nid) {
             if (!in_array($nid, $existingIds)) {
                 $this->npcModel->assignDialogueTree($id, $nid);
             }
         }
         
-                $logger = new LoggerService();
+        $logger = new LoggerService();
         $logger->logCritical($_SESSION['user_id'], 'ADMIN_NPC_UPDATE', [
             'npc_id' => $id,
             'name' => $data['name'],
             'role' => $data['role']
         ]);
 
-                $existingQuests = $this->npcModel->getQuests($id);
+        $existingQuests = $this->npcModel->getQuests($id);
         $existingQuestIds = array_column($existingQuests, 'id');
         $newQuestIds = $_POST['quests'] ?? [];
         
-                foreach ($existingQuestIds as $qid) {
+        foreach ($existingQuestIds as $qid) {
             if (!in_array($qid, $newQuestIds)) {
                 $this->npcModel->removeQuest($id, $qid);
             }
         }
         
-                foreach ($newQuestIds as $qid) {
+        foreach ($newQuestIds as $qid) {
             if (!in_array($qid, $existingQuestIds)) {
                 $this->npcModel->assignQuest($id, $qid);
             }

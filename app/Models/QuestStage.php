@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Config\Database;
+
 class QuestStage
 {
     private $db;
