@@ -181,6 +181,34 @@ export function initMapPoints(map, points) {
             marker = L.marker([parseFloat(point.y), parseFloat(point.x)], {
                 icon: icon
             }).addTo(map);
+        } else if (point.icon) {
+            // Use custom SVG icon
+            const typeColor = getTypeColor(point.type);
+            const icon = L.divIcon({
+                className: 'custom-map-icon',
+                html: `<div class="map-icon-container" style="
+                    width: 32px; 
+                    height: 32px; 
+                    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+                    color: ${typeColor};
+                ">
+                    <img src="/assets/map/icons/${point.icon}" 
+                         alt="${point.name}" 
+                         class="map-icon-svg"
+                         style="
+                            width: 100%; 
+                            height: 100%; 
+                            object-fit: contain;
+                            filter: drop-shadow(0 0 2px rgba(255,255,255,0.5));
+                         ">
+                </div>`,
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
+            });
+
+            marker = L.marker([parseFloat(point.y), parseFloat(point.x)], {
+                icon: icon
+            }).addTo(map);
         } else {
             marker = L.circleMarker([parseFloat(point.y), parseFloat(point.x)], {
                 radius: 8,
@@ -201,7 +229,7 @@ export function initMapPoints(map, points) {
         });
 
         // Hover effect (only for circle markers)
-        if (!point.has_quest) {
+        if (!point.has_quest && !point.icon) {
             marker.on('mouseover', function () {
                 this.setStyle({
                     radius: 10,

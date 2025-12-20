@@ -1,0 +1,60 @@
+/* Map Icons Styling */
+.custom-map-icon {
+    transition: all 0.3s ease;
+}
+
+.custom-map-icon:hover {
+    transform: scale(1.2);
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5)) !important;
+}
+
+.map-icon-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.map-icon-svg {
+    transition: all 0.2s ease;
+}
+
+.custom-map-icon:hover .map-icon-svg {
+    filter: drop-shadow(0 0 4px rgba(255,255,255,0.8)) !important;
+}
+
+/* Admin Icon Selector */
+.icon-option {
+    cursor: pointer;
+    position: relative;
+}
+
+.icon-option::after {
+    content: '✓';
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
+    background: #6366f1;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.icon-option.border-indigo-500::after {
+    display: flex;
+}
+
+.icon-option img {
+    transition: opacity 0.2s ease;
+}
+
+.icon-option:hover img {
+    opacity: 1 !important;
+}

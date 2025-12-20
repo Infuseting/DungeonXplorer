@@ -81,8 +81,56 @@ ob_start();
                 </div>
                 
                 <div class="mb-4">
-                    <label class="block text-gray-200 font-medium mb-2">Icône (optionnel)</label>
-                    <input type="text" name="icon" class="w-full p-2.5 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10" placeholder="icon.png">
+                    <label class="block text-gray-200 font-medium mb-2">Icône</label>
+                    <input type="hidden" name="icon" id="selected-icon" value="">
+                    
+                    <!-- Icon Selector Grid -->
+                    <div class="grid grid-cols-5 gap-3 mb-3 p-3 bg-gray-900 border border-gray-700 rounded-lg max-h-[200px] overflow-y-auto">
+                        <button type="button" class="icon-option aspect-square p-3 bg-gray-800 hover:bg-gray-700 border-2 border-transparent hover:border-indigo-500 rounded-lg transition-all flex items-center justify-center group" data-icon="" title="Aucune icône">
+                            <span class="text-gray-400 text-xs">Aucune</span>
+                        </button>
+                        <button type="button" class="icon-option aspect-square p-3 bg-gray-800 hover:bg-gray-700 border-2 border-transparent hover:border-indigo-500 rounded-lg transition-all" data-icon="dungeon.svg" title="Donjon">
+                            <img src="/assets/map/icons/dungeon.svg" alt="Donjon" class="w-full h-full object-contain opacity-70 group-hover:opacity-100">
+                        </button>
+                        <button type="button" class="icon-option aspect-square p-3 bg-gray-800 hover:bg-gray-700 border-2 border-transparent hover:border-indigo-500 rounded-lg transition-all" data-icon="place.svg" title="Lieu">
+                            <img src="/assets/map/icons/place.svg" alt="Lieu" class="w-full h-full object-contain opacity-70 group-hover:opacity-100">
+                        </button>
+                        <button type="button" class="icon-option aspect-square p-3 bg-gray-800 hover:bg-gray-700 border-2 border-transparent hover:border-indigo-500 rounded-lg transition-all" data-icon="npc.svg" title="PNJ">
+                            <img src="/assets/map/icons/npc.svg" alt="PNJ" class="w-full h-full object-contain opacity-70 group-hover:opacity-100">
+                        </button>
+                        <button type="button" class="icon-option aspect-square p-3 bg-gray-800 hover:bg-gray-700 border-2 border-transparent hover:border-indigo-500 rounded-lg transition-all" data-icon="quest.svg" title="Quête">
+                            <img src="/assets/map/icons/quest.svg" alt="Quête" class="w-full h-full object-contain opacity-70 group-hover:opacity-100">
+                        </button>
+                        <button type="button" class="icon-option aspect-square p-3 bg-gray-800 hover:bg-gray-700 border-2 border-transparent hover:border-indigo-500 rounded-lg transition-all" data-icon="story.svg" title="Histoire">
+                            <img src="/assets/map/icons/story.svg" alt="Histoire" class="w-full h-full object-contain opacity-70 group-hover:opacity-100">
+                        </button>
+                        <button type="button" class="icon-option aspect-square p-3 bg-gray-800 hover:bg-gray-700 border-2 border-transparent hover:border-indigo-500 rounded-lg transition-all" data-icon="treasure.svg" title="Trésor">
+                            <img src="/assets/map/icons/treasure.svg" alt="Trésor" class="w-full h-full object-contain opacity-70 group-hover:opacity-100">
+                        </button>
+                        <button type="button" class="icon-option aspect-square p-3 bg-gray-800 hover:bg-gray-700 border-2 border-transparent hover:border-indigo-500 rounded-lg transition-all" data-icon="shop.svg" title="Boutique">
+                            <img src="/assets/map/icons/shop.svg" alt="Boutique" class="w-full h-full object-contain opacity-70 group-hover:opacity-100">
+                        </button>
+                        <button type="button" class="icon-option aspect-square p-3 bg-gray-800 hover:bg-gray-700 border-2 border-transparent hover:border-indigo-500 rounded-lg transition-all" data-icon="camp.svg" title="Campement">
+                            <img src="/assets/map/icons/camp.svg" alt="Campement" class="w-full h-full object-contain opacity-70 group-hover:opacity-100">
+                        </button>
+                        <button type="button" class="icon-option aspect-square p-3 bg-gray-800 hover:bg-gray-700 border-2 border-transparent hover:border-indigo-500 rounded-lg transition-all" data-icon="boss.svg" title="Boss">
+                            <img src="/assets/map/icons/boss.svg" alt="Boss" class="w-full h-full object-contain opacity-70 group-hover:opacity-100">
+                        </button>
+                        <button type="button" class="icon-option aspect-square p-3 bg-gray-800 hover:bg-gray-700 border-2 border-transparent hover:border-indigo-500 rounded-lg transition-all" data-icon="portal.svg" title="Portail">
+                            <img src="/assets/map/icons/portal.svg" alt="Portail" class="w-full h-full object-contain opacity-70 group-hover:opacity-100">
+                        </button>
+                    </div>
+                    
+                    <!-- Upload Custom Icon -->
+                    <div class="flex gap-2">
+                        <input type="file" id="custom-icon-upload" accept=".svg,.png,.jpg,.jpeg" class="hidden">
+                        <button type="button" onclick="document.getElementById('custom-icon-upload').click()" class="flex-1 px-3 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 text-sm rounded-lg transition-colors flex items-center justify-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            Upload personnalisé
+                        </button>
+                    </div>
                 </div>
 
                 <div class="mb-4">
@@ -97,53 +145,62 @@ ob_start();
                 </button>
             </form>
         </div>
-        
-        <!-- Points List -->
-        <div class="card">
-            <h3 class="card-header">Points Existants</h3>
-            <div class="max-h-[400px] overflow-y-auto">
-                <?php if (!empty($mapPoints)): ?>
-                    <?php foreach ($mapPoints as $point): ?>
-                        <div class="bg-gray-900 border border-gray-700 rounded-lg p-4 mb-3 transition-all duration-200 hover:border-indigo-500 hover:translate-x-1">
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="font-semibold text-gray-200"><?= htmlspecialchars($point['name']) ?></span>
-                                <?php
-                                    $typeClass = match($point['type']) {
-                                        'story' => 'bg-indigo-500/20 text-indigo-300',
-                                        'place' => 'bg-green-500/20 text-green-300',
-                                        'dungeon' => 'bg-red-500/20 text-red-300',
-                                        'npc' => 'bg-yellow-500/20 text-yellow-300',
-                                        'quest' => 'bg-purple-500/20 text-purple-300',
-                                        default => 'bg-gray-700 text-gray-300'
-                                    };
-                                ?>
-                                <span class="px-3 py-1 rounded text-xs font-medium uppercase <?= $typeClass ?>">
-                                    <?= $point['type'] ?>
-                                </span>
-                            </div>
-                            <div class="text-gray-400 text-xs">
-                                📍 (<?= number_format($point['x'], 6) ?>, <?= number_format($point['y'], 6) ?>) 
-                                • Rayon: <?= $point['radius'] ?>px
-                            </div>
-                            <?php if ($point['description']): ?>
-                                <p class="text-gray-400 text-sm mt-2">
-                                    <?= htmlspecialchars($point['description']) ?>
-                                </p>
-                            <?php endif; ?>
-                            <div class="mt-3 flex gap-2">
-                                <button class="px-3 py-1.5 text-sm bg-red-600 text-white hover:bg-red-700 rounded" onclick="deletePoint(<?= $point['id'] ?>)">
-                                    Supprimer
-                                </button>
-                            </div>
+    </div>
+</div>
+
+<!-- Points List (Full Width Below) -->
+<div class="card mt-6">
+    <h3 class="card-header">Points Existants</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <?php if (!empty($mapPoints)): ?>
+            <?php foreach ($mapPoints as $point): ?>
+                <div class="bg-gray-900 border border-gray-700 rounded-lg p-4 transition-all duration-200 hover:border-indigo-500 cursor-pointer" onclick="editPoint(<?= htmlspecialchars(json_encode($point)) ?>)">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-semibold text-gray-200"><?= htmlspecialchars($point['name']) ?></span>
+                        <?php
+                            $typeClass = match($point['type']) {
+                                'story' => 'bg-indigo-500/20 text-indigo-300',
+                                'place' => 'bg-green-500/20 text-green-300',
+                                'dungeon' => 'bg-red-500/20 text-red-300',
+                                'npc' => 'bg-yellow-500/20 text-yellow-300',
+                                'quest' => 'bg-purple-500/20 text-purple-300',
+                                default => 'bg-gray-700 text-gray-300'
+                            };
+                        ?>
+                        <span class="px-3 py-1 rounded text-xs font-medium uppercase <?= $typeClass ?>">
+                            <?= $point['type'] ?>
+                        </span>
+                    </div>
+                    <?php if ($point['icon']): ?>
+                        <div class="flex items-center gap-2 mb-2">
+                            <img src="/assets/map/icons/<?= htmlspecialchars($point['icon']) ?>" alt="Icon" class="w-6 h-6">
+                            <span class="text-gray-400 text-xs"><?= htmlspecialchars($point['icon']) ?></span>
                         </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <p class="text-gray-400 text-center py-8">
-                        Aucun point sur la carte
-                    </p>
-                <?php endif; ?>
-            </div>
-        </div>
+                    <?php endif; ?>
+                    <div class="text-gray-400 text-xs mb-2">
+                        📍 (<?= number_format($point['x'], 6) ?>, <?= number_format($point['y'], 6) ?>) 
+                        • Rayon: <?= $point['radius'] ?>px
+                    </div>
+                    <?php if ($point['description']): ?>
+                        <p class="text-gray-400 text-sm mt-2 line-clamp-2">
+                            <?= htmlspecialchars($point['description']) ?>
+                        </p>
+                    <?php endif; ?>
+                    <div class="mt-3 flex gap-2">
+                        <button class="px-3 py-1.5 text-sm bg-indigo-600 text-white hover:bg-indigo-700 rounded" onclick="event.stopPropagation(); editPoint(<?= htmlspecialchars(json_encode($point)) ?>)">
+                            Éditer
+                        </button>
+                        <button class="px-3 py-1.5 text-sm bg-red-600 text-white hover:bg-red-700 rounded" onclick="event.stopPropagation(); deletePoint(<?= $point['id'] ?>)">
+                            Supprimer
+                        </button>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <p class="text-gray-400 text-center py-8 col-span-full">
+                Aucun point sur la carte
+            </p>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -289,6 +346,147 @@ function deletePoint(id) {
         location.reload();
     });
 }
+
+function editPoint(pointData) {
+    // Scroll to form
+    document.getElementById('point-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    // Fill form fields
+    const form = document.getElementById('point-form');
+    form.querySelector('[name="name"]').value = pointData.name || '';
+    document.getElementById('input-x').value = pointData.x || '';
+    document.getElementById('input-y').value = pointData.y || '';
+    document.getElementById('input-radius').value = pointData.radius || 50;
+    form.querySelector('[name="type"]').value = pointData.type || 'place';
+    form.querySelector('[name="description"]').value = pointData.description || '';
+    form.querySelector('[name="is_hidden"]').checked = pointData.is_hidden == 1;
+    
+    // Update icon selection
+    const selectedIconInput = document.getElementById('selected-icon');
+    selectedIconInput.value = pointData.icon || '';
+    
+    // Update icon selector visual state
+    document.querySelectorAll('.icon-option').forEach(opt => {
+        opt.classList.remove('border-indigo-500', 'bg-indigo-900/30');
+        if (opt.dataset.icon === (pointData.icon || '')) {
+            opt.classList.add('border-indigo-500', 'bg-indigo-900/30');
+        }
+    });
+    
+    // Update marker on map
+    if (tempMarker) {
+        adminMap.removeLayer(tempMarker);
+    }
+    if (radiusCircle) {
+        adminMap.removeLayer(radiusCircle);
+    }
+    
+    const latlng = L.latLng(parseFloat(pointData.y), parseFloat(pointData.x));
+    tempMarker = L.circleMarker(latlng, {
+        radius: 8,
+        fillColor: '#6366f1',
+        color: '#4f46e5',
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 0.6
+    }).addTo(adminMap);
+    
+    updateRadiusCircle(latlng);
+    adminMap.panTo(latlng);
+    
+    // Change form to update mode
+    form.action = '/admin/map/update/' + pointData.id;
+    form.querySelector('button[type="submit"]').textContent = 'Mettre à jour le Point';
+    
+    // Add cancel button if not exists
+    if (!document.getElementById('cancel-edit-btn')) {
+        const cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.id = 'cancel-edit-btn';
+        cancelBtn.className = 'btn btn-secondary w-full mt-2';
+        cancelBtn.textContent = 'Annuler l\'édition';
+        cancelBtn.onclick = cancelEdit;
+        form.querySelector('button[type="submit"]').after(cancelBtn);
+    }
+}
+
+function cancelEdit() {
+    const form = document.getElementById('point-form');
+    form.reset();
+    form.action = '/admin/map/create';
+    form.querySelector('button[type="submit"]').textContent = 'Créer le Point';
+    
+    const cancelBtn = document.getElementById('cancel-edit-btn');
+    if (cancelBtn) cancelBtn.remove();
+    
+    // Clear selected icon
+    document.getElementById('selected-icon').value = '';
+    document.querySelectorAll('.icon-option').forEach(opt => {
+        opt.classList.remove('border-indigo-500', 'bg-indigo-900/30');
+    });
+    
+    // Clear marker
+    if (tempMarker) {
+        adminMap.removeLayer(tempMarker);
+        tempMarker = null;
+    }
+    if (radiusCircle) {
+        adminMap.removeLayer(radiusCircle);
+        radiusCircle = null;
+    }
+}
+
+// Icon Selector Logic
+document.addEventListener('DOMContentLoaded', () => {
+    const iconOptions = document.querySelectorAll('.icon-option');
+    const selectedIconInput = document.getElementById('selected-icon');
+    const customIconUpload = document.getElementById('custom-icon-upload');
+    
+    iconOptions.forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Remove selected state from all
+            iconOptions.forEach(opt => opt.classList.remove('border-indigo-500', 'bg-indigo-900/30'));
+            
+            // Add selected state
+            this.classList.add('border-indigo-500', 'bg-indigo-900/30');
+            
+            // Update hidden input
+            selectedIconInput.value = this.dataset.icon;
+        });
+    });
+    
+    // Custom icon upload
+    if (customIconUpload) {
+        customIconUpload.addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const formData = new FormData();
+            formData.append('icon', file);
+            
+            try {
+                const response = await fetch('/admin/map/upload-icon', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    selectedIconInput.value = data.filename;
+                    alert('Icône uploadée avec succès : ' + data.filename);
+                } else {
+                    alert('Erreur lors de l\'upload : ' + data.message);
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                alert('Erreur lors de l\'upload de l\'icône');
+            }
+        });
+    }
+});
 </script>
 
 <?php

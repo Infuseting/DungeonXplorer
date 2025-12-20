@@ -161,8 +161,10 @@ $router->mount('/admin', function() use ($router) {
 
         $router->get('/map', 'App\Controllers\AdminMapController@index');
     $router->post('/map/update', 'App\Controllers\AdminMapController@updateMap');
+    $router->post('/map/update/(\d+)', 'App\Controllers\AdminMapController@updatePoint');
     $router->post('/map/create', 'App\Controllers\AdminMapController@createPoint');
     $router->post('/map/delete/(\d+)', 'App\Controllers\AdminMapController@deletePoint');
+    $router->post('/map/upload-icon', 'App\Controllers\AdminMapController@uploadIcon');
     
         $router->get('/points', 'App\Controllers\AdminMapController@managePoints');
     $router->post('/points/update-submap', 'App\Controllers\AdminMapController@updatePointSubMap');
