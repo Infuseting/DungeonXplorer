@@ -31,7 +31,7 @@ function component($component, $data = []) {
 /**
  * Generate character preview HTML with appearance layers
  * 
- * @param array $character Character data with class and appearance
+ * @param array|object $character Character data with class and appearance (array or Character object)
  * @param array $options Options: size (small, medium, large), showFilter (bool), id (string)
  * @return string HTML string
  */
@@ -44,6 +44,20 @@ function renderCharacter($character, $options = []) {
     ];
     
     $options = array_merge($defaults, $options);
+    
+    // Convert object to array if needed
+    if (is_object($character)) {
+        if (method_exists($character, 'toArray')) {
+            $characterArray = $character->toArray();
+            // Add missing properties from object
+            $characterArray['name'] = $character->getName() ?? $characterArray['name'] ?? '';
+            $characterArray['appearance'] = $character->appearance ?? $characterArray['appearance'] ?? [];
+        } else {
+            // Fallback: convert object properties to array
+            $characterArray = (array) $character;
+        }
+        $character = $characterArray;
+    }
     
     $className = strtolower($character['class']['name'] ?? $character['class_name'] ?? 'guerrier');
     $imageBase = "/assets/images/{$className}";
@@ -113,14 +127,15 @@ function renderCharacter($character, $options = []) {
         <?php endif; ?>
     </div>
     
-    <?php if ($options['showFilter'] && !$isNaturalHair): ?>
+    <?php if (!$isNaturalHair): ?>
     <script>
     (function() {
         const characterId = '<?= addslashes($options['id']) ?>';
         
         // Wait for image to load
-        function applyFilter() {
-            const hairLayer = document.querySelector(`[data-character-id="${characterId}"] .character-layer-hair`);
+        function applyHairFilter() {
+            const container = document.querySelector(`[data-character-id="${characterId}"]`);
+            const hairLayer = container?.querySelector('.character-layer-hair');
             
             if (!hairLayer) {
                 console.warn('Hair layer not found for character:', characterId);
@@ -133,15 +148,16 @@ function renderCharacter($character, $options = []) {
             
             console.log('Applying hair filter:', {characterId, r, g, b});
             
-            const filterId = 'colorFilter-' + characterId;
-            let svg = document.getElementById('svg-' + characterId);
+            const filterId = 'colorFilter-' + characterId.replace(/[^a-zA-Z0-9]/g, '_');
+            let svg = document.getElementById('svg-filters-' + characterId);
             
             if (!svg) {
                 svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                svg.id = 'svg-' + characterId;
+                svg.id = 'svg-filters-' + characterId;
                 svg.style.position = 'absolute';
                 svg.style.width = '0';
                 svg.style.height = '0';
+                svg.style.pointerEvents = 'none';
                 document.body.appendChild(svg);
                 
                 const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
@@ -153,26 +169,37 @@ function renderCharacter($character, $options = []) {
                 
                 const colorMatrix = document.createElementNS('http://www.w3.org/2000/svg', 'feColorMatrix');
                 colorMatrix.setAttribute('type', 'matrix');
-                
+                filter.appendChild(colorMatrix);
+            }
+            
+            // Update the color matrix
+            const filter = document.getElementById(filterId);
+            const colorMatrix = filter?.querySelector('feColorMatrix');
+            
+            if (colorMatrix) {
                 const rVal = r / 100;
                 const gVal = g / 100;
                 const bVal = b / 100;
                 
                 const matrix = `${rVal} 0 0 0 0 0 ${gVal} 0 0 0 0 0 ${bVal} 0 0 0 0 0 1 0`;
                 colorMatrix.setAttribute('values', matrix);
-                filter.appendChild(colorMatrix);
             }
             
             hairLayer.style.filter = `url(#${filterId})`;
+            console.log('Hair filter applied successfully');
         }
         
         // Apply filter after image loads
-        const hairImg = document.querySelector(`[data-character-id="${characterId}"] .character-layer-hair`);
+        const container = document.querySelector(`[data-character-id="${characterId}"]`);
+        const hairImg = container?.querySelector('.character-layer-hair');
+        
         if (hairImg) {
-            if (hairImg.complete) {
-                applyFilter();
+            if (hairImg.complete && hairImg.naturalHeight !== 0) {
+                applyHairFilter();
             } else {
-                hairImg.addEventListener('load', applyFilter);
+                hairImg.addEventListener('load', applyHairFilter);
+                // Fallback au cas où l'événement load ne se déclenche pas
+                setTimeout(applyHairFilter, 100);
             }
         }
     })();

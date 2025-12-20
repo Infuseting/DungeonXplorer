@@ -141,6 +141,15 @@ class Character
             $this->intelligence = $result['intelligence'] ?? 10;
             $this->current_hp = $result['current_hp'] ?? $this->vitality;
             
+            // Décoder les données d'apparence si présentes
+            if (isset($result['appearance']) && is_string($result['appearance'])) {
+                $this->appearance = json_decode($result['appearance'], true) ?? [];
+            } elseif (isset($result['appearance'])) {
+                $this->appearance = $result['appearance'];
+            } else {
+                $this->appearance = [];
+            }
+            
             return $this;
         }
         return null;
