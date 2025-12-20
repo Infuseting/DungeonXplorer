@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Config\Database;
 use App\Models\NPC;
 use App\Models\Inventory;
 use App\Models\Item;
@@ -15,6 +16,8 @@ class ShopController
      */
     public function getShop($npcId)
     {
+        header('Content-Type: application/json');
+        
         if (!isset($_SESSION['user_id']) || !isset($_SESSION['character_id'])) {
             http_response_code(401);
             echo json_encode(['success' => false, 'message' => 'Unauthorized']);
@@ -35,9 +38,9 @@ class ShopController
         
         // Initialisation des prix d'achat
         foreach ($merchantInventory as &$item) {
-             // Pour l'instant, le prix d'achat est le prix de base.
-             // TODO: Implémenter des modificateurs basés sur la réputation ou le charisme.
-             $item['buy_price'] = $item['price'];         
+            // Pour l'instant, le prix d'achat est le prix de base.
+            // TODO: Implémenter des modificateurs basés sur la réputation ou le charisme.
+            $item['buy_price'] = $item['price'];         
         }
 
         // Récupération de l'inventaire du joueur
@@ -52,7 +55,7 @@ class ShopController
         }
 
         // Récupération de l'or actuel du personnage
-        $db = \Database::getInstance()->getConnection();
+        $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare("SELECT gold FROM characters WHERE id = ?");
         $stmt->bind_param("i", $_SESSION['character_id']);
         $stmt->execute();
@@ -74,6 +77,8 @@ class ShopController
      */
     public function buy()
     {
+        header('Content-Type: application/json');
+
         if (!isset($_SESSION['user_id']) || !isset($_SESSION['character_id'])) {
             http_response_code(401);
             echo json_encode(['success' => false, 'message' => 'Unauthorized']);
@@ -89,7 +94,7 @@ class ShopController
             exit;
         }
 
-        $db = \Database::getInstance()->getConnection();
+        $db = Database::getInstance()->getConnection();
         $npcModel = new NPC();
         $inventoryModel = new Inventory();
 
@@ -116,7 +121,7 @@ class ShopController
         $charData = $stmt->get_result()->fetch_assoc();
         
         if ($charData['gold'] < $price) {
-            echo json_encode(['success' => false, 'message' => 'Not enough gold']);
+            echo json_encode(['success' => false, 'message' => 'Vous n\'avez pas assez d\'or en votre possession !']);
             exit;
         }
 
@@ -153,6 +158,8 @@ class ShopController
      */
     public function sell()
     {
+        header('Content-Type: application/json');
+        
         if (!isset($_SESSION['user_id']) || !isset($_SESSION['character_id'])) {
             http_response_code(401);
             echo json_encode(['success' => false, 'message' => 'Unauthorized']);
@@ -167,7 +174,7 @@ class ShopController
             exit;
         }
 
-        $db = \Database::getInstance()->getConnection();
+        $db = Database::getInstance()->getConnection();
         $npcModel = new NPC();
         
         // Vérifie que le joueur possède bien l'objet (via l'ID unique d'inventaire)

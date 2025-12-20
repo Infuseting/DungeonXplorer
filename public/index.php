@@ -96,7 +96,8 @@ $router->mount('/game', function() use ($router) {
         (new AuthMiddleware())->handle();
     });
 
-    $router->post('/', 'App\Controllers\GameController@index');     $router->get('/', 'App\Controllers\GameController@index'); 
+        $router->get('/', 'App\Controllers\GameController@index');
+    $router->post('/', 'App\Controllers\GameController@index');
         $router->post('/submap/load', 'App\Controllers\GameController@loadSubMap');
     $router->get('/map/points/(\\d+)', 'App\\Controllers\\GameController@getMapPoints');
         $router->get('/npc/(\d+)', 'App\Controllers\GameController@getNPC');
