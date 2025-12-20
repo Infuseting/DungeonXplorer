@@ -48,15 +48,15 @@ class Character
 
     public function __construct()
     {   
-        // Initialisation de la connexion DB si nécessaire (Singleton recommandé)
-        // $this->db = Database::getInstance()->getConnection(); 
+        // Initialisation de la connexion DB (Singleton)
+        $this->db = Database::getInstance()->getConnection(); 
         $this->inventory = new Inventory();
     }
 
     public function __wakeup()
     {
         // Reconnexion DB après désérialisation
-        // $this->db = Database::getInstance()->getConnection();
+        $this->db = Database::getInstance()->getConnection();
         if (!$this->inventory) {
              $this->inventory = new Inventory();
         }
@@ -68,13 +68,11 @@ class Character
      */
     public function create($userId, $classId, $name, $difficulty = 'NORMAL', $isIronman = 0)
     {
-        $db = Database::getInstance()->getConnection();
-        
-        $stmt = $db->prepare("INSERT INTO characters (user_id, class_id, name, difficulty, is_ironman, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
+        $stmt = $this->db->prepare("INSERT INTO characters (user_id, class_id, name, difficulty, is_ironman, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
         $stmt->bind_param("iissi", $userId, $classId, $name, $difficulty, $isIronman);
         
         if ($stmt->execute()) {
-            return $db->insert_id;
+            return $this->db->insert_id;
         }
         return false;
     }
@@ -85,8 +83,7 @@ class Character
      */
     public function findAllByUserId($userId)
     {
-        $db = Database::getInstance()->getConnection();
-        $stmt = $db->prepare("
+        $stmt = $this->db->prepare("
             SELECT c.*, cl.name as class_name, cs.level, cs.xp 
             FROM characters c 
             JOIN classes cl ON c.class_id = cl.id 
@@ -105,8 +102,7 @@ class Character
      */
     public function findById($id)
     {
-        $db = Database::getInstance()->getConnection();
-        $stmt = $db->prepare("
+        $stmt = $this->db->prepare("
             SELECT c.*, cl.name as class_name, 
                    cs.level, cs.xp, cs.strength, cs.dexterity, cs.intelligence, cs.vitality, cs.skill_points
             FROM characters c 
@@ -191,6 +187,17 @@ class Character
     {
         $stmt = $this->db->prepare("DELETE FROM characters WHERE id = ? AND user_id = ?");
         $stmt->bind_param("ii", $id, $userId);
+        return $stmt->execute();
+    }
+
+    /**
+     * Met à jour l'apparence d'un personnage.
+     */
+    public function updateAppearance($characterId, $appearance)
+    {
+        $appearanceJson = json_encode($appearance);
+        $stmt = $this->db->prepare("UPDATE characters SET appearance = ? WHERE id = ?");
+        $stmt->bind_param("si", $appearanceJson, $characterId);
         return $stmt->execute();
     }
 
