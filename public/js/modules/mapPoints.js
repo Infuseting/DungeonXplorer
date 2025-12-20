@@ -38,19 +38,23 @@ function getTypeLabel(type) {
 /**
  * Show point details in the side panel
  */
-export function showPointDetails(point) {
+export function showPointDetails(point, map = null) {
     console.log('Showing details for point:', point);
-    if (point.type === 'place' && point.sub_map_id) {
-        console.log('Opening sub-map:', point.sub_map_id);
-        openSubMap(point.sub_map_id, point.name);
-        return;
-    }
-
-    // Check if this is an NPC point
+    
+    // Check if this is an NPC point - open directly without panel
     if (point.type === 'npc' && point.target_id) {
         console.log('Opening NPC modal:', point.target_id);
         openNPCModal(point.target_id);
         return;
+    }
+    
+    // Zoom to the point on the map
+    if (map) {
+        const pointLatLng = L.latLng(parseFloat(point.y), parseFloat(point.x));
+        map.flyTo(pointLatLng, map.getMaxZoom() - 1, {
+            duration: 1.5,
+            easeLinearity: 0.25
+        });
     }
 
     const pointPanel = document.getElementById('point-panel');
@@ -118,15 +122,23 @@ export function showPointDetails(point) {
             }
             break;
         case 'place':
-            actionBtn.textContent = '🚪 Entrer';
-            actionBtn.addEventListener('click', () => {
-                showToast(`Fonctionnalité "${getTypeLabel(point.type)}" à venir !`, 'info');
-            });
+            if (point.sub_map_id) {
+                actionBtn.textContent = '🚪 Entrer dans la ville';
+                actionBtn.addEventListener('click', () => {
+                    console.log('Opening sub-map:', point.sub_map_id);
+                    openSubMap(point.sub_map_id, point.name);
+                });
+            } else {
+                actionBtn.textContent = '🚪 Entrer';
+                actionBtn.addEventListener('click', () => {
+                    showToast(`Fonctionnalité "${getTypeLabel(point.type)}" à venir !`, 'info');
+                });
+            }
             break;
         case 'npc':
             actionBtn.textContent = '💬 Parler';
             actionBtn.addEventListener('click', () => {
-                showToast(`Fonctionnalité "${getTypeLabel(point.type)}" à venir !`, 'info');
+                showToast(`Ce PNJ n'est pas configuré`, 'error');
             });
             break;
         case 'quest':
@@ -225,7 +237,7 @@ export function initMapPoints(map, points) {
         // Click handler
         marker.on('click', () => {
             console.log('Marker clicked:', point.name);
-            showPointDetails(point);
+            showPointDetails(point, map);
         });
 
         // Hover effect (only for circle markers)

@@ -520,7 +520,7 @@ ob_start();
 #map {
     width: 100%;
     height: 100%;
-    background: url('/assets/images/texture_table.webp') no-repeat center center fixed;
+    background: url('/assets/images/mapbg.png') no-repeat center center fixed;
     background-size: cover;
     z-index: 0;
 }
