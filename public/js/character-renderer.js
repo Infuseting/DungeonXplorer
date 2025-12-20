@@ -12,12 +12,29 @@ class CharacterRenderer {
      */
     applyHairFilter(characterElement) {
         const hairLayer = characterElement.querySelector('.character-layer-hair');
-        if (!hairLayer) return;
+        if (!hairLayer) {
+            console.log('No hair layer found for character:', characterElement.id);
+            return;
+        }
         
-        const characterId = characterElement.dataset.characterId;
+        // Wait for image to load
+        if (!hairLayer.complete) {
+            hairLayer.addEventListener('load', () => this.applyHairFilter(characterElement));
+            return;
+        }
+        
+        const characterId = characterElement.dataset.characterId || characterElement.id;
         const r = parseInt(hairLayer.dataset.hairRed) || 100;
         const g = parseInt(hairLayer.dataset.hairGreen) || 100;
         const b = parseInt(hairLayer.dataset.hairBlue) || 100;
+        
+        // Skip if default values (no color change)
+        if (r === 100 && g === 100 && b === 100) {
+            console.log('Using default hair color for:', characterId);
+            return;
+        }
+        
+        console.log('Applying hair filter:', {characterId, r, g, b});
         
         const filterId = `colorFilter-${characterId}`;
         
@@ -63,6 +80,8 @@ class CharacterRenderer {
             filter.appendChild(colorMatrix);
             
             this.filters.set(characterId, filterId);
+            
+            console.log('Created filter:', filterId, 'with matrix:', matrix);
         }
     }
     
@@ -70,18 +89,25 @@ class CharacterRenderer {
      * Initialize all character previews on the page
      */
     initAll() {
+        console.log('CharacterRenderer: Initializing all character previews');
         const characters = document.querySelectorAll('.character-preview');
-        characters.forEach(char => this.applyHairFilter(char));
+        console.log('Found', characters.length, 'character previews');
+        characters.forEach(char => {
+            console.log('Processing character:', char.id);
+            this.applyHairFilter(char);
+        });
     }
 }
 
 // Auto-initialize when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOM loaded, initializing CharacterRenderer');
         const renderer = new CharacterRenderer();
         renderer.initAll();
     });
 } else {
+    console.log('DOM already loaded, initializing CharacterRenderer immediately');
     const renderer = new CharacterRenderer();
     renderer.initAll();
 }
