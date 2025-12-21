@@ -14,32 +14,67 @@
             </button>
         </div>
         
-        <!-- Controls -->
-        <div class="p-4 bg-gray-800/50 border-b border-gray-700 flex flex-col md:flex-row gap-4">
-            <!-- Search -->
-            <div class="relative flex-1">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
-                <input type="text" id="quest-search" placeholder="Rechercher une quête..." 
-                       class="w-full bg-gray-900 border border-gray-700 rounded-md py-2 pl-10 pr-4 text-gray-200 focus:outline-none focus:border-amber-500">
+        <!-- Tab Navigation -->
+        <div class="flex bg-gray-800 border-b border-gray-700">
+            <button class="quest-type-tab active flex-1 py-3 text-center font-medium transition-colors" data-tab="story">
+                📖 Quêtes d'Histoire
+            </button>
+            <button class="quest-type-tab flex-1 py-3 text-center font-medium transition-colors" data-tab="daily">
+                ⏰ Quêtes Quotidiennes
+            </button>
+        </div>
+        
+        <!-- Story Quests Section -->
+        <div id="story-quests-section" class="flex-1 flex flex-col overflow-hidden">
+            <!-- Controls -->
+            <div class="p-4 bg-gray-800/50 border-b border-gray-700 flex flex-col md:flex-row gap-4">
+                <!-- Search -->
+                <div class="relative flex-1">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+                    <input type="text" id="quest-search" placeholder="Rechercher une quête..." 
+                           class="w-full bg-gray-900 border border-gray-700 rounded-md py-2 pl-10 pr-4 text-gray-200 focus:outline-none focus:border-amber-500">
+                </div>
+                
+                <!-- Filters -->
+                <div class="flex bg-gray-900 rounded-md p-1 border border-gray-700">
+                    <button class="quest-filter-tab active px-4 py-1.5 rounded text-sm font-medium transition-colors hover:text-white text-gray-400" data-filter="all">
+                        Toutes
+                    </button>
+                    <button class="quest-filter-tab px-4 py-1.5 rounded text-sm font-medium transition-colors hover:text-white text-gray-400" data-filter="active">
+                        En cours
+                    </button>
+                    <button class="quest-filter-tab px-4 py-1.5 rounded text-sm font-medium transition-colors hover:text-white text-gray-400" data-filter="completed">
+                        Terminées
+                    </button>
+                </div>
             </div>
             
-            <!-- Filters -->
-            <div class="flex bg-gray-900 rounded-md p-1 border border-gray-700">
-                <button class="quest-filter-tab active px-4 py-1.5 rounded text-sm font-medium transition-colors hover:text-white text-gray-400" data-filter="all">
-                    Toutes
-                </button>
-                <button class="quest-filter-tab px-4 py-1.5 rounded text-sm font-medium transition-colors hover:text-white text-gray-400" data-filter="active">
-                    En cours
-                </button>
-                <button class="quest-filter-tab px-4 py-1.5 rounded text-sm font-medium transition-colors hover:text-white text-gray-400" data-filter="completed">
-                    Terminées
-                </button>
+            <!-- Quest List -->
+            <div id="quest-list" class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+                <!-- Quests will be injected here -->
             </div>
         </div>
         
-        <!-- Quest List -->
-        <div id="quest-list" class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-            <!-- Quests will be injected here -->
+        <!-- Daily Quests Section (Hidden by default) -->
+        <div id="daily-quests-section" class="flex-1 flex-col overflow-hidden hidden">
+            <!-- Daily Quest Header Info -->
+            <div class="p-4 bg-gradient-to-r from-purple-900/50 to-blue-900/50 border-b border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold text-purple-300">Quêtes du Jour</h3>
+                        <p class="text-sm text-gray-400">3 quêtes aléatoires disponibles chaque jour</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-2xl font-bold text-yellow-400" id="daily-quest-reward-total">💰 15 pièces max</div>
+                        <div class="text-sm text-gray-400" id="daily-quest-timer">Renouvellement à minuit</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Daily Quest List -->
+            <div id="daily-quest-list" class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+                <!-- Daily quests will be injected here -->
+            </div>
         </div>
     </div>
 </div>
@@ -200,5 +235,87 @@
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #6b7280;
+}
+
+/* Tab Navigation Styles */
+.quest-type-tab {
+    color: #9ca3af;
+    border-bottom: 2px solid transparent;
+}
+
+.quest-type-tab:hover {
+    color: #e5e7eb;
+    background: rgba(75, 85, 99, 0.3);
+}
+
+.quest-type-tab.active {
+    color: #fbbf24;
+    border-bottom-color: #fbbf24;
+    background: rgba(217, 119, 6, 0.1);
+}
+
+/* Daily Quest Styles */
+.daily-quest-item {
+    background: linear-gradient(135deg, rgba(49, 46, 129, 0.4), rgba(30, 58, 138, 0.4));
+    border: 1px solid #4c1d95;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    transition: all 0.3s;
+}
+
+.daily-quest-item:hover {
+    border-color: #7c3aed;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
+}
+
+.daily-quest-item.completed {
+    border-color: #059669;
+    background: linear-gradient(135deg, rgba(6, 78, 59, 0.4), rgba(4, 120, 87, 0.3));
+}
+
+.daily-quest-item.claimed {
+    border-color: #374151;
+    background: rgba(31, 41, 55, 0.4);
+    opacity: 0.7;
+}
+
+.daily-quest-progress {
+    height: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.daily-quest-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #7c3aed, #a855f7);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+.daily-quest-progress-bar.complete {
+    background: linear-gradient(90deg, #059669, #10b981);
+}
+
+.claim-reward-btn {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    animation: pulse-gold 2s infinite;
+}
+
+.claim-reward-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
+}
+
+@keyframes pulse-gold {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+    50% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
 }
 </style>

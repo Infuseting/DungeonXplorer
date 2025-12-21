@@ -6,7 +6,9 @@
 import { playSound } from './soundManager.js';
 
 let questLog = [];
+let dailyQuests = [];
 let currentFilter = 'all'; // 'all', 'active', 'completed'
+let currentTab = 'story'; // 'story', 'daily'
 
 /**
  * Open Quest Journal Modal
@@ -25,7 +27,9 @@ export function openQuestJournal() {
         .then(data => {
             if (data.success) {
                 questLog = data.log;
+                dailyQuests = data.daily_quests || [];
                 renderQuestList();
+                renderDailyQuests();
             }
         })
         .catch(error => {
@@ -189,6 +193,144 @@ export function handleQuestSearch() {
     renderQuestList();
 }
 
+/**
+ * Switch between Story and Daily quest tabs
+ */
+export function switchQuestTab(tab) {
+    currentTab = tab;
+    
+    // Update tab UI
+    document.querySelectorAll('.quest-type-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === tab);
+    });
+    
+    // Show/hide sections
+    const storySection = document.getElementById('story-quests-section');
+    const dailySection = document.getElementById('daily-quests-section');
+    
+    if (tab === 'story') {
+        storySection.classList.remove('hidden');
+        storySection.classList.add('flex');
+        dailySection.classList.add('hidden');
+        dailySection.classList.remove('flex');
+    } else {
+        storySection.classList.add('hidden');
+        storySection.classList.remove('flex');
+        dailySection.classList.remove('hidden');
+        dailySection.classList.add('flex');
+    }
+}
+
+/**
+ * Render daily quests list
+ */
+function renderDailyQuests() {
+    const container = document.getElementById('daily-quest-list');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (!dailyQuests || dailyQuests.length === 0) {
+        container.innerHTML = '<div class="text-center text-gray-400 py-8">Aucune quête quotidienne disponible</div>';
+        return;
+    }
+    
+    dailyQuests.forEach(quest => {
+        const questEl = document.createElement('div');
+        const statusClass = quest.status.toLowerCase();
+        questEl.className = `daily-quest-item ${statusClass}`;
+        
+        const progressPercent = Math.min(100, (quest.current_progress / quest.objective_count) * 100);
+        const isComplete = quest.status === 'COMPLETED';
+        const isClaimed = quest.status === 'CLAIMED';
+        
+        // Get objective type icon
+        const typeIcons = {
+            'KILL_MONSTERS': '⚔️',
+            'COLLECT_GOLD': '💰',
+            'COMPLETE_DUNGEON': '🏰',
+            'VISIT_LOCATIONS': '🗺️',
+            'USE_ITEMS': '🧪'
+        };
+        const typeIcon = typeIcons[quest.objective_type] || '📋';
+        
+        questEl.innerHTML = `
+            <div class="flex items-start justify-between mb-2">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">${typeIcon}</span>
+                    <div>
+                        <h4 class="font-bold text-white ${isClaimed ? 'line-through opacity-50' : ''}">${quest.name}</h4>
+                        <p class="text-sm text-gray-400">${quest.description}</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-yellow-400 font-bold">🪙 ${quest.gold_reward}</div>
+                    ${isClaimed ? '<span class="text-xs text-green-400">✓ Réclamé</span>' : ''}
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4 mt-3">
+                <div class="flex-1">
+                    <div class="flex justify-between text-xs text-gray-400 mb-1">
+                        <span>Progression</span>
+                        <span>${quest.current_progress}/${quest.objective_count}</span>
+                    </div>
+                    <div class="daily-quest-progress">
+                        <div class="daily-quest-progress-bar ${isComplete || isClaimed ? 'complete' : ''}" style="width: ${progressPercent}%"></div>
+                    </div>
+                </div>
+                
+                ${isComplete && !isClaimed ? `
+                    <button class="claim-reward-btn" onclick="window.claimDailyQuestReward(${quest.id})">
+                        Réclamer
+                    </button>
+                ` : ''}
+            </div>
+        `;
+        
+        container.appendChild(questEl);
+    });
+}
+
+/**
+ * Claim daily quest reward
+ */
+window.claimDailyQuestReward = async function(playerDailyQuestId) {
+    try {
+        const response = await fetch('/game/quest/daily/claim', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ player_daily_quest_id: playerDailyQuestId })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            playSound('reward');
+            if (window.showToast) window.showToast(data.message, 'success');
+            
+            // Update the quest in the local array
+            const quest = dailyQuests.find(q => q.id === playerDailyQuestId);
+            if (quest) {
+                quest.status = 'CLAIMED';
+            }
+            
+            // Re-render
+            renderDailyQuests();
+            
+            // Dispatch event for gold update
+            window.dispatchEvent(new CustomEvent('goldUpdated'));
+        } else {
+            if (window.showToast) window.showToast(data.message || 'Erreur', 'error');
+        }
+    } catch (error) {
+        console.error('Error claiming reward:', error);
+        if (window.showToast) window.showToast('Erreur lors de la réclamation', 'error');
+    }
+};
+
 // Initialize event listeners when module loads
 document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('quest-search');
@@ -198,6 +340,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.querySelectorAll('.quest-filter-tab').forEach(tab => {
         tab.addEventListener('click', () => setQuestFilter(tab.dataset.filter));
+    });
+    
+    // Tab switching
+    document.querySelectorAll('.quest-type-tab').forEach(tab => {
+        tab.addEventListener('click', () => switchQuestTab(tab.dataset.tab));
     });
 
     const closeBtn = document.getElementById('close-quest-journal');

@@ -14,6 +14,7 @@ use App\Models\NPC;
 use App\Models\CharacterStats;
 use App\Models\Skill;
 use App\Services\TokenService;
+use App\Models\DailyQuest;
 use App\Config\Database ;
 
 class GameController
@@ -382,10 +383,66 @@ class GameController
         $playerQuestModel = new PlayerQuest();
         $log = $playerQuestModel->getQuestLog($_SESSION['character_id']);
         
+        // Get daily quests
+        $dailyQuestModel = new DailyQuest();
+        $dailyQuests = $dailyQuestModel->getDailyQuestsForCharacter($_SESSION['character_id']);
+        
         echo json_encode([
             'success' => true,
-            'log' => $log
+            'log' => $log,
+            'daily_quests' => $dailyQuests
         ]);
+        exit;
+    }
+    
+    /**
+     * Récupère les quêtes quotidiennes du personnage.
+     */
+    public function getDailyQuests()
+    {
+        header('Content-Type: application/json');
+        
+        if (!isset($_SESSION['character_id'])) {
+            echo json_encode(['success' => false, 'message' => 'Personnage non sélectionné']);
+            exit;
+        }
+        
+        $dailyQuestModel = new DailyQuest();
+        $dailyQuests = $dailyQuestModel->getDailyQuestsForCharacter($_SESSION['character_id']);
+        $stats = $dailyQuestModel->getDailyQuestStats($_SESSION['character_id']);
+        
+        echo json_encode([
+            'success' => true,
+            'daily_quests' => $dailyQuests,
+            'stats' => $stats
+        ]);
+        exit;
+    }
+    
+    /**
+     * Réclame la récompense d'une quête quotidienne complétée.
+     */
+    public function claimDailyQuestReward()
+    {
+        header('Content-Type: application/json');
+        
+        if (!isset($_SESSION['character_id'])) {
+            echo json_encode(['success' => false, 'message' => 'Personnage non sélectionné']);
+            exit;
+        }
+        
+        $data = json_decode(file_get_contents('php://input'), true);
+        $playerDailyQuestId = $data['player_daily_quest_id'] ?? null;
+        
+        if (!$playerDailyQuestId) {
+            echo json_encode(['success' => false, 'message' => 'ID de quête quotidienne manquant']);
+            exit;
+        }
+        
+        $dailyQuestModel = new DailyQuest();
+        $result = $dailyQuestModel->claimReward($_SESSION['character_id'], $playerDailyQuestId);
+        
+        echo json_encode($result);
         exit;
     }
     
@@ -570,6 +627,10 @@ class GameController
         if ($effectApplied) {
             // Consommation de l'objet (réduction quantité ou suppression)
             $inventoryModel->consumeItem($characterId, $inventoryItemId);
+            
+            // Mise à jour des quêtes quotidiennes (USE_ITEMS)
+            $dailyQuestModel = new DailyQuest();
+            $dailyQuestModel->onItemUsed($characterId, $item['id']);
             
             // Actualisation indispensable des stats pour le client
              $character = $characterModel->findById($characterId);

@@ -253,12 +253,22 @@ class CombatController
              $pqModel = new \App\Models\PlayerQuest();
              $questUpdates = $pqModel->onMonsterKilled($_SESSION['character_id'], $monsterModel->getId());
              
+             // Mise à jour des quêtes quotidiennes (KILL_MONSTERS)
+             $dailyQuestModel = new \App\Models\DailyQuest();
+             $dailyQuestUpdates = $dailyQuestModel->onMonsterKilled($_SESSION['character_id'], $monsterModel->getId());
+             
+             // Mise à jour des quêtes quotidiennes (COLLECT_GOLD)
+             if ($calc['gold'] > 0) {
+                 $dailyQuestModel->onGoldCollected($_SESSION['character_id'], $calc['gold']);
+             }
+             
              $rewards = [
                  'xp' => $calc['xp'],
                  'gold' => $calc['gold'],
                  'levels_gained' => $xpRes['levels_gained'],
                  'loot' => $loot,
-                 'quests' => $questUpdates
+                 'quests' => $questUpdates,
+                 'daily_quest_updates' => $dailyQuestUpdates
              ];
 
              // Logs de victoire

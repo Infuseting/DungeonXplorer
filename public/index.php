@@ -107,6 +107,9 @@ $router->mount('/game', function() use ($router) {
         $router->post('/quest/accept', 'App\Controllers\GameController@acceptQuest');
     $router->get('/quest/log', 'App\Controllers\GameController@getQuestLog');
     
+        $router->get('/quest/daily', 'App\Controllers\GameController@getDailyQuests');
+    $router->post('/quest/daily/claim', 'App\Controllers\GameController@claimDailyQuestReward');
+    
     $router->get('/combat/start/(\d+)', 'App\Controllers\CombatController@startCombat');
     $router->post('/combat/roll-dice', 'App\Controllers\CombatController@rollDice');
     $router->post('/combat/action', 'App\Controllers\CombatController@performAction');

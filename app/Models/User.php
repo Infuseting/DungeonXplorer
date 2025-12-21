@@ -86,7 +86,8 @@ class User
     {
         $result = $this->db->query("
             SELECT u.*, 
-            (SELECT COUNT(*) FROM characters c WHERE c.user_id = u.id) as character_count 
+            (SELECT COUNT(*) FROM characters c WHERE c.user_id = u.id) as character_count,
+            (SELECT COALESCE(SUM(c.gold), 0) FROM characters c WHERE c.user_id = u.id) as total_gold
             FROM users u 
             ORDER BY u.created_at DESC
         ");

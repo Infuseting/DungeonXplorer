@@ -103,6 +103,10 @@ class StoryController
 
         // Si la requête est AJAX, on renvoie une vue partielle pour l'interface
         if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+            // Mise à jour des quêtes quotidiennes (VISIT_LOCATIONS)
+            $dailyQuestModel = new \App\Models\DailyQuest();
+            $dailyQuestModel->onLocationVisited($characterId, $storyId);
+            
              extract([
                 'story' => $story,
                 'inventory' => $this->inventoryModel->getCharacterInventory($characterId)
@@ -790,6 +794,11 @@ class StoryController
 
                 // Sortie validée : Mise à jour de la progression
                 $this->progressModel->exitDungeon($characterId, $storyId);
+                
+                // Mise à jour des quêtes quotidiennes (COMPLETE_DUNGEON)
+                $dailyQuestModel = new \App\Models\DailyQuest();
+                $dailyQuestModel->onDungeonCompleted($characterId, $storyId);
+                
                 echo json_encode(['success' => true]);
                 exit;
             }

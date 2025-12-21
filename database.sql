@@ -1683,6 +1683,98 @@ ALTER TABLE `quest_reward_items`
   ADD CONSTRAINT `quest_reward_items_ibfk_1` FOREIGN KEY (`quest_id`) REFERENCES `quests` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `quest_reward_items_ibfk_2` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`) ON DELETE CASCADE;
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `daily_quests`
+--
+
+CREATE TABLE `daily_quests` (
+  `id` int NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `description` text NOT NULL,
+  `objective_type` enum('KILL_MONSTERS','COLLECT_GOLD','COMPLETE_DUNGEON','VISIT_LOCATIONS','USE_ITEMS') NOT NULL,
+  `objective_target` int DEFAULT NULL COMMENT 'ID cible optionnel (monster_id, item_id, etc.)',
+  `objective_count` int NOT NULL DEFAULT '1',
+  `gold_reward` int NOT NULL DEFAULT '5',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `daily_quests`
+--
+
+INSERT INTO `daily_quests` (`id`, `name`, `description`, `objective_type`, `objective_target`, `objective_count`, `gold_reward`, `is_active`) VALUES
+(1, 'Chasseur de Gobelins', 'Éliminez 3 monstres pour prouver votre valeur.', 'KILL_MONSTERS', NULL, 3, 5, 1),
+(2, 'Explorateur Novice', 'Visitez 2 lieux différents sur la carte.', 'VISIT_LOCATIONS', NULL, 2, 5, 1),
+(3, 'Aventurier du Donjon', 'Complétez un donjon en entier.', 'COMPLETE_DUNGEON', NULL, 1, 5, 1),
+(4, 'Collecteur d''Or', 'Amassez 50 pièces d''or.', 'COLLECT_GOLD', NULL, 50, 5, 1),
+(5, 'Maître des Potions', 'Utilisez 2 objets consommables.', 'USE_ITEMS', NULL, 2, 5, 1),
+(6, 'Tueur de Bêtes', 'Éliminez 5 monstres de n''importe quel type.', 'KILL_MONSTERS', NULL, 5, 5, 1),
+(7, 'Cartographe', 'Visitez 3 lieux différents.', 'VISIT_LOCATIONS', NULL, 3, 5, 1),
+(8, 'Pilleur de Donjons', 'Terminez 2 donjons.', 'COMPLETE_DUNGEON', NULL, 2, 5, 1),
+(9, 'Économe', 'Collectez 100 pièces d''or.', 'COLLECT_GOLD', NULL, 100, 5, 1),
+(10, 'Exterminateur', 'Tuez 10 monstres.', 'KILL_MONSTERS', NULL, 10, 5, 1),
+(11, 'Voyageur Infatigable', 'Visitez 5 lieux différents.', 'VISIT_LOCATIONS', NULL, 5, 5, 1),
+(12, 'Alchimiste Amateur', 'Utilisez 3 objets consommables.', 'USE_ITEMS', NULL, 3, 5, 1),
+(13, 'Chasseur Aguerri', 'Éliminez 7 créatures.', 'KILL_MONSTERS', NULL, 7, 5, 1),
+(14, 'Conquérant', 'Complétez 3 donjons.', 'COMPLETE_DUNGEON', NULL, 3, 5, 1),
+(15, 'Trésorier', 'Amassez 200 pièces d''or.', 'COLLECT_GOLD', NULL, 200, 5, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `player_daily_quests`
+--
+
+CREATE TABLE `player_daily_quests` (
+  `id` int NOT NULL,
+  `character_id` int NOT NULL,
+  `daily_quest_id` int NOT NULL,
+  `assigned_date` date NOT NULL,
+  `current_progress` int NOT NULL DEFAULT '0',
+  `status` enum('ACTIVE','COMPLETED','CLAIMED') NOT NULL DEFAULT 'ACTIVE',
+  `completed_at` timestamp NULL DEFAULT NULL,
+  `claimed_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Indexes for table `daily_quests`
+--
+ALTER TABLE `daily_quests`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `player_daily_quests`
+--
+ALTER TABLE `player_daily_quests`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_daily_quest_per_day` (`character_id`, `daily_quest_id`, `assigned_date`),
+  ADD KEY `idx_player_daily_date` (`character_id`, `assigned_date`),
+  ADD KEY `idx_daily_quest_id` (`daily_quest_id`);
+
+--
+-- AUTO_INCREMENT for table `daily_quests`
+--
+ALTER TABLE `daily_quests`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+
+--
+-- AUTO_INCREMENT for table `player_daily_quests`
+--
+ALTER TABLE `player_daily_quests`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- Constraints for table `player_daily_quests`
+--
+ALTER TABLE `player_daily_quests`
+  ADD CONSTRAINT `player_daily_quests_ibfk_1` FOREIGN KEY (`character_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `player_daily_quests_ibfk_2` FOREIGN KEY (`daily_quest_id`) REFERENCES `daily_quests` (`id`) ON DELETE CASCADE;
+
 --
 -- Constraints for table `quest_stages`
 --

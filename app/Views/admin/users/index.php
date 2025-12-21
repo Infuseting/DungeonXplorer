@@ -20,6 +20,7 @@ ob_start();
                     <th class="px-6 py-4 text-left text-slate-400 text-sm uppercase font-semibold">Pseudo</th>
                     <th class="px-6 py-4 text-left text-slate-400 text-sm uppercase font-semibold">Email</th>
                     <th class="px-6 py-4 text-center text-slate-400 text-sm uppercase font-semibold">Personnages</th>
+                    <th class="px-6 py-4 text-center text-slate-400 text-sm uppercase font-semibold">Gold Total</th>
                     <th class="px-6 py-4 text-left text-slate-400 text-sm uppercase font-semibold">Inscrit le</th>
                     <th class="px-6 py-4 text-right text-slate-400 text-sm uppercase font-semibold">Actions</th>
                 </tr>
@@ -34,6 +35,11 @@ ob_start();
                             <a href="/admin/characters?user_id=<?= $user['id'] ?>" class="inline-block bg-indigo-500/20 text-indigo-300 text-sm px-3 py-1 rounded-lg hover:bg-indigo-500/30 transition-all transform hover:-translate-y-0.5">
                                 <?= $user['character_count'] ?> perso<?= $user['character_count'] > 1 ? 's' : '' ?>
                             </a>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="inline-flex items-center gap-1 bg-yellow-500/20 text-yellow-300 text-sm px-3 py-1 rounded-lg">
+                                🪙 <?= number_format($user['total_gold'], 0, ',', ' ') ?>
+                            </span>
                         </td>
                         <td class="px-6 py-4 text-slate-400 text-sm">
                             <?= date('d/m/Y', strtotime($user['created_at'])) ?>
