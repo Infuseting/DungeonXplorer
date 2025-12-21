@@ -213,6 +213,13 @@ $router->mount('/admin', function() use ($router) {
     $router->post('/quests/reward/item/add', 'App\Controllers\AdminQuestController@addRewardItem');
     $router->post('/quests/reward/item/remove', 'App\Controllers\AdminQuestController@removeRewardItem');
     
+    // Routes quêtes quotidiennes admin
+    $router->get('/quests/daily', 'App\Controllers\AdminQuestController@dailyIndex');
+    $router->post('/quests/daily/create', 'App\Controllers\AdminQuestController@dailyCreate');
+    $router->post('/quests/daily/edit/(\d+)', 'App\Controllers\AdminQuestController@dailyEdit');
+    $router->post('/quests/daily/toggle/(\d+)', 'App\Controllers\AdminQuestController@dailyToggle');
+    $router->post('/quests/daily/delete/(\d+)', 'App\Controllers\AdminQuestController@dailyDelete');
+    
         $router->get('/users', 'App\Controllers\AdminUserController@index');
     $router->post('/users/reset-password/(\d+)', 'App\Controllers\AdminUserController@resetPassword');
     $router->post('/users/delete/(\d+)', 'App\Controllers\AdminUserController@delete');

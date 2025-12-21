@@ -544,4 +544,148 @@ class AdminQuestController
         }
         exit;
     }
+    
+    // ==================== DAILY QUESTS ====================
+    
+    /**
+     * List all daily quests
+     */
+    public function dailyIndex()
+    {
+        // Get all daily quests
+        $result = $this->db->query("SELECT * FROM daily_quests ORDER BY id ASC");
+        $dailyQuests = $result->fetch_all(MYSQLI_ASSOC);
+        
+        // Get today's stats
+        $today = date('Y-m-d');
+        $statsQuery = $this->db->prepare("
+            SELECT 
+                COUNT(*) as total_assigned,
+                SUM(CASE WHEN status IN ('COMPLETED', 'CLAIMED') THEN 1 ELSE 0 END) as total_completed,
+                SUM(CASE WHEN status = 'CLAIMED' THEN 1 ELSE 0 END) as total_claimed
+            FROM player_daily_quests
+            WHERE assigned_date = ?
+        ");
+        $statsQuery->bind_param("s", $today);
+        $statsQuery->execute();
+        $stats = $statsQuery->get_result()->fetch_assoc();
+        
+        // Get player stats for today
+        $playerStatsQuery = $this->db->prepare("
+            SELECT 
+                c.name as character_name,
+                u.username,
+                COUNT(*) as total_assigned,
+                SUM(CASE WHEN pdq.status IN ('COMPLETED', 'CLAIMED') THEN 1 ELSE 0 END) as total_completed,
+                SUM(CASE WHEN pdq.status = 'CLAIMED' THEN 1 ELSE 0 END) as total_claimed,
+                SUM(CASE WHEN pdq.status = 'CLAIMED' THEN dq.gold_reward ELSE 0 END) as gold_earned
+            FROM player_daily_quests pdq
+            JOIN characters c ON pdq.character_id = c.id
+            JOIN users u ON c.user_id = u.id
+            JOIN daily_quests dq ON pdq.daily_quest_id = dq.id
+            WHERE pdq.assigned_date = ?
+            GROUP BY pdq.character_id
+            ORDER BY total_completed DESC
+        ");
+        $playerStatsQuery->bind_param("s", $today);
+        $playerStatsQuery->execute();
+        $playerStats = $playerStatsQuery->get_result()->fetch_all(MYSQLI_ASSOC);
+        
+        require_once __DIR__ . '/../Views/admin/quests/daily.php';
+    }
+    
+    /**
+     * Create daily quest
+     */
+    public function dailyCreate()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $stmt = $this->db->prepare("
+                INSERT INTO daily_quests (name, description, objective_type, objective_count, gold_reward, is_active)
+                VALUES (?, ?, ?, ?, ?, 1)
+            ");
+            $stmt->bind_param("sssii", 
+                $_POST['name'],
+                $_POST['description'],
+                $_POST['objective_type'],
+                $_POST['objective_count'],
+                $_POST['gold_reward']
+            );
+            
+            if ($stmt->execute()) {
+                header('Location: /admin/quests/daily?success=created');
+            } else {
+                header('Location: /admin/quests/daily?error=create_failed');
+            }
+            exit;
+        }
+    }
+    
+    /**
+     * Edit daily quest
+     */
+    public function dailyEdit($id)
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $stmt = $this->db->prepare("
+                UPDATE daily_quests 
+                SET name = ?, description = ?, objective_type = ?, objective_count = ?, gold_reward = ?
+                WHERE id = ?
+            ");
+            $stmt->bind_param("sssiii", 
+                $_POST['name'],
+                $_POST['description'],
+                $_POST['objective_type'],
+                $_POST['objective_count'],
+                $_POST['gold_reward'],
+                $id
+            );
+            
+            if ($stmt->execute()) {
+                header('Location: /admin/quests/daily?success=updated');
+            } else {
+                header('Location: /admin/quests/daily?error=update_failed');
+            }
+            exit;
+        }
+    }
+    
+    /**
+     * Toggle daily quest active status
+     */
+    public function dailyToggle($id)
+    {
+        header('Content-Type: application/json');
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        $isActive = $input['is_active'] ? 1 : 0;
+        
+        $stmt = $this->db->prepare("UPDATE daily_quests SET is_active = ? WHERE id = ?");
+        $stmt->bind_param("ii", $isActive, $id);
+        
+        if ($stmt->execute()) {
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Erreur de mise à jour']);
+        }
+        exit;
+    }
+    
+    /**
+     * Delete daily quest
+     */
+    public function dailyDelete($id)
+    {
+        header('Content-Type: application/json');
+        
+        $stmt = $this->db->prepare("DELETE FROM daily_quests WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        
+        if ($stmt->execute()) {
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Erreur de suppression']);
+        }
+        exit;
+    }
 }

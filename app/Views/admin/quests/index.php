@@ -6,6 +6,7 @@ ob_start();
 <div class="flex justify-between items-center mb-8">
     <h1>📜 Gestion des Quêtes</h1>
     <div class="flex gap-4">
+        <a href="/admin/quests/daily" class="btn bg-purple-600 hover:bg-purple-500">⏰ Quêtes Quotidiennes</a>
         <form method="GET" class="inline-block">
             <input type="text" name="search" placeholder="Rechercher..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
             <button type="submit">🔍</button>
