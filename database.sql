@@ -1966,6 +1966,18 @@ ALTER TABLE `user_social_accounts`
 ALTER TABLE `user_tokens`
   ADD CONSTRAINT `user_tokens_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
+--
+-- Constraints for table `houses`
+--
+ALTER TABLE `houses` 
+ADD COLUMN `map_x` INT DEFAULT 54 AFTER `location_name`,
+ADD COLUMN `map_y` INT DEFAULT -108 AFTER `map_x`;
+
+UPDATE `houses` SET `map_x` = 54, `map_y` = -108 WHERE `name` = 'Petite Cabane';
+UPDATE `houses` SET `map_x` = 78.1875, `map_y` = -93.15625 WHERE `name` = 'Maison de Village';
+UPDATE `houses` SET `map_x` = 84.359375, `map_y` = -77.40625 WHERE `name` = 'Demeure du Marchand';
+UPDATE `houses` SET `map_x` = 99.46875, `map_y` = -91.40625 WHERE `name` = 'Manoir Noble';
+UPDATE `houses` SET `map_x` = 74.359375, `map_y` = -94.40625 WHERE `name` = 'Château Ancestral';
 
 -- furnitures categories
 INSERT INTO `furniture_categories` (`name`, `icon`, `sort_order`) VALUES

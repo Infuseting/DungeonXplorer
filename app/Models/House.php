@@ -134,7 +134,7 @@ class House
     public function getPrimaryHouse($characterId)
     {
         $stmt = $this->db->prepare("
-            SELECT ch.*, h.name, h.description, h.storage_slots, h.furniture_slots, h.image, h.location_name
+            SELECT ch.*, h.name, h.description, h.storage_slots, h.furniture_slots, h.image, h.location_name, h.map_x, h.map_y
             FROM character_houses ch
             JOIN houses h ON ch.house_id = h.id
             WHERE ch.character_id = ? AND ch.is_primary = 1
