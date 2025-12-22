@@ -168,9 +168,9 @@ class HouseManager {
         
         container.innerHTML = this.houses.map(house => `
             <div class="house-card ${house.is_primary ? 'primary' : ''}" data-house-id="${house.id}">
-                <div class="aspect-video bg-gray-900 flex items-center justify-center">
+                <div class="aspect-video bg-gray-900 flex items-center justify-center overflow-hidden">
                     ${house.image 
-                        ? `<img src="/${house.image}" alt="${house.name}" class="max-w-full max-h-full object-contain">`
+                        ? `<img src="/${house.image}" alt="${house.name}" class="w-full h-full object-cover">`
                         : '<span class="text-4xl">🏠</span>'
                     }
                 </div>
@@ -554,9 +554,9 @@ class HouseManager {
 
         container.innerHTML = houses.map(house => `
             <div class="house-card ${house.owned ? 'owned' : ''}">
-                <div class="aspect-video bg-gray-900 flex items-center justify-center">
+                <div class="aspect-video bg-gray-900 flex items-center justify-center overflow-hidden">
                     ${house.image 
-                        ? `<img src="/${house.image}" alt="${house.name}" class="max-w-full max-h-full object-contain">`
+                        ? `<img src="/${house.image}" alt="${house.name}" class="w-full h-full object-cover">`
                         : '<span class="text-4xl">🏠</span>'
                     }
                 </div>

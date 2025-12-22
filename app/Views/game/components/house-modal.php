@@ -66,7 +66,7 @@
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                             <div class="bg-gray-900/50 rounded-xl p-4 border border-gray-700">
                                 <div class="aspect-video bg-gray-800 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
-                                    <img id="house-image" src="" alt="Maison" class="max-w-full max-h-full object-contain hidden">
+                                    <img id="house-image" src="" alt="Maison" class="w-full h-full object-cover hidden">
                                     <span id="house-image-placeholder" class="text-8xl">🏠</span>
                                 </div>
                                 <div class="flex items-center justify-between">
@@ -75,7 +75,7 @@
                                                class="bg-transparent text-lg font-bold text-white border-b border-transparent hover:border-gray-600 focus:border-violet-500 focus:outline-none transition-colors">
                                     </div>
                                     <button id="rename-house-btn" class="text-violet-400 hover:text-violet-300 text-sm">
-                                        ✏️ Renommer
+                                        Renommer
                                     </button>
                                 </div>
                             </div>
