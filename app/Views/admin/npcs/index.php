@@ -14,17 +14,16 @@ ob_start();
     </div>
     
     <!-- Search and Filters -->
-    <div class="search-bar flex gap-4 mb-6">
+    <div class="flex items-center gap-4 mb-6">
         <input 
             type="text" 
             id="search-input" 
-            class="form-input" 
-            class="form-input flex-1 min-w-[250px]"
+            class="form-input flex-1"
             placeholder="🔍 Rechercher par nom..."
             value="<?= htmlspecialchars($search ?? '') ?>"
         >
         
-        <select id="role-filter" class="form-select min-w-[150px]">
+        <select id="role-filter" class="form-select w-auto">
             <option value="">Tous les rôles</option>
             <option value="merchant" <?= ($roleFilter ?? '') === 'merchant' ? 'selected' : '' ?>>Marchand</option>
             <option value="quest_giver" <?= ($roleFilter ?? '') === 'quest_giver' ? 'selected' : '' ?>>Donneur de quêtes</option>

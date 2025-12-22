@@ -58,10 +58,10 @@
         <!-- Daily Quests Section (Hidden by default) -->
         <div id="daily-quests-section" class="flex-1 flex-col overflow-hidden hidden">
             <!-- Daily Quest Header Info -->
-            <div class="p-4 bg-gradient-to-r from-purple-900/50 to-blue-900/50 border-b border-gray-700">
+            <div class="p-4 bg-gray-800/50 border-b border-gray-700">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="text-lg font-bold text-purple-300">Quêtes du Jour</h3>
+                        <h3 class="text-lg font-bold text-amber-500">Quêtes du Jour</h3>
                         <p class="text-sm text-gray-400">3 quêtes aléatoires disponibles chaque jour</p>
                     </div>
                     <div class="text-right">
@@ -256,22 +256,21 @@
 
 /* Daily Quest Styles */
 .daily-quest-item {
-    background: linear-gradient(135deg, rgba(49, 46, 129, 0.4), rgba(30, 58, 138, 0.4));
-    border: 1px solid #4c1d95;
+    background: rgba(31, 41, 55, 0.6);
+    border: 1px solid #374151;
     border-radius: 0.75rem;
     padding: 1rem;
     transition: all 0.3s;
 }
 
 .daily-quest-item:hover {
-    border-color: #7c3aed;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
+    border-color: #4b5563;
+    background: rgba(31, 41, 55, 0.8);
 }
 
 .daily-quest-item.completed {
     border-color: #059669;
-    background: linear-gradient(135deg, rgba(6, 78, 59, 0.4), rgba(4, 120, 87, 0.3));
+    background: rgba(6, 78, 59, 0.2);
 }
 
 .daily-quest-item.claimed {
@@ -290,7 +289,7 @@
 
 .daily-quest-progress-bar {
     height: 100%;
-    background: linear-gradient(90deg, #7c3aed, #a855f7);
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
     border-radius: 4px;
     transition: width 0.5s ease;
 }

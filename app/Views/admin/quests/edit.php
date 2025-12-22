@@ -3,9 +3,9 @@ $pageTitle = "Éditer Quête - " . htmlspecialchars($quest['name']);
 ob_start();
 ?>
 
-<div class="admin-header">
-    <h1>✏️ Éditer: <?= htmlspecialchars($quest['name']) ?></h1>
-    <a href="/admin/quests" class="btn">← Retour</a>
+<div class="flex justify-between items-center mb-8">
+    <h1 class="text-2xl font-bold">✏️ Éditer: <?= htmlspecialchars($quest['name']) ?></h1>
+    <a href="/admin/quests" class="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-all">← Retour</a>
 </div>
 
 <div class="tabs">
@@ -49,7 +49,7 @@ ob_start();
         </div>
         
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary">💾 Sauvegarder</button>
+            <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-all">💾 Sauvegarder</button>
         </div>
     </form>
 </div>
@@ -57,7 +57,7 @@ ob_start();
 <!-- Stages Tab -->
 <div id="tab-stages" class="tab-content">
     <div class="stages-container">
-        <button onclick="addStage()" class="btn btn-primary">➕ Ajouter une Étape</button>
+        <button onclick="addStage()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-all">➕ Ajouter une Étape</button>
         
         <div id="stages-list">
             <?php foreach ($quest['stages'] ?? [] as $index => $stage): ?>
@@ -65,16 +65,16 @@ ob_start();
                     <div class="stage-header">
                         <h3>Étape <?= $index + 1 ?>: <?= htmlspecialchars($stage['name']) ?></h3>
                         <div class="stage-actions">
-                            <button onclick="editStage(<?= $stage['id'] ?>)" class="btn btn-sm">✏️</button>
-                            <button onclick="deleteStage(<?= $stage['id'] ?>)" class="btn btn-sm btn-danger">🗑️</button>
+                            <button onclick="editStage(<?= $stage['id'] ?>)" class="btn-sm">✏️</button>
+                            <button onclick="deleteStage(<?= $stage['id'] ?>)" class="btn-sm btn-danger">🗑️</button>
                         </div>
                     </div>
                     
-                    <p><?= htmlspecialchars($stage['description'] ?? '') ?></p>
+                    <p class="text-slate-400"><?= htmlspecialchars($stage['description'] ?? '') ?></p>
                     
                     <div class="objectives-section">
                         <h4>Objectifs:</h4>
-                        <button onclick="addObjective(<?= $stage['id'] ?>)" class="btn btn-sm">➕ Ajouter Objectif</button>
+                        <button onclick="addObjective(<?= $stage['id'] ?>)" class="btn-sm bg-slate-700 hover:bg-slate-600">➕ Ajouter Objectif</button>
                         
                         <ul class="objectives-list">
                             <?php foreach ($stage['objectives'] ?? [] as $obj): ?>
@@ -83,8 +83,8 @@ ob_start();
                                     <span><?= htmlspecialchars($obj['description']) ?></span>
                                     <span class="objective-count">(<?= $obj['count_required'] ?>x)</span>
                                     <div class="objective-actions">
-                                        <button onclick="editObjective(<?= $obj['id'] ?>)" class="btn btn-xs">✏️</button>
-                                        <button onclick="deleteObjective(<?= $obj['id'] ?>)" class="btn btn-xs btn-danger">🗑️</button>
+                                        <button onclick="editObjective(<?= $obj['id'] ?>)" class="btn-xs">✏️</button>
+                                        <button onclick="deleteObjective(<?= $obj['id'] ?>)" class="btn-xs btn-danger">🗑️</button>
                                     </div>
                                 </li>
                             <?php endforeach; ?>
@@ -101,7 +101,7 @@ ob_start();
                                     <option value="<?= $mp['id'] ?>"><?= htmlspecialchars($mp['name']) ?> (Map <?= $mp['map_id'] ?>)</option>
                                 <?php endforeach; ?>
                             </select>
-                            <button onclick="addMapUnlock(<?= $stage['id'] ?>)" class="btn btn-sm">➕ Ajouter</button>
+                            <button onclick="addMapUnlock(<?= $stage['id'] ?>)" class="btn-sm bg-slate-700 hover:bg-slate-600">➕ Ajouter</button>
                         </div>
                         
                         <ul class="unlocks-list">
@@ -109,7 +109,7 @@ ob_start();
                                 <li class="unlock-item">
                                     <span class="unlock-icon">🔓</span>
                                     <span><?= htmlspecialchars($unlock['name']) ?></span>
-                                    <button onclick="removeMapUnlock(<?= $stage['id'] ?>, <?= $unlock['id'] ?>)" class="btn btn-xs btn-danger">🗑️</button>
+                                    <button onclick="removeMapUnlock(<?= $stage['id'] ?>, <?= $unlock['id'] ?>)" class="btn-xs btn-danger">🗑️</button>
                                 </li>
                             <?php endforeach; ?>
                         </ul>
@@ -123,13 +123,13 @@ ob_start();
 <!-- Prerequisites Tab -->
 <div id="tab-prerequisites" class="tab-content">
     <div class="prerequisites-container">
-        <h3>Prérequis de la Quête</h3>
-        <p>Le joueur doit avoir terminé ces quêtes pour débloquer celle-ci.</p>
+        <h3 class="text-lg font-semibold text-slate-200 mb-2">Prérequis de la Quête</h3>
+        <p class="text-slate-400 mb-4">Le joueur doit avoir terminé ces quêtes pour débloquer celle-ci.</p>
         
         <div class="form-group">
-            <label>Ajouter un prérequis</label>
+            <label class="text-slate-300">Ajouter un prérequis</label>
             <div style="display: flex; gap: 0.5rem;">
-                <select id="prerequisite-select" style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                <select id="prerequisite-select" class="flex-1 p-2 bg-slate-950 border border-slate-700 rounded-lg text-slate-200">
                     <option value="">-- Choisir une quête --</option>
                     <?php foreach ($allQuests as $q): ?>
                         <?php if ($q['id'] != $quest['id']): ?>
@@ -137,7 +137,7 @@ ob_start();
                         <?php endif; ?>
                     <?php endforeach; ?>
                 </select>
-                <button onclick="addPrerequisite()" class="btn btn-primary">➕ Ajouter</button>
+                <button onclick="addPrerequisite()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-all">➕ Ajouter</button>
             </div>
         </div>
 
@@ -145,7 +145,7 @@ ob_start();
             <?php foreach ($prerequisites as $prereq): ?>
                 <li class="prerequisite-item">
                     <span>✅ <?= htmlspecialchars($prereq['name']) ?></span>
-                    <button onclick="removePrerequisite(<?= $prereq['id'] ?>)" class="btn btn-xs btn-danger">🗑️</button>
+                    <button onclick="removePrerequisite(<?= $prereq['id'] ?>)" class="btn-xs btn-danger">🗑️</button>
                 </li>
             <?php endforeach; ?>
         </ul>
@@ -155,28 +155,28 @@ ob_start();
 <!-- Rewards Tab -->
 <div id="tab-rewards" class="tab-content">
     <div class="prerequisites-container">
-        <h3>Récompenses (Objets)</h3>
-        <p>Objets donnés au joueur en plus de l'XP et de l'Or.</p>
+        <h3 class="text-lg font-semibold text-slate-200 mb-2">Récompenses (Objets)</h3>
+        <p class="text-slate-400 mb-4">Objets donnés au joueur en plus de l'XP et de l'Or.</p>
         
         <div class="form-group">
-            <label>Ajouter un objet</label>
+            <label class="text-slate-300">Ajouter un objet</label>
             <div style="display: flex; gap: 0.5rem;">
-                <select id="reward-item-select" style="flex: 2; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                <select id="reward-item-select" class="flex-1 p-2 bg-slate-950 border border-slate-700 rounded-lg text-slate-200" style="flex: 2;">
                     <option value="">-- Choisir un objet --</option>
                     <?php foreach ($allItems as $item): ?>
                         <option value="<?= $item['id'] ?>"><?= htmlspecialchars($item['name']) ?> (<?= $item['type'] ?>)</option>
                     <?php endforeach; ?>
                 </select>
-                <input type="number" id="reward-item-qty" value="1" min="1" style="width: 80px; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
-                <button onclick="addRewardItem()" class="btn btn-primary">➕ Ajouter</button>
+                <input type="number" id="reward-item-qty" value="1" min="1" class="w-20 p-2 bg-slate-950 border border-slate-700 rounded-lg text-slate-200">
+                <button onclick="addRewardItem()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-all">➕ Ajouter</button>
             </div>
         </div>
         
         <ul class="prerequisites-list">
             <?php foreach ($quest['reward_items'] ?? [] as $reward): ?>
-                <li class="prerequisite-item">
+                <li class="prerequisite-item reward-item">
                     <span>🎁 <?= htmlspecialchars($reward['name']) ?> (x<?= $reward['quantity'] ?>)</span>
-                    <button onclick="removeRewardItem(<?= $reward['id'] ?>)" class="btn btn-xs btn-danger">🗑️</button>
+                    <button onclick="removeRewardItem(<?= $reward['id'] ?>)" class="btn-xs btn-danger">🗑️</button>
                 </li>
             <?php endforeach; ?>
         </ul>
@@ -186,7 +186,7 @@ ob_start();
 <!-- Stage Modal -->
 <div id="stage-modal" class="modal">
     <div class="modal-content">
-        <h3 id="stage-modal-title">Ajouter une Étape</h3>
+        <h3 id="stage-modal-title" class="text-xl font-semibold text-slate-200 mb-4">Ajouter une Étape</h3>
         <form id="stage-form">
             <input type="hidden" id="stage-id">
             <div class="form-group">
@@ -202,8 +202,8 @@ ob_start();
                 <input type="number" id="stage-order" value="0" min="0">
             </div>
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary">💾 Sauvegarder</button>
-                <button type="button" onclick="closeStageModal()" class="btn">Annuler</button>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-all">💾 Sauvegarder</button>
+                <button type="button" onclick="closeStageModal()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-all">Annuler</button>
             </div>
         </form>
     </div>
@@ -212,7 +212,7 @@ ob_start();
 <!-- Objective Modal -->
 <div id="objective-modal" class="modal">
     <div class="modal-content">
-        <h3 id="objective-modal-title">Ajouter un Objectif</h3>
+        <h3 id="objective-modal-title" class="text-xl font-semibold text-slate-200 mb-4">Ajouter un Objectif</h3>
         <form id="objective-form">
             <input type="hidden" id="objective-id">
             <input type="hidden" id="objective-stage-id">
@@ -259,7 +259,7 @@ ob_start();
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <small style="color: var(--text-muted); display: block; margin-top: 0.25rem;">
+                <small class="text-slate-500 block mt-1">
                     Le dialogue sera visible uniquement pendant cette étape
                 </small>
             </div>
@@ -270,8 +270,8 @@ ob_start();
                 <input type="number" id="objective-target" placeholder="ID de l'item, monstre, etc.">
             </div>
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary">💾 Sauvegarder</button>
-                <button type="button" onclick="closeObjectiveModal()" class="btn">Annuler</button>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-all">💾 Sauvegarder</button>
+                <button type="button" onclick="closeObjectiveModal()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-all">Annuler</button>
             </div>
         </form>
     </div>
@@ -291,15 +291,12 @@ function getObjectiveIcon($type) {
 ?>
 
 <style>
-
-#tab-stages, #tab-prerequisites, #tab-general input, #tab-general textarea{
-    color: black;
-}
+/* Dark theme styles */
 .tabs {
     display: flex;
     gap: 0.5rem;
     margin-bottom: 2rem;
-    border-bottom: 2px solid #e0e0e0;
+    border-bottom: 2px solid #334155;
 }
 
 .tab-btn {
@@ -309,16 +306,18 @@ function getObjectiveIcon($type) {
     border-bottom: 3px solid transparent;
     cursor: pointer;
     font-size: 1rem;
+    color: #94a3b8;
     transition: all 0.2s;
 }
 
 .tab-btn:hover {
-    background: #f5f5f5;
+    background: #1e293b;
+    color: #e2e8f0;
 }
 
 .tab-btn.active {
-    border-bottom-color: #2196F3;
-    color: #2196F3;
+    border-bottom-color: #6366f1;
+    color: #6366f1;
     font-weight: 600;
 }
 
@@ -330,16 +329,62 @@ function getObjectiveIcon($type) {
     display: block;
 }
 
-.stages-container {
-    background: white;
+.form-container {
+    background: #0f172a;
     padding: 2rem;
-    border-radius: 8px;
+    border-radius: 0.75rem;
+    border: 1px solid #1e293b;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #cbd5e1;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    background: #020617;
+    border: 1px solid #334155;
+    border-radius: 0.5rem;
+    color: #e2e8f0;
+    font-size: 1rem;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.stages-container,
+.prerequisites-container {
+    background: #0f172a;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    border: 1px solid #1e293b;
 }
 
 .stage-card {
-    background: #f9f9f9;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 0.5rem;
     padding: 1.5rem;
     margin-top: 1.5rem;
 }
@@ -353,7 +398,8 @@ function getObjectiveIcon($type) {
 
 .stage-header h3 {
     margin: 0;
-    color: #333;
+    color: #e2e8f0;
+    font-size: 1.1rem;
 }
 
 .stage-actions {
@@ -361,17 +407,22 @@ function getObjectiveIcon($type) {
     gap: 0.5rem;
 }
 
-.objectives-section {
+.objectives-section,
+.unlocks-section {
     margin-top: 1.5rem;
     padding-top: 1.5rem;
-    border-top: 1px solid #ddd;
+    border-top: 1px solid #334155;
 }
 
-.objectives-section h4 {
+.objectives-section h4,
+.unlocks-section h4 {
     margin-bottom: 1rem;
+    color: #cbd5e1;
 }
 
-.objectives-list {
+.objectives-list,
+.unlocks-list,
+.prerequisites-list {
     list-style: none;
     padding: 0;
     margin-top: 1rem;
@@ -382,18 +433,20 @@ function getObjectiveIcon($type) {
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem;
-    background: white;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 0.375rem;
     margin-bottom: 0.5rem;
+    color: #e2e8f0;
 }
 
-.objective-icon {
+.objective-icon,
+.unlock-icon {
     font-size: 1.2rem;
 }
 
 .objective-count {
-    color: #666;
+    color: #64748b;
     font-size: 0.9rem;
 }
 
@@ -401,38 +454,6 @@ function getObjectiveIcon($type) {
     margin-left: auto;
     display: flex;
     gap: 0.25rem;
-}
-
-.npc-assignment {
-    background: white;
-    padding: 2rem;
-    border-radius: 8px;
-}
-
-#assigned-npcs {
-    list-style: none;
-    padding: 0;
-}
-
-#assigned-npcs li {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    background: #f9f9f9;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    margin-bottom: 0.5rem;
-}
-
-.unlocks-section {
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid #ddd;
-}
-
-.unlocks-section h4 {
-    margin-bottom: 1rem;
 }
 
 .unlock-controls {
@@ -444,13 +465,10 @@ function getObjectiveIcon($type) {
 .unlock-select {
     flex: 1;
     padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-.unlocks-list {
-    list-style: none;
-    padding: 0;
+    background: #020617;
+    border: 1px solid #334155;
+    border-radius: 0.375rem;
+    color: #e2e8f0;
 }
 
 .unlock-item {
@@ -458,16 +476,32 @@ function getObjectiveIcon($type) {
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem;
-    background: #e8f5e9;
-    border: 1px solid #c8e6c9;
-    border-radius: 4px;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 0.375rem;
     margin-bottom: 0.5rem;
+    color: #4ade80;
 }
 
-.unlock-icon {
-    font-size: 1.2rem;
+.prerequisite-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background: rgba(234, 179, 8, 0.1);
+    border: 1px solid rgba(234, 179, 8, 0.3);
+    border-radius: 0.375rem;
+    margin-bottom: 0.5rem;
+    color: #facc15;
 }
 
+.prerequisite-item.reward-item {
+    background: rgba(168, 85, 247, 0.1);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    color: #c084fc;
+}
+
+/* Modal styles */
 .modal {
     display: none;
     position: fixed;
@@ -475,7 +509,7 @@ function getObjectiveIcon($type) {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.7);
     z-index: 1000;
     align-items: center;
     justify-content: center;
@@ -486,41 +520,54 @@ function getObjectiveIcon($type) {
 }
 
 .modal-content {
-    background: white;
+    background: #1e293b;
     padding: 2rem;
-    border-radius: 8px;
+    border-radius: 0.75rem;
+    border: 1px solid #334155;
     max-width: 600px;
     width: 90%;
     max-height: 90vh;
     overflow-y: auto;
 }
 
+/* Button styles */
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    background: #334155;
+    color: #e2e8f0;
+    border: none;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-sm:hover {
+    background: #475569;
+}
+
 .btn-xs {
     padding: 0.25rem 0.5rem;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
+    background: #334155;
+    color: #e2e8f0;
+    border: none;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
-.prerequisites-container {
-    background: white;
-    padding: 2rem;
-    border-radius: 8px;
+.btn-xs:hover {
+    background: #475569;
 }
 
-.prerequisites-list {
-    list-style: none;
-    padding: 0;
-    margin-top: 1rem;
+.btn-danger {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
 }
 
-.prerequisite-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem;
-    background: #fff3cd;
-    border: 1px solid #ffeeba;
-    border-radius: 4px;
-    margin-bottom: 0.5rem;
+.btn-danger:hover {
+    background: rgba(239, 68, 68, 0.3);
 }
 </style>
 

@@ -14,23 +14,23 @@ ob_start();
     </div>
     
     <!-- Search and Filters -->
-    <div class="flex gap-4 mb-6 flex-wrap">
+    <div class="flex items-center gap-4 mb-6">
         <input 
             type="text" 
             id="search-input" 
-            class="form-input flex-1 min-w-[250px]"
+            class="form-input flex-1"
             placeholder="🔍 Rechercher par nom..."
             value="<?= htmlspecialchars($search ?? '') ?>"
         >
         
-        <select id="type-filter" class="form-select min-w-[150px]">
+        <select id="type-filter" class="form-select w-auto">
             <option value="">Tous les types</option>
             <option value="equipment" <?= ($typeFilter ?? '') === 'equipment' ? 'selected' : '' ?>>Équipement</option>
             <option value="consumable" <?= ($typeFilter ?? '') === 'consumable' ? 'selected' : '' ?>>Consommable</option>
             <option value="material" <?= ($typeFilter ?? '') === 'material' ? 'selected' : '' ?>>Matériau</option>
         </select>
         
-        <select id="slot-filter" class="form-select min-w-[150px]">
+        <select id="slot-filter" class="form-select w-auto">
             <option value="">Tous les slots</option>
             <option value="head" <?= ($slotFilter ?? '') === 'head' ? 'selected' : '' ?>>Tête</option>
             <option value="chest" <?= ($slotFilter ?? '') === 'chest' ? 'selected' : '' ?>>Torse</option>
