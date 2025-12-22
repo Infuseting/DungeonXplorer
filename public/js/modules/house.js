@@ -133,7 +133,6 @@ class HouseManager {
         document.getElementById('xp-bonus').textContent = `+${bonuses.xp}%`;
 
         this.renderBonuses(bonuses);
-        this.renderOwnedHouses();
     }
 
     renderBonuses(bonuses) {
@@ -154,51 +153,13 @@ class HouseManager {
                 return `
                     <div class="bonus-item">
                         <span class="bonus-icon">${type.icon}</span>
-                        <div>
-                            <div class="text-sm text-gray-400">${type.label}</div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <div class="text-sm text-gray-400">${type.label}: </div>
                             <div class="bonus-value text-green-400">+${value}${type.suffix}</div>
                         </div>
                     </div>
                 `;
             }).join('') || '<p class="text-gray-500 col-span-2 text-center">Aucun bonus actif. Achetez des meubles !</p>';
-    }
-
-    renderOwnedHouses() {
-        const container = document.getElementById('owned-houses-list');
-        
-        container.innerHTML = this.houses.map(house => `
-            <div class="house-card ${house.is_primary ? 'primary' : ''}" data-house-id="${house.id}">
-                <div class="aspect-video bg-gray-900 flex items-center justify-center overflow-hidden">
-                    ${house.image 
-                        ? `<img src="/${house.image}" alt="${house.name}" class="w-full h-full object-cover">`
-                        : '<span class="text-4xl">🏠</span>'
-                    }
-                </div>
-                <div class="p-3">
-                    <h4 class="font-bold text-white">${house.custom_name || house.name}</h4>
-                    <p class="text-xs text-gray-400">${house.location_name || 'Inconnu'}</p>
-                    <div class="flex items-center justify-between mt-2">
-                        <span class="text-xs text-gray-500">
-                            📦 ${house.storage_slots} | 🪑 ${house.furniture_slots}
-                        </span>
-                        ${!house.is_primary ? `
-                            <button class="set-primary-btn text-xs bg-amber-600 hover:bg-amber-700 text-white px-2 py-1 rounded transition-colors"
-                                    data-house-id="${house.id}">
-                                ⭐ Principal
-                            </button>
-                        ` : '<span class="text-xs text-amber-400">⭐ Principal</span>'}
-                    </div>
-                </div>
-            </div>
-        `).join('');
-
-        // Bind set primary buttons
-        container.querySelectorAll('.set-primary-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.setPrimaryHouse(btn.dataset.houseId);
-            });
-        });
     }
 
     async switchTab(tabName) {
@@ -572,7 +533,17 @@ class HouseManager {
                     </div>
                     <p class="text-xs text-gray-500 mb-3">${house.location_name || 'Emplacement variable'}</p>
                     ${house.owned ? `
-                        <div class="text-center text-green-400 font-medium">Possédée</div>
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-green-400 font-medium">✓ Possédée</span>
+                            ${house.is_primary ? `
+                                <span class="text-xs bg-violet-600 text-white px-2 py-1 rounded">Principale</span>
+                            ` : `
+                                <button class="set-primary-shop-btn text-xs bg-violet-600 hover:bg-violet-700 text-white px-3 py-1 rounded transition-colors"
+                                        data-character-house-id="${house.character_house_id}">
+                                    Définir principale
+                                </button>
+                            `}
+                        </div>
                     ` : `
                         <button class="buy-house-btn w-full bg-amber-600 hover:bg-amber-700 text-white py-2 rounded-lg font-medium transition-colors ${this.playerGold < house.price ? 'opacity-50 cursor-not-allowed' : ''}"
                                 data-house-id="${house.id}"
@@ -588,6 +559,11 @@ class HouseManager {
         // Bind buy buttons
         container.querySelectorAll('.buy-house-btn').forEach(btn => {
             btn.addEventListener('click', () => this.purchaseHouse(btn.dataset.houseId));
+        });
+
+        // Bind set primary buttons in shop
+        container.querySelectorAll('.set-primary-shop-btn').forEach(btn => {
+            btn.addEventListener('click', () => this.setPrimaryHouse(btn.dataset.characterHouseId));
         });
     }
 
@@ -778,6 +754,15 @@ class HouseManager {
             if (data.success) {
                 this.showNotification('Maison principale mise à jour', 'success');
                 await this.loadHouseData();
+                
+                // Rafraîchir le shop pour mettre à jour les boutons "Principal"
+                await this.loadAvailableHouses();
+                
+                // Rafraîchir les points de la carte pour mettre à jour la position de la maison
+                if (window.loadMapPoints && window.characterId) {
+                    const currentMapId = window.getCurrentMapId ? window.getCurrentMapId() : 1;
+                    await window.loadMapPoints(currentMapId, window.characterId);
+                }
             } else {
                 this.showNotification(data.message || 'Erreur', 'error');
             }

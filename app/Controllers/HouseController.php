@@ -112,11 +112,27 @@ class HouseController
 
         // Maisons déjà possédées
         $owned = $houseModel->getCharacterHouses($characterId);
-        $ownedIds = array_column($owned, 'house_id');
+        
+        // Créer un mapping des maisons possédées avec leurs infos
+        $ownedMap = [];
+        foreach ($owned as $o) {
+            $ownedMap[$o['house_id']] = [
+                'character_house_id' => $o['id'],
+                'is_primary' => $o['is_primary'] ?? 0,
+                'custom_name' => $o['custom_name'] ?? null
+            ];
+        }
 
-        // Marquer les maisons possédées
+        // Marquer les maisons possédées avec leurs infos
         foreach ($houses as &$house) {
-            $house['owned'] = in_array($house['id'], $ownedIds);
+            if (isset($ownedMap[$house['id']])) {
+                $house['owned'] = true;
+                $house['character_house_id'] = $ownedMap[$house['id']]['character_house_id'];
+                $house['is_primary'] = $ownedMap[$house['id']]['is_primary'];
+                $house['custom_name'] = $ownedMap[$house['id']]['custom_name'];
+            } else {
+                $house['owned'] = false;
+            }
         }
 
         // Or du personnage

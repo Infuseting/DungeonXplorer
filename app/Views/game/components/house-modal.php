@@ -65,7 +65,7 @@
                         <!-- House Image & Info -->
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                             <div class="bg-gray-900/50 rounded-xl p-4 border border-gray-700">
-                                <div class="aspect-video bg-gray-800 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+                                <div class="aspect-[4/3] bg-gray-800 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
                                     <img id="house-image" src="" alt="Maison" class="w-full h-full object-cover hidden">
                                     <span id="house-image-placeholder" class="text-8xl">🏠</span>
                                 </div>
@@ -115,14 +115,6 @@
                             <div class="bg-gray-900/50 rounded-xl p-4 border border-gray-700 text-center">
                                 <div id="xp-bonus" class="text-2xl font-bold text-blue-400">+0%</div>
                                 <div class="text-sm text-gray-400">XP Bonus</div>
-                            </div>
-                        </div>
-
-                        <!-- Owned Houses -->
-                        <div class="bg-gray-900/50 rounded-xl p-4 border border-gray-700">
-                            <h3 class="text-lg font-bold text-white mb-4 border-b border-gray-600 pb-2">Vos Propriétés</h3>
-                            <div id="owned-houses-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <!-- Houses will be inserted here -->
                             </div>
                         </div>
                     </div>
