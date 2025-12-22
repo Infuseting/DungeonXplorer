@@ -124,6 +124,20 @@ $router->mount('/game', function() use ($router) {
         $router->get('/skills', 'App\Controllers\SkillsController@index');
     $router->post('/skills/unlock', 'App\Controllers\SkillsController@unlock');
 
+    // Routes Maison
+    $router->get('/house', 'App\Controllers\HouseController@index');
+    $router->get('/house/available', 'App\Controllers\HouseController@available');
+    $router->post('/house/purchase', 'App\Controllers\HouseController@purchase');
+    $router->post('/house/set-primary', 'App\Controllers\HouseController@setPrimary');
+    $router->post('/house/rename', 'App\Controllers\HouseController@rename');
+    $router->get('/house/furniture', 'App\Controllers\HouseController@furnitureShop');
+    $router->post('/house/furniture/purchase', 'App\Controllers\HouseController@purchaseFurniture');
+    $router->post('/house/furniture/sell', 'App\Controllers\HouseController@sellFurniture');
+    $router->post('/house/deposit', 'App\Controllers\HouseController@deposit');
+    $router->post('/house/withdraw', 'App\Controllers\HouseController@withdraw');
+    $router->get('/house/inventory', 'App\Controllers\HouseController@getInventory');
+    $router->get('/house/bonuses', 'App\Controllers\HouseController@getBonuses');
+
 });
 
 // --- Routes Histoires (Navigation, Exploration) ---
@@ -213,12 +227,23 @@ $router->mount('/admin', function() use ($router) {
     $router->post('/quests/reward/item/add', 'App\Controllers\AdminQuestController@addRewardItem');
     $router->post('/quests/reward/item/remove', 'App\Controllers\AdminQuestController@removeRewardItem');
     
-    // Routes quêtes quotidiennes admin
     $router->get('/quests/daily', 'App\Controllers\AdminQuestController@dailyIndex');
     $router->post('/quests/daily/create', 'App\Controllers\AdminQuestController@dailyCreate');
     $router->post('/quests/daily/edit/(\d+)', 'App\Controllers\AdminQuestController@dailyEdit');
     $router->post('/quests/daily/toggle/(\d+)', 'App\Controllers\AdminQuestController@dailyToggle');
     $router->post('/quests/daily/delete/(\d+)', 'App\Controllers\AdminQuestController@dailyDelete');
+    
+    // Routes maisons admin
+    $router->get('/houses', 'App\Controllers\AdminHouseController@index');
+    $router->match('GET|POST', '/houses/create', 'App\Controllers\AdminHouseController@create');
+    $router->match('GET|POST', '/houses/edit/(\d+)', 'App\Controllers\AdminHouseController@edit');
+    $router->post('/houses/delete/(\d+)', 'App\Controllers\AdminHouseController@delete');
+    
+    // Routes meubles admin
+    $router->get('/furniture', 'App\Controllers\AdminHouseController@furnitureIndex');
+    $router->match('GET|POST', '/furniture/create', 'App\Controllers\AdminHouseController@furnitureCreate');
+    $router->match('GET|POST', '/furniture/edit/(\d+)', 'App\Controllers\AdminHouseController@furnitureEdit');
+    $router->post('/furniture/delete/(\d+)', 'App\Controllers\AdminHouseController@furnitureDelete');
     
         $router->get('/users', 'App\Controllers\AdminUserController@index');
     $router->post('/users/reset-password/(\d+)', 'App\Controllers\AdminUserController@resetPassword');

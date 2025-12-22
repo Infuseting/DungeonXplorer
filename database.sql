@@ -683,6 +683,41 @@ CREATE TABLE `quest_reward_items` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `daily_quests`
+--
+
+CREATE TABLE `daily_quests` (
+  `id` int NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `description` text NOT NULL,
+  `objective_type` enum('KILL_MONSTERS','COLLECT_GOLD','COMPLETE_DUNGEON','VISIT_LOCATIONS','USE_ITEMS') NOT NULL,
+  `objective_target` int DEFAULT NULL COMMENT 'ID cible optionnel (monster_id, item_id, etc.)',
+  `objective_count` int NOT NULL DEFAULT '1',
+  `gold_reward` int NOT NULL DEFAULT '5',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `player_daily_quests`
+--
+
+CREATE TABLE `player_daily_quests` (
+  `id` int NOT NULL,
+  `character_id` int NOT NULL,
+  `daily_quest_id` int NOT NULL,
+  `assigned_date` date NOT NULL,
+  `current_progress` int NOT NULL DEFAULT '0',
+  `status` enum('ACTIVE','COMPLETED','CLAIMED') NOT NULL DEFAULT 'ACTIVE',
+  `completed_at` timestamp NULL DEFAULT NULL,
+  `claimed_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `quest_stages`
 --
 
@@ -900,6 +935,127 @@ CREATE TABLE `user_tokens` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   KEY `idx_selector` (`selector`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `houses`
+--
+
+CREATE TABLE `houses` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `description` text,
+  `price` int NOT NULL DEFAULT 0,
+  `storage_slots` int NOT NULL DEFAULT 20,
+  `furniture_slots` int NOT NULL DEFAULT 5,
+  `image` varchar(255) DEFAULT NULL,
+  `location_name` varchar(100) DEFAULT NULL,
+  `is_available` tinyint(1) NOT NULL DEFAULT 1,
+  `required_level` int NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `character_houses`
+--
+
+CREATE TABLE `character_houses` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `character_id` int NOT NULL,
+  `house_id` int NOT NULL,
+  `custom_name` varchar(100) DEFAULT NULL,
+  `purchased_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `is_primary` tinyint(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_character_house` (`character_id`, `house_id`),
+  KEY `fk_character_house_character` (`character_id`),
+  KEY `fk_character_house_house` (`house_id`),
+  CONSTRAINT `fk_character_house_character` FOREIGN KEY (`character_id`) REFERENCES `characters` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_character_house_house` FOREIGN KEY (`house_id`) REFERENCES `houses` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `furniture_categories`
+--
+
+CREATE TABLE `furniture_categories` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `icon` varchar(50) DEFAULT '🪑',
+  `sort_order` int NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `furniture`
+--
+
+CREATE TABLE `furniture` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `category_id` int DEFAULT NULL,
+  `name` varchar(100) NOT NULL,
+  `description` text,
+  `price` int NOT NULL DEFAULT 0,
+  `icon` varchar(255) DEFAULT NULL,
+  `image` varchar(255) DEFAULT NULL,
+  `bonus_type` enum('storage','comfort','luck','xp','gold','defense','none') DEFAULT 'none',
+  `bonus_value` int NOT NULL DEFAULT 0,
+  `is_available` tinyint(1) NOT NULL DEFAULT 1,
+  `required_level` int NOT NULL DEFAULT 1,
+  `rarity` enum('common','uncommon','rare','epic','legendary') DEFAULT 'common',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `fk_furniture_category` (`category_id`),
+  CONSTRAINT `fk_furniture_category` FOREIGN KEY (`category_id`) REFERENCES `furniture_categories` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `character_house_furniture`
+--
+
+CREATE TABLE `character_house_furniture` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `character_house_id` int NOT NULL,
+  `furniture_id` int NOT NULL,
+  `position_x` int DEFAULT 0,
+  `position_y` int DEFAULT 0,
+  `placed_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `fk_house_furniture_house` (`character_house_id`),
+  KEY `fk_house_furniture_furniture` (`furniture_id`),
+  CONSTRAINT `fk_house_furniture_house` FOREIGN KEY (`character_house_id`) REFERENCES `character_houses` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_house_furniture_furniture` FOREIGN KEY (`furniture_id`) REFERENCES `furniture` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `house_storage`
+--
+
+CREATE TABLE `house_storage` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `character_house_id` int NOT NULL,
+  `item_id` int NOT NULL,
+  `quantity` int NOT NULL DEFAULT 1,
+  `slot_index` int NOT NULL DEFAULT 0,
+  `stored_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `fk_storage_house` (`character_house_id`),
+  KEY `fk_storage_item` (`item_id`),
+  CONSTRAINT `fk_storage_house` FOREIGN KEY (`character_house_id`) REFERENCES `character_houses` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_storage_item` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Indexes for dumped tables
@@ -1683,24 +1839,6 @@ ALTER TABLE `quest_reward_items`
   ADD CONSTRAINT `quest_reward_items_ibfk_1` FOREIGN KEY (`quest_id`) REFERENCES `quests` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `quest_reward_items_ibfk_2` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`) ON DELETE CASCADE;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `daily_quests`
---
-
-CREATE TABLE `daily_quests` (
-  `id` int NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `description` text NOT NULL,
-  `objective_type` enum('KILL_MONSTERS','COLLECT_GOLD','COMPLETE_DUNGEON','VISIT_LOCATIONS','USE_ITEMS') NOT NULL,
-  `objective_target` int DEFAULT NULL COMMENT 'ID cible optionnel (monster_id, item_id, etc.)',
-  `objective_count` int NOT NULL DEFAULT '1',
-  `gold_reward` int NOT NULL DEFAULT '5',
-  `is_active` tinyint(1) NOT NULL DEFAULT '1',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
 --
 -- Dumping data for table `daily_quests`
 --
@@ -1721,25 +1859,6 @@ INSERT INTO `daily_quests` (`id`, `name`, `description`, `objective_type`, `obje
 (13, 'Chasseur Aguerri', 'Éliminez 7 créatures.', 'KILL_MONSTERS', NULL, 7, 5, 1),
 (14, 'Conquérant', 'Complétez 3 donjons.', 'COMPLETE_DUNGEON', NULL, 3, 5, 1),
 (15, 'Trésorier', 'Amassez 200 pièces d''or.', 'COLLECT_GOLD', NULL, 200, 5, 1);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `player_daily_quests`
---
-
-CREATE TABLE `player_daily_quests` (
-  `id` int NOT NULL,
-  `character_id` int NOT NULL,
-  `daily_quest_id` int NOT NULL,
-  `assigned_date` date NOT NULL,
-  `current_progress` int NOT NULL DEFAULT '0',
-  `status` enum('ACTIVE','COMPLETED','CLAIMED') NOT NULL DEFAULT 'ACTIVE',
-  `completed_at` timestamp NULL DEFAULT NULL,
-  `claimed_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- --------------------------------------------------------
 
 --
 -- Indexes for table `daily_quests`
@@ -1846,7 +1965,53 @@ ALTER TABLE `user_social_accounts`
 --
 ALTER TABLE `user_tokens`
   ADD CONSTRAINT `user_tokens_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+
+-- furnitures categories
+INSERT INTO `furniture_categories` (`name`, `icon`, `sort_order`) VALUES
+('Rangement', '📦', 1),
+('Décoration', '🖼️', 2),
+('Confort', '🛋️', 3),
+('Utilitaire', '⚒️', 4),
+('Luxe', '👑', 5);
+
+-- default houses
+INSERT INTO `houses` (`name`, `description`, `price`, `storage_slots`, `furniture_slots`, `image`, `location_name`, `required_level`) VALUES
+('Petite Cabane', 'Une modeste cabane en bois, parfaite pour débuter. Simple mais fonctionnelle.', 500, 15, 3, 'assets/images/houses/cabin.png', 'Île du Minotaure', 1),
+('Maison de Village', 'Une confortable maison au cœur du village. Espace de vie agréable.', 2000, 25, 6, 'assets/images/houses/village_house.png', 'Village de Lunargent', 5),
+('Demeure du Marchand', 'Une belle demeure avec cave et grenier. Idéale pour les aventuriers prospères.', 5000, 40, 10, 'assets/images/houses/merchant_house.png', 'Cité de Valdris', 10),
+('Manoir Noble', 'Un manoir prestigieux avec de nombreuses pièces et un jardin privé.', 15000, 60, 15, 'assets/images/houses/manor.png', 'Quartier Noble', 20),
+('Château Ancestral', 'Un château majestueux digne des plus grands héros du royaume.', 50000, 100, 25, 'assets/images/houses/castle.png', 'Hautes Terres', 30);
+
+-- default furnitures
+INSERT INTO `furniture` (`category_id`, `name`, `description`, `price`, `icon`, `bonus_type`, `bonus_value`, `rarity`, `required_level`) VALUES
+-- Storage
+(1, 'Coffre en Bois', 'Un simple coffre pour stocker vos affaires.', 100, '📦', 'storage', 5, 'common', 1),
+(1, 'Armoire Rustique', 'Une armoire solide avec plusieurs étagères.', 300, '🗄️', 'storage', 10, 'uncommon', 3),
+(1, 'Coffre Renforcé', 'Un coffre avec des renforts métalliques.', 800, '🗃️', 'storage', 15, 'rare', 8),
+(1, 'Coffre-Fort Magique', 'Un coffre enchanté offrant une protection maximale.', 2500, '✨', 'storage', 25, 'epic', 15),
+-- Decoration
+(2, 'Tableau Simple', 'Un joli tableau pour décorer vos murs.', 50, '🖼️', 'comfort', 1, 'common', 1),
+(2, 'Tapisserie Royale', 'Une magnifique tapisserie tissée à la main.', 400, '🎭', 'comfort', 3, 'uncommon', 5),
+(2, 'Statue de Héros', 'Une statue représentant un héros légendaire.', 1500, '🗿', 'xp', 5, 'rare', 12),
+(2, 'Trophée de Dragon', 'La tête empaillée d''un dragon vaincu.', 5000, '🐉', 'luck', 10, 'epic', 20),
+-- Comfort
+(3, 'Lit Simple', 'Un lit basique mais confortable.', 150, '🛏️', 'comfort', 2, 'common', 1),
+(3, 'Fauteuil Moelleux', 'Un fauteuil parfait pour se reposer.', 250, '🪑', 'comfort', 3, 'common', 2),
+(3, 'Lit Royal', 'Un lit somptueux digne d''un roi.', 2000, '👑', 'comfort', 10, 'epic', 15),
+(3, 'Cheminée Magique', 'Une cheminée qui ne s''éteint jamais.', 1200, '🔥', 'comfort', 8, 'rare', 10),
+-- Utility
+(4, 'Établi d''Artisan', 'Un établi pour réparer vos équipements.', 500, '🔧', 'none', 0, 'uncommon', 5),
+(4, 'Autel de Bénédiction', 'Un autel pour recevoir des bénédictions.', 3000, '⛪', 'luck', 5, 'rare', 12),
+(4, 'Fontaine de Mana', 'Une fontaine qui régénère la magie.', 4000, '💧', 'xp', 10, 'epic', 18),
+-- Luxurious
+(5, 'Trône Doré', 'Un trône recouvert d''or pur.', 10000, '🪑', 'gold', 10, 'legendary', 25),
+(5, 'Cristal des Anciens', 'Un cristal mystique aux pouvoirs incroyables.', 25000, '💎', 'xp', 20, 'legendary', 30),
+(5, 'Portail Dimensionnel', 'Un portail permettant de voyager instantanément.', 50000, '🌀', 'none', 0, 'legendary', 35);
+
+
 COMMIT;
+
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

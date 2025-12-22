@@ -216,8 +216,16 @@
                     <span class="mr-3 text-xl">📜</span>
                     Gestion des Histoires
                 </a>
-                <a href="/" class="flex items-center px-6 py-3.5 text-slate-400 hover:bg-indigo-500/10 hover:text-slate-200 border-l-3 border-transparent hover:border-indigo-500 transition-all">
+                <a href="/admin/houses" class="flex items-center px-6 py-3.5 text-slate-400 hover:bg-indigo-500/10 hover:text-slate-200 border-l-3 border-transparent hover:border-indigo-500 transition-all <?= strpos($_SERVER['REQUEST_URI'], '/admin/houses') === 0 ? 'bg-indigo-500/15 text-indigo-400 border-indigo-500' : '' ?>">
                     <span class="mr-3 text-xl">🏠</span>
+                    Gestion des Maisons
+                </a>
+                <a href="/admin/furniture" class="flex items-center px-6 py-3.5 text-slate-400 hover:bg-indigo-500/10 hover:text-slate-200 border-l-3 border-transparent hover:border-indigo-500 transition-all <?= strpos($_SERVER['REQUEST_URI'], '/admin/furniture') === 0 ? 'bg-indigo-500/15 text-indigo-400 border-indigo-500' : '' ?>">
+                    <span class="mr-3 text-xl">🪑</span>
+                    Gestion des Meubles
+                </a>
+                <a href="/" class="flex items-center px-6 py-3.5 text-slate-400 hover:bg-indigo-500/10 hover:text-slate-200 border-l-3 border-transparent hover:border-indigo-500 transition-all">
+                    <span class="mr-3 text-xl">🎮</span>
                     Retour au Jeu
                 </a>
             </nav>

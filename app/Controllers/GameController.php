@@ -161,6 +161,27 @@ class GameController
         $points = $mapPointModel->getVisiblePointsForCharacter($mapId, $_SESSION['character_id']);
         $points = $this->enrichPointsWithQuestStatus($points, $_SESSION['character_id']);
         
+        // Ajouter le point de maison uniquement sur la carte principale (map_id = 1)
+        if ($mapId == 1) {
+            $points[] = [
+                'id' => 'house',
+                'map_id' => 1,
+                'name' => 'Ma Maison',
+                'description' => 'Votre maison personnelle où vous pouvez stocker vos objets et vous reposer.',
+                'x' => 54,
+                'y' => -108,
+                'type' => 'house',
+                'target_id' => null,
+                'sub_map_id' => null,
+                'story_id' => null,
+                'icon' => null,
+                'is_locked' => 0,
+                'is_hidden' => 0,
+                'radius' => 20,
+                'has_quest' => false
+            ];
+        }
+        
         echo json_encode([
             'success' => true,
             'points' => $points

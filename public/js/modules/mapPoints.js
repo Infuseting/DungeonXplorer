@@ -16,7 +16,8 @@ function getTypeColor(type) {
         'place': '#22c55e',
         'dungeon': '#ef4444',
         'npc': '#fbbf24',
-        'quest': '#a855f7'
+        'quest': '#a855f7',
+        'house': '#ef4444'
     };
     return colors[type] || '#6366f1';
 }
@@ -30,7 +31,8 @@ function getTypeLabel(type) {
         'place': 'Lieu',
         'dungeon': 'Donjon',
         'npc': 'PNJ',
-        'quest': 'Quête'
+        'quest': 'Quête',
+        'house': 'Maison'
     };
     return labels[type] || type;
 }
@@ -40,6 +42,17 @@ function getTypeLabel(type) {
  */
 export function showPointDetails(point) {
     console.log('Showing details for point:', point);
+    
+    // Check if this is a house point
+    if (point.type === 'house') {
+        console.log('Opening house modal');
+        // Import house manager dynamically
+        import('./house.js').then(module => {
+            module.houseManager.open();
+        });
+        return;
+    }
+    
     if (point.type === 'place' && point.sub_map_id) {
         console.log('Opening sub-map:', point.sub_map_id);
         openSubMap(point.sub_map_id, point.name);
@@ -157,8 +170,24 @@ export function initMapPoints(map, points) {
 
         let marker;
 
+        // Special house point marker (with house icon)
+        if (point.type === 'house') {
+            const houseIcon = L.divIcon({
+                className: 'house-point-icon',
+                html: `<div class="house-marker-container" title="${point.name}">
+                    <div class="house-marker-pulse"></div>
+                    <div class="house-marker-icon"><div>
+                </div>`,
+                iconSize: [48, 48],
+                iconAnchor: [24, 24]
+            });
+
+            marker = L.marker([parseFloat(point.y), parseFloat(point.x)], {
+                icon: houseIcon
+            }).addTo(map);
+        }
         // If point has available quest, show exclamation mark
-        if (point.has_quest) {
+        else if (point.has_quest) {
             const icon = L.divIcon({
                 className: 'quest-giver-icon',
                 html: `<div style="
@@ -200,20 +229,24 @@ export function initMapPoints(map, points) {
             showPointDetails(point);
         });
 
-        // Hover effect (only for circle markers)
-        if (!point.has_quest) {
+        // Hover effect (only for circle markers - not for divIcon markers)
+        if (!point.has_quest && point.type !== 'house' && marker.setStyle) {
             marker.on('mouseover', function () {
-                this.setStyle({
-                    radius: 10,
-                    weight: 3
-                });
+                if (this.setStyle) {
+                    this.setStyle({
+                        radius: 10,
+                        weight: 3
+                    });
+                }
             });
 
             marker.on('mouseout', function () {
-                this.setStyle({
-                    radius: 8,
-                    weight: 2
-                });
+                if (this.setStyle) {
+                    this.setStyle({
+                        radius: 8,
+                        weight: 2
+                    });
+                }
             });
         }
 

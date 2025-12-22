@@ -117,6 +117,9 @@ ob_start();
     <!-- Settings Modal -->
     <?php require __DIR__ . '/components/settings-modal.php'; ?>
 
+    <!-- House Modal -->
+    <?php require __DIR__ . '/components/house-modal.php'; ?>
+
     <!-- Shop Modal -->
     <div id="shop-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80">
         <div class="bg-gray-900 border-2 border-yellow-600 rounded-lg p-4 w-full max-w-6xl h-5/6 flex flex-col relative shadow-2xl">
@@ -167,6 +170,7 @@ ob_start();
     import { openQuestJournal } from '/js/modules/questJournal.js';
     import { initShop } from '/js/modules/shop.js';
     import { initSoundManager, playSound } from '/js/modules/soundManager.js';
+    import { houseManager } from '/js/modules/house.js';
     import GameRouter from '/js/gameRouter.js';
 
         window.characterId = <?= $character->getId() ?>;
@@ -212,6 +216,9 @@ ob_start();
         
                 initShop();
         console.log('Shop initialized');
+        
+        // House system initialized via map point
+        console.log('House system initialized');
         
                 const inventoryToggle = document.getElementById('inventory-toggle');
         if (inventoryToggle) {
@@ -417,6 +424,57 @@ ob_start();
  * Styles for inventory, map, and game-specific UI elements
  */
 
+/* House Point Marker Styles */
+.house-marker-container {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.house-marker-pulse {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background-color: rgba(239, 68, 68, 0.4);
+    border-radius: 50%;
+    animation: house-pulse 2s ease-out infinite;
+}
+
+.house-marker-dot {
+    position: relative;
+    width: 28px;
+    height: 28px;
+    background-color: #ef4444;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid #fff;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.7);
+    font-size: 14px;
+    z-index: 10;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.house-marker-dot:hover {
+    transform: scale(1.15);
+}
+
+@keyframes house-pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
 /* Inventory Slot Styles */
 .slot {
     background-color: rgba(17, 24, 39, 0.8);
@@ -527,6 +585,62 @@ ob_start();
 
 .leaflet-container {
     background: transparent;
+}
+
+/* House Map Point Styles */
+.house-marker-container {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.house-marker-pulse {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(239, 68, 68, 0.4);
+    animation: house-pulse 2s ease-in-out infinite;
+}
+
+.house-marker-icon {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    background-color: #ef4444;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    color: white;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.house-marker-container:hover .house-marker-icon {
+    transform: scale(1.15);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.6);
+}
+
+.house-marker-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+@keyframes house-pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.6;
+    }
+    50% {
+        transform: scale(1.3);
+        opacity: 0.2;
+    }
 }
 </style>
 <?php
