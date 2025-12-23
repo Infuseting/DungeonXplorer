@@ -757,7 +757,7 @@ class StoryController
     public function exitStory()
     {
         $characterId = $_SESSION['character_id'];
-        $storyId = $_POST['story_id'] ?? null;         
+        $storyId = $_POST['story_id'] ?? $_GET['story_id'] ?? null;         
         
         // Si storyId manquant, on tente de le récupérer depuis la progression active
         if (!$storyId) {
@@ -798,8 +798,14 @@ class StoryController
                     }
 
                     if (!$canExit) {
-                         echo json_encode(['success' => false, 'message' => $reason]);
-                         exit;
+                        // Si GET, rediriger avec message d'erreur
+                        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                            $_SESSION['error_message'] = $reason;
+                            header('Location: /game');
+                            exit;
+                        }
+                        echo json_encode(['success' => false, 'message' => $reason]);
+                        exit;
                     }
                 }
 
@@ -810,9 +816,22 @@ class StoryController
                 $dailyQuestModel = new \App\Models\DailyQuest();
                 $dailyQuestModel->onDungeonCompleted($characterId, $storyId);
                 
+                // Si GET, rediriger vers la carte avec message de succès
+                if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                    $_SESSION['success_message'] = 'Félicitations ! Vous avez terminé le donjon avec succès ! 🎉';
+                    header('Location: /game');
+                    exit;
+                }
+                
                 echo json_encode(['success' => true]);
                 exit;
             }
+        }
+        
+        // Si GET, rediriger
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            header('Location: /game');
+            exit;
         }
         
         echo json_encode(['success' => false, 'message' => 'Sortie impossible ici']);

@@ -147,8 +147,34 @@ function handleInitialData(initialData) {
 
         if (initialData.hit) {
             playerHit();
-            // Update HP handled by server return usually, but here relies on static PHP value 
-            // which is already there.
+        }
+        
+        // Mise à jour des HP après l'attaque initiale
+        if (typeof initialData.playerHp !== "undefined") {
+            const hpEl = document.getElementById('player-hp');
+            const hpBar = document.getElementById('player-hp-bar');
+            
+            updateCombatState(initialData.playerHp, MAX_HP);
+            hpEl.textContent = initialData.playerHp;
+            
+            if (hpBar) {
+                const hpPercent = (initialData.playerHp / MAX_HP) * 100;
+                hpBar.style.width = hpPercent + "%";
+                
+                // Changement de couleur selon le pourcentage
+                if (hpPercent <= 25) {
+                    hpBar.className = "bg-red-600 h-full transition-all duration-500 animate-pulse";
+                } else if (hpPercent <= 50) {
+                    hpBar.className = "bg-gradient-to-r from-orange-600 to-orange-400 h-full transition-all duration-500";
+                } else {
+                    hpBar.className = "bg-gradient-to-r from-red-600 to-red-400 h-full transition-all duration-500";
+                }
+            }
+        }
+        
+        // Vérification de mort instantanée
+        if (initialData.playerDead || initialData.gameOver) {
+            playerLoss();
         }
     }, 500);
 }

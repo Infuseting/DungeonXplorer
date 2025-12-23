@@ -153,10 +153,11 @@ $router->mount('/story', function() use ($router) {
     $router->post('/loot', 'App\Controllers\StoryController@collectLoot');
     $router->post('/flee', 'App\Controllers\StoryController@attemptFlee');
     $router->post('/clear-monsters', 'App\Controllers\StoryController@clearMonsters');
-    $router->post('/exit', 'App\Controllers\StoryController@exitStory');
+    $router->match('GET|POST', '/exit', 'App\Controllers\StoryController@exitStory');
     $router->post('/reset', 'App\Controllers\StoryController@resetProgress');
     $router->post('/trap/avoid', 'App\Controllers\StoryController@attemptTrapAvoidance');
     $router->post('/search', 'App\Controllers\StoryController@searchRoom');
+    $router->post('/npc/interact', 'App\Controllers\StoryController@interactWithNPC');
 });
 
 // --- Routes Administration ---

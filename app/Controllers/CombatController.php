@@ -87,13 +87,30 @@ class CombatController
             $initialData = [
                 'message' => $initMessage . " <br>" . $monsterResult[0],
                 'hit' => $monsterResult[1],
-                'monster_starts' => true
+                'monster_starts' => true,
+                'playerHp' => $combat->getPlayerHp(),
+                'playerDead' => !$combat->getJoueur()->isAlive()
             ];
+            
+            // Si le joueur est mort immédiatement, terminer le combat
+            if (!$combat->getJoueur()->isAlive()) {
+                $combat->endCombat();
+                
+                $logger = new LoggerService();
+                $logger->logGameplay($_SESSION['user_id'], $_SESSION['character_id'], 'COMBAT_LOSS', [
+                    'monster_id' => $monsterModel->getId(),
+                    'instant_death' => true
+                ]);
+                
+                $initialData['gameOver'] = true;
+            }
         } else {
             $initialData = [
                 'message' => $initMessage . " À vous d'attaquer !",
                 'hit' => false,
-                'monster_starts' => false
+                'monster_starts' => false,
+                'playerHp' => $combat->getPlayerHp(),
+                'playerDead' => false
             ];
         }
 
