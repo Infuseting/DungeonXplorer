@@ -89,6 +89,23 @@ class StoryProgress
     }
 
     /**
+     * Delete progress for a story (reset)
+     * 
+     * @param int $characterId
+     * @param int $storyId
+     * @return bool
+     */
+    public function deleteProgress($characterId, $storyId)
+    {
+        $stmt = $this->db->prepare(
+            "DELETE FROM character_story_progress 
+             WHERE character_id = ? AND story_id = ?"
+        );
+        $stmt->bind_param("ii", $characterId, $storyId);
+        return $stmt->execute();
+    }
+
+    /**
      * Get active story for character
      * 
      * @param int $characterId

@@ -208,7 +208,7 @@ class CombatController
              $playerMessage[0] = implode("<br>", $statusMessages) . "<br><strong>Vous ne pouvez pas agir !</strong>";
         } else {
              $skillId = $_POST['skill_id'] ?? null;
-             // Exécution de l'action du joueur (Attaque physique ou Compétence)
+             // Exécution de l'action du joueur
              $playerMessage = $combat->playerTurn($action, $skillId);
              
              if (!empty($statusMessages)) {
@@ -216,13 +216,18 @@ class CombatController
              }
         }
        
-        // Tour du Monstre (si le combat n'est pas fini)
+        // Tour du Monstre (seulement si le joueur est encore vivant)
         $monsterMessage = null;
-        if (!$combat->isEnd()) {
+        if ($combat->getJoueur()->isAlive() && $combat->isMonsterAlive() && !$preventAction) {
             $monsterMessage = $combat->monsterTurn();
         }
         
-        // Reset des bonus temporaires de défense (par exemple après un sort de type "Bouclier")
+        // Vérifier si le combat est terminé après les deux tours
+        if (!$combat->isMonsterAlive() || !$combat->getJoueur()->isAlive()) {
+            $combat->endCombat();
+        }
+        
+        // Reset des bonus temporaires de défense
         if (isset($_SESSION['initialDefence'])) {
             $combat->getJoueur()->setArmorClass($_SESSION['initialDefence']);
             unset($_SESSION['initialDefence']); 
@@ -321,6 +326,7 @@ class CombatController
 
         // Gestion de la Défaite (Joueur mort)
         if (!$combat->isAlive($combat->getJoueur())) {
+             $monsterModel = $combat->getMonster();
              $logger = new LoggerService();
              $logger->logGameplay($_SESSION['user_id'], $_SESSION['character_id'], 'COMBAT_LOSS', [
                  'monster_id' => $monsterModel->getId()
@@ -343,13 +349,28 @@ class CombatController
                  unset($_SESSION['combat']);
                  exit;
              }
+             
+             // Défaite en mode non-Ironman : le joueur perd le combat mais survit
+             echo json_encode([
+                "success" => true,
+                "player" => $pMsg,
+                "monster" => $mMsg,
+                "playerHp" => 0,
+                "monsterHp" => $combat->getMonster()->getVitality(),
+                "win" => false,
+                "gameOver" => true,
+                "ironmanDeath" => false
+             ]);
+             unset($_SESSION['combat']);
+             exit;
         }
 
         echo json_encode([
             "success" => true,
             "player" => $pMsg,
             "monster" => $mMsg,
-            "playerHp" => $combat->getPlayerHp(), 
+            "playerHp" => $combat->getPlayerHp(),
+            "monsterHp" => $combat->getMonster()->getVitality(),
             "win" => (!$combat->isMonsterAlive()),
             "newTurn" => ($combat->isMonsterAlive() && !$preventAction),
             "damageM" => $playerMessage[1] ?? false, 

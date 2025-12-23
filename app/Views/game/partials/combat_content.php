@@ -17,7 +17,18 @@ use App\Models\Skill;
             <img src="<?= $monsterModel->getSallePath() ?>" class="w-full h-full object-cover absolute inset-0 text-white" id="bg" alt="Décor de salle">
 
             <div class="absolute top-8 flex flex-col text-justify z-10 w-full px-4">
-                <h2 class="text-2xl md:text-3xl font-bold text-white text-center drop-shadow-lg mb-4 bg-black/50 p-2 rounded">VS <?= $monsterModel->getName()?></h2>
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-2xl md:text-3xl font-bold text-white text-center drop-shadow-lg bg-black/50 p-2 rounded flex-1">VS <?= $monsterModel->getName()?></h2>
+                    <!-- Barre de PV du Monstre (uniquement visuelle) -->
+                    <div class="bg-black/70 p-2 rounded-lg ml-2 w-32">
+                        <div class="w-full bg-gray-700 h-4 rounded-full overflow-hidden shadow-inner">
+                            <div id="monster-hp-bar" 
+                                 class="bg-red-500 h-full transition-all duration-500 shadow-lg" 
+                                 style="width: 100%"
+                                 data-max-hp="<?= (int)$monsterModel->getVitality() ?>"></div>
+                        </div>
+                    </div>
+                </div>
                 <div id="combat-log" class="text-center bg-black/60 p-2 rounded min-h-[60px] flex flex-col justify-end"></div>
             </div>
 
@@ -39,29 +50,40 @@ use App\Models\Skill;
 
             <!-- Stats à gauche -->
             <div class="w-full md:w-1/3 flex flex-col mb-4 md:mb-0 bg-gray-900/50 rounded-lg p-4">
-                <h3 class='text-violet-400 font-bold mb-4 text-center md:text-xl border-b border-gray-700 pb-2'>
+                <h3 class='text-violet-400 font-bold mb-3 text-center md:text-xl border-b border-gray-700 pb-2'>
                     Stats de <?= htmlspecialchars($characterModel->getName()) ?>
                 </h3>
 
-                <ul class="text-sm grid grid-cols-2 gap-4 mx-auto w-full">
-                    <li class="flex items-center gap-2 w-full bg-gray-800/50 p-2 rounded">
-                        <span class="material-symbols-outlined text-red-500" title="Santé du joueur">favorite</span>
-                        <span class="text-xl font-bold text-white" id="player-hp"><?= htmlspecialchars($characterModel->getCurrentHp()); ?></span>
-                    </li>
+                <!-- Barre de PV du Joueur (Principale) -->
+                <div class="mb-4 bg-gray-800/50 p-3 rounded-lg">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-red-500" title="Santé du joueur">favorite</span>
+                            <span class="text-xl font-bold text-white" id="player-hp"><?= htmlspecialchars($characterModel->getCurrentHp()); ?></span>
+                            <span class="text-gray-400 text-sm">/ <?= (int)$characterModel->getVitality() ?></span>
+                        </div>
+                    </div>
+                    <!-- Barre de PV du Joueur -->
+                    <div class="w-full bg-gray-700 h-3 rounded-full overflow-hidden">
+                        <div id="player-hp-bar" class="bg-gradient-to-r from-red-600 to-red-400 h-full transition-all duration-500" 
+                             style="width: <?= (($characterModel->getCurrentHp() / $characterModel->getVitality()) * 100) ?>%"></div>
+                    </div>
+                </div>
 
+                <ul class="text-sm grid grid-cols-2 gap-3 mx-auto w-full">
                     <li class="flex items-center gap-2 w-full bg-gray-800/50 p-2 rounded">
                         <span class="material-symbols-outlined text-orange-400" title="Puissance d'attaque">swords</span>
-                        <span class="text-xl font-bold text-white"><?= htmlspecialchars($characterModel->getAttaqueClass()); ?></span>
+                        <span class="text-lg font-bold text-white"><?= htmlspecialchars($characterModel->getAttaqueClass()); ?></span>
                     </li>
 
                     <li class="flex items-center gap-2 w-full bg-gray-800/50 p-2 rounded">
                         <span class="material-symbols-outlined text-blue-400" title="Défense du joueur">shield</span>
-                        <span class="text-xl font-bold text-white"><?= htmlspecialchars($characterModel->getArmorClass()); ?></span>
+                        <span class="text-lg font-bold text-white"><?= htmlspecialchars($characterModel->getArmorClass()); ?></span>
                     </li>
 
                     <li class="flex items-center gap-2 w-full bg-gray-800/50 p-2 rounded">
                         <span class="material-symbols-outlined text-amber-600" title="Force du joueur">fitness_center</span>
-                        <span class="text-xl font-bold text-white"><?= htmlspecialchars($characterModel->getStrength()); ?></span>
+                        <span class="text-lg font-bold text-white"><?= htmlspecialchars($characterModel->getStrength()); ?></span>
                     </li>
 
                     <li class="flex items-center gap-2 w-full bg-gray-800/50 p-2 rounded">

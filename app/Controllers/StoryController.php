@@ -474,6 +474,16 @@ class StoryController
             if (!in_array($monsterId, $_SESSION[$sessionKey])) {
                 $_SESSION[$sessionKey][] = $monsterId;
             }
+            
+            // Faire reculer le joueur : trouver un nœud connecté pour y retourner
+            $returnConnections = $this->nodeModel->getReturnConnections($currentNodeId);
+            $previousNodeId = null;
+            
+            if (!empty($returnConnections)) {
+                // Prendre la première connexion de retour disponible
+                $previousNodeId = $returnConnections[0]['from_node_id'];
+                $this->progressModel->updateProgress($characterId, $storyId, $previousNodeId);
+            }
         } else {
              // Echec : Le monstre a l'initiative pour le combat (implémentation future)
              $_SESSION['combat_initiative'] = 'enemy';
@@ -484,7 +494,8 @@ class StoryController
             'roll' => $roll,
             'chance' => $chance,
             'force_combat' => !$success,
-            'message' => $success ? "Vous avez pris la fuite (Monstre unique) !" : "Échec de la fuite ! Le monstre vous bloque."
+            'retreated' => $success && isset($previousNodeId) && $previousNodeId !== null,
+            'message' => $success ? "Vous avez pris la fuite ! Vous reculez dans le donjon." : "Échec de la fuite ! Le monstre vous bloque."
         ]);
     }
 
@@ -828,4 +839,39 @@ class StoryController
         
         echo json_encode(['success' => true]);
     }
+
+    /**
+     * Réinitialise la progression d'une histoire (après une défaite par exemple)
+     */
+    public function resetProgress()
+    {
+        $characterId = $_SESSION['character_id'];
+        $storyId = $_POST['story_id'] ?? null;
+        
+        // Si storyId manquant, on tente de le récupérer depuis la progression active
+        if (!$storyId) {
+            $active = $this->progressModel->getActiveStory($characterId);
+            if ($active) $storyId = $active['story_id'];
+        }
+
+        if ($storyId) {
+            // Supprimer la progression
+            $this->progressModel->deleteProgress($characterId, $storyId);
+            
+            // Nettoyer les sessions
+            $keys = array_keys($_SESSION);
+            foreach ($keys as $key) {
+                if (strpos($key, 'fled_monsters_') === 0 || 
+                    strpos($key, 'killed_monsters_') === 0 || 
+                    strpos($key, 'npc_interacted_') === 0) {
+                    unset($_SESSION[$key]);
+                }
+            }
+            
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Aucune histoire active']);
+        }
+    }
 }
+
