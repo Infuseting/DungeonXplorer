@@ -92,6 +92,7 @@ $router->mount('/game', function() use ($router) {
     $router->post('/', 'App\Controllers\GameController@index'); // POST from character select
     $router->get('/', 'App\Controllers\GameController@index'); // GET for refresh
 
+
     // Map API
     $router->post('/submap/load', 'App\Controllers\GameController@loadSubMap');
     $router->get('/map/points/(\\d+)', 'App\\Controllers\\GameController@getMapPoints');
@@ -107,6 +108,7 @@ $router->mount('/game', function() use ($router) {
     $router->get('/combat/start/(\d+)', 'App\Controllers\CombatController@startCombat');
     $router->post('/combat/roll-dice', 'App\Controllers\CombatController@rollDice');
     $router->post('/combat/action', 'App\Controllers\CombatController@performAction');
+    $router->get('/death', 'App\Controllers\CombatController@death');
     // Inventory API
     $router->post('/inventory/move', 'App\Controllers\InventoryController@move');
     $router->post('/inventory/equip', 'App\Controllers\InventoryController@equip');

@@ -109,22 +109,6 @@
                         </div>
 
                         <?php
-                            $id = $characterModel->getClassName();
-                            switch ($id) {
-                                case 1:
-                                    $classImage = '/assets/images/warrior.png';
-                                    break;
-                                case 2:
-                                    $classImage = '/assets/images/wizard.png';
-                                    break;
-                                case 3:
-                                    $classImage = '/assets/images/thief.png';
-                                    break;
-                                default:
-                                    $classImage = '/assets/images/default_class.png';
-                                    break;
-                            }
-
                             $character =  $characterModel->toArray();
                         ?>
                         <!--object-cover w-full h-full -->
@@ -212,6 +196,8 @@
                         <span>LANCER LES DÉS</span>
                         </button>
                     </div>
+                    <audio id="ost-audio" src="/assets/audio/combat/ostCombat.mp3" loop preload="auto"></audio>
+
                     
                     </div>
                 </div>
@@ -221,6 +207,27 @@
         <script>
             let end = false;
             const winOrLoss = document.getElementById('win?');
+            const slashSound = new Audio('/assets/audio/combat/special.mp3');
+            const diceSound = new Audio('/assets/audio/combat/diceRoll.mp3');
+            const attaqueSound = new Audio('/assets/audio/combat/attaque.mp3');
+            const bouclierSound = new Audio('/assets/audio/combat/bouclier.mp3');
+            const spellSound = new Audio('/assets/audio/combat/spell.mp3');
+            const rumbleSound = new Audio('/assets/audio/combat/rumble.mp3');
+            const potionSound = new Audio('/assets/audio/combat/potion.mp3');
+            const ost = document.getElementById('ost-audio');
+            ost.play();
+         
+            slashSound.preload = "auto";
+            diceSound.preload = "auto";
+            attaqueSound.preload = "auto";
+            bouclierSound.preload = "auto";
+            spellSound.preload = "auto";
+            rumbleSound.preload = "auto";
+
+            const classId = <?= (int) $characterModel->getClassId() ?>;
+
+
+
             const redirection = document.getElementById('redirectBtn');
             const dice = document.getElementById("dice");
             const bg = document.getElementById('bg');
@@ -231,6 +238,7 @@
             const btnRun = document.getElementById("btn-special");
             const monster = document.getElementById("monster");
             const character = document.getElementById('character');
+            let choice;
             function disableActions() {
                 btnAttack.disabled = true;
                 btnDefend.disabled = true;
@@ -248,6 +256,7 @@
             function sendAction(action) {
                 disableActions();
                  dice.textContent = "🎲 "; 
+                 choice = action;
 
                 fetch("/game/combat/action", {
                     method: "POST",
@@ -267,7 +276,10 @@
                             log.innerHTML += `<p class="text-blue-400 font-semibold mb-1">${data.player}</p>`;
                              if(data.damageM){
                                 ennemyHit();
+                             }else{
+                                getAudio(false);
                              }
+
                         }
 
                         //Délai d'une seconde entre les deux affichage ( gestion flux informations)
@@ -313,6 +325,8 @@
 
             function rollDice() {
                 if(end)return;
+                diceSound.currentTime = 0;
+                diceSound.play();
                 enableActions();
                 btn.disabled = true;
                 
@@ -379,6 +393,9 @@
             }
             //animation plus graphique
             function ennemyHit(){
+                    //adapter son en fonction de l'attaque
+                    getAudio(true);
+
                     gsap.from(monster, {
                     x: "-8",     // recul
                     duration: 0.1,
@@ -388,6 +405,9 @@
                 });
                 }
             function playerHit(){
+                   slashSound.currentTime = 0;
+                   slashSound.play();
+                   
                    gsap.from(character, {
                     x: "-8",     // recul
                     duration: 0.1,
@@ -398,17 +418,70 @@
                 
 
             }
-            function playerDie(){
-                 gsap.fromTo("body", 
-                    { x: -10 }, 
-                    { x: 10, duration: 0.05, repeat: 10, yoyo: true }
-                );
-               // window.location.href('')
+
+            function getAudio(bool){
+                console.log(choice);
+                console.log(bool);
+                console.log(classId);
+                switch(choice){
+                    case 'defend':
+                        bouclierSound.currentTime = 0;
+                        bouclierSound.play();
+                        break;
+                    case 'specialCapacity':
+                        slashSound.currentTime = 0;
+                        slashSound.play();
+                        break;
+                    case 'usePotion':
+                        potionSound.currentTime = 0;
+                        potionSound.play();
+                        break;
+                    case 'attack':
+                        if(bool){
+                            if(classId == 2){
+                                spellSound.currentTime = 0;
+                                spellSound.play();
+                            }else{
+                                attaqueSound.currentTime = 0;
+                                attaqueSound.play();
+                            }
+                        }
+                      
+                    default:
+                        break;
+                }
             }
+          function playerDie() {
+    setTimeout(() => {
+        rumbleSound.currentTime = 0;
+        rumbleSound.play();
+        gsap.fromTo("body", 
+            { x: -10 }, 
+            { x: 10, duration: 0.05, repeat: 15, yoyo: true }
+        );
+
+        // --- AJOUT : Redirection après le tremblement ---
+        setTimeout(() => {
+            // On peut ajouter un fondu au noir avant de partir
+            gsap.to("body", { 
+                opacity: 0, 
+                duration: 1, 
+                onComplete: () => {
+                    window.location.href = '/game/death'; // Ou ton URL de mort
+                }
+            });
+        }, 1000); 
+        // ------------------------------------------------
+    }, 1000);
+}
             function bossDie() {
+                setTimeout(() => {
+
+                      rumbleSound.currentTime = 0;
+                rumbleSound.play();
                 gsap.fromTo("body", 
                     { x: -10 }, 
-                    { x: 10, duration: 0.05, repeat: 10, yoyo: true }
+                    { x: 10, duration: 0.05, repeat: 15, yoyo: true }
                 );
                 const tl = gsap.timeline();
 
@@ -430,6 +503,9 @@
                     duration: 0.4,
                     ease: "power3.in"
                 });
+                    
+                }, 1000);
+              
             }  
         </script>
     </body>

@@ -115,8 +115,24 @@ public function endCombat() {
     unset($_SESSION['combat']); 
 }
 
+public function death
 
+(){
+// 1. On force l'affichage des erreurs pour voir s'il y a un crash invisible
+   
+    
+    // 3. Test du chemin
+    $path = __DIR__ . '/../Views/game/lossview.php';
+
+    
+    if (file_exists($path)) {
+        require $path;
+    } else {
+        echo "ERREUR : Le fichier n'existe pas à ce chemin.";
+    }
+    exit;
 
     
 
+}
 }
