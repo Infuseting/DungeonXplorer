@@ -205,14 +205,20 @@ function sendAction(action, skillId = null, itemId = null) {
                     if (data.win) {
                         end = true;
                         playerWin(data.rewards);
+                    } else if (data.defeat) {
+                        end = true;
+                        playerDefeat(data);
                     }
+
                     if (typeof data.playerHp !== "undefined") {
                         const hpEl = document.getElementById('player-hp');
                         hpEl.innerHTML = "";
 
+                        // Si défaite non-Ironman, on affiche 1 PV (ou ce que le serveur renvoie)
                         updateCombatState(data.playerHp, MAX_HP);
 
-                        if (data.playerHp <= 0) {
+                        if (data.playerHp <= 0 && !data.defeat) {
+                            // Cas Ironman ou mort standard non gérée par 'defeat' flag
                             playerLoss();
                             hpEl.innerHTML += "<p style='color:red'>" + data.playerHp + "</p>";
                         } else {
@@ -347,7 +353,7 @@ function playerLoss() {
         winOrLoss.classList.add("text-red-600", "animate-pulse");
 
         // Fetch Saves
-        fetch('/game/saves')
+        fetch('/game/saves', { method: 'POST' })
             .then(r => r.json())
             .then(data => {
                 let savesHtml = '<div class="mt-4 p-4 bg-gray-900/90 rounded text-center"><p class="text-white mb-2">Charger une sauvegarde :</p>';
@@ -364,6 +370,50 @@ function playerLoss() {
 
                 winOrLoss.innerHTML = '<p class ="text-5xl font-black text-red-600 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] mb-4">GAME OVER</p>' + savesHtml;
             });
+
+    }, 2000);
+}
+
+function playerDefeat(data) {
+    end = true;
+    disableActions();
+    if (btn) btn.disabled = true;
+    playerDie();
+
+    setTimeout(() => {
+        log.textContent = "";
+        // Un effet visuel différent pour la défaite non-fatale (ex: flou et gris)
+        bg.classList.add("grayscale", "blur-sm", "brightness-50");
+        winOrLoss.classList.add("text-orange-500", "animate-pulse");
+
+        let redirectBtn = document.createElement("button");
+        redirectBtn.textContent = "Reprendre Conscience";
+        redirectBtn.classList.add('px-8', 'py-3', 'bg-orange-600', 'text-white', 'font-bold', 'uppercase', 'tracking-widest', 'hover:bg-orange-500', 'mt-6', 'rounded-full', 'shadow-lg', 'transform', 'hover:scale-105', 'transition', 'duration-200');
+
+        redirectBtn.onclick = () => {
+            const sceneCtx = document.getElementById('combat-scene');
+            let returnStoryId = sceneCtx ? sceneCtx.dataset.returnStoryId : null;
+
+            if (returnStoryId === 'undefined' || returnStoryId === 'null') returnStoryId = null;
+
+            if (window.GameRouter && returnStoryId) {
+                window.GameRouter.navigate(`/story/enter/${returnStoryId}`);
+            } else if (window.GameRouter) {
+                window.GameRouter.showMap();
+            } else {
+                window.location.href = "/game";
+            }
+        };
+
+        winOrLoss.innerHTML = `
+            <p class="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-600 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] mb-2">DÉFAITE</p>
+            <p class="text-xl text-gray-300 mb-4 italic">${data.message || "Vous avez été vaincu..."}</p>
+            <div class="bg-gray-900/80 p-4 rounded border border-orange-500/30">
+                <p class="text-orange-200">Vous avez survécu de justesse (1 PV).</p>
+                <p class="text-sm text-gray-400">Fuyez ou soignez-vous vite !</p>
+            </div>
+        `;
+        redirection.appendChild(redirectBtn);
 
     }, 2000);
 }

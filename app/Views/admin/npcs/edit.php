@@ -12,20 +12,21 @@ ob_start();
             ← Retour
         </a>
     </div>
-    
+
     <form method="POST" action="/admin/npcs/edit/<?= $npc['id'] ?>" enctype="multipart/form-data">
         <div class="grid grid-cols-2 gap-6">
             <!-- Basic Info -->
             <div class="form-group">
                 <label class="form-label">Nom du PNJ *</label>
-                <input type="text" name="name" class="form-input" value="<?= htmlspecialchars($npc['name']) ?>" required>
+                <input type="text" name="name" class="form-input" value="<?= htmlspecialchars($npc['name']) ?>"
+                    required>
             </div>
-            
+
             <div class="form-group">
                 <label class="form-label">Rôles</label>
                 <div class="flex gap-4 flex-wrap">
                     <?php
-                        $npcRoles = array_map('trim', explode(',', $npc['role'] ?? ''));
+                    $npcRoles = array_map('trim', explode(',', $npc['role'] ?? ''));
                     ?>
                     <label><input type="checkbox" name="roles[]" value="merchant" <?= in_array('merchant', $npcRoles) ? 'checked' : '' ?>> Marchand</label>
                     <label><input type="checkbox" name="roles[]" value="quest_giver" <?= in_array('quest_giver', $npcRoles) ? 'checked' : '' ?>> Donneur de quêtes</label>
@@ -33,11 +34,12 @@ ob_start();
                     <label><input type="checkbox" name="roles[]" value="guard" <?= in_array('guard', $npcRoles) ? 'checked' : '' ?>> Garde</label>
                 </div>
             </div>
-            
+
             <!-- Faction -->
             <div>
                 <label for="faction_id" class="block text-sm font-medium text-gray-300 mb-2">Faction</label>
-                <select id="faction_id" name="faction_id" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors">
+                <select id="faction_id" name="faction_id"
+                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors">
                     <option value="">-- Aucune (Neutre) --</option>
                     <?php if (!empty($factions)): ?>
                         <?php foreach ($factions as $faction): ?>
@@ -56,7 +58,7 @@ ob_start();
                     <div class="flex-1">
                         <input type="file" name="texture" id="texture-input" class="form-input" accept="image/*">
                         <small class="text-gray-400 block mt-2">
-                            Formats acceptés: PNG, JPG, GIF. Taille recommandée: 64x64px
+                            Formats acceptés: PNG, JPG, GIF, WebP. Taille recommandée: 64x64px
                         </small>
                         <?php if ($npc['texture']): ?>
                             <small class="text-gray-200 block mt-1">
@@ -64,7 +66,8 @@ ob_start();
                             </small>
                         <?php endif; ?>
                     </div>
-                    <div id="texture-preview" class="w-16 h-16 border-2 border-dashed border-gray-700 rounded-lg flex items-center justify-center bg-gray-900 overflow-hidden">
+                    <div id="texture-preview"
+                        class="w-16 h-16 border-2 border-dashed border-gray-700 rounded-lg flex items-center justify-center bg-gray-900 overflow-hidden">
                         <?php if ($npc['texture']): ?>
                             <img src="/<?= htmlspecialchars($npc['texture']) ?>" class="w-full h-full object-cover">
                         <?php else: ?>
@@ -73,39 +76,42 @@ ob_start();
                     </div>
                 </div>
             </div>
-            
+
             <!-- Merchant Fields -->
             <div class="col-span-2 hidden bg-gray-900 p-6 rounded-xl border border-gray-700" id="merchant-fields">
                 <h4 class="text-gray-200 mb-4 text-lg">
                     💰 Configuration Marchand
                 </h4>
-                
+
                 <div class="grid grid-cols-2 gap-6">
                     <div class="form-group">
                         <label class="form-label">SEED Inventaire *</label>
-                        <input type="number" name="merchant_seed" id="merchant-seed" class="form-input" value="<?= $npc['merchant_seed'] ?? '' ?>">
+                        <input type="number" name="merchant_seed" id="merchant-seed" class="form-input"
+                            value="<?= $npc['merchant_seed'] ?? '' ?>">
                         <small class="text-gray-400 block mt-1">
                             Même SEED = même inventaire
                         </small>
                     </div>
-                    
+
                     <div class="form-group">
                         <button type="button" class="btn btn-secondary mt-7" onclick="regenerateInventory()">
                             🔄 Régénérer Inventaire
                         </button>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">Taux rachat items vendus (%)</label>
-                        <input type="number" step="0.01" name="buy_rate_own" class="form-input" value="<?= ($npc['buy_rate_own'] ?? 0.05) * 100 ?>" min="0" max="100">
+                        <input type="number" step="0.01" name="buy_rate_own" class="form-input"
+                            value="<?= ($npc['buy_rate_own'] ?? 0.05) * 100 ?>" min="0" max="100">
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">Taux rachat autres items (%)</label>
-                        <input type="number" step="0.01" name="buy_rate_other" class="form-input" value="<?= ($npc['buy_rate_other'] ?? 0.15) * 100 ?>" min="0" max="100">
+                        <input type="number" step="0.01" name="buy_rate_other" class="form-input"
+                            value="<?= ($npc['buy_rate_other'] ?? 0.15) * 100 ?>" min="0" max="100">
                     </div>
                 </div>
-                
+
                 <!-- Current Inventory -->
                 <?php if (!empty($merchantInventory)): ?>
                     <div class="mt-6">
@@ -131,15 +137,16 @@ ob_start();
                 <h4 class="text-gray-200 mb-4 text-lg">
                     Configuration Dialogues
                 </h4>
-                
+
                 <div class="flex flex-col gap-2 mt-2">
                     <?php
-                        $assignedIds = array_column($assignedTrees, 'id');
+                    $assignedIds = array_column($assignedTrees, 'id');
                     ?>
                     <?php if (!empty($dialogueTrees)): ?>
                         <?php foreach ($dialogueTrees as $tree): ?>
                             <label>
-                                <input type="checkbox" name="dialogue_trees[]" value="<?= $tree['id'] ?>" <?= in_array($tree['id'], $assignedIds) ? 'checked' : '' ?> >
+                                <input type="checkbox" name="dialogue_trees[]" value="<?= $tree['id'] ?>"
+                                    <?= in_array($tree['id'], $assignedIds) ? 'checked' : '' ?>>
                                 <?= htmlspecialchars($tree['name']) ?>
                             </label>
                         <?php endforeach; ?>
@@ -153,15 +160,15 @@ ob_start();
                 <h4 class="text-gray-200 mb-4 text-lg">
                     📜 Configuration Quêtes
                 </h4>
-                
+
                 <div class="flex flex-col gap-2 mt-2">
                     <?php
-                        $assignedQuestIds = array_column($assignedQuests, 'id');
+                    $assignedQuestIds = array_column($assignedQuests, 'id');
                     ?>
                     <?php if (!empty($allQuests)): ?>
                         <?php foreach ($allQuests as $quest): ?>
                             <label>
-                                <input type="checkbox" name="quests[]" value="<?= $quest['id'] ?>" <?= in_array($quest['id'], $assignedQuestIds) ? 'checked' : '' ?> >
+                                <input type="checkbox" name="quests[]" value="<?= $quest['id'] ?>" <?= in_array($quest['id'], $assignedQuestIds) ? 'checked' : '' ?>>
                                 <?= htmlspecialchars($quest['name']) ?> (Niveau <?= $quest['min_level'] ?>)
                             </label>
                         <?php endforeach; ?>
@@ -171,7 +178,7 @@ ob_start();
                 </div>
             </div>
         </div>
-        
+
         <div class="mt-8 flex gap-4 justify-end">
             <a href="/admin/npcs" class="btn btn-secondary">Annuler</a>
             <button type="submit" class="btn btn-primary">💾 Sauvegarder</button>
@@ -180,59 +187,59 @@ ob_start();
 </div>
 
 <script>
-const merchantFields = document.getElementById('merchant-fields');
-const merchantSeed = document.getElementById('merchant-seed');
-const questFields = document.getElementById('quest-fields');
-const roleCheckboxes = document.querySelectorAll('[name="roles[]"]');
+    const merchantFields = document.getElementById('merchant-fields');
+    const merchantSeed = document.getElementById('merchant-seed');
+    const questFields = document.getElementById('quest-fields');
+    const roleCheckboxes = document.querySelectorAll('[name="roles[]"]');
 
-function updateRoleFields() {
-    const isMerchant = Array.from(roleCheckboxes).some(cb => cb.value === 'merchant' && cb.checked);
-    const isQuestGiver = Array.from(roleCheckboxes).some(cb => cb.value === 'quest_giver' && cb.checked);
-    
-    merchantFields.style.display = isMerchant ? 'block' : 'none';
-    merchantSeed.required = isMerchant;
-    
-    questFields.style.display = isQuestGiver ? 'block' : 'none';
-}
+    function updateRoleFields() {
+        const isMerchant = Array.from(roleCheckboxes).some(cb => cb.value === 'merchant' && cb.checked);
+        const isQuestGiver = Array.from(roleCheckboxes).some(cb => cb.value === 'quest_giver' && cb.checked);
 
-roleCheckboxes.forEach(cb => cb.addEventListener('change', updateRoleFields));
-updateRoleFields();
+        merchantFields.style.display = isMerchant ? 'block' : 'none';
+        merchantSeed.required = isMerchant;
 
-function regenerateInventory() {
-    if (!confirm('Régénérer l\'inventaire ? Cela remplacera l\'inventaire actuel.')) return;
-    
-    fetch('/admin/npcs/<?= $npc['id'] ?>/regenerate-inventory', {
-        method: 'POST'
-    }).then(() => {
-        location.reload();
+        questFields.style.display = isQuestGiver ? 'block' : 'none';
+    }
+
+    roleCheckboxes.forEach(cb => cb.addEventListener('change', updateRoleFields));
+    updateRoleFields();
+
+    function regenerateInventory() {
+        if (!confirm('Régénérer l\'inventaire ? Cela remplacera l\'inventaire actuel.')) return;
+
+        fetch('/admin/npcs/<?= $npc['id'] ?>/regenerate-inventory', {
+            method: 'POST'
+        }).then(() => {
+            location.reload();
+        });
+    }
+
+    const textureInput = document.getElementById('texture-input');
+    const texturePreview = document.getElementById('texture-preview');
+
+    textureInput.addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                texturePreview.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
+            };
+            reader.readAsDataURL(file);
+        }
     });
-}
 
-const textureInput = document.getElementById('texture-input');
-const texturePreview = document.getElementById('texture-preview');
+    document.querySelector('form').addEventListener('submit', function (e) {
+        const buyRateOwn = document.querySelector('[name="buy_rate_own"]');
+        const buyRateOther = document.querySelector('[name="buy_rate_other"]');
 
-textureInput.addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            texturePreview.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
-        };
-        reader.readAsDataURL(file);
-    }
-});
-
-document.querySelector('form').addEventListener('submit', function(e) {
-    const buyRateOwn = document.querySelector('[name="buy_rate_own"]');
-    const buyRateOther = document.querySelector('[name="buy_rate_other"]');
-    
-    if (buyRateOwn.value) {
-        buyRateOwn.value = parseFloat(buyRateOwn.value) / 100;
-    }
-    if (buyRateOther.value) {
-        buyRateOther.value = parseFloat(buyRateOther.value) / 100;
-    }
-});
+        if (buyRateOwn.value) {
+            buyRateOwn.value = parseFloat(buyRateOwn.value) / 100;
+        }
+        if (buyRateOther.value) {
+            buyRateOther.value = parseFloat(buyRateOther.value) / 100;
+        }
+    });
 </script>
 
 <?php

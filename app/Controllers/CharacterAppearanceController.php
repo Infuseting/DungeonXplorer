@@ -7,8 +7,8 @@ use App\Models\CharacterClass;
 use App\Models\CharacterStats;
 
 class CharacterAppearanceController
-{   
-    
+{
+
     public function index($characterId)
     {
         if (!isset($_SESSION['user_id'])) {
@@ -16,7 +16,7 @@ class CharacterAppearanceController
             exit;
         }
 
-                if ($characterId === 'preview') {
+        if ($characterId === 'preview') {
             if (!isset($_SESSION['temp_character'])) {
                 header('Location: /personnage/create');
                 exit;
@@ -25,63 +25,68 @@ class CharacterAppearanceController
             $character = $_SESSION['temp_character'];
             $character['id'] = 'preview';
             $isPreview = true;
-        } 
-                else {
+        } else {
             $characterModel = new Character();
             $character = $characterModel->findById($characterId);
-            
+
             if (!$character || $character->getUserId() != $_SESSION['user_id']) {
                 header('Location: /personnage');
                 exit;
             }
-            
+
+            // Convert object to array for view compatibility
+            $characterArray = $character->toArray();
+
             $classModel = new CharacterClass();
-            $character['class'] = $classModel->findById($character['class_id']);
-            
+            $characterArray['class'] = $classModel->findById($character->classId);
+            $characterArray['class_id'] = $character->classId;
+
             $statsModel = new CharacterStats();
-            $character['stats'] = $statsModel->findByCharacterId($characterId);
-            
+            $characterArray['stats'] = $statsModel->findByCharacterId($characterId);
+
+            $character = $characterArray;
             $isPreview = false;
         }
-        
-                if (!isset($character['class']) || !is_array($character['class'])) {
+
+        if (!isset($character['class']) || !is_array($character['class'])) {
             error_log("Error: character class not found or invalid");
             error_log("Character data: " . print_r($character, true));
             header('Location: /personnage/create?error=invalid_class');
             exit;
         }
-        
-                $className = strtolower($character['class']['name']);
+
+        $className = strtolower($character['class']['name']);
         $appearanceOptions = $this->getAppearanceOptions($className);
-        
+
         require __DIR__ . '/../Views/character/appearance.php';
     }
-    public function toFullArray($characterId) {
+    public function toFullArray($characterId)
+    {
         if (!isset($_SESSION['user_id'])) {
             http_response_code(401);
             echo json_encode(['error' => 'Unauthorized']);
             exit;
         }
-        
+
         $characterModel = new Character();
         $character = $characterModel->findById($characterId);
-        
+
         if (!$character || $character->getUserId() != $_SESSION['user_id']) {
             http_response_code(403);
             echo json_encode(['error' => 'Forbidden']);
             exit;
         }
-        
-                $characterData = $character->toArray();
-        
-                $characterData['user_id'] = $character->getUserId();
 
-                $classModel = new CharacterClass();
-        $characterData['class'] = $classModel->findById($characterData['class']['name'] ?? 'Warrior');                                                                                         
-                $statsModel = new CharacterStats();
+        $characterData = $character->toArray();
+
+        $characterData['user_id'] = $character->getUserId();
+
+        $classModel = new CharacterClass();
+        $characterData['class'] = $classModel->findById($characterData['class']['name'] ?? 'Warrior');
+        $statsModel = new CharacterStats();
         $characterData['stats'] = $statsModel->findByCharacterId($characterId);
-        
-                echo renderCharacter($characterData, [
+
+        echo renderCharacter($characterData, [
             'size' => 'full',
             'showFilter' => true,
             'id' => 'character-' . $characterData['id'],
@@ -91,13 +96,13 @@ class CharacterAppearanceController
     private function getAppearanceOptions($className)
     {
         $basePath = __DIR__ . '/../../public/assets/images/' . $className;
-        
+
         $options = [
             'eyes' => [],
             'makeup' => []
         ];
-        
-                $eyesPath = $basePath . '/eyes';
+
+        $eyesPath = $basePath . '/eyes';
         if (is_dir($eyesPath)) {
             $eyeFiles = glob($eyesPath . '/eyes_*.png');
             if ($eyeFiles) {
@@ -108,8 +113,8 @@ class CharacterAppearanceController
                 }
             }
         }
-        
-                $makeupPath = $basePath . '/makeup';
+
+        $makeupPath = $basePath . '/makeup';
         if (is_dir($makeupPath)) {
             $makeupFiles = glob($makeupPath . '/*.png');
             if ($makeupFiles) {
@@ -120,36 +125,36 @@ class CharacterAppearanceController
                 }
             }
         }
-        
+
         return $options;
     }
-    
+
     public function update($characterId)
     {
         if (!isset($_SESSION['user_id'])) {
             header('Location: /login');
             exit;
         }
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: /personnage/apparence/' . $characterId);
             exit;
         }
-        
-                $selectedMakeups = $_POST['makeup'] ?? [];
+
+        $selectedMakeups = $_POST['makeup'] ?? [];
         $makeupData = [];
-        
-                foreach ($selectedMakeups as $makeupFile) {
+
+        foreach ($selectedMakeups as $makeupFile) {
             $makeupData[$makeupFile] = true;
         }
-        
+
         $hairData = [
-            'redCyan' => (int)($_POST['hair_red_cyan'] ?? 100),
-            'greenMagenta' => (int)($_POST['hair_green_magenta'] ?? 100),
-            'blueYellow' => (int)($_POST['hair_blue_yellow'] ?? 100),
+            'redCyan' => (int) ($_POST['hair_red_cyan'] ?? 100),
+            'greenMagenta' => (int) ($_POST['hair_green_magenta'] ?? 100),
+            'blueYellow' => (int) ($_POST['hair_blue_yellow'] ?? 100),
             'natural' => isset($_POST['hair_natural'])
         ];
-        
+
         $appearance = [
             'hair' => $hairData,
             'eyes' => [
@@ -157,29 +162,28 @@ class CharacterAppearanceController
             ],
             'makeup' => $makeupData
         ];
-        
-                if ($characterId === 'preview') {
+
+        if ($characterId === 'preview') {
             if (!isset($_SESSION['temp_character'])) {
                 header('Location: /personnage/create');
                 exit;
             }
 
-                        $_SESSION['temp_character']['appearance'] = $appearance;
+            $_SESSION['temp_character']['appearance'] = $appearance;
 
-                        header('Location: /personnage/difficulty');
+            header('Location: /personnage/difficulty');
             exit;
-        }
-                else {
+        } else {
             $characterModel = new Character();
             $character = $characterModel->findById($characterId);
-            
+
             if (!$character || $character->getUserId() != $_SESSION['user_id']) {
                 header('Location: /personnage');
                 exit;
             }
-            
+
             $characterModel->updateAppearance($characterId, $appearance);
-            
+
             header('Location: /personnage');
             exit;
         }
