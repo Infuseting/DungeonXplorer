@@ -37,6 +37,21 @@ $customStyles = '
             max-height: min(65vh, 600px);
         }
     }
+
+    /* Custom Scrollbar for Class List */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(31, 41, 55, 0.5);
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(139, 92, 246, 0.5);
+        border-radius: 3px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(124, 58, 237, 0.8);
+    }
 ';
 
 ob_start();
@@ -49,13 +64,15 @@ ob_start();
     <div class="absolute inset-0 bg-gradient-to-r from-gray-900 via-transparent to-gray-900"></div>
 </div>
 
-<div class="relative z-10 min-h-screen flex flex-col">
+<div class="relative z-10 h-screen max-h-screen flex flex-col">
     <!-- Header -->
     <header class="flex justify-between items-center p-4 md:p-6 bg-gray-900/50 backdrop-blur-sm lg:bg-transparent">
         <div class="flex items-center gap-4">
             <a href="/personnage" class="text-gray-400 hover:text-white transition flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                    <path fill-rule="evenodd"
+                        d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                        clip-rule="evenodd" />
                 </svg>
                 Retour
             </a>
@@ -63,34 +80,44 @@ ob_start();
         </div>
     </header>
 
-    <form action="/personnage/create" method="POST" class="flex-1 flex flex-col lg:flex-row overflow-hidden" style="height: 100%;">
-        
+    <form action="/personnage/create" method="POST" class="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
+
         <!-- Left Panel: Class Selection (Top on Mobile) -->
-        <div class="w-full lg:w-1/3 p-4 md:p-6 overflow-y-auto custom-scrollbar bg-gray-900/80 backdrop-blur border-b lg:border-b-0 lg:border-r border-gray-800 max-h-[30vh] lg:max-h-full order-1">
-            <h2 class="text-lg font-medium text-violet-400 mb-4 md:mb-6 uppercase tracking-wider hidden md:block">Choisissez votre Destinée</h2>
-            
+        <div
+            class="w-full lg:w-1/3 p-4 md:p-6 overflow-y-auto custom-scrollbar bg-gray-900/80 backdrop-blur border-b lg:border-b-0 lg:border-r border-gray-800 max-h-[30vh] lg:max-h-full lg:h-full min-h-0 order-1 ">
+            <h2 class="text-lg font-medium text-violet-400 mb-4 lg:mb-6 uppercase tracking-wider hidden lg:block">
+                Choisissez votre Destinée</h2>
+
             <div class="flex lg:flex-col gap-4 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0">
-                <?php foreach ($classes as $class): 
+                <?php foreach ($classes as $class):
                     $className = strtolower($class['name']);
-                ?>
-                    <label class="class-card flex-shrink-0 w-64 lg:w-full block cursor-pointer border border-gray-700 rounded-lg p-3 md:p-4 relative group">
-                        <input type="radio" name="class_id" value="<?= $class['id'] ?>" class="peer sr-only" required 
-                               onchange="updateClassPreview(this, '<?= $className ?>')">
-                        
+                    ?>
+                    <label
+                        class="class-card flex-shrink-0 w-64 lg:w-full block cursor-pointer border border-gray-700 rounded-lg p-3 lg:p-4 relative group">
+                        <input type="radio" name="class_id" value="<?= $class['id'] ?>" class="peer sr-only" required
+                            onchange="updateClassPreview(this, '<?= $className ?>')">
+
                         <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 md:w-16 md:h-16 rounded bg-gray-800 border border-gray-600 flex items-center justify-center group-hover:border-violet-500 transition overflow-hidden flex-shrink-0">
-                                <img src="/assets/images/<?= strtolower($className) ?>/icon_<?= strtolower($className) ?>.png" 
-                                     alt="<?= $class['name'] ?>" 
-                                     class="w-full h-full object-contain">
+                            <div
+                                class="w-12 h-12 md:w-16 md:h-16 rounded bg-gray-800 border border-gray-600 flex items-center justify-center group-hover:border-violet-500 transition overflow-hidden flex-shrink-0">
+                                <img src="/assets/images/<?= strtolower($className) ?>/icon_<?= strtolower($className) ?>.png"
+                                    alt="<?= $class['name'] ?>" class="w-full h-full object-contain">
                             </div>
                             <div class="flex-1 min-w-0">
-                                <div class="font-bold text-base md:text-lg text-white group-hover:text-violet-300 transition break-words"><?= $class['name'] ?></div>
-                                <div class="text-xs md:text-sm text-gray-500 mt-1 line-clamp-2 break-words"><?= htmlspecialchars($class['description']) ?></div>
+                                <div
+                                    class="font-bold text-base md:text-lg text-white group-hover:text-violet-300 transition break-words">
+                                    <?= $class['name'] ?>
+                                </div>
+                                <div class="text-xs md:text-sm text-gray-500 mt-1 line-clamp-2 break-words">
+                                    <?= htmlspecialchars($class['description']) ?>
+                                </div>
                             </div>
                         </div>
-                        
+
                         <!-- Selection Indicator -->
-                        <div class="absolute inset-0 border-2 border-violet-500 rounded-lg opacity-0 peer-checked:opacity-100 transition pointer-events-none"></div>
+                        <div
+                            class="absolute inset-0 border-2 border-violet-500 rounded-lg opacity-0 peer-checked:opacity-100 transition pointer-events-none">
+                        </div>
                     </label>
                 <?php endforeach; ?>
             </div>
@@ -98,14 +125,16 @@ ob_start();
 
         <!-- Center Panel: Preview & Name -->
         <div class="flex-1 flex flex-col order-2 overflow-hidden min-h-0">
-            
+
             <!-- Character Preview - Responsive Height Control -->
             <div class="flex-1 flex items-center justify-center px-4 pt-4 pb-2 overflow-hidden min-h-0">
-                <div id="character-preview" class="relative flex items-center justify-center transition-all duration-500 max-w-full max-h-full">
+                <div id="character-preview"
+                    class="relative flex items-center justify-center transition-all duration-500 max-w-full max-h-full pb-32 lg:pb-0">
                     <!-- Placeholder for Full Body Image -->
-                    <img id="preview-image" src="" alt="Aperçu" 
-                         class="character-preview-img drop-shadow-2xl filter brightness-0 invert opacity-20">
-                    <div id="preview-placeholder" class="absolute inset-0 flex items-center justify-center text-gray-500 text-base md:text-lg lg:text-xl font-medium text-center px-4 pointer-events-none">
+                    <img id="preview-image" src="" alt="Aperçu"
+                        class="character-preview-img drop-shadow-2xl filter brightness-0 invert opacity-20">
+                    <div id="preview-placeholder"
+                        class="absolute inset-0 flex items-center justify-center text-gray-500 text-base md:text-lg lg:text-xl font-medium text-center px-4 pointer-events-none">
                         Sélectionnez une classe
                     </div>
                 </div>
@@ -115,11 +144,14 @@ ob_start();
             <div class="hidden lg:flex flex-shrink-0 w-full max-w-md mx-auto px-4 md:px-6 pb-4 pt-2">
                 <div class="w-full">
                     <div class="relative group">
-                        <div class="absolute -inset-1 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-lg blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
-                        <input type="text" id="desktop-name-input" placeholder="Nom de votre Héros" 
-                               class="relative w-full bg-gray-900 border-2 border-gray-700 rounded-lg py-2 md:py-3 px-4 md:px-6 text-center text-base md:text-lg font-bold text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none transition shadow-xl">
+                        <div
+                            class="absolute -inset-1 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-lg blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200">
+                        </div>
+                        <input type="text" id="desktop-name-input" placeholder="Nom de votre Héros"
+                            class="relative w-full bg-gray-900 border-2 border-gray-700 rounded-lg py-2 md:py-3 px-4 md:px-6 text-center text-base md:text-lg font-bold text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none transition shadow-xl">
                     </div>
-                    <button type="button" onclick="submitWithDesktopName()" class="mt-2 md:mt-3 w-full py-2 md:py-3 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-lg shadow-lg shadow-violet-600/30 transition active:scale-95 uppercase tracking-wider text-sm md:text-base">
+                    <button type="button" onclick="submitWithDesktopName()"
+                        class="mt-2 md:mt-3 w-full py-2 md:py-3 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-lg shadow-lg shadow-violet-600/30 transition active:scale-95 uppercase tracking-wider text-sm md:text-base">
                         Personnaliser
                     </button>
                 </div>
@@ -127,14 +159,18 @@ ob_start();
         </div>
 
         <!-- Mobile Name Input - Fixed at Bottom -->
-        <div class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-lg border-t border-gray-800 p-4" style="padding-bottom: calc(1rem + env(safe-area-inset-bottom));">
+        <div class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-lg border-t border-gray-800 p-4"
+            style="padding-bottom: calc(1rem + env(safe-area-inset-bottom));">
             <div class="max-w-md mx-auto">
                 <div class="relative group">
-                    <div class="absolute -inset-1 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-lg blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
-                    <input type="text" name="name" required placeholder="Nom de votre Héros" 
-                           class="relative w-full bg-gray-900 border-2 border-gray-700 rounded-lg py-2 px-4 text-center text-base font-bold text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none transition shadow-xl">
+                    <div
+                        class="absolute -inset-1 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-lg blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200">
+                    </div>
+                    <input type="text" name="name" required placeholder="Nom de votre Héros"
+                        class="relative w-full bg-gray-900 border-2 border-gray-700 rounded-lg py-2 px-4 text-center text-base font-bold text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none transition shadow-xl">
                 </div>
-                <button type="submit" class="mt-2 w-full py-2 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-lg shadow-lg shadow-violet-600/30 transition active:scale-95 uppercase tracking-wider text-sm">
+                <button type="submit"
+                    class="mt-2 w-full py-2 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-lg shadow-lg shadow-violet-600/30 transition active:scale-95 uppercase tracking-wider text-sm">
                     Personnaliser
                 </button>
             </div>
@@ -144,29 +180,29 @@ ob_start();
 </div>
 
 <script>
-function updateClassPreview(input, className, desc) {
-    const previewImage = document.getElementById('preview-image');
-    const placeholder = document.getElementById('preview-placeholder');
-    
-        const imagePath = '/assets/images/' + className + '/' + className + '.png';
-    
-        previewImage.src = imagePath;
-    previewImage.classList.remove('brightness-0', 'invert', 'opacity-20');
-    placeholder.style.display = 'none';
-}
+    function updateClassPreview(input, className, desc) {
+        const previewImage = document.getElementById('preview-image');
+        const placeholder = document.getElementById('preview-placeholder');
 
-function submitWithDesktopName() {
-    const desktopInput = document.getElementById('desktop-name-input');
-    const mobileInput = document.querySelector('input[name="name"]');
-    const form = document.querySelector('form');
-    
-        if (desktopInput.value.trim()) {
-        mobileInput.value = desktopInput.value;
-        form.submit();
-    } else {
-        desktopInput.focus();
+        const imagePath = '/assets/images/' + className + '/' + className + '.png';
+
+        previewImage.src = imagePath;
+        previewImage.classList.remove('brightness-0', 'invert', 'opacity-20');
+        placeholder.style.display = 'none';
     }
-}
+
+    function submitWithDesktopName() {
+        const desktopInput = document.getElementById('desktop-name-input');
+        const mobileInput = document.querySelector('input[name="name"]');
+        const form = document.querySelector('form');
+
+        if (desktopInput.value.trim()) {
+            mobileInput.value = desktopInput.value;
+            form.submit();
+        } else {
+            desktopInput.focus();
+        }
+    }
 </script>
 
 <?php
