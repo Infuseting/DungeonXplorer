@@ -42,19 +42,27 @@ export function showPointDetails(point, map = null) {
     console.log('Showing details for point:', point);
     
     // Check if this is an NPC point - open directly without panel
-    if (point.type === 'npc' && point.target_id) {
-        console.log('Opening NPC modal:', point.target_id);
-        openNPCModal(point.target_id);
+    if (point.type === 'npc') {
+        if (point.target_id) {
+            console.log('Opening NPC modal:', point.target_id);
+            openNPCModal(point.target_id);
+        } else {
+            console.log('NPC point without target_id');
+        }
         return;
     }
     
-    // Zoom to the point on the map
+    // Zoom to the point on the map with dezoom/rezoom effect
     if (map) {
         const pointLatLng = L.latLng(parseFloat(point.y), parseFloat(point.x));
-        map.flyTo(pointLatLng, map.getMaxZoom() - 1, {
-            duration: 1.5,
-            easeLinearity: 0.25
+        const maxZoom = map.getMaxZoom();
+        
+        map.flyTo(pointLatLng, maxZoom, {
+            animate: true,
+            duration: 2,
+            easeLinearity: 0.1
         });
+
     }
 
     const pointPanel = document.getElementById('point-panel');
@@ -126,6 +134,10 @@ export function showPointDetails(point, map = null) {
                 actionBtn.textContent = '🚪 Entrer dans la ville';
                 actionBtn.addEventListener('click', () => {
                     console.log('Opening sub-map:', point.sub_map_id);
+                    const pointPanel = document.getElementById('point-panel');
+                    if (pointPanel) {
+                        pointPanel.classList.add('translate-x-full');
+                    }
                     openSubMap(point.sub_map_id, point.name);
                 });
             } else {
@@ -156,6 +168,26 @@ export function showPointDetails(point, map = null) {
 }
 
 /**
+ * Update icon sizes based on zoom level
+ */
+function updateIconSizes(map, markers) {
+    const zoom = map.getZoom();
+    const baseSize = 48;
+    const scale = Math.pow(1.15, zoom - 3); // Scale factor based on zoom
+    const newSize = Math.max(24, Math.min(baseSize * scale, 120)); // Min 24px, max 120px
+    
+    markers.forEach(markerData => {
+        if (markerData.element) {
+            const container = markerData.element.querySelector('.map-icon-container');
+            if (container) {
+                container.style.width = newSize + 'px';
+                container.style.height = newSize + 'px';
+            }
+        }
+    });
+}
+
+/**
  * Initialize map points on the map
  */
 export function initMapPoints(map, points) {
@@ -165,9 +197,10 @@ export function initMapPoints(map, points) {
 
     // Add markers for each point
     points.forEach((point, index) => {
-        console.log(`Adding marker ${index + 1}:`, point);
+        console.log(`Adding marker ${index + 1}:`, point,point.id);
 
         let marker;
+        let markerData = { point: point };
 
         // If point has available quest, show exclamation mark
         if (point.has_quest) {
@@ -193,15 +226,19 @@ export function initMapPoints(map, points) {
             marker = L.marker([parseFloat(point.y), parseFloat(point.x)], {
                 icon: icon
             }).addTo(map);
+            
+            // Store reference to marker element for dynamic sizing
+            marker.on('add', function() {
+                markerData.element = this.getElement();
+            });
         } else if (point.icon) {
             // Use custom SVG icon
             const typeColor = getTypeColor(point.type);
             const icon = L.divIcon({
                 className: 'custom-map-icon',
                 html: `<div class="map-icon-container" style="
-                    width: 32px; 
-                    height: 32px; 
-                    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+                    width: 48px; 
+                    height: 48px;
                     color: ${typeColor};
                 ">
                     <img src="/assets/map/icons/${point.icon}" 
@@ -211,16 +248,20 @@ export function initMapPoints(map, points) {
                             width: 100%; 
                             height: 100%; 
                             object-fit: contain;
-                            filter: drop-shadow(0 0 2px rgba(255,255,255,0.5));
                          ">
                 </div>`,
-                iconSize: [32, 32],
-                iconAnchor: [16, 16]
+                iconSize: [48, 48],
+                iconAnchor: [24, 24]
             });
 
             marker = L.marker([parseFloat(point.y), parseFloat(point.x)], {
                 icon: icon
             }).addTo(map);
+            
+            // Store reference to marker element for dynamic sizing
+            marker.on('add', function() {
+                markerData.element = this.getElement();
+            });
         } else {
             marker = L.circleMarker([parseFloat(point.y), parseFloat(point.x)], {
                 radius: 8,
@@ -257,8 +298,19 @@ export function initMapPoints(map, points) {
             });
         }
 
-        markers.push(marker);
+        markerData.marker = marker;
+        markers.push(markerData);
     });
+
+    // Update icon sizes on zoom
+    map.on('zoomend', () => {
+        updateIconSizes(map, markers);
+    });
+    
+    // Initial size update
+    setTimeout(() => {
+        updateIconSizes(map, markers);
+    }, 100);
 
     console.log('All markers added successfully');
     return markers;

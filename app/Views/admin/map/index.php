@@ -140,7 +140,7 @@ ob_start();
                     </label>
                 </div>
                 
-                <button type="submit" class="btn btn-primary w-full">
+                <button type="submit" class="w-full px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors shadow-lg">
                     Créer le Point
                 </button>
             </form>
@@ -397,13 +397,14 @@ function editPoint(pointData) {
     // Change form to update mode
     form.action = '/admin/map/update/' + pointData.id;
     form.querySelector('button[type="submit"]').textContent = 'Mettre à jour le Point';
+    form.querySelector('button[type="submit"]').className = 'w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors shadow-lg';
     
     // Add cancel button if not exists
     if (!document.getElementById('cancel-edit-btn')) {
         const cancelBtn = document.createElement('button');
         cancelBtn.type = 'button';
         cancelBtn.id = 'cancel-edit-btn';
-        cancelBtn.className = 'btn btn-secondary w-full mt-2';
+        cancelBtn.className = 'w-full px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg transition-colors shadow-lg mt-2';
         cancelBtn.textContent = 'Annuler l\'édition';
         cancelBtn.onclick = cancelEdit;
         form.querySelector('button[type="submit"]').after(cancelBtn);
@@ -415,6 +416,7 @@ function cancelEdit() {
     form.reset();
     form.action = '/admin/map/create';
     form.querySelector('button[type="submit"]').textContent = 'Créer le Point';
+    form.querySelector('button[type="submit"]').className = 'w-full px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors shadow-lg';
     
     const cancelBtn = document.getElementById('cancel-edit-btn');
     if (cancelBtn) cancelBtn.remove();

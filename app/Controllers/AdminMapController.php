@@ -268,25 +268,23 @@ class AdminMapController
                 'y' => $_POST['y'] ?? 0,
                 'radius' => $_POST['radius'] ?? 50,
                 'type' => $_POST['type'] ?? 'place',
-                'target_id' => $_POST['target_id'] ?? null,
                 'icon' => $_POST['icon'] ?? null,
                 'is_hidden' => isset($_POST['is_hidden']) ? 1 : 0
             ];
             
             $stmt = $this->db->prepare("
                 UPDATE map_points 
-                SET name = ?, description = ?, x = ?, y = ?, radius = ?, type = ?, target_id = ?, icon = ?, is_hidden = ?
+                SET name = ?, description = ?, x = ?, y = ?, radius = ?, type = ?, icon = ?, is_hidden = ?
                 WHERE id = ?
             ");
             $stmt->bind_param(
-                "ssddisisii",
+                "ssddissii",
                 $data['name'],
                 $data['description'],
                 $data['x'],
                 $data['y'],
                 $data['radius'],
                 $data['type'],
-                $data['target_id'],
                 $data['icon'],
                 $data['is_hidden'],
                 $id
