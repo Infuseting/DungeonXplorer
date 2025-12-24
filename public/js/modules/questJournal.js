@@ -75,7 +75,7 @@ function renderQuestList() {
     });
 
     if (filteredQuests.length === 0) {
-        container.innerHTML = '<div class="empty-state">Aucune quête trouvée</div>';
+        container.innerHTML = '<div class="text-center text-gray-300 py-8 text-lg">Aucune quête trouvée</div>';
         return;
     }
 
@@ -350,5 +350,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeBtn = document.getElementById('close-quest-journal');
     if (closeBtn) {
         closeBtn.addEventListener('click', closeQuestJournal);
+    }
+
+    // Close on backdrop click
+    const backdrop = document.getElementById('quest-backdrop');
+    if (backdrop) {
+        backdrop.addEventListener('click', closeQuestJournal);
     }
 });

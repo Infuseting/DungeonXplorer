@@ -174,6 +174,22 @@ class Character
     }
 
     /**
+     * Get current XP
+     */
+    public function getExperience()
+    {
+        return $this->experience ?? 0;
+    }
+
+    /**
+     * Get XP required for next level
+     */
+    public function getXpForNextLevel()
+    {
+        return ($this->level ?? 1) * 100;
+    }
+
+    /**
      * Débloque une compétence pour ce personnage.
      */
     public function unlockSkill($skillId)

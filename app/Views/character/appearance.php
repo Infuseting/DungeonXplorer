@@ -757,19 +757,38 @@ ob_start();
                     
                     <!-- Tab Navigation -->
                     <div class="tab-navigation">
-                        <div class="tab-item" data-tab="hair">Cheveux</div>
+                        <div class="tab-item active" data-tab="hair">Cheveux</div>
                         <div class="tab-item" data-tab="eyes">Yeux</div>
                         <div class="tab-item" data-tab="makeup">Maquillage</div>
                         <div class="tab-item" data-tab="finish">Terminer</div>
+                        <button type="button" id="helpBtn" class="tab-item ml-auto" style="flex: 0; min-width: auto;" title="Aide">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </button>
                     </div>
 
-                    <!-- intro text -->
-                    <div class="intro-text mb-4 lg:mb-6 text-gray-300 mx-4 lg:mx-8 hidden lg:block">
-                        <p class="mb-2 text-3xl text-font-bold">Personnalisez l'apparence de votre personnage avant de commencer votre aventure dans DungeonXplorer !<br><br> Utilisez les onglets ci-dessus pour modifier les cheveux, les yeux et le maquillage. <br><br>Une fois satisfait, cliquez sur "Commencer l'aventure".</p>
+                    <!-- Help Modal -->
+                    <div id="helpModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm">
+                        <div class="bg-gray-800 border border-violet-500/30 rounded-xl p-6 mx-4 max-w-lg shadow-2xl">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-bold text-violet-300">Aide - Personnalisation</h3>
+                                <button type="button" id="closeHelpModal" class="text-gray-400 hover:text-white transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="text-gray-300 space-y-4">
+                                <p>Personnalisez l'apparence de votre personnage avant de commencer votre aventure dans DungeonXplorer !</p>
+                                <p>Utilisez les onglets ci-dessus pour modifier les cheveux, les yeux et le maquillage.</p>
+                                <p>Une fois satisfait, cliquez sur <strong class="text-violet-400">"Commencer l'aventure"</strong>.</p>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Hair Section -->
-                    <div class="edit-section hidden" id="hairSection">
+                    <div class="edit-section" id="hairSection">
                         <h3 class="section-title">Modifier le style et la couleur des cheveux</h3>
                         
                         <!-- Option Naturelle/Custom -->
@@ -1065,12 +1084,36 @@ function toggleMakeup(makeupFile, isChecked) {
     }
 }
 
+// Help modal functionality
+const helpBtn = document.getElementById('helpBtn');
+const helpModal = document.getElementById('helpModal');
+const closeHelpModal = document.getElementById('closeHelpModal');
+
+helpBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    helpModal.classList.remove('hidden');
+    helpModal.classList.add('flex');
+});
+
+closeHelpModal?.addEventListener('click', () => {
+    helpModal.classList.add('hidden');
+    helpModal.classList.remove('flex');
+});
+
+helpModal?.addEventListener('click', (e) => {
+    if (e.target === helpModal) {
+        helpModal.classList.add('hidden');
+        helpModal.classList.remove('flex');
+    }
+});
+
 document.querySelectorAll('.tab-item').forEach(tab => {
+    if (!tab.dataset.tab) return; // Skip help button
+    
     tab.addEventListener('click', () => {
-        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-item[data-tab]').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
         
-        document.querySelectorAll('.intro-text').forEach(t => t.classList.add('hidden'));
         document.querySelectorAll('.edit-section').forEach(s => s.classList.add('hidden'));
         document.getElementById(tab.dataset.tab + 'Section').classList.remove('hidden');
         
@@ -1081,6 +1124,9 @@ document.querySelectorAll('.tab-item').forEach(tab => {
         }
     });
 });
+
+// Initialize with hair tab active and zoomed
+characterViewer.classList.add('zoomed');
 
 document.querySelectorAll('.eye-radio').forEach(radio => {
     radio.addEventListener('change', function() {

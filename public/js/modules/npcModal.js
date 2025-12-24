@@ -328,9 +328,9 @@ function displayDialogue(dialogue) {
                                     });
 
                                     // Refresh map points if on map
-                                    // We might need to trigger a map refresh event or call a global function
-                                    if (window.loadMapPoints) {
-                                        window.loadMapPoints();
+                                    if (window.loadMapPoints && window.currentMapData) {
+                                        const mapId = window.currentMapData.mapId || 1;
+                                        window.loadMapPoints(mapId, window.characterId);
                                     }
                                 }
                             } else {

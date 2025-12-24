@@ -196,7 +196,14 @@ function renderEquippedItem($item, $isTwoHanded = null) {
     
     <!-- Modal Content -->
     <div class="relative z-10 w-full h-full flex items-center justify-center p-4 lg:p-8 pointer-events-none">
-        <div class="bg-gray-800/90 border border-gray-600 rounded-2xl shadow-2xl flex flex-col lg:flex-row gap-4 lg:gap-8 p-4 lg:p-8 max-w-6xl w-full h-[90vh] lg:h-auto pointer-events-auto transform transition-all scale-100 overflow-hidden">
+        <div class="bg-gray-800/90 border border-gray-600 rounded-2xl shadow-2xl flex flex-col lg:flex-row gap-4 lg:gap-8 p-4 lg:p-8 max-w-6xl w-full h-[90vh] lg:h-auto pointer-events-auto transform transition-all scale-100 overflow-hidden relative">
+            <!-- Close Button -->
+            <button id="inventory-close-btn" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-10">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            
             <div class="w-full lg:w-1/2 flex flex-col min-h-0">
                 <h2 class="text-xl lg:text-2xl font-bold text-white mb-4 lg:mb-6 border-b border-gray-600 pb-2 flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 lg:h-6 lg:w-6 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

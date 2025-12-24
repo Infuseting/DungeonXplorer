@@ -61,11 +61,17 @@ export function showPointDetails(point, map = null) {
 
     // Zoom to the point on the map with dezoom/rezoom effect
     if (map) {
-        // Save current view before zooming
-        previousMapView = {
-            center: map.getCenter(),
-            zoom: map.getZoom()
-        };
+        // Only save previous view if panel is not already open (first click)
+        const pointPanel = document.getElementById('point-panel');
+        const isPanelOpen = pointPanel && !pointPanel.classList.contains('translate-x-full');
+        
+        if (!isPanelOpen) {
+            // Save current view before zooming (only on first point click)
+            previousMapView = {
+                center: map.getCenter(),
+                zoom: map.getZoom()
+            };
+        }
         currentMapInstance = map;
         
         const pointLatLng = L.latLng(parseFloat(point.y), parseFloat(point.x));
