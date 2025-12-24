@@ -247,7 +247,7 @@ function renderDailyQuests() {
         // Get objective type icon
         const typeIcons = {
             'KILL_MONSTERS': '⚔️',
-            'COLLECT_GOLD': '💰',
+            'COLLECT_GOLD': '🪙',
             'COMPLETE_DUNGEON': '🏰',
             'VISIT_LOCATIONS': '🗺️',
             'USE_ITEMS': '🧪'

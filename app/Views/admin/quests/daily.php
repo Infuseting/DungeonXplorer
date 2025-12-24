@@ -67,7 +67,7 @@ ob_start();
                             <?php
                             $typeLabels = [
                                 'KILL_MONSTERS' => ['⚔️ Tuer des monstres', 'bg-red-500/20 text-red-300'],
-                                'COLLECT_GOLD' => ['💰 Collecter de l\'or', 'bg-yellow-500/20 text-yellow-300'],
+                                'COLLECT_GOLD' => ['🪙 Collecter de l\'or', 'bg-yellow-500/20 text-yellow-300'],
                                 'COMPLETE_DUNGEON' => ['🏰 Compléter un donjon', 'bg-purple-500/20 text-purple-300'],
                                 'VISIT_LOCATIONS' => ['🗺️ Visiter des lieux', 'bg-blue-500/20 text-blue-300'],
                                 'USE_ITEMS' => ['🧪 Utiliser des items', 'bg-green-500/20 text-green-300'],
@@ -168,7 +168,7 @@ ob_start();
                     <label class="block text-slate-400 text-sm mb-2">Type d'objectif</label>
                     <select id="questType" name="objective_type" required class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 focus:border-indigo-500 focus:outline-none">
                         <option value="KILL_MONSTERS">⚔️ Tuer des monstres</option>
-                        <option value="COLLECT_GOLD">💰 Collecter de l'or</option>
+                        <option value="COLLECT_GOLD">🪙 Collecter de l'or</option>
                         <option value="COMPLETE_DUNGEON">🏰 Compléter un donjon</option>
                         <option value="VISIT_LOCATIONS">🗺️ Visiter des lieux</option>
                         <option value="USE_ITEMS">🧪 Utiliser des items</option>

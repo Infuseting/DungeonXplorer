@@ -16,7 +16,7 @@ class Inventory
     public function getCharacterInventory($characterId)
     {
         $stmt = $this->db->prepare("
-            SELECT ci.*, i.name, i.description, i.type, i.slot_type as item_slot_type, i.two_handed, i.width, i.height, i.weight, i.icon, i.stats, i.max_stack, i.price
+            SELECT ci.*, i.name, i.description, i.type, i.slot_type as item_slot_type, i.two_handed, i.width, i.height, i.weight, i.icon, i.stats as base_stats, i.max_stack, i.price
             FROM character_inventory ci
             JOIN items i ON ci.item_id = i.id
             WHERE ci.character_id = ?
@@ -37,6 +37,19 @@ class Inventory
         foreach ($result as $item) {
             $itemWeight = floatval($item['weight'] ?? 0);
             $currentWeight += $itemWeight;
+            
+            // Get enchantments for this item
+            $item['enchantments'] = $this->getItemEnchantments($item['id']);
+            
+            // Use instance_stats if available (includes enchantment bonuses), otherwise use base_stats
+            // Ensure stats is always a valid JSON string
+            if (!empty($item['instance_stats'])) {
+                $item['stats'] = $item['instance_stats'];
+            } elseif (!empty($item['base_stats'])) {
+                $item['stats'] = $item['base_stats'];
+            } else {
+                $item['stats'] = '{}';
+            }
 
             if ($item['location'] === 'equipped') {
                 $inventory['equipped'][$item['slot_name']] = $item;
@@ -51,6 +64,23 @@ class Inventory
         $inventory['max_weight'] = $maxWeight;
 
         return $inventory;
+    }
+    
+    /**
+     * Get enchantments for an inventory item
+     */
+    private function getItemEnchantments($inventoryItemId)
+    {
+        $stmt = $this->db->prepare("
+            SELECT ie.id, ie.enchantment_id, e.name, e.description, e.icon, e.stat_modifiers, e.rarity
+            FROM item_enchantments ie
+            JOIN enchantments e ON ie.enchantment_id = e.id
+            WHERE ie.character_inventory_id = ?
+        ");
+        if (!$stmt) return [];
+        $stmt->bind_param("i", $inventoryItemId);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
 
     private function calculateMaxWeight($characterId, $equippedItems)

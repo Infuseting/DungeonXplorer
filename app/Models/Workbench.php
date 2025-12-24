@@ -214,6 +214,9 @@ class Workbench
             JOIN items i ON ci.item_id = i.id
             WHERE ci.id = ? AND ci.character_id = ?
         ");
+        if (!$stmt) {
+            return ['success' => false, 'message' => 'Erreur base de données'];
+        }
         $stmt->bind_param("ii", $characterInventoryId, $characterId);
         $stmt->execute();
         $item = $stmt->get_result()->fetch_assoc();
@@ -232,6 +235,9 @@ class Workbench
             SELECT id FROM item_enchantments
             WHERE character_inventory_id = ? AND enchantment_id = ?
         ");
+        if (!$stmt) {
+            return ['success' => false, 'message' => 'Erreur base de données'];
+        }
         $stmt->bind_param("ii", $characterInventoryId, $enchantmentId);
         $stmt->execute();
         if ($stmt->get_result()->fetch_assoc()) {
@@ -240,17 +246,23 @@ class Workbench
 
         // Vérifier l'or du joueur
         $stmt = $this->db->prepare("SELECT gold FROM characters WHERE id = ?");
+        if (!$stmt) {
+            return ['success' => false, 'message' => 'Erreur base de données'];
+        }
         $stmt->bind_param("i", $characterId);
         $stmt->execute();
         $character = $stmt->get_result()->fetch_assoc();
 
-        if ($character['gold'] < $enchantment['cost']) {
+        if (!$character || $character['gold'] < $enchantment['cost']) {
             return ['success' => false, 'message' => 'Or insuffisant'];
         }
 
         // Déduire l'or
         $newGold = $character['gold'] - $enchantment['cost'];
         $stmt = $this->db->prepare("UPDATE characters SET gold = ? WHERE id = ?");
+        if (!$stmt) {
+            return ['success' => false, 'message' => 'Erreur lors de la déduction d\'or'];
+        }
         $stmt->bind_param("di", $newGold, $characterId);
         $stmt->execute();
 
@@ -259,13 +271,18 @@ class Workbench
             INSERT INTO item_enchantments (character_inventory_id, enchantment_id)
             VALUES (?, ?)
         ");
+        if (!$stmt) {
+            return ['success' => false, 'message' => 'Erreur lors de l\'application de l\'enchantement'];
+        }
         $stmt->bind_param("ii", $characterInventoryId, $enchantmentId);
-        $stmt->execute();
+        if (!$stmt->execute()) {
+            return ['success' => false, 'message' => 'Erreur: ' . $stmt->error];
+        }
 
         // Mettre à jour les stats de l'item
         $this->updateItemStats($characterInventoryId);
 
-        // Mettre à jour le compteur d'enchantements (si la table existe)
+        // Mettre à jour le compteur d'enchantements
         $this->incrementEnchantmentCount($characterId);
 
         return [
@@ -293,12 +310,14 @@ class Workbench
         $item = $stmt->get_result()->fetch_assoc();
 
         $baseStats = json_decode($item['base_stats'] ?? '{}', true) ?: [];
-        $instanceStats = json_decode($item['instance_stats'] ?? '{}', true) ?: $baseStats;
+        
+        // Start with base stats
+        $instanceStats = $baseStats;
 
         // Récupérer tous les enchantements
         $enchantments = $this->getItemEnchantments($characterInventoryId);
 
-        // Calculer les bonus
+        // Calculer les bonus d'enchantement
         $enchantmentBonuses = [];
         foreach ($enchantments as $ench) {
             $modifiers = json_decode($ench['stat_modifiers'], true) ?: [];
@@ -309,9 +328,23 @@ class Workbench
                 $enchantmentBonuses[$stat] += $value;
             }
         }
+        
+        // Appliquer les bonus aux stats de l'instance
+        // Les stats de base + les bonus d'enchantement
+        foreach ($enchantmentBonuses as $stat => $bonus) {
+            $baseValue = $baseStats[$stat] ?? 0;
+            $instanceStats[$stat] = $baseValue + $bonus;
+        }
 
-        // Stocker les bonus d'enchantement dans instance_stats
-        $instanceStats['enchantment_bonuses'] = $enchantmentBonuses;
+        // Store the enchantment bonuses for reference (e.g., to show in tooltip)
+        if (!empty($enchantmentBonuses)) {
+            $instanceStats['enchantment_bonuses'] = $enchantmentBonuses;
+        }
+        
+        // Preserve rarity if it exists
+        if (isset($baseStats['rarity'])) {
+            $instanceStats['rarity'] = $baseStats['rarity'];
+        }
         
         // Mettre à jour
         $statsJson = json_encode($instanceStats);
@@ -321,31 +354,32 @@ class Workbench
     }
 
     /**
-     * Incrémente le compteur d'enchantements du personnage
+     * Incrémente le compteur d'enchantements pour la maison du personnage
      */
     private function incrementEnchantmentCount($characterId)
     {
-        // Vérifier si l'entrée existe
-        $stmt = $this->db->prepare("SELECT id FROM character_workbenches WHERE character_id = ?");
+        // Trouver l'établi de la maison principale du joueur
+        $stmt = $this->db->prepare("
+            SELECT chw.id 
+            FROM character_house_workbenches chw
+            JOIN character_houses ch ON chw.character_house_id = ch.id
+            WHERE ch.character_id = ? AND ch.is_primary = 1
+            LIMIT 1
+        ");
+        if (!$stmt) return;
         $stmt->bind_param("i", $characterId);
         $stmt->execute();
-        $exists = $stmt->get_result()->fetch_assoc();
+        $workbench = $stmt->get_result()->fetch_assoc();
 
-        if ($exists) {
+        if ($workbench) {
             $stmt = $this->db->prepare("
-                UPDATE character_workbenches 
+                UPDATE character_house_workbenches 
                 SET total_enchantments = total_enchantments + 1 
-                WHERE character_id = ?
+                WHERE id = ?
             ");
-            $stmt->bind_param("i", $characterId);
-        } else {
-            $stmt = $this->db->prepare("
-                INSERT INTO character_workbenches (character_id, total_enchantments) 
-                VALUES (?, 1)
-            ");
-            $stmt->bind_param("i", $characterId);
+            $stmt->bind_param("i", $workbench['id']);
+            $stmt->execute();
         }
-        $stmt->execute();
     }
 
     /**
@@ -407,7 +441,7 @@ class Workbench
     {
         $stmt = $this->db->prepare("
             SELECT ci.id as inventory_id, ci.item_id, ci.location, ci.slot_name, ci.instance_stats,
-                   i.name, i.description, i.type, i.slot_type, i.icon, i.stats
+                   i.name, i.description, i.type, i.slot_type, i.icon, i.stats as base_stats
             FROM character_inventory ci
             JOIN items i ON ci.item_id = i.id
             WHERE ci.character_id = ? 
@@ -423,6 +457,15 @@ class Workbench
         // Ajouter les enchantements existants et la rareté à chaque item
         foreach ($items as &$item) {
             $item['enchantments'] = $this->getItemEnchantments($item['inventory_id']);
+            
+            // Use instance_stats if available (includes enchantment bonuses), otherwise use base_stats
+            if (!empty($item['instance_stats'])) {
+                $item['stats'] = $item['instance_stats'];
+            } elseif (!empty($item['base_stats'])) {
+                $item['stats'] = $item['base_stats'];
+            } else {
+                $item['stats'] = '{}';
+            }
             
             // Extraire la rareté de instance_stats si disponible
             $instanceStats = json_decode($item['instance_stats'] ?? '{}', true);

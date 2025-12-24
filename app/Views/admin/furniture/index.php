@@ -73,7 +73,7 @@ $rarityColors = [
                     
                     <!-- Stats -->
                     <div class="grid grid-cols-2 gap-1 text-xs mb-3">
-                        <div class="text-gray-400">💰 Prix:</div>
+                        <div class="text-gray-400">🪙 Prix:</div>
                         <div class="text-amber-400"><?= number_format($item['price'], 0, ',', ' ') ?></div>
                         
                         <?php if ($item['bonus_type'] !== 'none'): ?>

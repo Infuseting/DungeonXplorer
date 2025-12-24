@@ -21,9 +21,16 @@ class Character
         $statKey = $stat->value; 
         if (!empty($inv['equipped'])) {
             foreach ($inv['equipped'] as $item) {
-                $stats = json_decode($item['stats'] ?? '[]', true);
-                if (isset($stats[$statKey])) {
-                    $total += (int)$stats[$statKey];
+                // First try instance_stats (which includes enchantment bonuses)
+                $instanceStats = json_decode($item['instance_stats'] ?? '{}', true);
+                if (!empty($instanceStats) && isset($instanceStats[$statKey])) {
+                    $total += (int)$instanceStats[$statKey];
+                } else {
+                    // Fallback to base stats
+                    $stats = json_decode($item['stats'] ?? '[]', true);
+                    if (isset($stats[$statKey])) {
+                        $total += (int)$stats[$statKey];
+                    }
                 }
             }
         }

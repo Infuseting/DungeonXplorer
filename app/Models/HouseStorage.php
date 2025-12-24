@@ -20,7 +20,7 @@ class HouseStorage
     {
         try {
             $stmt = $this->db->prepare("
-                SELECT hs.*, i.name, i.description, i.type, i.icon, i.stats, i.price, i.max_stack
+                SELECT hs.*, i.name, i.description, i.type, i.icon, i.stats, i.price, i.max_stack, i.slot_type
                 FROM house_storage hs
                 JOIN items i ON hs.item_id = i.id
                 WHERE hs.character_house_id = ?
@@ -29,7 +29,16 @@ class HouseStorage
             if (!$stmt) return [];
             $stmt->bind_param("i", $characterHouseId);
             $stmt->execute();
-            return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            
+            // Ensure stats is always a valid JSON string
+            foreach ($items as &$item) {
+                if (empty($item['stats'])) {
+                    $item['stats'] = '{}';
+                }
+            }
+            
+            return $items;
         } catch (\Exception $e) {
             return [];
         }

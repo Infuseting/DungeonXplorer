@@ -110,7 +110,7 @@ ob_start();
                             <span>🤲 2 mains</span>
                         <?php endif; ?>
                         <?php if ($item['price']): ?>
-                            <span class="text-yellow-400 font-semibold">💰 <?= number_format($item['price']) ?> pièces</span>
+                            <span class="text-yellow-400 font-semibold">🪙 <?= number_format($item['price']) ?> pièces</span>
                         <?php endif; ?>
                     </div>
                     

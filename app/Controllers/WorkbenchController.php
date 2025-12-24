@@ -140,23 +140,28 @@ class WorkbenchController
             exit;
         }
 
-        $input = json_decode(file_get_contents('php://input'), true);
-        $inventoryItemId = $input['inventory_item_id'] ?? null;
-        $enchantmentId = $input['enchantment_id'] ?? null;
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $inventoryItemId = $input['inventory_item_id'] ?? null;
+            $enchantmentId = $input['enchantment_id'] ?? null;
 
-        if (!$inventoryItemId || !$enchantmentId) {
-            echo json_encode(['success' => false, 'message' => 'Paramètres manquants']);
-            exit;
+            if (!$inventoryItemId || !$enchantmentId) {
+                echo json_encode(['success' => false, 'message' => 'Paramètres manquants']);
+                exit;
+            }
+
+            $workbenchModel = new Workbench();
+            $result = $workbenchModel->applyEnchantment(
+                $_SESSION['character_id'],
+                $inventoryItemId,
+                $enchantmentId
+            );
+
+            echo json_encode($result);
+        } catch (\Exception $e) {
+            error_log("Workbench enchant error: " . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Erreur: ' . $e->getMessage()]);
         }
-
-        $workbenchModel = new Workbench();
-        $result = $workbenchModel->applyEnchantment(
-            $_SESSION['character_id'],
-            $inventoryItemId,
-            $enchantmentId
-        );
-
-        echo json_encode($result);
     }
 
     /**

@@ -262,21 +262,27 @@ class HouseManager {
         // Render stored items with full data attributes for tooltips
         storage.forEach(item => {
             const statsJson = typeof item.stats === 'string' ? item.stats : JSON.stringify(item.stats || {});
+            const enchantments = item.enchantments || [];
+            const enchantCount = enchantments.length;
+            const isEnchanted = enchantCount > 0;
+            
             html += `
-                <div class="storage-item item-icon rarity-${item.rarity || 'common'}" 
+                <div class="storage-item item-icon ${isEnchanted ? 'enchanted-item' : ''} rarity-${item.rarity || 'common'}" 
                      data-storage-id="${item.id}"
                      data-item-id="${item.item_id}"
                      data-id="${item.id}"
                      data-name="${this.escapeHtml(item.name)}"
                      data-type="${item.type || 'Objet'}"
                      data-description="${this.escapeHtml(item.description || '')}"
-                     data-stats='${this.escapeHtml(statsJson)}'
+                     data-stats='${this.escapeJsonAttr(statsJson)}'
+                     data-enchantments='${this.escapeJsonAttr(JSON.stringify(enchantments))}'
                      data-slot-type="${item.slot_type || 'none'}"
                      data-rarity="${item.rarity || 'common'}"
                      data-location="storage"
                      draggable="true">
-                    <img src="/${item.icon}" alt="${this.escapeHtml(item.name)}" draggable="false">
+                    <img src="/${item.icon}" alt="${this.escapeHtml(item.name)}" draggable="false" class="relative z-[2]">
                     ${item.quantity > 1 ? `<span class="quantity-badge">${item.quantity}</span>` : ''}
+                    ${isEnchanted ? `<span class="enchant-badge">${enchantCount}</span>` : ''}
                 </div>
             `;
         });
@@ -401,21 +407,27 @@ class HouseManager {
 
         container.innerHTML = inventory.map(item => {
             const statsJson = typeof item.stats === 'string' ? item.stats : JSON.stringify(item.stats || {});
+            const enchantments = item.enchantments || [];
+            const enchantCount = enchantments.length;
+            const isEnchanted = enchantCount > 0;
+            
             return `
-                <div class="inventory-transfer-item item-icon rarity-${item.rarity || 'common'}"
+                <div class="inventory-transfer-item item-icon ${isEnchanted ? 'enchanted-item' : ''} rarity-${item.rarity || 'common'}"
                      data-inventory-id="${item.id}"
                      data-item-id="${item.item_id}"
                      data-id="${item.id}"
                      data-name="${this.escapeHtml(item.name)}"
                      data-type="${item.type || 'Objet'}"
                      data-description="${this.escapeHtml(item.description || '')}"
-                     data-stats='${this.escapeHtml(statsJson)}'
+                     data-stats='${this.escapeJsonAttr(statsJson)}'
+                     data-enchantments='${this.escapeJsonAttr(JSON.stringify(enchantments))}'
                      data-slot-type="${item.item_slot_type || item.slot_type || 'none'}"
                      data-rarity="${item.rarity || 'common'}"
                      data-location="inventory"
                      draggable="true">
-                    <img src="/${item.icon}" alt="${this.escapeHtml(item.name)}" draggable="false">
+                    <img src="/${item.icon}" alt="${this.escapeHtml(item.name)}" draggable="false" class="relative z-[2]">
                     ${item.quantity > 1 ? `<span class="quantity-badge">${item.quantity}</span>` : ''}
+                    ${isEnchanted ? `<span class="enchant-badge">${enchantCount}</span>` : ''}
                 </div>
             `;
         }).join('');
@@ -663,7 +675,7 @@ class HouseManager {
         
         html += this.categories.map(cat => `
             <button class="furniture-cat-btn px-3 py-1 rounded-lg text-sm transition-colors" data-category="${cat.id}">
-                ${cat.icon} ${cat.name}
+                ${cat.name}
             </button>
         `).join('');
 
@@ -899,6 +911,15 @@ class HouseManager {
         div.textContent = text;
         return div.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
+    
+    /**
+     * Escape JSON string for use in single-quoted HTML attributes
+     * Only escapes single quotes, preserves double quotes for valid JSON
+     */
+    escapeJsonAttr(jsonStr) {
+        if (!jsonStr) return '{}';
+        return jsonStr.replace(/'/g, '&#39;');
+    }
 
     /**
      * Setup tooltip for an item (similar to inventory.js)
@@ -912,6 +933,7 @@ class HouseManager {
         const typeEl = document.getElementById('tooltip-type');
         const statsEl = document.getElementById('tooltip-stats');
         const descEl = document.getElementById('tooltip-desc');
+        const enchantsEl = document.getElementById('tooltip-enchants');
 
         item.addEventListener('mouseenter', (e) => {
             // Populate Data
@@ -922,16 +944,52 @@ class HouseManager {
             // Parse and display stats
             statsEl.innerHTML = '';
             try {
-                const stats = JSON.parse(item.dataset.stats || '{}');
+                const statsRaw = item.dataset.stats || '{}';
+                const stats = typeof statsRaw === 'string' ? JSON.parse(statsRaw) : statsRaw;
+                const enchantBonuses = stats.enchantment_bonuses || {};
+                
                 for (const [key, value] of Object.entries(stats)) {
+                    // Skip internal fields and non-numeric values
+                    if (key === 'enchantment_bonuses' || key === 'rarity') continue;
+                    if (typeof value !== 'number') continue;
+                    
                     const statRow = document.createElement('div');
-                    statRow.className = 'tooltip-stat';
+                    statRow.className = 'tooltip-stat flex justify-between';
                     const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                    statRow.innerHTML = `<span>${label}</span><span>${value}</span>`;
+                    
+                    // Check if this stat has an enchantment bonus - show total in green if enchanted
+                    const bonus = enchantBonuses[key] || 0;
+                    if (bonus > 0) {
+                        statRow.innerHTML = `<span>${label}</span><span class="text-green-400">+${value}</span>`;
+                    } else {
+                        statRow.innerHTML = `<span>${label}</span><span>+${value}</span>`;
+                    }
                     statsEl.appendChild(statRow);
                 }
             } catch (err) {
-                console.error('Error parsing stats', err);
+                console.error('Error parsing stats', err, item.dataset.stats);
+            }
+
+            // Display enchantments if available
+            if (enchantsEl) {
+                enchantsEl.innerHTML = '';
+                enchantsEl.classList.add('hidden');
+                try {
+                    const enchantments = JSON.parse(item.dataset.enchantments || '[]');
+                    if (enchantments && enchantments.length > 0) {
+                        enchantsEl.classList.remove('hidden');
+                        enchantsEl.innerHTML = `
+                            <p class="text-xs text-violet-400 font-bold mb-1">✨ Enchantements:</p>
+                            ${enchantments.map(e => `
+                                <div class="text-xs text-purple-300 flex items-center gap-1">
+                                    <span class="text-violet-400">✦</span> ${e.name}
+                                </div>
+                            `).join('')}
+                        `;
+                    }
+                } catch (err) {
+                    // No enchantments or invalid data
+                }
             }
 
             tooltip.classList.remove('hidden');
@@ -1308,23 +1366,38 @@ class HouseManager {
 
         container.innerHTML = items.map(item => {
             const enchantCount = item.enchantments ? item.enchantments.length : 0;
-            const statsJson = typeof item.stats === 'string' ? item.stats : JSON.stringify(item.stats || {});
+            const isEnchanted = enchantCount > 0;
+            
+            // Merge base stats with instance stats for display
+            let displayStats = {};
+            try {
+                const baseStats = typeof item.stats === 'string' ? JSON.parse(item.stats || '{}') : (item.stats || {});
+                const instanceStats = typeof item.instance_stats === 'string' ? JSON.parse(item.instance_stats || '{}') : (item.instance_stats || {});
+                displayStats = { ...baseStats, ...instanceStats };
+                // Keep enchantment_bonuses for display, only remove rarity
+                delete displayStats.rarity;
+            } catch (e) {
+                displayStats = {};
+            }
+            const statsJson = JSON.stringify(displayStats);
+            
             return `
-                <div class="workbench-item rarity-${item.rarity || 'common'} cursor-pointer hover:ring-2 hover:ring-violet-500 transition-all relative"
+                <div class="workbench-item ${isEnchanted ? 'enchanted-item' : ''} rarity-${item.rarity || 'common'} cursor-pointer hover:ring-2 hover:ring-violet-500 transition-all relative"
                      data-inventory-id="${item.inventory_id}"
                      data-item-id="${item.item_id}"
                      data-name="${this.escapeHtml(item.name)}"
-                     data-type="${item.type}"
+                     data-type="${item.slot_type || item.type}"
                      data-slot-type="${item.slot_type}"
-                     data-stats='${this.escapeHtml(statsJson)}'
-                     data-enchantments='${this.escapeHtml(JSON.stringify(item.enchantments || []))}'>
-                    <img src="/${item.icon}" alt="${this.escapeHtml(item.name)}" class="w-full h-full object-contain p-1" draggable="false">
-                    ${enchantCount > 0 ? `<span class="absolute -top-1 -right-1 bg-violet-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">${enchantCount}</span>` : ''}
+                     data-stats='${this.escapeJsonAttr(statsJson)}'
+                     data-description="${this.escapeHtml(item.description || '')}"
+                     data-enchantments='${this.escapeJsonAttr(JSON.stringify(item.enchantments || []))}'>
+                    <img src="/${item.icon}" alt="${this.escapeHtml(item.name)}" class="w-full h-full object-contain p-1 relative z-[2]" draggable="false">
+                    ${isEnchanted ? `<span class="enchant-badge">${enchantCount}</span>` : ''}
                 </div>
             `;
         }).join('');
 
-        // Add click events
+        // Add click events and tooltips
         container.querySelectorAll('.workbench-item').forEach(item => {
             item.addEventListener('click', () => this.selectWorkbenchItem(item));
             this.setupItemTooltip(item);
@@ -1351,37 +1424,38 @@ class HouseManager {
             icon: itemElement.querySelector('img')?.src || ''
         };
 
+        // Reset selected enchantment when changing item
+        this.selectedEnchantment = null;
+        document.querySelectorAll('.enchantment-item').forEach(i => i.classList.remove('ring-2', 'ring-violet-500'));
+        const enchantSlot = document.getElementById('workbench-enchant-slot');
+        enchantSlot.innerHTML = '<span class="text-gray-600 text-3xl">✨</span>';
+        enchantSlot.classList.remove('border-violet-500');
+
         // Update item slot visual
         const itemSlot = document.getElementById('workbench-item-slot');
         itemSlot.innerHTML = `<img src="${this.selectedWorkbenchItem.icon}" alt="${this.selectedWorkbenchItem.name}" class="w-full h-full object-contain p-1">`;
 
-        // Show item info
+        // Show item info (only enchantments, no name)
         const itemInfo = document.getElementById('workbench-item-info');
-        itemInfo.classList.remove('hidden');
-        document.getElementById('workbench-item-name').textContent = this.selectedWorkbenchItem.name;
-        document.getElementById('workbench-item-type').textContent = this.selectedWorkbenchItem.slotType;
-
-        // Show current enchantments
         const enchantsContainer = document.getElementById('workbench-item-enchants');
+        
         if (this.selectedWorkbenchItem.enchantments.length > 0) {
-            enchantsContainer.innerHTML = `
-                <p class="text-xs text-violet-400 mb-1">Enchantements actuels:</p>
-                ${this.selectedWorkbenchItem.enchantments.map(e => `
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="text-gray-300">✨ ${e.name}</span>
-                        <button class="text-red-400 hover:text-red-300 text-xs" data-enchant-id="${e.id}" onclick="window.houseManager?.removeEnchantment(${e.id})">✕</button>
-                    </div>
-                `).join('')}
-            `;
+            itemInfo.classList.remove('hidden');
+            enchantsContainer.innerHTML = this.selectedWorkbenchItem.enchantments.map(e => `
+                <div class="flex items-center justify-between text-xs bg-gray-900/50 rounded px-2 py-1">
+                    <span class="text-purple-300">✨ ${e.name}</span>
+                    <button class="text-red-400 hover:text-red-300 text-xs px-1" data-enchant-id="${e.id}" onclick="window.houseManager?.removeEnchantment(${e.id})" title="Retirer (50🪙)">✕</button>
+                </div>
+            `).join('');
         } else {
-            enchantsContainer.innerHTML = '<p class="text-xs text-gray-500">Aucun enchantement</p>';
+            itemInfo.classList.add('hidden');
         }
 
-        // Filter compatible enchantments
+        // Filter compatible enchantments and disable already applied ones
         this.filterCompatibleEnchantments(this.selectedWorkbenchItem.slotType);
 
-        // Update result preview if enchantment selected
-        this.updateResultPreview();
+        // Hide result preview since no enchantment is selected
+        document.getElementById('workbench-result-preview').classList.add('hidden');
 
         playSound('click');
     }
@@ -1393,16 +1467,35 @@ class HouseManager {
         const enchantmentsList = document.getElementById('workbench-enchantments-list');
         const items = enchantmentsList.querySelectorAll('.enchantment-item');
 
+        // Get list of already applied enchantment IDs
+        const appliedEnchantmentIds = this.selectedWorkbenchItem?.enchantments?.map(e => String(e.enchantment_id)) || [];
+
         items.forEach(item => {
+            const enchantId = item.dataset.enchantmentId;
             const compatibleSlots = JSON.parse(item.dataset.compatibleSlots || '[]');
             const isCompatible = compatibleSlots.length === 0 || compatibleSlots.includes(slotType);
+            const isAlreadyApplied = appliedEnchantmentIds.includes(enchantId);
             
-            if (isCompatible) {
-                item.classList.remove('opacity-50', 'pointer-events-none');
+            // Remove all state classes first
+            item.classList.remove('opacity-50', 'pointer-events-none', 'cursor-pointer', 'already-applied');
+            
+            if (isAlreadyApplied) {
+                // Already applied - show as disabled with special styling
+                item.classList.add('opacity-40', 'pointer-events-none', 'already-applied');
+                // Add visual indicator
+                if (!item.querySelector('.applied-badge')) {
+                    const badge = document.createElement('span');
+                    badge.className = 'applied-badge text-xs text-green-400 ml-2';
+                    badge.textContent = '✓ Appliqué';
+                    item.querySelector('.flex')?.appendChild(badge);
+                }
+            } else if (isCompatible) {
                 item.classList.add('cursor-pointer');
+                // Remove applied badge if exists
+                item.querySelector('.applied-badge')?.remove();
             } else {
                 item.classList.add('opacity-50', 'pointer-events-none');
-                item.classList.remove('cursor-pointer');
+                item.querySelector('.applied-badge')?.remove();
             }
         });
     }
@@ -1441,7 +1534,7 @@ class HouseManager {
                      data-rarity="${ench.rarity}">
                     <div class="flex items-center justify-between mb-1">
                         <span class="font-bold text-${color}-400">${ench.name}</span>
-                        <span class="text-amber-400 text-sm">${this.formatNumber(ench.cost)} 💰</span>
+                        <span class="text-amber-400 text-sm">${this.formatNumber(ench.cost)} 🪙</span>
                     </div>
                     <p class="text-xs text-gray-400 mb-2">${ench.description || ''}</p>
                     <div class="flex flex-wrap gap-1">

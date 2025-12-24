@@ -78,7 +78,7 @@
                             <p class="text-sm text-gray-400">3 quêtes aléatoires disponibles chaque jour</p>
                         </div>
                         <div class="text-right">
-                            <div class="text-2xl font-bold text-yellow-400" id="daily-quest-reward-total">💰 15 pièces max</div>
+                            <div class="text-2xl font-bold text-yellow-400" id="daily-quest-reward-total">🪙 15 pièces max</div>
                             <div class="text-sm text-gray-400" id="daily-quest-timer">Renouvellement à minuit</div>
                         </div>
                     </div>

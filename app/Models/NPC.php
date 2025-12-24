@@ -125,7 +125,16 @@ class NPC
         $stmt->bind_param("i", $npcId);
         $stmt->execute();
         $result = $stmt->get_result();
-        return $result->fetch_all(MYSQLI_ASSOC);
+        $items = $result->fetch_all(MYSQLI_ASSOC);
+        
+        // Ensure stats is always a valid JSON string
+        foreach ($items as &$item) {
+            if (empty($item['stats'])) {
+                $item['stats'] = '{}';
+            }
+        }
+        
+        return $items;
     }
     
     /**
