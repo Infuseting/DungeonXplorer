@@ -88,7 +88,7 @@ class House
             WHERE id = ?
         ");
         $stmt->bind_param(
-            "ssiiiisiiddi",
+            "ssiiissiiddi",
             $data['name'],
             $data['description'],
             $data['price'],

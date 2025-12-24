@@ -59,8 +59,16 @@ export async function initMap(configUrl = '/assets/map/main/map_config.json', ti
             maxZoom: maxZoom,
             noWrap: true,
             continuousWorld: false,
-            attribution: ''
-        }).addTo(map);
+            attribution: '',
+            errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
+        });
+        
+        // Silently handle tile loading errors
+        tileLayer.on('tileerror', function(error) {
+            // Suppress console errors for missing tiles
+        });
+        
+        tileLayer.addTo(map);
 
         const southWest = map.unproject([0, height], maxZoom);
         const northEast = map.unproject([width, 0], maxZoom);

@@ -136,9 +136,19 @@ class HouseManager {
         const img = document.getElementById('house-image');
         const placeholder = document.getElementById('house-image-placeholder');
         if (house.image) {
-            img.src = '/' + house.image;
-            img.classList.remove('hidden');
-            placeholder.classList.add('hidden');
+            // Add error handler before setting src
+            img.onerror = () => {
+                console.warn('Failed to load house image:', house.image);
+                img.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+            };
+            img.onload = () => {
+                img.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+            };
+            // Handle case where image path might already start with /
+            const imagePath = house.image.startsWith('/') ? house.image : '/' + house.image;
+            img.src = imagePath;
         } else {
             img.classList.add('hidden');
             placeholder.classList.remove('hidden');
@@ -166,21 +176,67 @@ class HouseManager {
     renderBonuses(bonuses) {
         const container = document.getElementById('house-bonuses');
         const bonusTypes = {
-            storage: { icon: '📦', label: 'Stockage', suffix: ' slots' },
-            comfort: { icon: '🛋️', label: 'Confort', suffix: '' },
-            luck: { icon: '🍀', label: 'Chance', suffix: '%' },
-            xp: { icon: '⭐', label: 'XP', suffix: '%' },
-            gold: { icon: '🪙', label: 'Or', suffix: '%' },
-            defense: { icon: '🛡️', label: 'Défense', suffix: '' }
+            storage: { 
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                </svg>`, 
+                label: 'Stockage', 
+                suffix: ' slots',
+                color: 'text-amber-400'
+            },
+            comfort: { 
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                </svg>`, 
+                label: 'Confort', 
+                suffix: '',
+                color: 'text-pink-400'
+            },
+            luck: { 
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
+                </svg>`, 
+                label: 'Chance', 
+                suffix: '%',
+                color: 'text-green-400'
+            },
+            xp: { 
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                </svg>`, 
+                label: 'XP', 
+                suffix: '%',
+                color: 'text-blue-400'
+            },
+            gold: { 
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>`, 
+                label: 'Or', 
+                suffix: '%',
+                color: 'text-yellow-400'
+            },
+            defense: { 
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                </svg>`, 
+                label: 'Défense', 
+                suffix: '',
+                color: 'text-slate-400'
+            }
         };
+
+        const defaultIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+        </svg>`;
 
         container.innerHTML = Object.entries(bonuses)
             .filter(([key, value]) => value > 0)
             .map(([key, value]) => {
-                const type = bonusTypes[key] || { icon: '✨', label: key, suffix: '' };
+                const type = bonusTypes[key] || { icon: defaultIcon, label: key, suffix: '', color: 'text-violet-400' };
                 return `
                     <div class="bonus-item">
-                        <span class="bonus-icon">${type.icon}</span>
+                        <span class="bonus-icon ${type.color}">${type.icon}</span>
                         <div class="flex flex-wrap items-center gap-2">
                             <div class="text-sm text-gray-400">${type.label}: </div>
                             <div class="bonus-value text-green-400">+${value}${type.suffix}</div>
@@ -598,12 +654,23 @@ class HouseManager {
     renderHousesShop(houses) {
         const container = document.getElementById('houses-shop-grid');
 
-        container.innerHTML = houses.map(house => `
+        container.innerHTML = houses.map(house => {
+            const imagePath = house.image ? (house.image.startsWith('/') ? house.image : '/' + house.image) : null;
+            return `
             <div class="house-card ${house.owned ? 'owned' : ''}">
                 <div class="aspect-video bg-gray-900 flex items-center justify-center overflow-hidden">
-                    ${house.image 
-                        ? `<img src="/${house.image}" alt="${house.name}" class="w-full h-full object-cover">`
-                        : '<span class="text-4xl">🏠</span>'
+                    ${imagePath 
+                        ? `<img src="${imagePath}" alt="${house.name}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                           <div class="hidden flex-col items-center justify-center text-gray-500">
+                               <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+                                   <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                               </svg>
+                           </div>`
+                        : `<div class="flex flex-col items-center justify-center text-gray-500">
+                               <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+                                   <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                               </svg>
+                           </div>`
                     }
                 </div>
                 <div class="p-4">
@@ -639,7 +706,8 @@ class HouseManager {
                     `}
                 </div>
             </div>
-        `).join('');
+        `;
+        }).join('');
 
         // Bind buy buttons
         container.querySelectorAll('.buy-house-btn').forEach(btn => {

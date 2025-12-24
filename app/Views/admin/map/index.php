@@ -234,14 +234,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
                 const basePath = selectedMapConfig.substring(0, selectedMapConfig.lastIndexOf('/'));
-        L.tileLayer(basePath + '/{z}/{x}/{y}.png', {
+        const tileLayer = L.tileLayer(basePath + '/{z}/{x}/{y}.png', {
             tileSize: tileSize,
             minZoom: maxZoom - 3,
             maxZoom: maxZoom,
             noWrap: true,
             continuousWorld: false,
-            attribution: ''
-        }).addTo(adminMap);
+            attribution: '',
+            errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
+        });
+        
+        // Silently handle tile loading errors
+        tileLayer.on('tileerror', function(error) {
+            // Suppress console errors for missing tiles
+        });
+        
+        tileLayer.addTo(adminMap);
 
         const southWest = adminMap.unproject([0, height], maxZoom);
         const northEast = adminMap.unproject([width, 0], maxZoom);
