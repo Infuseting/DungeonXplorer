@@ -268,30 +268,31 @@ class AdminMapController
                 'y' => $_POST['y'] ?? 0,
                 'radius' => $_POST['radius'] ?? 50,
                 'type' => $_POST['type'] ?? 'place',
-                'target_id' => $_POST['target_id'] ?? null,
+                'icon' => $_POST['icon'] ?? null,
                 'is_hidden' => isset($_POST['is_hidden']) ? 1 : 0
             ];
             
             $stmt = $this->db->prepare("
                 UPDATE map_points 
-                SET name = ?, description = ?, x = ?, y = ?, radius = ?, type = ?, target_id = ?, is_hidden = ?
+                SET name = ?, description = ?, x = ?, y = ?, radius = ?, type = ?, icon = ?, is_hidden = ?
                 WHERE id = ?
             ");
             $stmt->bind_param(
-                "ssddisiii",
+                "ssddissii",
                 $data['name'],
                 $data['description'],
                 $data['x'],
                 $data['y'],
                 $data['radius'],
                 $data['type'],
-                $data['target_id'],
+                $data['icon'],
                 $data['is_hidden'],
                 $id
             );
             
             if ($stmt->execute()) {
-                header('Location: /admin/map');
+                $mapId = $_POST['map_id'] ?? 1;
+                header('Location: /admin/map?map_id=' . $mapId);
                 exit;
             }
         }
@@ -306,6 +307,55 @@ class AdminMapController
             header('Location: /admin/map');
             exit;
         }
+    }
+    
+    public function uploadIcon()
+    {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Méthode non autorisée']);
+            exit;
+        }
+        
+        if (!isset($_FILES['icon']) || $_FILES['icon']['error'] !== UPLOAD_ERR_OK) {
+            echo json_encode(['success' => false, 'message' => 'Aucun fichier uploadé']);
+            exit;
+        }
+        
+        $file = $_FILES['icon'];
+        $allowedExtensions = ['svg', 'png', 'jpg', 'jpeg'];
+        $maxFileSize = 2 * 1024 * 1024; // 2MB
+        
+        // Validate file size
+        if ($file['size'] > $maxFileSize) {
+            echo json_encode(['success' => false, 'message' => 'Fichier trop volumineux (max 2MB)']);
+            exit;
+        }
+        
+        // Validate extension
+        $fileExtension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (!in_array($fileExtension, $allowedExtensions)) {
+            echo json_encode(['success' => false, 'message' => 'Extension non autorisée. Utilisez: ' . implode(', ', $allowedExtensions)]);
+            exit;
+        }
+        
+        // Generate unique filename
+        $filename = 'custom_' . uniqid() . '.' . $fileExtension;
+        $uploadPath = __DIR__ . '/../../public/assets/map/icons/' . $filename;
+        
+        // Move uploaded file
+        if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
+            echo json_encode([
+                'success' => true, 
+                'filename' => $filename,
+                'message' => 'Icône uploadée avec succès'
+            ]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Erreur lors du déplacement du fichier']);
+        }
+        
+        exit;
     }
     
     private function getAllMaps()

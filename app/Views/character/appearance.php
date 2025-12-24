@@ -458,9 +458,7 @@ $customStyles = '
         
         .customization-panel {
             padding: 1.25rem;
-            /* Allow flex to handle height */
-            max-height: none; 
-            height: 100%;
+            max-height: calc(100vh - 10rem);
         }
         
         .tab-item {
@@ -500,9 +498,7 @@ $customStyles = '
         
         .customization-panel {
             padding: 1rem;
-            /* Allow flex to handle height */
-            max-height: none;
-            height: 100%;
+            max-height: calc(100vh - 8rem);
         }
         
         .tab-navigation {
@@ -557,9 +553,7 @@ $customStyles = '
         
         .customization-panel {
             padding: 0.875rem;
-            /* Allow flex to handle height */
-            max-height: none;
-            height: 100%;
+            max-height: calc(100vh - 7rem);
         }
         
         .tab-navigation {
@@ -663,7 +657,7 @@ $customStyles = '
         
         .customization-panel {
             padding: 0.75rem;
-            max-height: none;
+            max-height: calc(100vh - 6rem);
         }
         
         .section-title {
