@@ -77,7 +77,7 @@ ob_start();
             <!-- Merchant Fields -->
             <div class="col-span-2 hidden bg-gray-900 p-6 rounded-xl border border-gray-700" id="merchant-fields">
                 <h4 class="text-gray-200 mb-4 text-lg">
-                    💰 Configuration Marchand
+                    🪙 Configuration Marchand
                 </h4>
                 
                 <div class="grid grid-cols-2 gap-6">
@@ -119,7 +119,7 @@ ob_start();
                                         <?= htmlspecialchars($item['name']) ?>
                                     </div>
                                     <div class="text-yellow-400 mt-1">
-                                        💰 <?= number_format($item['price']) ?> pièces
+                                        🪙 <?= number_format($item['price']) ?> pièces
                                     </div>
                                 </div>
                             <?php endforeach; ?>

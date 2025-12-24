@@ -50,7 +50,7 @@ ob_start();
                         <p class="text-sm text-gray-400 mb-3 line-clamp-2"><?= htmlspecialchars($house['description'] ?? 'Pas de description') ?></p>
                         
                         <div class="grid grid-cols-2 gap-2 text-sm mb-3">
-                            <div class="text-gray-400">💰 Prix:</div>
+                            <div class="text-gray-400">🪙 Prix:</div>
                             <div class="text-amber-400 font-bold"><?= number_format($house['price'], 0, ',', ' ') ?> or</div>
                             
                             <div class="text-gray-400">📦 Stockage:</div>

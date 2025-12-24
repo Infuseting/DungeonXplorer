@@ -6,6 +6,59 @@
     transition: all 0.2s;
 }
 
+<?php
+/**
+ * Helper function to render an equipped item with enchantment support
+ */
+function renderEquippedItem($item, $isTwoHanded = null) {
+    if (!$item) return '';
+    
+    $enchantments = $item['enchantments'] ?? [];
+    $enchantCount = count($enchantments);
+    $isEnchanted = $enchantCount > 0;
+    $enchantedClass = $isEnchanted ? 'enchanted-item' : '';
+    
+    // Ensure stats is properly formatted JSON
+    $statsJson = $item['stats'];
+    if (is_array($statsJson)) {
+        $statsJson = json_encode($statsJson);
+    } elseif (empty($statsJson)) {
+        $statsJson = '{}';
+    }
+    // Only escape single quotes for use in single-quoted attribute
+    $statsJson = str_replace("'", "&#39;", $statsJson);
+    
+    $enchantmentsJson = json_encode($enchantments);
+    $enchantmentsJson = str_replace("'", "&#39;", $enchantmentsJson);
+    
+    // Handle two-handed attribute
+    $twoHandedAttr = '';
+    if ($isTwoHanded !== null) {
+        $twoHandedAttr = 'data-two-handed="' . ($item['two_handed'] ? '1' : '0') . '"';
+    }
+    
+    $html = '<div class="relative w-full h-full ' . $enchantedClass . '">';
+    $html .= '<img src="/' . $item['icon'] . '" 
+                 class="w-full h-full object-contain item-icon p-1 relative z-[2]" 
+                 draggable="true" 
+                 data-id="' . $item['id'] . '"
+                 data-slot-type="' . htmlspecialchars($item['item_slot_type']) . '"
+                 ' . $twoHandedAttr . '
+                 data-name="' . htmlspecialchars($item['name']) . '"
+                 data-type="' . htmlspecialchars($item['type']) . '"
+                 data-description="' . htmlspecialchars($item['description']) . '"
+                 data-stats=\'' . $statsJson . '\'
+                 data-enchantments=\'' . $enchantmentsJson . '\'>';
+    
+    if ($isEnchanted) {
+        $html .= '<span class="enchant-badge">' . $enchantCount . '</span>';
+    }
+    
+    $html .= '</div>';
+    return $html;
+}
+?>
+
 .slot:hover {
     border-color: #8b5cf6;
 }
@@ -57,6 +110,83 @@
     background-color: rgba(16, 185, 129, 0.1);
     box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
 }
+
+/* ==========================================
+   MINECRAFT-STYLE ENCHANTED ITEM EFFECT
+   ========================================== */
+
+/* Enchanted item shimmer effect */
+.enchanted-item {
+    position: relative;
+    overflow: hidden;
+}
+
+.enchanted-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        transparent 40%,
+        rgba(138, 43, 226, 0.3) 45%,
+        rgba(75, 0, 130, 0.5) 50%,
+        rgba(138, 43, 226, 0.3) 55%,
+        transparent 60%,
+        transparent 100%
+    );
+    animation: enchantShimmer 3s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.enchanted-item::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        135deg,
+        rgba(138, 43, 226, 0.1) 0%,
+        transparent 50%,
+        rgba(75, 0, 130, 0.15) 100%
+    );
+    pointer-events: none;
+    z-index: 0;
+}
+
+@keyframes enchantShimmer {
+    0% {
+        transform: translateX(-50%) skewX(-15deg);
+    }
+    100% {
+        transform: translateX(100%) skewX(-15deg);
+    }
+}
+
+/* Enchantment count badge */
+.enchant-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 6px rgba(139, 92, 246, 0.6);
+    z-index: 10;
+}
 </style>
 
 <!-- Inventory Modal -->
@@ -81,192 +211,72 @@
                         <!-- Head -->
                         <div class="absolute top-2 lg:top-4 left-1/2 transform -translate-x-1/2 w-12 h-12 lg:w-16 lg:h-16 slot rounded-lg" data-slot="head">
                             <span class="slot-label">Tête</span>
-                            <?php if(isset($inventory['equipped']['head'])): $item = $inventory['equipped']['head']; ?>
-                                <img src="/<?= $item['icon'] ?>" 
-                                     class="w-full h-full object-contain item-icon p-1" 
-                                     draggable="true" 
-                                     data-id="<?= $item['id'] ?>"
-                                     data-slot-type="<?= htmlspecialchars($item['item_slot_type']) ?>"
-                                     data-name="<?= htmlspecialchars($item['name']) ?>"
-                                     data-type="<?= htmlspecialchars($item['type']) ?>"
-                                     data-description="<?= htmlspecialchars($item['description']) ?>"
-                                     data-stats='<?= htmlspecialchars($item['stats']) ?>'>
-                            <?php endif; ?>
+                            <?php if(isset($inventory['equipped']['head'])): echo renderEquippedItem($inventory['equipped']['head']); endif; ?>
                         </div>
                         
                         <!-- Shoulders -->
                         <div class="absolute top-10 lg:top-16 left-4 lg:left-8 w-12 h-12 lg:w-16 lg:h-16 slot rounded-lg" data-slot="shoulders">
                             <span class="slot-label">Épaules</span>
-                            <?php if(isset($inventory['equipped']['shoulders'])): $item = $inventory['equipped']['shoulders']; ?>
-                                <img src="/<?= $item['icon'] ?>" 
-                                     class="w-full h-full object-contain item-icon p-1" 
-                                     draggable="true" 
-                                     data-id="<?= $item['id'] ?>"
-                                     data-slot-type="<?= htmlspecialchars($item['item_slot_type']) ?>"
-                                     data-name="<?= htmlspecialchars($item['name']) ?>"
-                                     data-type="<?= htmlspecialchars($item['type']) ?>"
-                                     data-description="<?= htmlspecialchars($item['description']) ?>"
-                                     data-stats='<?= htmlspecialchars($item['stats']) ?>'>
-                            <?php endif; ?>
+                            <?php if(isset($inventory['equipped']['shoulders'])): echo renderEquippedItem($inventory['equipped']['shoulders']); endif; ?>
                         </div>
                         
                         <!-- Amulet -->
                         <div class="absolute top-10 lg:top-16 right-4 lg:right-8 transform w-12 h-12 lg:w-16 lg:h-16 slot rounded-lg" data-slot="amulet">
                             <span class="slot-label">Amulette</span>
-                            <?php if(isset($inventory['equipped']['amulet'])): $item = $inventory['equipped']['amulet']; ?>
-                                <img src="/<?= $item['icon'] ?>" 
-                                     class="w-full h-full object-contain item-icon p-1" 
-                                     draggable="true" 
-                                     data-id="<?= $item['id'] ?>"
-                                     data-slot-type="<?= htmlspecialchars($item['item_slot_type']) ?>"
-                                     data-name="<?= htmlspecialchars($item['name']) ?>"
-                                     data-type="<?= htmlspecialchars($item['type']) ?>"
-                                     data-description="<?= htmlspecialchars($item['description']) ?>"
-                                     data-stats='<?= htmlspecialchars($item['stats']) ?>'>
-                            <?php endif; ?>
+                            <?php if(isset($inventory['equipped']['amulet'])): echo renderEquippedItem($inventory['equipped']['amulet']); endif; ?>
                         </div>
                         
                         <!-- Chest -->
                         <div class="absolute top-20 lg:top-36 left-1/2 transform -translate-x-1/2 w-16 h-20 lg:w-20 lg:h-24 slot rounded-lg" data-slot="chest">
                             <span class="slot-label">Torse</span>
-                            <?php if(isset($inventory['equipped']['chest'])): $item = $inventory['equipped']['chest']; ?>
-                                <img src="/<?= $item['icon'] ?>" 
-                                     class="w-full h-full object-contain item-icon p-1" 
-                                     draggable="true" 
-                                     data-id="<?= $item['id'] ?>"
-                                     data-slot-type="<?= htmlspecialchars($item['item_slot_type']) ?>"
-                                     data-name="<?= htmlspecialchars($item['name']) ?>"
-                                     data-type="<?= htmlspecialchars($item['type']) ?>"
-                                     data-description="<?= htmlspecialchars($item['description']) ?>"
-                                     data-stats='<?= htmlspecialchars($item['stats']) ?>'>
-                            <?php endif; ?>
+                            <?php if(isset($inventory['equipped']['chest'])): echo renderEquippedItem($inventory['equipped']['chest']); endif; ?>
                         </div>
                         
                         <!-- Gloves -->
                         <div class="absolute top-24 lg:top-40 left-4 lg:left-8 w-12 h-24 lg:w-16 lg:h-32 slot rounded-lg" data-slot="gloves">
                             <span class="slot-label">Gants</span>
-                            <?php if(isset($inventory['equipped']['gloves'])): $item = $inventory['equipped']['gloves']; ?>
-                                <img src="/<?= $item['icon'] ?>" 
-                                     class="w-full h-full object-contain item-icon p-1" 
-                                     draggable="true" 
-                                     data-id="<?= $item['id'] ?>"
-                                     data-slot-type="<?= htmlspecialchars($item['item_slot_type']) ?>"
-                                     data-name="<?= htmlspecialchars($item['name']) ?>"
-                                     data-type="<?= htmlspecialchars($item['type']) ?>"
-                                     data-description="<?= htmlspecialchars($item['description']) ?>"
-                                     data-stats='<?= htmlspecialchars($item['stats']) ?>'>
-                            <?php endif; ?>
+                            <?php if(isset($inventory['equipped']['gloves'])): echo renderEquippedItem($inventory['equipped']['gloves']); endif; ?>
                         </div>
                         
                         <!-- Bracers -->
                         <div class="absolute top-24 lg:top-40 right-4 lg:right-8 w-12 h-24 lg:w-16 lg:h-32 slot rounded-lg" data-slot="bracers">
                             <span class="slot-label">Bracelets</span>
-                            <?php if(isset($inventory['equipped']['bracers'])): $item = $inventory['equipped']['bracers']; ?>
-                                <img src="/<?= $item['icon'] ?>" 
-                                     class="w-full h-full object-contain item-icon p-1" 
-                                     draggable="true" 
-                                     data-id="<?= $item['id'] ?>"
-                                     data-slot-type="<?= htmlspecialchars($item['item_slot_type']) ?>"
-                                     data-name="<?= htmlspecialchars($item['name']) ?>"
-                                     data-type="<?= htmlspecialchars($item['type']) ?>"
-                                     data-description="<?= htmlspecialchars($item['description']) ?>"
-                                     data-stats='<?= htmlspecialchars($item['stats']) ?>'>
-                            <?php endif; ?>
+                            <?php if(isset($inventory['equipped']['bracers'])): echo renderEquippedItem($inventory['equipped']['bracers']); endif; ?>
                         </div>
                         
                         <!-- Belt -->
                         <div class="absolute top-[165px] lg:top-[260px] left-1/2 transform -translate-x-1/2 w-16 h-8 lg:w-20 lg:h-10 slot rounded-lg" data-slot="belt">
                             <span class="slot-label">Ceinture</span>
-                            <?php if(isset($inventory['equipped']['belt'])): $item = $inventory['equipped']['belt']; ?>
-                                <img src="/<?= $item['icon'] ?>" 
-                                     class="w-full h-full object-contain item-icon p-1" 
-                                     draggable="true" 
-                                     data-id="<?= $item['id'] ?>"
-                                     data-slot-type="<?= htmlspecialchars($item['item_slot_type']) ?>"
-                                     data-name="<?= htmlspecialchars($item['name']) ?>"
-                                     data-type="<?= htmlspecialchars($item['type']) ?>"
-                                     data-description="<?= htmlspecialchars($item['description']) ?>"
-                                     data-stats='<?= htmlspecialchars($item['stats']) ?>'>
-                            <?php endif; ?>
+                            <?php if(isset($inventory['equipped']['belt'])): echo renderEquippedItem($inventory['equipped']['belt']); endif; ?>
                         </div>
                         
                         <!-- Legs -->
                         <div class="absolute top-[200px] lg:top-[310px] left-1/2 w-16 h-20 lg:w-20 transform -translate-x-1/2 lg:h-24 slot rounded-lg" data-slot="legs">
                             <span class="slot-label">Jambes</span>
-                            <?php if(isset($inventory['equipped']['legs'])): $item = $inventory['equipped']['legs']; ?>
-                                <img src="/<?= $item['icon'] ?>" 
-                                     class="w-full h-full object-contain item-icon p-1" 
-                                     draggable="true" 
-                                     data-id="<?= $item['id'] ?>"
-                                     data-slot-type="<?= htmlspecialchars($item['item_slot_type']) ?>"
-                                     data-name="<?= htmlspecialchars($item['name']) ?>"
-                                     data-type="<?= htmlspecialchars($item['type']) ?>"
-                                     data-description="<?= htmlspecialchars($item['description']) ?>"
-                                     data-stats='<?= htmlspecialchars($item['stats']) ?>'>
-                            <?php endif; ?>
+                            <?php if(isset($inventory['equipped']['legs'])): echo renderEquippedItem($inventory['equipped']['legs']); endif; ?>
                         </div>
                         
                         <!-- Boots -->
                         <div class="absolute top-[290px] lg:top-[420px] left-1/2 w-16 h-12 lg:w-20 transform -translate-x-1/2 lg:h-16 slot rounded-lg" data-slot="boots">
                             <span class="slot-label">Bottes</span>
-                            <?php if(isset($inventory['equipped']['boots'])): $item = $inventory['equipped']['boots']; ?>
-                                <img src="/<?= $item['icon'] ?>" 
-                                     class="w-full h-full object-contain item-icon p-1" 
-                                     draggable="true" 
-                                     data-id="<?= $item['id'] ?>"
-                                     data-slot-type="<?= htmlspecialchars($item['item_slot_type']) ?>"
-                                     data-name="<?= htmlspecialchars($item['name']) ?>"
-                                     data-type="<?= htmlspecialchars($item['type']) ?>"
-                                     data-description="<?= htmlspecialchars($item['description']) ?>"
-                                     data-stats='<?= htmlspecialchars($item['stats']) ?>'>
-                            <?php endif; ?>
+                            <?php if(isset($inventory['equipped']['boots'])): echo renderEquippedItem($inventory['equipped']['boots']); endif; ?>
                         </div>
                         
                         <!-- Rings -->
                         <div class="absolute top-[200px] lg:top-[310px] left-6 lg:left-8 w-8 h-8 lg:w-10 lg:h-10 slot rounded-full" data-slot="ring_1">
                             <span class="slot-label">Ring1</span>
-                            <?php if(isset($inventory['equipped']['ring_1'])): $item = $inventory['equipped']['ring_1']; ?>
-                                <img src="/<?= $item['icon'] ?>" 
-                                     class="w-full h-full object-contain item-icon p-1" 
-                                     draggable="true" 
-                                     data-id="<?= $item['id'] ?>"
-                                     data-slot-type="<?= htmlspecialchars($item['item_slot_type']) ?>"
-                                     data-name="<?= htmlspecialchars($item['name']) ?>"
-                                     data-type="<?= htmlspecialchars($item['type']) ?>"
-                                     data-description="<?= htmlspecialchars($item['description']) ?>"
-                                     data-stats='<?= htmlspecialchars($item['stats']) ?>'>
-                            <?php endif; ?>
+                            <?php if(isset($inventory['equipped']['ring_1'])): echo renderEquippedItem($inventory['equipped']['ring_1']); endif; ?>
                         </div>
                         <div class="absolute top-[200px] lg:top-[310px] right-6 lg:right-8 w-8 h-8 lg:w-10 lg:h-10 slot rounded-full" data-slot="ring_2">
                             <span class="slot-label">Ring2</span>
-                            <?php if(isset($inventory['equipped']['ring_2'])): $item = $inventory['equipped']['ring_2']; ?>
-                                <img src="/<?= $item['icon'] ?>" 
-                                     class="w-full h-full object-contain item-icon p-1" 
-                                     draggable="true" 
-                                     data-id="<?= $item['id'] ?>"
-                                     data-slot-type="<?= htmlspecialchars($item['item_slot_type']) ?>"
-                                     data-name="<?= htmlspecialchars($item['name']) ?>"
-                                     data-type="<?= htmlspecialchars($item['type']) ?>"
-                                     data-description="<?= htmlspecialchars($item['description']) ?>"
-                                     data-stats='<?= htmlspecialchars($item['stats']) ?>'>
-                            <?php endif; ?>
+                            <?php if(isset($inventory['equipped']['ring_2'])): echo renderEquippedItem($inventory['equipped']['ring_2']); endif; ?>
                         </div>
                         
                         <!-- Main Hand -->
                         <div class="absolute top-[240px] lg:top-[360px] left-4 lg:left-8 w-12 h-24 lg:w-16 lg:h-32 slot rounded-lg" data-slot="main_hand">
                             <span class="slot-label">Main</span>
-                            <?php if(isset($inventory['equipped']['main_hand'])): $item = $inventory['equipped']['main_hand']; ?>
-                                <img src="/<?= $item['icon'] ?>" 
-                                     class="w-full h-full object-contain item-icon p-1" 
-                                     draggable="true" 
-                                     data-id="<?= $item['id'] ?>"
-                                     data-slot-type="<?= htmlspecialchars($item['item_slot_type']) ?>"
-                                     data-two-handed="<?= $item['two_handed'] ? '1' : '0' ?>"
-                                     data-name="<?= htmlspecialchars($item['name']) ?>"
-                                     data-type="<?= htmlspecialchars($item['type']) ?>"
-                                     data-description="<?= htmlspecialchars($item['description']) ?>"
-                                     data-stats='<?= htmlspecialchars($item['stats']) ?>'>
-                            <?php elseif(isset($inventory['equipped']['off_hand']) && $inventory['equipped']['off_hand']['two_handed']): ?>
+                            <?php if(isset($inventory['equipped']['main_hand'])): echo renderEquippedItem($inventory['equipped']['main_hand'], true); 
+                            elseif(isset($inventory['equipped']['off_hand']) && $inventory['equipped']['off_hand']['two_handed']): ?>
                                 <!-- Show grayed-out image if off_hand has two-handed weapon -->
                                 <img src="/<?= $inventory['equipped']['off_hand']['icon'] ?>" 
                                      class="w-full h-full object-contain p-1 opacity-30 pointer-events-none"
@@ -278,18 +288,8 @@
                         <!-- Off Hand -->
                         <div class="absolute top-[240px] lg:top-[360px] right-4 lg:right-8 w-12 h-24 lg:w-16 lg:h-32 slot rounded-lg" data-slot="off_hand">
                             <span class="slot-label">Off</span>
-                            <?php if(isset($inventory['equipped']['off_hand'])): $item = $inventory['equipped']['off_hand']; ?>
-                                <img src="/<?= $item['icon'] ?>" 
-                                     class="w-full h-full object-contain item-icon p-1" 
-                                     draggable="true" 
-                                     data-id="<?= $item['id'] ?>"
-                                     data-slot-type="<?= htmlspecialchars($item['item_slot_type']) ?>"
-                                     data-two-handed="<?= $item['two_handed'] ? '1' : '0' ?>"
-                                     data-name="<?= htmlspecialchars($item['name']) ?>"
-                                     data-type="<?= htmlspecialchars($item['type']) ?>"
-                                     data-description="<?= htmlspecialchars($item['description']) ?>"
-                                     data-stats='<?= htmlspecialchars($item['stats']) ?>'>
-                            <?php elseif(isset($inventory['equipped']['main_hand']) && $inventory['equipped']['main_hand']['two_handed']): ?>
+                            <?php if(isset($inventory['equipped']['off_hand'])): echo renderEquippedItem($inventory['equipped']['off_hand'], true);
+                            elseif(isset($inventory['equipped']['main_hand']) && $inventory['equipped']['main_hand']['two_handed']): ?>
                                 <!-- Show grayed-out image if main_hand has two-handed weapon -->
                                 <img src="/<?= $inventory['equipped']['main_hand']['icon'] ?>" 
                                      class="w-full h-full object-contain p-1 opacity-30 pointer-events-none"
@@ -301,17 +301,7 @@
                         <!-- Backpack Slot (Special) -->
                         <div class="absolute bottom-4 right-[-30px] w-10 h-10 lg:w-12 lg:h-12 slot rounded-lg border-yellow-500/50" data-slot="backpack">
                             <span class="slot-label">Sac</span>
-                            <?php if(isset($inventory['equipped']['backpack'])): $item = $inventory['equipped']['backpack']; ?>
-                                <img src="/<?= $item['icon'] ?>" 
-                                     class="w-full h-full object-contain item-icon p-1" 
-                                     draggable="true" 
-                                     data-id="<?= $item['id'] ?>"
-                                     data-slot-type="<?= htmlspecialchars($item['item_slot_type']) ?>"
-                                     data-name="<?= htmlspecialchars($item['name']) ?>"
-                                     data-type="<?= htmlspecialchars($item['type']) ?>"
-                                     data-description="<?= htmlspecialchars($item['description']) ?>"
-                                     data-stats='<?= htmlspecialchars($item['stats']) ?>'>
-                            <?php endif; ?>
+                            <?php if(isset($inventory['equipped']['backpack'])): echo renderEquippedItem($inventory['equipped']['backpack']); endif; ?>
                         </div>
                     </div>
                 </div>
@@ -378,8 +368,25 @@
                     <div class="flex-1 overflow-auto">
                         <div id="inventory-container" class="grid grid-cols-4 lg:grid-cols-6 gap-2">
                             <?php if(isset($inventory['inventory']) && !empty($inventory['inventory'])): ?>
-                                <?php foreach($inventory['inventory'] as $item): ?>
-                                    <div class="inventory-item-slot w-16 h-16 bg-gray-800/80 border-2 border-gray-600 relative flex items-center justify-center transition-all duration-200 hover:border-gray-500 hover:bg-gray-700/90 [&.drag-over]:border-violet-500 [&.drag-over]:bg-violet-500/20 rounded-lg flex items-center justify-center relative bg-gray-800 hover:bg-gray-700 transition-colors" 
+                                <?php foreach($inventory['inventory'] as $item): 
+                                    $enchantments = $item['enchantments'] ?? [];
+                                    $enchantCount = count($enchantments);
+                                    $isEnchanted = $enchantCount > 0;
+                                    $enchantedClass = $isEnchanted ? 'enchanted-item' : '';
+                                    
+                                    // Properly format JSON for HTML attributes
+                                    $statsJson = $item['stats'];
+                                    if (is_array($statsJson)) {
+                                        $statsJson = json_encode($statsJson);
+                                    } elseif (empty($statsJson)) {
+                                        $statsJson = '{}';
+                                    }
+                                    $statsJson = str_replace("'", "&#39;", $statsJson);
+                                    
+                                    $enchantmentsJson = json_encode($enchantments);
+                                    $enchantmentsJson = str_replace("'", "&#39;", $enchantmentsJson);
+                                ?>
+                                    <div class="inventory-item-slot w-16 h-16 bg-gray-800/80 border-2 border-gray-600 relative flex items-center justify-center transition-all duration-200 hover:border-gray-500 hover:bg-gray-700/90 [&.drag-over]:border-violet-500 [&.drag-over]:bg-violet-500/20 rounded-lg <?= $enchantedClass ?>" 
                                          data-location="inventory" 
                                          data-inventory-id="<?= $item['id'] ?>"
                                          data-price="<?= $item['price'] ?? 0 ?>"
@@ -388,20 +395,25 @@
                                          data-type="<?= htmlspecialchars($item['type']) ?>"
                                          data-slot-type="<?= htmlspecialchars($item['item_slot_type']) ?>"
                                          data-description="<?= htmlspecialchars($item['description']) ?>"
-                                         data-stats='<?= htmlspecialchars($item['stats']) ?>'
+                                         data-stats='<?= $statsJson ?>'
+                                         data-enchantments='<?= $enchantmentsJson ?>'
                                          data-id="<?= $item['id'] ?>">
                                         <img src="/<?= $item['icon'] ?>" 
-                                             class="w-12 h-12 object-contain cursor-grab active:cursor-grabbing item-icon" 
+                                             class="w-12 h-12 object-contain cursor-grab active:cursor-grabbing item-icon relative z-[2]" 
                                              draggable="true" 
                                              data-id="<?= $item['id'] ?>"
                                              data-slot-type="<?= htmlspecialchars($item['item_slot_type']) ?>"
                                              data-name="<?= htmlspecialchars($item['name']) ?>"
                                              data-type="<?= htmlspecialchars($item['type']) ?>"
                                              data-description="<?= htmlspecialchars($item['description']) ?>"
-                                             data-stats='<?= htmlspecialchars($item['stats']) ?>'
+                                             data-stats='<?= $statsJson ?>'
+                                             data-enchantments='<?= $enchantmentsJson ?>'
                                              data-weight="<?= $item['weight'] ?>">
+                                        <?php if($isEnchanted): ?>
+                                            <span class="enchant-badge"><?= $enchantCount ?></span>
+                                        <?php endif; ?>
                                         <?php if(isset($item['quantity']) && $item['quantity'] > 1): ?>
-                                            <span class="absolute bottom-0 right-1 text-xs font-bold text-white drop-shadow-md"><?= $item['quantity'] ?></span>
+                                            <span class="absolute bottom-0 right-1 text-xs font-bold text-white drop-shadow-md z-[3]"><?= $item['quantity'] ?></span>
                                         <?php endif; ?>
                                     </div>
                                 <?php endforeach; ?>
@@ -530,21 +542,35 @@
                     }
 
                     function formatStats(stats) {
+                        const enchantBonuses = stats.enchantment_bonuses || {};
                         return Object.entries(stats).map(([idx, val]) => {
-                             if(idx === 'capacity') return ''; 
-                             const label = idx.charAt(0).toUpperCase() + idx.slice(1);
+                             if(idx === 'capacity' || idx === 'enchantment_bonuses' || idx === 'rarity') return ''; 
+                             const label = idx.charAt(0).toUpperCase() + idx.slice(1).replace(/_/g, ' ');
+                             const bonus = enchantBonuses[idx] || 0;
+                             // Show total value, in green if enchanted
+                             if (bonus > 0) {
+                                 return `<div class="flex justify-between"><span>${label}</span><span class="text-green-400">+${val}</span></div>`;
+                             }
                              return `<div class="flex justify-between"><span>${label}</span><span class="text-white">+${val}</span></div>`;
                         }).join('');
                     }
 
                     function formatStatsWithDiff(newStats, oldStats) {
                          const allKeys = new Set([...Object.keys(newStats), ...Object.keys(oldStats)]);
+                         const newBonuses = newStats.enchantment_bonuses || {};
+                         
                          return Array.from(allKeys).map(key => {
-                             if(key === 'capacity') return '';
+                             if(key === 'capacity' || key === 'enchantment_bonuses' || key === 'rarity') return '';
                              const newVal = newStats[key] || 0;
                              const oldVal = oldStats[key] || 0;
                              const diff = newVal - oldVal;
-                             const label = key.charAt(0).toUpperCase() + key.slice(1);
+                             const label = key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
+                             
+                             // Show total value, in green if enchanted
+                             const newBonus = newBonuses[key] || 0;
+                             let valueDisplay = newBonus > 0 
+                                 ? `<span class="text-green-400">+${newVal}</span>`
+                                 : `<span class="text-white">+${newVal}</span>`;
                              
                              let diffHtml = '';
                              if (diff > 0) diffHtml = `<span class="text-green-400 text-[10px] ml-1">(+${diff})</span>`;
@@ -553,7 +579,7 @@
                              return `<div class="flex justify-between items-center">
                                         <span>${label}</span>
                                         <span>
-                                            <span class="text-white">+${newVal}</span>
+                                            ${valueDisplay}
                                             ${diffHtml}
                                         </span>
                                      </div>`;
@@ -726,12 +752,13 @@
 </div>
 
 <!-- Tooltip Container -->
-<div id="item-tooltip" class="fixed hidden bg-gray-900 border border-gray-600 p-3 rounded shadow-xl max-w-xs text-sm text-gray-300">
+<div id="item-tooltip" class="fixed hidden bg-gray-900 border border-gray-600 p-3 rounded shadow-xl max-w-xs text-sm text-gray-300 z-[9999]">
     <div class="tooltip-header">
         <div id="tooltip-name" class="font-bold text-violet-400 text-base"></div>
         <div id="tooltip-type" class="text-xs text-gray-500 uppercase"></div>
     </div>
     <div id="tooltip-stats" class="space-y-1 mb-2"></div>
+    <div id="tooltip-enchants" class="hidden border-t border-violet-700/50 pt-2 mt-2"></div>
     <div id="tooltip-desc" class="italic text-gray-400 text-xs border-t border-gray-700 pt-2"></div>
 </div>
 

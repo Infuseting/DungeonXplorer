@@ -79,8 +79,12 @@ function renderShop(data) {
  * @param {string} action 'buy' | 'sell'
  */
 function createShopSlot(item, action) {
+    const enchantments = item.enchantments || [];
+    const enchantCount = enchantments.length;
+    const isEnchanted = enchantCount > 0;
+    
     const slot = document.createElement('div');
-    slot.className = 'w-16 h-16 slot rounded-lg flex items-center justify-center relative bg-gray-800 hover:bg-gray-700 transition-colors border border-gray-600 cursor-pointer';
+    slot.className = `w-16 h-16 slot rounded-lg flex items-center justify-center relative bg-gray-800 hover:bg-gray-700 transition-colors border border-gray-600 cursor-pointer ${isEnchanted ? 'enchanted-item' : ''}`;
 
     // Add visual indicator for action
     if (action === 'buy') {
@@ -91,13 +95,24 @@ function createShopSlot(item, action) {
 
     const img = document.createElement('img');
     img.src = '/' + (item.icon || 'assets/images/items/default.png');
-    img.className = 'w-12 h-12 object-contain item-icon';
+    img.className = 'w-12 h-12 object-contain item-icon relative z-[2]';
 
     // Add data attributes for tooltip
     img.dataset.name = item.name;
     img.dataset.type = item.type;
     img.dataset.description = item.description;
-    img.dataset.stats = item.stats || JSON.stringify({});
+    
+    // Handle stats - ensure it's a proper JSON string
+    let statsString = '{}';
+    if (item.stats) {
+        if (typeof item.stats === 'string') {
+            statsString = item.stats;
+        } else if (typeof item.stats === 'object') {
+            statsString = JSON.stringify(item.stats);
+        }
+    }
+    img.dataset.stats = statsString;
+    img.dataset.enchantments = JSON.stringify(enchantments);
 
     // Add price info to tooltip data (custom handling or append to description)
     // We'll use a custom tooltip handler or modify the description temporarily for the tooltip
@@ -121,6 +136,14 @@ function createShopSlot(item, action) {
     img.dataset.description = originalDesc + (originalDesc ? '<br><br>' : '') + priceText;
 
     slot.appendChild(img);
+    
+    // Add enchantment badge if enchanted
+    if (isEnchanted) {
+        const badge = document.createElement('span');
+        badge.className = 'enchant-badge';
+        badge.textContent = enchantCount;
+        slot.appendChild(badge);
+    }
 
     // Setup tooltip
     setupTooltip(img);

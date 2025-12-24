@@ -295,3 +295,4 @@ export function clearMapHistory() {
 
 // Make loadMapPoints available globally
 window.loadMapPoints = loadMapPoints;
+window.getCurrentMapId = getCurrentMapId;

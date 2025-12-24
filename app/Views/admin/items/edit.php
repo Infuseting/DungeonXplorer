@@ -87,7 +87,7 @@ ob_start();
                 <label class="form-label">Prix (optionnel)</label>
                 <input type="number" name="price" class="form-input" value="<?= $item['price'] ?? '' ?>" placeholder="Laisser vide si non vendable" min="0">
                 <small class="text-gray-400 block mt-1">
-                    💰 Prix de vente/achat (laisser vide si l'item n'est pas vendable)
+                    🪙 Prix de vente/achat (laisser vide si l'item n'est pas vendable)
                 </small>
             </div>
 

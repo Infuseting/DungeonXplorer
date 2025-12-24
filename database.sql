@@ -951,8 +951,12 @@ CREATE TABLE `houses` (
   `furniture_slots` int NOT NULL DEFAULT 5,
   `image` varchar(255) DEFAULT NULL,
   `location_name` varchar(100) DEFAULT NULL,
+  `map_x` int NOT NULL DEFAULT 54,
+  `map_y` int NOT NULL DEFAULT -108,
   `is_available` tinyint(1) NOT NULL DEFAULT 1,
   `required_level` int NOT NULL DEFAULT 1,
+  `workbench_price` int NOT NULL DEFAULT 5000,
+  `workbench_required_level` int NOT NULL DEFAULT 10,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -1057,9 +1061,67 @@ CREATE TABLE `house_storage` (
   CONSTRAINT `fk_storage_item` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+-- --------------------------------------------------------
+
 --
--- Indexes for dumped tables
+-- Table structure for table `enchantments`
 --
+
+CREATE TABLE IF NOT EXISTS `enchantments` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `description` text,
+  `icon` varchar(255) DEFAULT 'assets/items/enchantment_default.png',
+  `stat_modifiers` json DEFAULT NULL COMMENT 'Ex: {"damage": 10, "strength": 5}',
+  `compatible_slot_types` json DEFAULT NULL COMMENT 'Ex: ["main_hand", "chest", "head"]',
+  `rarity` enum('common','uncommon','rare','epic','legendary') DEFAULT 'common',
+  `cost` int NOT NULL DEFAULT 100,
+  `required_level` int NOT NULL DEFAULT 1,
+  `is_available` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `character_house_workbenches`
+--
+
+CREATE TABLE IF NOT EXISTS `character_house_workbenches` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `character_house_id` int NOT NULL,
+  `purchased_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `total_enchantments` int NOT NULL DEFAULT 0 COMMENT 'Nombre d''enchantements effectués',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_house_workbench` (`character_house_id`),
+  KEY `fk_workbench_house` (`character_house_id`),
+  CONSTRAINT `fk_workbench_house` FOREIGN KEY (`character_house_id`) REFERENCES `character_houses` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `item_enchantments`
+--
+
+CREATE TABLE IF NOT EXISTS `item_enchantments` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `character_inventory_id` int NOT NULL,
+  `enchantment_id` int NOT NULL,
+  `applied_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `fk_item_enchant_inventory` (`character_inventory_id`),
+  KEY `fk_item_enchant_enchantment` (`enchantment_id`),
+  CONSTRAINT `fk_item_enchant_inventory` FOREIGN KEY (`character_inventory_id`) REFERENCES `character_inventory` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_item_enchant_enchantment` FOREIGN KEY (`enchantment_id`) REFERENCES `enchantments` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+
+
+
+
 
 --
 -- Indexes for table `characters`
@@ -1412,10 +1474,6 @@ ALTER TABLE `user_social_accounts`
 ALTER TABLE `user_tokens`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`);
-
---
--- AUTO_INCREMENT for dumped tables
---
 
 --
 -- AUTO_INCREMENT for table `characters`
@@ -1840,27 +1898,6 @@ ALTER TABLE `quest_reward_items`
   ADD CONSTRAINT `quest_reward_items_ibfk_2` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`) ON DELETE CASCADE;
 
 --
--- Dumping data for table `daily_quests`
---
-
-INSERT INTO `daily_quests` (`id`, `name`, `description`, `objective_type`, `objective_target`, `objective_count`, `gold_reward`, `is_active`) VALUES
-(1, 'Chasseur de Gobelins', 'Éliminez 3 monstres pour prouver votre valeur.', 'KILL_MONSTERS', NULL, 3, 5, 1),
-(2, 'Explorateur Novice', 'Visitez 2 lieux différents sur la carte.', 'VISIT_LOCATIONS', NULL, 2, 5, 1),
-(3, 'Aventurier du Donjon', 'Complétez un donjon en entier.', 'COMPLETE_DUNGEON', NULL, 1, 5, 1),
-(4, 'Collecteur d''Or', 'Amassez 50 pièces d''or.', 'COLLECT_GOLD', NULL, 50, 5, 1),
-(5, 'Maître des Potions', 'Utilisez 2 objets consommables.', 'USE_ITEMS', NULL, 2, 5, 1),
-(6, 'Tueur de Bêtes', 'Éliminez 5 monstres de n''importe quel type.', 'KILL_MONSTERS', NULL, 5, 5, 1),
-(7, 'Cartographe', 'Visitez 3 lieux différents.', 'VISIT_LOCATIONS', NULL, 3, 5, 1),
-(8, 'Pilleur de Donjons', 'Terminez 2 donjons.', 'COMPLETE_DUNGEON', NULL, 2, 5, 1),
-(9, 'Économe', 'Collectez 100 pièces d''or.', 'COLLECT_GOLD', NULL, 100, 5, 1),
-(10, 'Exterminateur', 'Tuez 10 monstres.', 'KILL_MONSTERS', NULL, 10, 5, 1),
-(11, 'Voyageur Infatigable', 'Visitez 5 lieux différents.', 'VISIT_LOCATIONS', NULL, 5, 5, 1),
-(12, 'Alchimiste Amateur', 'Utilisez 3 objets consommables.', 'USE_ITEMS', NULL, 3, 5, 1),
-(13, 'Chasseur Aguerri', 'Éliminez 7 créatures.', 'KILL_MONSTERS', NULL, 7, 5, 1),
-(14, 'Conquérant', 'Complétez 3 donjons.', 'COMPLETE_DUNGEON', NULL, 3, 5, 1),
-(15, 'Trésorier', 'Amassez 200 pièces d''or.', 'COLLECT_GOLD', NULL, 200, 5, 1);
-
---
 -- Indexes for table `daily_quests`
 --
 ALTER TABLE `daily_quests`
@@ -1967,7 +2004,38 @@ ALTER TABLE `user_tokens`
   ADD CONSTRAINT `user_tokens_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 
--- furnitures categories
+
+
+
+
+
+
+
+
+
+-- --------------------------------------------------------
+-- Default Data - Daily Quests
+-- --------------------------------------------------------
+INSERT INTO `daily_quests` (`id`, `name`, `description`, `objective_type`, `objective_target`, `objective_count`, `gold_reward`, `is_active`) VALUES
+(1, 'Chasseur de Gobelins', 'Éliminez 3 monstres pour prouver votre valeur.', 'KILL_MONSTERS', NULL, 3, 5, 1),
+(2, 'Explorateur Novice', 'Visitez 2 lieux différents sur la carte.', 'VISIT_LOCATIONS', NULL, 2, 5, 1),
+(3, 'Aventurier du Donjon', 'Complétez un donjon en entier.', 'COMPLETE_DUNGEON', NULL, 1, 5, 1),
+(4, 'Collecteur d''Or', 'Amassez 50 pièces d''or.', 'COLLECT_GOLD', NULL, 50, 5, 1),
+(5, 'Maître des Potions', 'Utilisez 2 objets consommables.', 'USE_ITEMS', NULL, 2, 5, 1),
+(6, 'Tueur de Bêtes', 'Éliminez 5 monstres de n''importe quel type.', 'KILL_MONSTERS', NULL, 5, 5, 1),
+(7, 'Cartographe', 'Visitez 3 lieux différents.', 'VISIT_LOCATIONS', NULL, 3, 5, 1),
+(8, 'Pilleur de Donjons', 'Terminez 2 donjons.', 'COMPLETE_DUNGEON', NULL, 2, 5, 1),
+(9, 'Économe', 'Collectez 100 pièces d''or.', 'COLLECT_GOLD', NULL, 100, 5, 1),
+(10, 'Exterminateur', 'Tuez 10 monstres.', 'KILL_MONSTERS', NULL, 10, 5, 1),
+(11, 'Voyageur Infatigable', 'Visitez 5 lieux différents.', 'VISIT_LOCATIONS', NULL, 5, 5, 1),
+(12, 'Alchimiste Amateur', 'Utilisez 3 objets consommables.', 'USE_ITEMS', NULL, 3, 5, 1),
+(13, 'Chasseur Aguerri', 'Éliminez 7 créatures.', 'KILL_MONSTERS', NULL, 7, 5, 1),
+(14, 'Conquérant', 'Complétez 3 donjons.', 'COMPLETE_DUNGEON', NULL, 3, 5, 1),
+(15, 'Trésorier', 'Amassez 200 pièces d''or.', 'COLLECT_GOLD', NULL, 200, 5, 1);
+
+-- --------------------------------------------------------
+-- Default Data - Furniture Categories
+-- --------------------------------------------------------
 INSERT INTO `furniture_categories` (`name`, `icon`, `sort_order`) VALUES
 ('Rangement', '📦', 1),
 ('Décoration', '🖼️', 2),
@@ -1975,15 +2043,19 @@ INSERT INTO `furniture_categories` (`name`, `icon`, `sort_order`) VALUES
 ('Utilitaire', '⚒️', 4),
 ('Luxe', '👑', 5);
 
--- default houses
-INSERT INTO `houses` (`name`, `description`, `price`, `storage_slots`, `furniture_slots`, `image`, `location_name`, `required_level`) VALUES
-('Petite Cabane', 'Une modeste cabane en bois, parfaite pour débuter. Simple mais fonctionnelle.', 500, 15, 3, 'assets/images/houses/cabin.png', 'Île du Minotaure', 1),
-('Maison de Village', 'Une confortable maison au cœur du village. Espace de vie agréable.', 2000, 25, 6, 'assets/images/houses/village_house.png', 'Village de Lunargent', 5),
-('Demeure du Marchand', 'Une belle demeure avec cave et grenier. Idéale pour les aventuriers prospères.', 5000, 40, 10, 'assets/images/houses/merchant_house.png', 'Cité de Valdris', 10),
-('Manoir Noble', 'Un manoir prestigieux avec de nombreuses pièces et un jardin privé.', 15000, 60, 15, 'assets/images/houses/manor.png', 'Quartier Noble', 20),
-('Château Ancestral', 'Un château majestueux digne des plus grands héros du royaume.', 50000, 100, 25, 'assets/images/houses/castle.png', 'Hautes Terres', 30);
+-- --------------------------------------------------------
+-- Default Data - Houses
+-- --------------------------------------------------------
+INSERT INTO `houses` (`name`, `description`, `price`, `storage_slots`, `furniture_slots`, `image`, `location_name`, `map_x`, `map_y`, `required_level`, `workbench_price`, `workbench_required_level`) VALUES
+('Petite Cabane', 'Une modeste cabane en bois, parfaite pour débuter. Simple mais fonctionnelle.', 500, 15, 3, 'assets/images/houses/cabin.png', 'Île du Minotaure', 54, -108, 1, 2000, 5),
+('Maison de Village', 'Une confortable maison au cœur du village. Espace de vie agréable.', 2000, 25, 6, 'assets/images/houses/village_house.png', 'Village de Lunargent', 78, -93, 5, 3500, 8),
+('Demeure du Marchand', 'Une belle demeure avec cave et grenier. Idéale pour les aventuriers prospères.', 5000, 40, 10, 'assets/images/houses/merchant_house.png', 'Cité de Valdris', 84, -77, 10, 5000, 10),
+('Manoir Noble', 'Un manoir prestigieux avec de nombreuses pièces et un jardin privé.', 15000, 60, 15, 'assets/images/houses/manor.png', 'Quartier Noble', 99, -91, 20, 8000, 15),
+('Château Ancestral', 'Un château majestueux digne des plus grands héros du royaume.', 50000, 100, 25, 'assets/images/houses/castle.png', 'Hautes Terres', 74, -94, 30, 12000, 20);
 
--- default furnitures
+-- --------------------------------------------------------
+-- Default Data - Furniture
+-- --------------------------------------------------------
 INSERT INTO `furniture` (`category_id`, `name`, `description`, `price`, `icon`, `bonus_type`, `bonus_value`, `rarity`, `required_level`) VALUES
 -- Storage
 (1, 'Coffre en Bois', 'Un simple coffre pour stocker vos affaires.', 100, '📦', 'storage', 5, 'common', 1),
@@ -2008,6 +2080,39 @@ INSERT INTO `furniture` (`category_id`, `name`, `description`, `price`, `icon`, 
 (5, 'Trône Doré', 'Un trône recouvert d''or pur.', 10000, '🪑', 'gold', 10, 'legendary', 25),
 (5, 'Cristal des Anciens', 'Un cristal mystique aux pouvoirs incroyables.', 25000, '💎', 'xp', 20, 'legendary', 30),
 (5, 'Portail Dimensionnel', 'Un portail permettant de voyager instantanément.', 50000, '🌀', 'none', 0, 'legendary', 35);
+
+-- --------------------------------------------------------
+-- Default Data - Enchantments
+-- --------------------------------------------------------
+
+INSERT INTO `enchantments` (`name`, `description`, `icon`, `stat_modifiers`, `compatible_slot_types`, `rarity`, `cost`, `required_level`) VALUES
+-- Weapon Enchantments
+('Tranchant', 'Augmente les dégâts de l''arme', 'assets/items/enchant_sharp.png', '{"damage": 5}', '["main_hand", "off_hand"]', 'common', 100, 1),
+('Fureur', 'Augmente considérablement les dégâts', 'assets/items/enchant_fury.png', '{"damage": 15}', '["main_hand", "off_hand"]', 'uncommon', 300, 5),
+('Destruction', 'Dégâts massifs', 'assets/items/enchant_destruction.png', '{"damage": 30, "critical_chance": 5}', '["main_hand", "off_hand"]', 'rare', 750, 10),
+('Vampirisme', 'Vole de la vie à chaque coup', 'assets/items/enchant_vampirism.png', '{"lifesteal": 10}', '["main_hand", "off_hand"]', 'epic', 1500, 15),
+('Apocalypse', 'Puissance dévastatrice', 'assets/items/enchant_apocalypse.png', '{"damage": 50, "critical_chance": 10, "critical_damage": 25}', '["main_hand"]', 'legendary', 5000, 25),
+
+-- Armor Enchantments
+('Protection', 'Augmente la défense', 'assets/items/enchant_protection.png', '{"defense": 5}', '["chest", "head", "shoulders", "legs", "boots", "gloves", "bracers"]', 'common', 100, 1),
+('Fortification', 'Défense renforcée', 'assets/items/enchant_fortification.png', '{"defense": 12, "max_hp": 20}', '["chest", "head", "shoulders", "legs"]', 'uncommon', 300, 5),
+('Bastion', 'Défense inébranlable', 'assets/items/enchant_bastion.png', '{"defense": 25, "max_hp": 50}', '["chest", "head"]', 'rare', 750, 10),
+('Vitalité', 'Grande augmentation de vie', 'assets/items/enchant_vitality.png', '{"max_hp": 100, "hp_regen": 5}', '["chest", "amulet"]', 'epic', 1500, 15),
+('Immortalité', 'Protection divine', 'assets/items/enchant_immortality.png', '{"defense": 40, "max_hp": 150, "damage_reduction": 10}', '["chest"]', 'legendary', 5000, 25),
+
+-- Stat Enchantments
+('Force', 'Augmente la force', 'assets/items/enchant_strength.png', '{"strength": 3}', '["gloves", "belt", "chest"]', 'common', 100, 1),
+('Agilité', 'Augmente la dextérité', 'assets/items/enchant_agility.png', '{"dexterity": 3}', '["boots", "gloves", "legs"]', 'common', 100, 1),
+('Intelligence', 'Augmente l''intelligence', 'assets/items/enchant_intelligence.png', '{"intelligence": 3}', '["head", "amulet"]', 'common', 100, 1),
+('Sagesse', 'Augmente la sagesse', 'assets/items/enchant_wisdom.png', '{"wisdom": 3}', '["head", "amulet"]', 'common', 100, 1),
+('Constitution', 'Augmente l''endurance', 'assets/items/enchant_constitution.png', '{"constitution": 3}', '["chest", "belt", "legs"]', 'common', 100, 1),
+
+-- Special Enchantments
+('Chance', 'Augmente la chance de loot', 'assets/items/enchant_luck.png', '{"luck": 5}', '["ring", "amulet"]', 'uncommon', 400, 5),
+('Fortune', 'Grande chance de loot', 'assets/items/enchant_fortune.png', '{"luck": 15, "gold_bonus": 10}', '["ring", "amulet"]', 'rare', 1000, 10),
+('Célérité', 'Augmente la vitesse', 'assets/items/enchant_speed.png', '{"speed": 10}', '["boots", "legs"]', 'uncommon', 350, 5),
+('Évasion', 'Chance d''esquive', 'assets/items/enchant_evasion.png', '{"dodge_chance": 5}', '["boots", "chest", "legs"]', 'rare', 800, 10),
+('Précision', 'Augmente le taux de critique', 'assets/items/enchant_precision.png', '{"critical_chance": 5}', '["gloves", "ring", "amulet"]', 'uncommon', 400, 5);
 
 
 COMMIT;

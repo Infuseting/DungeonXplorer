@@ -20,7 +20,7 @@ class HouseStorage
     {
         try {
             $stmt = $this->db->prepare("
-                SELECT hs.*, i.name, i.description, i.type, i.icon, i.stats, i.price, i.max_stack
+                SELECT hs.*, i.name, i.description, i.type, i.icon, i.stats, i.price, i.max_stack, i.slot_type
                 FROM house_storage hs
                 JOIN items i ON hs.item_id = i.id
                 WHERE hs.character_house_id = ?
@@ -29,7 +29,16 @@ class HouseStorage
             if (!$stmt) return [];
             $stmt->bind_param("i", $characterHouseId);
             $stmt->execute();
-            return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            
+            // Ensure stats is always a valid JSON string
+            foreach ($items as &$item) {
+                if (empty($item['stats'])) {
+                    $item['stats'] = '{}';
+                }
+            }
+            
+            return $items;
         } catch (\Exception $e) {
             return [];
         }
@@ -300,5 +309,37 @@ class HouseStorage
         }
 
         return ['success' => true, 'message' => $deposited . ' items déposés'];
+    }
+
+    /**
+     * Supprime un item du coffre (jeter)
+     */
+    public function dropItem($characterId, $storageId)
+    {
+        try {
+            // Vérifier que l'item appartient bien au personnage
+            $stmt = $this->db->prepare("
+                SELECT hs.id
+                FROM house_storage hs
+                JOIN character_houses ch ON hs.character_house_id = ch.id
+                WHERE hs.id = ? AND ch.character_id = ?
+            ");
+            $stmt->bind_param("ii", $storageId, $characterId);
+            $stmt->execute();
+            $item = $stmt->get_result()->fetch_assoc();
+
+            if (!$item) {
+                return ['success' => false, 'message' => 'Item non trouvé'];
+            }
+
+            // Supprimer l'item
+            $stmt = $this->db->prepare("DELETE FROM house_storage WHERE id = ?");
+            $stmt->bind_param("i", $storageId);
+            $stmt->execute();
+
+            return ['success' => true, 'message' => 'Item supprimé'];
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => 'Erreur lors de la suppression'];
+        }
     }
 }

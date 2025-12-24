@@ -15,6 +15,7 @@ use App\Models\CharacterStats;
 use App\Models\Skill;
 use App\Services\TokenService;
 use App\Models\DailyQuest;
+use App\Models\House;
 use App\Config\Database ;
 
 class GameController
@@ -163,13 +164,28 @@ class GameController
         
         // Ajouter le point de maison uniquement sur la carte principale (map_id = 1)
         if ($mapId == 1) {
+            // Récupérer les coordonnées de la maison principale du joueur
+            $houseModel = new House();
+            $primaryHouse = $houseModel->getPrimaryHouse($_SESSION['character_id']);
+            
+            // Coordonnées par défaut (Petite Cabane) si pas de maison
+            $houseX = 54;
+            $houseY = -108;
+            $houseName = 'Ma Maison';
+            
+            if ($primaryHouse) {
+                $houseX = $primaryHouse['map_x'] ?? 54;
+                $houseY = $primaryHouse['map_y'] ?? -108;
+                $houseName = $primaryHouse['custom_name'] ?? $primaryHouse['name'] ?? 'Ma Maison';
+            }
+            
             $points[] = [
                 'id' => 'house',
                 'map_id' => 1,
-                'name' => 'Ma Maison',
+                'name' => $houseName,
                 'description' => 'Votre maison personnelle où vous pouvez stocker vos objets et vous reposer.',
-                'x' => 54,
-                'y' => -108,
+                'x' => $houseX,
+                'y' => $houseY,
                 'type' => 'house',
                 'target_id' => null,
                 'sub_map_id' => null,

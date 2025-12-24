@@ -36,19 +36,21 @@
                 </div>
             </div>
 
-            <!-- Tab Navigation -->
-            <div
-                class="flex border-b border-gray-600 bg-gray-900/30 overflow-x-auto whitespace-nowrap custom-scrollbar">
-                <button class="house-tab active px-6 py-3 text-sm font-medium transition-colors" data-tab="overview">
+        <!-- Tab Navigation -->
+            <div class="flex border-b border-gray-600 bg-gray-900/30 overflow-x-auto">
+                <button class="house-tab active px-6 py-3 text-sm font-medium transition-colors whitespace-nowrap" data-tab="overview">
                     Vue d'ensemble
                 </button>
-                <button class="house-tab px-6 py-3 text-sm font-medium transition-colors" data-tab="storage">
+                <button class="house-tab px-6 py-3 text-sm font-medium transition-colors whitespace-nowrap" data-tab="storage">
                     Coffre
                 </button>
-                <button class="house-tab px-6 py-3 text-sm font-medium transition-colors" data-tab="furniture">
+                <button class="house-tab px-6 py-3 text-sm font-medium transition-colors whitespace-nowrap" data-tab="workbench">
+                    Établi
+                </button>
+                <button class="house-tab px-6 py-3 text-sm font-medium transition-colors whitespace-nowrap" data-tab="furniture">
                     Meubles
                 </button>
-                <button class="house-tab px-6 py-3 text-sm font-medium transition-colors" data-tab="shop">
+                <button class="house-tab px-6 py-3 text-sm font-medium transition-colors whitespace-nowrap" data-tab="shop">
                     Acheter
                 </button>
             </div>
@@ -73,8 +75,7 @@
                         <!-- House Image & Info -->
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                             <div class="bg-gray-900/50 rounded-xl p-4 border border-gray-700">
-                                <div
-                                    class="aspect-video bg-gray-800 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+                                <div class="aspect-[4/3] bg-gray-800 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
                                     <img id="house-image" src="" alt="Maison" class="w-full h-full object-cover hidden">
                                     <span id="house-image-placeholder" class="text-8xl">🏠</span>
                                 </div>
@@ -129,15 +130,6 @@
                                 <div class="text-sm text-gray-400">XP Bonus</div>
                             </div>
                         </div>
-
-                        <!-- Owned Houses -->
-                        <div class="bg-gray-900/50 rounded-xl p-4 border border-gray-700">
-                            <h3 class="text-lg font-bold text-white mb-4 border-b border-gray-600 pb-2">Vos Propriétés
-                            </h3>
-                            <div id="owned-houses-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <!-- Houses will be inserted here -->
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -163,7 +155,6 @@
                             <div id="house-storage-grid" class="grid grid-cols-4 sm:grid-cols-5 gap-2 min-h-[300px]">
                                 <!-- Storage items will be inserted here -->
                             </div>
-                            <p class="drag-hint mt-2">⬇️ Glissez un objet ici pour le déposer</p>
                         </div>
 
                         <!-- Player Inventory -->
@@ -187,7 +178,6 @@
                             <div id="house-inventory-grid" class="grid grid-cols-4 sm:grid-cols-5 gap-2 min-h-[300px]">
                                 <!-- Inventory items will be inserted here -->
                             </div>
-                            <p class="drag-hint mt-2">⬆️ Glissez un objet ici pour le récupérer</p>
                         </div>
                     </div>
 
@@ -199,7 +189,126 @@
                     </div>
                 </div>
 
-                <!-- Furniture Tab -->
+            <!-- Workbench Tab -->
+                <div id="house-tab-workbench" class="house-tab-content hidden">
+                    <!-- No House Message -->
+                    <div id="workbench-no-house" class="hidden text-center py-12">
+                        <span class="text-8xl mb-4 block">🏠</span>
+                        <h3 class="text-2xl text-gray-300 mb-2">Pas de maison</h3>
+                        <p class="text-gray-500 mb-4">Vous devez d'abord acheter une maison pour accéder à l'établi d'enchantement.</p>
+                        <button id="workbench-go-to-shop-btn" class="px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-lg hover:from-amber-700 hover:to-amber-800 transition-all shadow-lg">
+                            🛒 Acheter une maison
+                        </button>
+                    </div>
+                    
+                    <!-- Workbench Locked Message (Paywall) -->
+                    <div id="workbench-locked" class="hidden text-center py-12">
+                        <span class="text-8xl mb-4 block">🔮</span>
+                        <h3 class="text-2xl text-gray-300 mb-2">Établi d'Enchantement</h3>
+                        <p class="text-gray-500 mb-4">Déverrouillez l'établi pour enchanter vos équipements et les rendre plus puissants !</p>
+                        <div class="bg-gray-900/50 rounded-xl p-6 border border-violet-700/50 inline-block max-w-md">
+                            <p class="text-violet-400 font-bold text-xl mb-2">
+                                <span class="text-yellow-400" id="workbench-price">5000</span> 🪙
+                            </p>
+                            <p class="text-gray-400 text-sm mb-4">Niveau requis: <span class="text-white font-bold" id="workbench-required-level">10</span></p>
+                            <button id="purchase-workbench-btn" class="w-full px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-700 text-white rounded-lg hover:from-violet-700 hover:to-purple-800 transition-all shadow-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed">
+                                ✨ Acheter l'Établi
+                            </button>
+                            <p id="workbench-purchase-error" class="text-red-400 text-sm mt-2 hidden"></p>
+                        </div>
+                    </div>
+
+                    <!-- Workbench Interface (Furnace Style) -->
+                    <div id="workbench-interface" class="hidden">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            
+                            <!-- Left: Item Selection -->
+                            <div class="bg-gray-900/50 rounded-xl p-4 border border-gray-700">
+                                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                    Inventaire
+                                </h3>
+                                <div id="workbench-items-grid" class="grid grid-cols-4 gap-2 max-h-[400px] overflow-y-auto">
+                                    <!-- Enchantable items will be inserted here -->
+                                </div>
+                            </div>
+
+                            <!-- Center: Enchantment Furnace -->
+                            <div class="bg-gray-900/50 rounded-xl p-4 border border-violet-700/50 relative">
+                                <h3 class="text-lg font-bold text-white mb-4 text-center flex items-center justify-center gap-2">
+                                    Établi d'Enchantement
+                                </h3>
+                                
+                                <!-- Furnace Style Interface -->
+                                <div class="flex flex-col items-center gap-6">
+                                    <!-- Top Slot: Item to Enchant -->
+                                    <div class="relative">
+                                        <div id="workbench-item-slot" 
+                                             class="w-20 h-20 bg-gray-800 border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center cursor-pointer hover:border-violet-500 transition-colors"
+                                             title="Placez un item à enchanter">
+                                            <span class="text-gray-600 text-3xl">⚔️</span>
+                                        </div>
+                                        <p class="text-xs text-gray-500 text-center mt-1">Item</p>
+                                    </div>
+
+                                    <!-- Arrow Down -->
+                                    <div class="text-violet-400 text-2xl animate-pulse">⬇️</div>
+
+                                    <!-- Bottom Slot: Enchantment -->
+                                    <div class="relative">
+                                        <div id="workbench-enchant-slot" 
+                                             class="w-20 h-20 bg-gray-800 border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center cursor-pointer hover:border-violet-500 transition-colors"
+                                             title="Placez un enchantement">
+                                            <span class="text-gray-600 text-3xl">✨</span>
+                                        </div>
+                                        <p class="text-xs text-gray-500 text-center mt-1">Enchantement</p>
+                                    </div>
+
+                                    <!-- Result Preview -->
+                                    <div id="workbench-result-preview" class="hidden w-full bg-gray-800/50 rounded-lg p-4 mt-4 border border-violet-500/30">
+                                        <h4 class="text-sm text-violet-400 font-bold mb-2">Aperçu du résultat:</h4>
+                                        <div id="workbench-result-stats" class="text-sm text-gray-300">
+                                            <!-- Stats preview will be inserted here -->
+                                        </div>
+                                        <div class="mt-3 flex items-center justify-between">
+                                            <span class="text-amber-400 font-bold">Coût: <span id="workbench-cost">0</span> 🪙</span>
+                                            <button id="workbench-apply-btn" class="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                                                Enchanter
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Item Info - Only show enchantments -->
+                                <div id="workbench-item-info" class="hidden mt-4 p-3 bg-gray-800/50 rounded-lg border border-violet-700/30">
+                                    <h4 class="text-sm text-violet-400 font-bold mb-2">Enchantements appliqués:</h4>
+                                    <div id="workbench-item-enchants" class="space-y-1">
+                                        <!-- Current enchantments list -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right: Enchantments List -->
+                            <div class="bg-gray-900/50 rounded-xl p-4 border border-gray-700">
+                                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                    Enchantements
+                                </h3>
+                                <div id="workbench-enchantments-list" class="space-y-2 max-h-[400px] overflow-y-auto">
+                                    <!-- Enchantments will be inserted here -->
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Instructions -->
+                        <div class="mt-4 bg-gray-900/30 rounded-xl p-4 border border-gray-700">
+                            <p class="text-sm text-gray-400 text-center">
+                                💡 <strong>Comment ça marche :</strong> Sélectionnez un item équipable, choisissez un enchantement compatible, puis cliquez sur "Enchanter" pour améliorer votre équipement de façon permanente.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            <!-- Furniture Tab -->
                 <div id="house-tab-furniture" class="house-tab-content hidden">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="placed-furniture-grid">
                         <!-- Placed furniture will be inserted here -->
@@ -455,39 +564,162 @@
         border-radius: 8px;
     }
 
-    #house-storage-grid {
-        transition: background-color 0.2s, border 0.2s;
-        border: 2px solid transparent;
-        padding: 8px;
-        min-height: 200px;
-    }
+/* Valid drop zone highlight */
+.valid-drop-zone {
+    border-color: #10b981 !important;
+    background-color: rgba(16, 185, 129, 0.1);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
 
-    #house-inventory-grid {
-        transition: background-color 0.2s, border 0.2s;
-        border: 2px solid transparent;
-        padding: 8px;
-        min-height: 200px;
-    }
+/* ==========================================
+   WORKBENCH STYLES
+   ========================================== */
 
-    /* Hover effects */
-    .storage-item:hover,
-    .inventory-transfer-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
+/* Workbench Item */
+.workbench-item {
+    width: 50px;
+    height: 50px;
+    background-color: rgba(17, 24, 39, 0.8);
+    border: 2px solid #374151;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    position: relative;
+}
 
-    /* Instructions text */
-    .drag-hint {
-        text-align: center;
-        color: #6b7280;
-        font-size: 12px;
-        margin-top: 8px;
-    }
+.workbench-item:hover {
+    border-color: #8b5cf6;
+    transform: scale(1.05);
+}
 
-    /* Valid drop zone highlight */
-    .valid-drop-zone {
-        border-color: #10b981 !important;
-        background-color: rgba(16, 185, 129, 0.1);
-        box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+.workbench-item.ring-2 {
+    border-color: #7c3aed;
+    box-shadow: 0 0 10px rgba(124, 58, 237, 0.5);
+}
+
+/* Enchantment Item */
+.enchantment-item {
+    transition: all 0.2s;
+}
+
+.enchantment-item.ring-2 {
+    box-shadow: 0 0 15px rgba(124, 58, 237, 0.5);
+}
+
+/* Workbench Slots */
+#workbench-item-slot,
+#workbench-enchant-slot {
+    transition: all 0.3s;
+}
+
+#workbench-item-slot:hover,
+#workbench-enchant-slot:hover {
+    border-color: #7c3aed !important;
+    background-color: rgba(124, 58, 237, 0.1);
+}
+
+/* Result Preview Animation */
+#workbench-result-preview {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
     }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Enchantment apply button animation */
+#workbench-apply-btn:not(:disabled):hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.5);
+}
+
+#workbench-apply-btn:disabled {
+    cursor: not-allowed;
+}
+
+/* ==========================================
+   MINECRAFT-STYLE ENCHANTED ITEM EFFECT
+   ========================================== */
+
+/* Enchanted item shimmer effect */
+.enchanted-item {
+    position: relative;
+    overflow: hidden;
+}
+
+.enchanted-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        transparent 40%,
+        rgba(138, 43, 226, 0.3) 45%,
+        rgba(75, 0, 130, 0.5) 50%,
+        rgba(138, 43, 226, 0.3) 55%,
+        transparent 60%,
+        transparent 100%
+    );
+    animation: enchantShimmer 3s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.enchanted-item::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        135deg,
+        rgba(138, 43, 226, 0.1) 0%,
+        transparent 50%,
+        rgba(75, 0, 130, 0.15) 100%
+    );
+    pointer-events: none;
+    z-index: 0;
+}
+
+@keyframes enchantShimmer {
+    0% {
+        transform: translateX(-50%) skewX(-15deg);
+    }
+    100% {
+        transform: translateX(100%) skewX(-15deg);
+    }
+}
+
+/* Enchantment count badge */
+.enchant-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 6px rgba(139, 92, 246, 0.6);
+    z-index: 10;
+}
 </style>

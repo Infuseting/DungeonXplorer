@@ -64,7 +64,7 @@ ob_start();
             <!-- Merchant Fields -->
             <div class="col-span-2 hidden bg-gray-900 p-6 rounded-xl border border-gray-700" id="merchant-fields">
                 <h4 class="text-gray-200 mb-4 text-lg">
-                    💰 Configuration Marchand
+                    🪙 Configuration Marchand
                 </h4>
                 
                 <div class="grid grid-cols-2 gap-6">

@@ -112,11 +112,27 @@ class HouseController
 
         // Maisons déjà possédées
         $owned = $houseModel->getCharacterHouses($characterId);
-        $ownedIds = array_column($owned, 'house_id');
+        
+        // Créer un mapping des maisons possédées avec leurs infos
+        $ownedMap = [];
+        foreach ($owned as $o) {
+            $ownedMap[$o['house_id']] = [
+                'character_house_id' => $o['id'],
+                'is_primary' => $o['is_primary'] ?? 0,
+                'custom_name' => $o['custom_name'] ?? null
+            ];
+        }
 
-        // Marquer les maisons possédées
+        // Marquer les maisons possédées avec leurs infos
         foreach ($houses as &$house) {
-            $house['owned'] = in_array($house['id'], $ownedIds);
+            if (isset($ownedMap[$house['id']])) {
+                $house['owned'] = true;
+                $house['character_house_id'] = $ownedMap[$house['id']]['character_house_id'];
+                $house['is_primary'] = $ownedMap[$house['id']]['is_primary'];
+                $house['custom_name'] = $ownedMap[$house['id']]['custom_name'];
+            } else {
+                $house['owned'] = false;
+            }
         }
 
         // Or du personnage
@@ -435,5 +451,32 @@ class HouseController
             'success' => true,
             'bonuses' => $bonuses
         ]);
+    }
+
+    /**
+     * Supprimer un item du coffre (jeter)
+     */
+    public function dropStorageItem()
+    {
+        header('Content-Type: application/json');
+
+        if (!isset($_SESSION['user_id']) || !isset($_SESSION['character_id'])) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $storageId = $input['storage_id'] ?? null;
+
+        if (!$storageId) {
+            echo json_encode(['success' => false, 'message' => 'ID requis']);
+            exit;
+        }
+
+        $storageModel = new HouseStorage();
+        $result = $storageModel->dropItem($_SESSION['character_id'], $storageId);
+
+        echo json_encode($result);
     }
 }

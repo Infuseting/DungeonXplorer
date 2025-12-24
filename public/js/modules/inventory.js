@@ -63,6 +63,7 @@ export function setupTooltip(item) {
     const typeEl = document.getElementById('tooltip-type');
     const statsEl = document.getElementById('tooltip-stats');
     const descEl = document.getElementById('tooltip-desc');
+    const enchantsEl = document.getElementById('tooltip-enchants');
 
     item.addEventListener('mouseenter', e => {
         if (draggedItem) return; // Don't show tooltip while dragging
@@ -75,17 +76,53 @@ export function setupTooltip(item) {
         // Parse and display stats
         statsEl.innerHTML = '';
         try {
-            const stats = JSON.parse(item.dataset.stats);
+            const statsRaw = item.dataset.stats || '{}';
+            const stats = typeof statsRaw === 'string' ? JSON.parse(statsRaw) : statsRaw;
+            const enchantBonuses = stats.enchantment_bonuses || {};
+            
             for (const [key, value] of Object.entries(stats)) {
+                // Skip internal fields and non-numeric values
+                if (key === 'enchantment_bonuses' || key === 'rarity') continue;
+                if (typeof value !== 'number') continue;
+                
                 const statRow = document.createElement('div');
                 statRow.className = 'tooltip-stat';
                 // Format key (e.g., capacity_width -> Capacity Width)
                 const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                statRow.innerHTML = `<span>${label}</span><span>${value}</span>`;
+                
+                // Check if this stat has an enchantment bonus - show total in green if enchanted
+                const bonus = enchantBonuses[key] || 0;
+                if (bonus > 0) {
+                    statRow.innerHTML = `<span>${label}</span><span class="text-green-400">+${value}</span>`;
+                } else {
+                    statRow.innerHTML = `<span>${label}</span><span>+${value}</span>`;
+                }
                 statsEl.appendChild(statRow);
             }
         } catch (e) {
-            console.error('Error parsing stats', e);
+            console.error('Error parsing stats', e, item.dataset.stats);
+        }
+
+        // Display enchantments if available
+        if (enchantsEl) {
+            enchantsEl.innerHTML = '';
+            enchantsEl.classList.add('hidden');
+            try {
+                const enchantments = JSON.parse(item.dataset.enchantments || '[]');
+                if (enchantments && enchantments.length > 0) {
+                    enchantsEl.classList.remove('hidden');
+                    enchantsEl.innerHTML = `
+                        <p class="text-xs text-violet-400 font-bold mb-1">✨ Enchantements:</p>
+                        ${enchantments.map(enc => `
+                            <div class="text-xs text-purple-300 flex items-center gap-1">
+                                <span class="text-violet-400">✦</span> ${enc.name}
+                            </div>
+                        `).join('')}
+                    `;
+                }
+            } catch (err) {
+                // No enchantments or invalid data
+            }
         }
 
         tooltip.classList.remove('hidden');

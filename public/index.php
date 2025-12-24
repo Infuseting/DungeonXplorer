@@ -136,8 +136,16 @@ $router->mount('/game', function() use ($router) {
     $router->post('/house/furniture/sell', 'App\Controllers\HouseController@sellFurniture');
     $router->post('/house/deposit', 'App\Controllers\HouseController@deposit');
     $router->post('/house/withdraw', 'App\Controllers\HouseController@withdraw');
+    $router->post('/house/drop-storage', 'App\Controllers\HouseController@dropStorageItem');
     $router->get('/house/inventory', 'App\Controllers\HouseController@getInventory');
     $router->get('/house/bonuses', 'App\Controllers\HouseController@getBonuses');
+
+    // Routes Établi / Enchantements
+    $router->get('/workbench', 'App\Controllers\WorkbenchController@index');
+    $router->post('/workbench/purchase', 'App\Controllers\WorkbenchController@purchase');
+    $router->post('/workbench/enchant', 'App\Controllers\WorkbenchController@enchant');
+    $router->post('/workbench/remove', 'App\Controllers\WorkbenchController@removeEnchantment');
+    $router->get('/workbench/compatible', 'App\Controllers\WorkbenchController@getCompatibleEnchantments');
 
 });
 
