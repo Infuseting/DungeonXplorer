@@ -147,8 +147,34 @@ function handleInitialData(initialData) {
 
         if (initialData.hit) {
             playerHit();
-            // Update HP handled by server return usually, but here relies on static PHP value 
-            // which is already there.
+        }
+        
+        // Mise à jour des HP après l'attaque initiale
+        if (typeof initialData.playerHp !== "undefined") {
+            const hpEl = document.getElementById('player-hp');
+            const hpBar = document.getElementById('player-hp-bar');
+            
+            updateCombatState(initialData.playerHp, MAX_HP);
+            hpEl.textContent = initialData.playerHp;
+            
+            if (hpBar) {
+                const hpPercent = (initialData.playerHp / MAX_HP) * 100;
+                hpBar.style.width = hpPercent + "%";
+                
+                // Changement de couleur selon le pourcentage
+                if (hpPercent <= 25) {
+                    hpBar.className = "bg-red-600 h-full transition-all duration-500 animate-pulse";
+                } else if (hpPercent <= 50) {
+                    hpBar.className = "bg-gradient-to-r from-orange-600 to-orange-400 h-full transition-all duration-500";
+                } else {
+                    hpBar.className = "bg-gradient-to-r from-red-600 to-red-400 h-full transition-all duration-500";
+                }
+            }
+        }
+        
+        // Vérification de mort instantanée
+        if (initialData.playerDead || initialData.gameOver) {
+            playerLoss();
         }
     }, 500);
 }
@@ -193,7 +219,7 @@ function sendAction(action, skillId = null, itemId = null) {
                             log.innerHTML += `<p class="text-red-600 font-bold mb-2">${data.message}</p>`;
                         }
 
-                        if (data.newTurn && !data.win) {
+                        if (data.newTurn && !data.win && !data.gameOver) {
                             log.innerHTML += `<p class="text-yellow-400 font-bold animate-pulse mt-2">À vous de jouer !</p>`;
                             if (btn && !end) {
                                 btn.disabled = false;
@@ -206,17 +232,79 @@ function sendAction(action, skillId = null, itemId = null) {
                         end = true;
                         playerWin(data.rewards);
                     }
+                    
+                    // Vérification du Game Over
+                    if (data.gameOver && !data.win) {
+                        end = true;
+                        playerLoss();
+                    }
+                    
+                    // Mise à jour des HP du joueur
                     if (typeof data.playerHp !== "undefined") {
                         const hpEl = document.getElementById('player-hp');
-                        hpEl.innerHTML = "";
-
+                        const hpBar = document.getElementById('player-hp-bar');
+                        
                         updateCombatState(data.playerHp, MAX_HP);
 
                         if (data.playerHp <= 0) {
                             playerLoss();
-                            hpEl.innerHTML += "<p style='color:red'>" + data.playerHp + "</p>";
+                            hpEl.textContent = "0";
+                            if (hpBar) hpBar.style.width = "0%";
                         } else {
                             hpEl.textContent = data.playerHp;
+                            
+                            // Mise à jour de la barre de PV
+                            if (hpBar) {
+                                const hpPercent = (data.playerHp / MAX_HP) * 100;
+                                hpBar.style.width = hpPercent + "%";
+                                
+                                // Changement de couleur selon le pourcentage
+                                if (hpPercent <= 25) {
+                                    hpBar.className = "bg-red-600 h-full transition-all duration-500 animate-pulse";
+                                } else if (hpPercent <= 50) {
+                                    hpBar.className = "bg-gradient-to-r from-orange-600 to-orange-400 h-full transition-all duration-500";
+                                } else {
+                                    hpBar.className = "bg-gradient-to-r from-red-600 to-red-400 h-full transition-all duration-500";
+                                }
+                            }
+                            
+                            // Animation de dégâts
+                            if (data.damageJ) {
+                                hpEl.classList.add('animate-bounce');
+                                setTimeout(() => hpEl.classList.remove('animate-bounce'), 500);
+                            }
+                        }
+                    }
+                    
+                    // Mise à jour de la barre de PV du monstre (uniquement visuelle)
+                    if (typeof data.monsterHp !== "undefined") {
+                        const monsterHpBar = document.getElementById('monster-hp-bar');
+                        
+                        if (monsterHpBar) {
+                            const maxHp = parseInt(monsterHpBar.dataset.maxHp) || 100;
+                            const hpPercent = (data.monsterHp / maxHp) * 100;
+                            
+                            // Mise à jour de la largeur de la barre
+                            monsterHpBar.style.width = hpPercent + "%";
+                            
+                            // Changement de couleur selon le pourcentage
+                            if (hpPercent <= 0) {
+                                monsterHpBar.className = "bg-gray-600 h-full transition-all duration-500 shadow-lg";
+                            } else if (hpPercent <= 25) {
+                                monsterHpBar.className = "bg-red-700 h-full transition-all duration-500 animate-pulse shadow-lg";
+                            } else if (hpPercent <= 50) {
+                                monsterHpBar.className = "bg-orange-500 h-full transition-all duration-500 shadow-lg";
+                            } else if (hpPercent <= 75) {
+                                monsterHpBar.className = "bg-yellow-500 h-full transition-all duration-500 shadow-lg";
+                            } else {
+                                monsterHpBar.className = "bg-red-500 h-full transition-all duration-500 shadow-lg";
+                            }
+                            
+                            // Animation si le monstre prend des dégâts
+                            if (data.damageM) {
+                                monsterHpBar.classList.add('scale-105');
+                                setTimeout(() => monsterHpBar.classList.remove('scale-105'), 200);
+                            }
                         }
                     }
                     // if (btn) btn.disabled = false; // Logic moved inside newTurn check with highlight
@@ -346,6 +434,10 @@ function playerLoss() {
         bg.classList.add("sepia", "saturate-200", "hue-rotate-[-50deg]", "brightness-75");
         winOrLoss.classList.add("text-red-600", "animate-pulse");
 
+        // Récupérer le story_id si disponible
+        const sceneCtx = document.getElementById('combat-scene');
+        const returnStoryId = sceneCtx ? sceneCtx.dataset.returnStoryId : null;
+
         // Fetch Saves
         fetch('/game/saves')
             .then(r => r.json())
@@ -360,7 +452,7 @@ function playerLoss() {
                 } else {
                     savesHtml += '<p class="text-gray-400">Aucune sauvegarde trouvée.</p>';
                 }
-                savesHtml += '<button onclick="window.location.href=\'/game\'" class="mt-4 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded">Retour Menu (Risqué)</button></div>';
+                savesHtml += `<button onclick="window.resetStoryAndReturnToMap(${returnStoryId})" class="mt-4 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded">Retour à la Map</button></div>`;
 
                 winOrLoss.innerHTML = '<p class ="text-5xl font-black text-red-600 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] mb-4">GAME OVER</p>' + savesHtml;
             });
@@ -383,6 +475,37 @@ window.loadSave = function (id) {
                 window.location.href = '/game';
             } else {
                 alert("Erreur: " + d.message);
+            }
+        });
+};
+
+// Réinitialiser la progression de l'histoire et retourner à la map
+window.resetStoryAndReturnToMap = function (storyId) {
+    const formData = new FormData();
+    if (storyId && storyId !== 'null' && storyId !== 'undefined') {
+        formData.append('story_id', storyId);
+    }
+    
+    fetch('/story/reset', {
+        method: 'POST',
+        body: formData
+    })
+        .then(r => r.json())
+        .then(d => {
+            // Rediriger vers la map que la réinitialisation ait réussi ou non
+            if (window.GameRouter) {
+                window.GameRouter.showMap();
+            } else {
+                window.location.href = '/game';
+            }
+        })
+        .catch(err => {
+            console.error('Error resetting story:', err);
+            // Rediriger quand même vers la map
+            if (window.GameRouter) {
+                window.GameRouter.showMap();
+            } else {
+                window.location.href = '/game';
             }
         });
 };

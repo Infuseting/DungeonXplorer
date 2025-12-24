@@ -254,12 +254,23 @@ class Character
      */
     public function heal($characterId, $amount)
     {
-        if (!$this->db) {
-            $this->db = Database::getInstance()->getConnection();
+        // Mise à jour en mémoire
+        if (isset($this->vitality)) {
+            if (isset($this->currentHp)) {
+                $this->currentHp = min($this->vitality, $this->currentHp + $amount);
+            } else {
+                $this->currentHp = min($this->vitality, $amount);
+            }
         }
-        $stmt = $this->db->prepare("UPDATE character_stats SET current_hp = LEAST(vitality, current_hp + ?) WHERE character_id = ?");
-        $stmt->bind_param("ii", $amount, $characterId);
-        return $stmt->execute();
+
+        // Mise à jour en base si la connexion est disponible
+        if (isset($this->db) && $this->db !== null) {
+            $stmt = $this->db->prepare("UPDATE character_stats SET current_hp = LEAST(vitality, current_hp + ?) WHERE character_id = ?");
+            $stmt->bind_param("ii", $amount, $characterId);
+            return $stmt->execute();
+        }
+
+        return true;
     }
 
     /**
@@ -383,15 +394,19 @@ class Character
      */
     public function reduceVitality($number)
     {
-        if (!$this->db) {
-            $this->db = Database::getInstance()->getConnection();
+        // Mise à jour en mémoire (prioritaire pour le combat)
+        if (isset($this->vitality)) {
+            $this->vitality = max(0, $this->vitality - $number);
         }
-        $stmt = $this->db->prepare("UPDATE character_stats SET current_hp = GREATEST(0, current_hp - ?) WHERE character_id = ?");
-        $stmt->bind_param("ii", $number, $this->id);
-        $stmt->execute();
-
         if (isset($this->currentHp)) {
             $this->currentHp = max(0, $this->currentHp - $number);
+        }
+
+        // Mise à jour en base si la connexion est disponible
+        if (isset($this->db) && $this->db !== null) {
+            $stmt = $this->db->prepare("UPDATE character_stats SET current_hp = GREATEST(0, current_hp - ?) WHERE character_id = ?");
+            $stmt->bind_param("ii", $number, $this->id);
+            $stmt->execute();
         }
     }
 
@@ -400,19 +415,27 @@ class Character
      */
     public function isAlive()
     {
+        // Priorité à la propriété vitality (utilisée en combat)
+        if (isset($this->vitality)) {
+            return $this->vitality > 0;
+        }
+
+        // Sinon, vérifier currentHp
         if (isset($this->currentHp)) {
             return $this->currentHp > 0;
         }
 
-        if (!$this->db) {
-            $this->db = Database::getInstance()->getConnection();
+        // Dernier recours : vérifier en base de données si disponible
+        if (isset($this->db) && $this->db !== null) {
+            $stmt = $this->db->prepare("SELECT current_hp FROM character_stats WHERE character_id = ?");
+            $stmt->bind_param("i", $this->id);
+            $stmt->execute();
+            $res = $stmt->get_result()->fetch_assoc();
+            return ($res['current_hp'] > 0);
         }
 
-        $stmt = $this->db->prepare("SELECT current_hp FROM character_stats WHERE character_id = ?");
-        $stmt->bind_param("i", $this->id);
-        $stmt->execute();
-        $res = $stmt->get_result()->fetch_assoc();
-        return ($res['current_hp'] > 0);
+        // Si aucune info disponible, considérer mort par sécurité
+        return false;
     }
 
     public function getClassId()

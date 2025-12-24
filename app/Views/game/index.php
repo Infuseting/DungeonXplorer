@@ -697,6 +697,22 @@ ob_start();
         }
     }
 </style>
+
+<script type="module">
+import { showToast } from '/js/modules/toast.js';
+
+// Afficher les messages de session
+<?php if (isset($_SESSION['success_message'])): ?>
+showToast('<?= addslashes($_SESSION['success_message']) ?>', 'success');
+<?php unset($_SESSION['success_message']); ?>
+<?php endif; ?>
+
+<?php if (isset($_SESSION['error_message'])): ?>
+showToast('<?= addslashes($_SESSION['error_message']) ?>', 'error');
+<?php unset($_SESSION['error_message']); ?>
+<?php endif; ?>
+</script>
+
 <?php
 $content = ob_get_clean();
 require __DIR__ . '/../layouts/base.php';

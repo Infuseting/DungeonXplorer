@@ -622,8 +622,15 @@ window.attemptFlee = async (monsterId) => {
 
         if (data.success) {
             showToast(data.message, 'success');
-            // Refresh to update UI states (fled status)
-            loadCurrentNode();
+            // Si le joueur a reculé, recharger le nœud (qui est maintenant le précédent)
+            if (data.retreated) {
+                setTimeout(() => {
+                    loadCurrentNode();
+                }, 800);
+            } else {
+                // Si pas de recul possible (début du donjon), juste cacher le monstre
+                loadCurrentNode();
+            }
         } else {
             showToast(data.message, 'warning');
             if (data.force_combat) {
