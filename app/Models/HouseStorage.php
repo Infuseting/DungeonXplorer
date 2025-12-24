@@ -301,4 +301,36 @@ class HouseStorage
 
         return ['success' => true, 'message' => $deposited . ' items déposés'];
     }
+
+    /**
+     * Supprime un item du coffre (jeter)
+     */
+    public function dropItem($characterId, $storageId)
+    {
+        try {
+            // Vérifier que l'item appartient bien au personnage
+            $stmt = $this->db->prepare("
+                SELECT hs.id
+                FROM house_storage hs
+                JOIN character_houses ch ON hs.character_house_id = ch.id
+                WHERE hs.id = ? AND ch.character_id = ?
+            ");
+            $stmt->bind_param("ii", $storageId, $characterId);
+            $stmt->execute();
+            $item = $stmt->get_result()->fetch_assoc();
+
+            if (!$item) {
+                return ['success' => false, 'message' => 'Item non trouvé'];
+            }
+
+            // Supprimer l'item
+            $stmt = $this->db->prepare("DELETE FROM house_storage WHERE id = ?");
+            $stmt->bind_param("i", $storageId);
+            $stmt->execute();
+
+            return ['success' => true, 'message' => 'Item supprimé'];
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => 'Erreur lors de la suppression'];
+        }
+    }
 }

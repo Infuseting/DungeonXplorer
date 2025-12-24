@@ -452,4 +452,31 @@ class HouseController
             'bonuses' => $bonuses
         ]);
     }
+
+    /**
+     * Supprimer un item du coffre (jeter)
+     */
+    public function dropStorageItem()
+    {
+        header('Content-Type: application/json');
+
+        if (!isset($_SESSION['user_id']) || !isset($_SESSION['character_id'])) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $storageId = $input['storage_id'] ?? null;
+
+        if (!$storageId) {
+            echo json_encode(['success' => false, 'message' => 'ID requis']);
+            exit;
+        }
+
+        $storageModel = new HouseStorage();
+        $result = $storageModel->dropItem($_SESSION['character_id'], $storageId);
+
+        echo json_encode($result);
+    }
 }

@@ -32,17 +32,20 @@
             </div>
 
         <!-- Tab Navigation -->
-            <div class="flex border-b border-gray-600 bg-gray-900/30">
-                <button class="house-tab active px-6 py-3 text-sm font-medium transition-colors" data-tab="overview">
+            <div class="flex border-b border-gray-600 bg-gray-900/30 overflow-x-auto">
+                <button class="house-tab active px-6 py-3 text-sm font-medium transition-colors whitespace-nowrap" data-tab="overview">
                     Vue d'ensemble
                 </button>
-                <button class="house-tab px-6 py-3 text-sm font-medium transition-colors" data-tab="storage">
+                <button class="house-tab px-6 py-3 text-sm font-medium transition-colors whitespace-nowrap" data-tab="storage">
                     Coffre
                 </button>
-                <button class="house-tab px-6 py-3 text-sm font-medium transition-colors" data-tab="furniture">
+                <button class="house-tab px-6 py-3 text-sm font-medium transition-colors whitespace-nowrap" data-tab="workbench">
+                    Établi
+                </button>
+                <button class="house-tab px-6 py-3 text-sm font-medium transition-colors whitespace-nowrap" data-tab="furniture">
                     Meubles
                 </button>
-                <button class="house-tab px-6 py-3 text-sm font-medium transition-colors" data-tab="shop">
+                <button class="house-tab px-6 py-3 text-sm font-medium transition-colors whitespace-nowrap" data-tab="shop">
                     Acheter
                 </button>
             </div>
@@ -169,6 +172,126 @@
                         <p class="text-sm text-gray-400 text-center">
                             💡 <strong>Astuce :</strong> Glissez-déposez ou cliquez sur un objet pour le transférer
                         </p>
+                    </div>
+                </div>
+
+            <!-- Workbench Tab -->
+                <div id="house-tab-workbench" class="house-tab-content hidden">
+                    <!-- No House Message -->
+                    <div id="workbench-no-house" class="hidden text-center py-12">
+                        <span class="text-8xl mb-4 block">🏠</span>
+                        <h3 class="text-2xl text-gray-300 mb-2">Pas de maison</h3>
+                        <p class="text-gray-500 mb-4">Vous devez d'abord acheter une maison pour accéder à l'établi d'enchantement.</p>
+                        <button id="workbench-go-to-shop-btn" class="px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-lg hover:from-amber-700 hover:to-amber-800 transition-all shadow-lg">
+                            🛒 Acheter une maison
+                        </button>
+                    </div>
+                    
+                    <!-- Workbench Locked Message (Paywall) -->
+                    <div id="workbench-locked" class="hidden text-center py-12">
+                        <span class="text-8xl mb-4 block">🔮</span>
+                        <h3 class="text-2xl text-gray-300 mb-2">Établi d'Enchantement</h3>
+                        <p class="text-gray-500 mb-4">Déverrouillez l'établi pour enchanter vos équipements et les rendre plus puissants !</p>
+                        <div class="bg-gray-900/50 rounded-xl p-6 border border-violet-700/50 inline-block max-w-md">
+                            <p class="text-violet-400 font-bold text-xl mb-2">
+                                <span class="text-yellow-400" id="workbench-price">5000</span> 💰
+                            </p>
+                            <p class="text-gray-400 text-sm mb-4">Niveau requis: <span class="text-white font-bold" id="workbench-required-level">10</span></p>
+                            <button id="purchase-workbench-btn" class="w-full px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-700 text-white rounded-lg hover:from-violet-700 hover:to-purple-800 transition-all shadow-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed">
+                                ✨ Acheter l'Établi
+                            </button>
+                            <p id="workbench-purchase-error" class="text-red-400 text-sm mt-2 hidden"></p>
+                        </div>
+                    </div>
+
+                    <!-- Workbench Interface (Furnace Style) -->
+                    <div id="workbench-interface" class="hidden">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            
+                            <!-- Left: Item Selection -->
+                            <div class="bg-gray-900/50 rounded-xl p-4 border border-gray-700">
+                                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                    <span>⚔️</span> Choisir un Item
+                                </h3>
+                                <div id="workbench-items-grid" class="grid grid-cols-4 gap-2 max-h-[400px] overflow-y-auto">
+                                    <!-- Enchantable items will be inserted here -->
+                                </div>
+                            </div>
+
+                            <!-- Center: Enchantment Furnace -->
+                            <div class="bg-gray-900/50 rounded-xl p-4 border border-violet-700/50 relative">
+                                <h3 class="text-lg font-bold text-white mb-4 text-center flex items-center justify-center gap-2">
+                                    <span>🔮</span> Établi d'Enchantement
+                                </h3>
+                                
+                                <!-- Furnace Style Interface -->
+                                <div class="flex flex-col items-center gap-6">
+                                    <!-- Top Slot: Item to Enchant -->
+                                    <div class="relative">
+                                        <div id="workbench-item-slot" 
+                                             class="w-20 h-20 bg-gray-800 border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center cursor-pointer hover:border-violet-500 transition-colors"
+                                             title="Placez un item à enchanter">
+                                            <span class="text-gray-600 text-3xl">⚔️</span>
+                                        </div>
+                                        <p class="text-xs text-gray-500 text-center mt-1">Item</p>
+                                    </div>
+
+                                    <!-- Arrow Down -->
+                                    <div class="text-violet-400 text-2xl animate-pulse">⬇️</div>
+
+                                    <!-- Bottom Slot: Enchantment -->
+                                    <div class="relative">
+                                        <div id="workbench-enchant-slot" 
+                                             class="w-20 h-20 bg-gray-800 border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center cursor-pointer hover:border-violet-500 transition-colors"
+                                             title="Placez un enchantement">
+                                            <span class="text-gray-600 text-3xl">✨</span>
+                                        </div>
+                                        <p class="text-xs text-gray-500 text-center mt-1">Enchantement</p>
+                                    </div>
+
+                                    <!-- Result Preview -->
+                                    <div id="workbench-result-preview" class="hidden w-full bg-gray-800/50 rounded-lg p-4 mt-4 border border-violet-500/30">
+                                        <h4 class="text-sm text-violet-400 font-bold mb-2">Aperçu du résultat:</h4>
+                                        <div id="workbench-result-stats" class="text-sm text-gray-300">
+                                            <!-- Stats preview will be inserted here -->
+                                        </div>
+                                        <div class="mt-3 flex items-center justify-between">
+                                            <span class="text-amber-400 font-bold">Coût: <span id="workbench-cost">0</span> 💰</span>
+                                            <button id="workbench-apply-btn" class="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                                                Enchanter
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Item Info -->
+                                <div id="workbench-item-info" class="hidden mt-4 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
+                                    <h4 id="workbench-item-name" class="font-bold text-white mb-1"></h4>
+                                    <p id="workbench-item-type" class="text-xs text-gray-500 mb-2"></p>
+                                    <div id="workbench-item-enchants" class="space-y-1">
+                                        <!-- Current enchantments list -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right: Enchantments List -->
+                            <div class="bg-gray-900/50 rounded-xl p-4 border border-gray-700">
+                                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                    <span>✨</span> Enchantements
+                                </h3>
+                                <div id="workbench-enchantments-list" class="space-y-2 max-h-[400px] overflow-y-auto">
+                                    <!-- Enchantments will be inserted here -->
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Instructions -->
+                        <div class="mt-4 bg-gray-900/30 rounded-xl p-4 border border-gray-700">
+                            <p class="text-sm text-gray-400 text-center">
+                                💡 <strong>Comment ça marche :</strong> Sélectionnez un item équipable, choisissez un enchantement compatible, puis cliquez sur "Enchanter" pour améliorer votre équipement de façon permanente.
+                            </p>
+                        </div>
                     </div>
                 </div>
 
@@ -439,5 +562,80 @@
     border-color: #10b981 !important;
     background-color: rgba(16, 185, 129, 0.1);
     box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+/* ==========================================
+   WORKBENCH STYLES
+   ========================================== */
+
+/* Workbench Item */
+.workbench-item {
+    width: 50px;
+    height: 50px;
+    background-color: rgba(17, 24, 39, 0.8);
+    border: 2px solid #374151;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.workbench-item:hover {
+    border-color: #8b5cf6;
+    transform: scale(1.05);
+}
+
+.workbench-item.ring-2 {
+    border-color: #7c3aed;
+    box-shadow: 0 0 10px rgba(124, 58, 237, 0.5);
+}
+
+/* Enchantment Item */
+.enchantment-item {
+    transition: all 0.2s;
+}
+
+.enchantment-item.ring-2 {
+    box-shadow: 0 0 15px rgba(124, 58, 237, 0.5);
+}
+
+/* Workbench Slots */
+#workbench-item-slot,
+#workbench-enchant-slot {
+    transition: all 0.3s;
+}
+
+#workbench-item-slot:hover,
+#workbench-enchant-slot:hover {
+    border-color: #7c3aed !important;
+    background-color: rgba(124, 58, 237, 0.1);
+}
+
+/* Result Preview Animation */
+#workbench-result-preview {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Enchantment apply button animation */
+#workbench-apply-btn:not(:disabled):hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.5);
+}
+
+#workbench-apply-btn:disabled {
+    cursor: not-allowed;
 }
 </style>
