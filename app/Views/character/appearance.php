@@ -458,7 +458,9 @@ $customStyles = '
         
         .customization-panel {
             padding: 1.25rem;
-            max-height: calc(100vh - 10rem);
+            /* Allow flex to handle height */
+            max-height: none; 
+            height: 100%;
         }
         
         .tab-item {
@@ -498,7 +500,9 @@ $customStyles = '
         
         .customization-panel {
             padding: 1rem;
-            max-height: calc(100vh - 8rem);
+            /* Allow flex to handle height */
+            max-height: none;
+            height: 100%;
         }
         
         .tab-navigation {
@@ -553,7 +557,9 @@ $customStyles = '
         
         .customization-panel {
             padding: 0.875rem;
-            max-height: calc(100vh - 7rem);
+            /* Allow flex to handle height */
+            max-height: none;
+            height: 100%;
         }
         
         .tab-navigation {
@@ -657,7 +663,7 @@ $customStyles = '
         
         .customization-panel {
             padding: 0.75rem;
-            max-height: calc(100vh - 6rem);
+            max-height: none;
         }
         
         .section-title {
@@ -724,9 +730,9 @@ ob_start();
             <p class="text-violet-300 text-lg sm:text-base"><?= htmlspecialchars($character['name']) ?></p>
         </div>
         
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-4 md:gap-6 flex-1">
+        <div class="flex flex-col lg:grid lg:grid-cols-2 gap-4 lg:gap-6 flex-1 min-h-0 overflow-hidden">
             <!-- Character Preview -->
-            <div class="character-viewer flex items-center justify-center lg:order-1" id="characterViewer">
+            <div class="character-viewer flex items-center justify-center lg:order-1 flex-shrink-0 lg:flex-shrink" id="characterViewer">
                 <div class="character-preview-wrapper">
                     <div class="character-preview relative inline-block w-full h-full" data-character-id="character-edit" id="characterPreview">
                         <!-- Base Character -->
@@ -752,7 +758,7 @@ ob_start();
             </div>
 
             <!-- Customization Panel -->
-            <div class="customization-panel lg:order-2">
+            <div class="customization-panel lg:order-2 flex-1 min-h-0 overflow-y-auto">
                 <form action="/personnage/apparence/<?= $character['id'] ?>" method="POST" id="appearanceForm">
                     
                     <!-- Tab Navigation -->
@@ -764,7 +770,7 @@ ob_start();
                     </div>
 
                     <!-- intro text -->
-                    <div class="intro-text mb-6 text-gray-300 m-8">
+                    <div class="intro-text mb-4 lg:mb-6 text-gray-300 mx-4 lg:mx-8 hidden lg:block">
                         <p class="mb-2 text-3xl text-font-bold">Personnalisez l'apparence de votre personnage avant de commencer votre aventure dans DungeonXplorer !<br><br> Utilisez les onglets ci-dessus pour modifier les cheveux, les yeux et le maquillage. <br><br>Une fois satisfait, cliquez sur "Commencer l'aventure".</p>
                     </div>
 

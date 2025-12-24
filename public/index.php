@@ -39,6 +39,7 @@ $router->post('/game/combat/end', 'App\Controllers\CombatController@endCombat');
 
 $router->post('/game/save', 'App\Controllers\SaveController@saveGame');
 $router->post('/game/load', 'App\Controllers\SaveController@loadGame');
+$router->get('/game/saves', 'App\Controllers\SaveController@listSaves');
 $router->post('/game/saves', 'App\Controllers\SaveController@listSaves');
 
 $router->post('/game/dialogue/select', 'App\Controllers\GameController@selectDialogueOption');
@@ -160,9 +161,11 @@ $router->mount('/story', function() use ($router) {
     $router->post('/loot', 'App\Controllers\StoryController@collectLoot');
     $router->post('/flee', 'App\Controllers\StoryController@attemptFlee');
     $router->post('/clear-monsters', 'App\Controllers\StoryController@clearMonsters');
-    $router->post('/exit', 'App\Controllers\StoryController@exitStory');
+    $router->match('GET|POST', '/exit', 'App\Controllers\StoryController@exitStory');
+    $router->post('/reset', 'App\Controllers\StoryController@resetProgress');
     $router->post('/trap/avoid', 'App\Controllers\StoryController@attemptTrapAvoidance');
     $router->post('/search', 'App\Controllers\StoryController@searchRoom');
+    $router->post('/npc/interact', 'App\Controllers\StoryController@interactWithNPC');
 });
 
 // --- Routes Administration ---

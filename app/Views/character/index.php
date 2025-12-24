@@ -62,7 +62,7 @@ ob_start();
     </header>
 
     <!-- Main Content -->
-    <main class="flex-1 flex items-center justify-center px-4 py-8 md:py-0 pb-32 lg:pb-0 relative overflow-hidden">
+    <main class="flex-1 flex items-center justify-center px-4 py-8 pb-32  relative overflow-hidden">
         <div class="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center h-full">
             
             <!-- Mobile Drawer Menu (Character List) -->
@@ -99,7 +99,7 @@ ob_start();
                 </div>
             </div>
             <!-- Stats / Actions (Right on Desktop, Bottom on Mobile) -->
-            <div class="order-3 lg:order-3 lg:col-span-4 bg-gray-800/80 backdrop-blur p-4 md:p-6 rounded-xl border border-gray-700 w-full max-w-md mx-auto lg:max-w-none">
+            <div class="hidden lg:block order-3 lg:order-3 lg:col-span-4 bg-gray-800/80 backdrop-blur p-4 md:p-6 rounded-xl border border-gray-700 w-full max-w-md mx-auto lg:max-w-none">
                 <!-- Stats Radar Chart -->
                 <div class="hidden md:block mb-6 md:mb-8">
                     <h3 class="text-lg font-medium text-white mb-4 border-b border-gray-700 pb-2">Statistiques</h3>
