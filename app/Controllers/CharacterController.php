@@ -47,6 +47,13 @@ class CharacterController
             $character['intelligence'] = $character['stats']['intelligence'];
             $character['vitality'] = $character['stats']['vitality'];
             $character['level'] = $character['stats']['level'] ?? 1;
+            
+            // Décoder les données d'apparence si elles sont en JSON
+            if (isset($character['appearance']) && is_string($character['appearance'])) {
+                $character['appearance'] = json_decode($character['appearance'], true) ?? [];
+            } elseif (!isset($character['appearance'])) {
+                $character['appearance'] = [];
+            }
         }
 
         $selectedCharacter = $characters[0];

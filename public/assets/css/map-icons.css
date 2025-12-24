@@ -1,0 +1,85 @@
+/* Map Icons Styling */
+.custom-map-icon {
+    transition: all 0.3s ease;
+}
+
+@keyframes goldShimmer {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(255, 215, 0, 1),
+                    0 0 20px rgba(255, 215, 0, 0.8),
+                    0 0 30px rgba(255, 215, 0, 0.6),
+                    inset 0 0 10px rgba(255, 215, 0, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 15px rgba(255, 215, 0, 1),
+                    0 0 30px rgba(255, 215, 0, 1),
+                    0 0 45px rgba(255, 215, 0, 0.8),
+                    inset 0 0 15px rgba(255, 215, 0, 0.7);
+    }
+}
+
+.custom-map-icon:hover {
+    transform: scale(1.3);
+}
+
+.map-icon-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    outline: 4px solid gold !important;
+    outline-offset: 2px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 215, 0, 0.2) 0%, transparent 70%);
+    animation: goldShimmer 2s ease-in-out infinite;
+    padding: 4px;
+}
+
+.map-icon-svg {
+    transition: all 0.2s ease;
+    filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.8));
+    border: 3px solid gold !important;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 4px;
+}
+
+.custom-map-icon:hover .map-icon-svg {
+    filter: brightness(1.2) drop-shadow(0 0 8px rgba(255, 215, 0, 1)) !important;
+}
+
+/* Admin Icon Selector */
+.icon-option {
+    cursor: pointer;
+    position: relative;
+}
+
+.icon-option::after {
+    content: '✓';
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
+    background: #6366f1;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.icon-option.border-indigo-500::after {
+    display: flex;
+}
+
+.icon-option img {
+    transition: opacity 0.2s ease;
+}
+
+.icon-option:hover img {
+    opacity: 1 !important;
+}

@@ -40,19 +40,8 @@ function getTypeLabel(type) {
 /**
  * Show point details in the side panel
  */
-export function showPointDetails(point) {
+export function showPointDetails(point, map = null) {
     console.log('Showing details for point:', point);
-    
-    // Check if this is a house point
-    if (point.type === 'house') {
-        console.log('Opening house modal');
-        // Import house manager dynamically
-        import('./house.js').then(module => {
-            module.houseManager.open();
-        });
-        return;
-    }
-    
     if (point.type === 'place' && point.sub_map_id) {
         console.log('Opening sub-map:', point.sub_map_id);
         openSubMap(point.sub_map_id, point.name);
@@ -64,6 +53,19 @@ export function showPointDetails(point) {
         console.log('Opening NPC modal:', point.target_id);
         openNPCModal(point.target_id);
         return;
+    }
+
+    // Zoom to the point on the map with dezoom/rezoom effect
+    if (map) {
+        const pointLatLng = L.latLng(parseFloat(point.y), parseFloat(point.x));
+        const maxZoom = map.getMaxZoom();
+
+        map.flyTo(pointLatLng, maxZoom, {
+            animate: true,
+            duration: 2,
+            easeLinearity: 0.1
+        });
+
     }
 
     const pointPanel = document.getElementById('point-panel');
@@ -131,15 +133,27 @@ export function showPointDetails(point) {
             }
             break;
         case 'place':
-            actionBtn.textContent = '🚪 Entrer';
-            actionBtn.addEventListener('click', () => {
-                showToast(`Fonctionnalité "${getTypeLabel(point.type)}" à venir !`, 'info');
-            });
+            if (point.sub_map_id) {
+                actionBtn.textContent = '🚪 Entrer dans la ville';
+                actionBtn.addEventListener('click', () => {
+                    console.log('Opening sub-map:', point.sub_map_id);
+                    const pointPanel = document.getElementById('point-panel');
+                    if (pointPanel) {
+                        pointPanel.classList.add('translate-x-full');
+                    }
+                    openSubMap(point.sub_map_id, point.name);
+                });
+            } else {
+                actionBtn.textContent = '🚪 Entrer';
+                actionBtn.addEventListener('click', () => {
+                    showToast(`Fonctionnalité "${getTypeLabel(point.type)}" à venir !`, 'info');
+                });
+            }
             break;
         case 'npc':
             actionBtn.textContent = '💬 Parler';
             actionBtn.addEventListener('click', () => {
-                showToast(`Fonctionnalité "${getTypeLabel(point.type)}" à venir !`, 'info');
+                showToast(`Ce PNJ n'est pas configuré`, 'error');
             });
             break;
         case 'quest':
@@ -157,6 +171,26 @@ export function showPointDetails(point) {
 }
 
 /**
+ * Update icon sizes based on zoom level
+ */
+function updateIconSizes(map, markers) {
+    const zoom = map.getZoom();
+    const baseSize = 48;
+    const scale = Math.pow(1.15, zoom - 3); // Scale factor based on zoom
+    const newSize = Math.max(24, Math.min(baseSize * scale, 120)); // Min 24px, max 120px
+
+    markers.forEach(markerData => {
+        if (markerData.element) {
+            const container = markerData.element.querySelector('.map-icon-container');
+            if (container) {
+                container.style.width = newSize + 'px';
+                container.style.height = newSize + 'px';
+            }
+        }
+    });
+}
+
+/**
  * Initialize map points on the map
  */
 export function initMapPoints(map, points) {
@@ -166,9 +200,10 @@ export function initMapPoints(map, points) {
 
     // Add markers for each point
     points.forEach((point, index) => {
-        console.log(`Adding marker ${index + 1}:`, point);
+        console.log(`Adding marker ${index + 1}:`, point, point.id);
 
         let marker;
+        let markerData = { point: point };
 
         // Special house point marker (with house icon)
         if (point.type === 'house') {
@@ -210,6 +245,42 @@ export function initMapPoints(map, points) {
             marker = L.marker([parseFloat(point.y), parseFloat(point.x)], {
                 icon: icon
             }).addTo(map);
+
+            // Store reference to marker element for dynamic sizing
+            marker.on('add', function () {
+                markerData.element = this.getElement();
+            });
+        } else if (point.icon) {
+            // Use custom SVG icon
+            const typeColor = getTypeColor(point.type);
+            const icon = L.divIcon({
+                className: 'custom-map-icon',
+                html: `<div class="map-icon-container" style="
+                    width: 48px; 
+                    height: 48px;
+                    color: ${typeColor};
+                ">
+                    <img src="/assets/map/icons/${point.icon}" 
+                         alt="${point.name}" 
+                         class="map-icon-svg"
+                         style="
+                            width: 100%; 
+                            height: 100%; 
+                            object-fit: contain;
+                         ">
+                </div>`,
+                iconSize: [48, 48],
+                iconAnchor: [24, 24]
+            });
+
+            marker = L.marker([parseFloat(point.y), parseFloat(point.x)], {
+                icon: icon
+            }).addTo(map);
+
+            // Store reference to marker element for dynamic sizing
+            marker.on('add', function () {
+                markerData.element = this.getElement();
+            });
         } else {
             marker = L.circleMarker([parseFloat(point.y), parseFloat(point.x)], {
                 radius: 8,
@@ -226,11 +297,11 @@ export function initMapPoints(map, points) {
         // Click handler
         marker.on('click', () => {
             console.log('Marker clicked:', point.name);
-            showPointDetails(point);
+            showPointDetails(point, map);
         });
 
-        // Hover effect (only for circle markers - not for divIcon markers)
-        if (!point.has_quest && point.type !== 'house' && marker.setStyle) {
+        // Hover effect (only for circle markers)
+        if (!point.has_quest) {
             marker.on('mouseover', function () {
                 if (this.setStyle) {
                     this.setStyle({
@@ -250,8 +321,19 @@ export function initMapPoints(map, points) {
             });
         }
 
-        markers.push(marker);
+        markerData.marker = marker;
+        markers.push(markerData);
     });
+
+    // Update icon sizes on zoom
+    map.on('zoomend', () => {
+        updateIconSizes(map, markers);
+    });
+
+    // Initial size update
+    setTimeout(() => {
+        updateIconSizes(map, markers);
+    }, 100);
 
     console.log('All markers added successfully');
     return markers;

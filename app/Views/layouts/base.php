@@ -30,13 +30,17 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <?php if (isset($customStyles)): ?>
     <style>
         body {
             padding-bottom: env(safe-area-inset-bottom);
         }
-        <?= $customStyles ?>
     </style>
+    <?php if (isset($customStyles)): ?>
+        <?php if (strpos($customStyles, '<link') !== false): ?>
+            <?= $customStyles ?>
+        <?php else: ?>
+            <style><?= $customStyles ?></style>
+        <?php endif; ?>
     <?php endif; ?>
 </head>
 <body class="<?= $bodyClass ?? '' ?>">

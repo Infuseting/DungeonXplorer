@@ -338,6 +338,12 @@ function updateStatsChart(strength, dexterity, intelligence, vitality) {
         statsChart.destroy();
     }
     
+    // Calculer le max dynamique basé sur la moyenne des stats doublée
+    const avgStat = (strength + dexterity + intelligence + vitality) / 4;
+    const dynamicMax = Math.ceil((avgStat * 2) / 10) * 10; // Double la moyenne et arrondit au 10 supérieur
+    const finalMax = Math.max(dynamicMax, 20); // Minimum de 20 pour éviter un graphique trop petit
+    const stepSize = Math.ceil(finalMax / 5); // 5 graduations environ
+    
         statsChart = new Chart(ctx, {
         type: 'radar',
         data: {
@@ -362,10 +368,10 @@ function updateStatsChart(strength, dexterity, intelligence, vitality) {
             scales: {
                 r: {
                     beginAtZero: true,
-                    max: 100,
+                    max: finalMax,
                     min: 0,
                     ticks: {
-                        stepSize: 20,
+                        stepSize: stepSize,
                         color: 'rgba(156, 163, 175, 0.8)',
                         backdropColor: 'transparent',
                         font: { size: 11 }
