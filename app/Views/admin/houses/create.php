@@ -56,6 +56,22 @@ ob_start();
             </div>
         </div>
 
+        <!-- Coordonnées sur la carte -->
+        <div class="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+            <h4 class="text-sm font-medium text-gray-300 mb-3">📍 Position sur la carte</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Coordonnée X (longitude)</label>
+                    <input type="number" name="map_x" step="0.000001" class="form-input w-full" placeholder="54.0">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Coordonnée Y (latitude)</label>
+                    <input type="number" name="map_y" step="0.000001" class="form-input w-full" placeholder="-108.0">
+                </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">Ces coordonnées définissent où le point "Maison" apparaîtra sur la carte quand cette maison est définie comme principale.</p>
+        </div>
+
         <!-- Description -->
         <div>
             <label class="block text-sm font-medium text-gray-300 mb-2">Description</label>

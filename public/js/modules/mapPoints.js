@@ -7,6 +7,10 @@ import { showToast } from './toast.js';
 import { openSubMap } from './subMap.js';
 import { openNPCModal } from './npcModal.js';
 
+// Store previous map view to restore when closing panel
+let previousMapView = null;
+let currentMapInstance = null;
+
 /**
  * Get color for point type
  */
@@ -57,6 +61,13 @@ export function showPointDetails(point, map = null) {
 
     // Zoom to the point on the map with dezoom/rezoom effect
     if (map) {
+        // Save current view before zooming
+        previousMapView = {
+            center: map.getCenter(),
+            zoom: map.getZoom()
+        };
+        currentMapInstance = map;
+        
         const pointLatLng = L.latLng(parseFloat(point.y), parseFloat(point.x));
         const maxZoom = map.getMaxZoom();
 
@@ -154,6 +165,22 @@ export function showPointDetails(point, map = null) {
             actionBtn.textContent = '💬 Parler';
             actionBtn.addEventListener('click', () => {
                 showToast(`Ce PNJ n'est pas configuré`, 'error');
+            });
+            break;
+        case 'house':
+            actionBtn.textContent = '🏠 Visiter la maison';
+            actionBtn.addEventListener('click', () => {
+                // Close the panel first
+                const pointPanel = document.getElementById('point-panel');
+                if (pointPanel) {
+                    pointPanel.classList.add('translate-x-full');
+                }
+                // Open house modal
+                if (window.houseManager) {
+                    window.houseManager.open();
+                } else {
+                    showToast('Erreur: Module maison non chargé', 'error');
+                }
             });
             break;
         case 'quest':
@@ -348,5 +375,15 @@ export function initPanelControls() {
 
     closePanelBtn.addEventListener('click', () => {
         pointPanel.classList.add('translate-x-full');
+        
+        // Restore previous map view when closing panel
+        if (previousMapView && currentMapInstance) {
+            currentMapInstance.flyTo(previousMapView.center, previousMapView.zoom, {
+                animate: true,
+                duration: 1.5,
+                easeLinearity: 0.25
+            });
+            previousMapView = null;
+        }
     });
 }

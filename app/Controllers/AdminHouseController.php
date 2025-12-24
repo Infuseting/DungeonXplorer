@@ -34,7 +34,9 @@ class AdminHouseController
                 'image' => $_POST['image'] ?? null,
                 'location_name' => $_POST['location_name'] ?? '',
                 'is_available' => isset($_POST['is_available']) ? 1 : 0,
-                'required_level' => (int)($_POST['required_level'] ?? 1)
+                'required_level' => (int)($_POST['required_level'] ?? 1),
+                'map_x' => !empty($_POST['map_x']) ? (float)$_POST['map_x'] : null,
+                'map_y' => !empty($_POST['map_y']) ? (float)$_POST['map_y'] : null
             ];
 
             if ($houseModel->create($data)) {
@@ -70,7 +72,9 @@ class AdminHouseController
                 'image' => $_POST['image'] ?? null,
                 'location_name' => $_POST['location_name'] ?? '',
                 'is_available' => isset($_POST['is_available']) ? 1 : 0,
-                'required_level' => (int)($_POST['required_level'] ?? 1)
+                'required_level' => (int)($_POST['required_level'] ?? 1),
+                'map_x' => !empty($_POST['map_x']) ? (float)$_POST['map_x'] : null,
+                'map_y' => !empty($_POST['map_y']) ? (float)$_POST['map_y'] : null
             ];
 
             if ($houseModel->update($id, $data)) {

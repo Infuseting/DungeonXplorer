@@ -55,11 +55,11 @@ class House
     public function create($data)
     {
         $stmt = $this->db->prepare("
-            INSERT INTO houses (name, description, price, storage_slots, furniture_slots, image, location_name, is_available, required_level)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO houses (name, description, price, storage_slots, furniture_slots, image, location_name, is_available, required_level, map_x, map_y)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         $stmt->bind_param(
-            "ssiiiisii",
+            "ssiiiisiidd",
             $data['name'],
             $data['description'],
             $data['price'],
@@ -68,7 +68,9 @@ class House
             $data['image'],
             $data['location_name'],
             $data['is_available'],
-            $data['required_level']
+            $data['required_level'],
+            $data['map_x'],
+            $data['map_y']
         );
         return $stmt->execute() ? $this->db->insert_id : false;
     }
@@ -82,11 +84,11 @@ class House
             UPDATE houses SET 
                 name = ?, description = ?, price = ?, storage_slots = ?, 
                 furniture_slots = ?, image = ?, location_name = ?, 
-                is_available = ?, required_level = ?
+                is_available = ?, required_level = ?, map_x = ?, map_y = ?
             WHERE id = ?
         ");
         $stmt->bind_param(
-            "ssiiiisiii",
+            "ssiiiisiiddi",
             $data['name'],
             $data['description'],
             $data['price'],
@@ -96,6 +98,8 @@ class House
             $data['location_name'],
             $data['is_available'],
             $data['required_level'],
+            $data['map_x'],
+            $data['map_y'],
             $id
         );
         return $stmt->execute();

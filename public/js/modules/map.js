@@ -138,9 +138,13 @@ export async function loadMapPoints(mapId, characterId, map = null) {
  */
 export function clearMapPoints() {
     if (currentMarkers && currentMarkers.length > 0) {
-        currentMarkers.forEach(marker => {
-            if (marker && marker.remove) {
-                marker.remove();
+        currentMarkers.forEach(markerData => {
+            // markerData is { marker: L.marker, point: point }
+            if (markerData && markerData.marker && markerData.marker.remove) {
+                markerData.marker.remove();
+            } else if (markerData && markerData.remove) {
+                // Fallback if it's a direct marker
+                markerData.remove();
             }
         });
         currentMarkers = [];
