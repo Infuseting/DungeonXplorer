@@ -360,7 +360,7 @@ export function initMapPoints(map, points) {
 
     // Disabled: Dynamic icon sizing causes position glitches during flyTo animations
     // The icons will keep their fixed size which works better with Leaflet animations
-    /*
+    
     map.on('zoomend', () => {
         updateIconSizes(map, markers);
     });
@@ -368,7 +368,6 @@ export function initMapPoints(map, points) {
     setTimeout(() => {
         updateIconSizes(map, markers);
     }, 100);
-    */
 
     console.log('All markers added successfully');
     return markers;
