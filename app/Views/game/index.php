@@ -1,7 +1,7 @@
 <?php
 $title = 'Jeu - DungeonXplorer';
 $bodyClass = 'bg-gray-900 min-h-screen overflow-hidden select-none';
-$customStyles = '<link rel="stylesheet" href="/css/game.css">';
+$customStyles = '<link rel="stylesheet" href="/assets/css/map-icons.css">';
 
 ob_start();
 ?>
@@ -500,58 +500,6 @@ ob_start();
  * Styles for inventory, map, and game-specific UI elements
  */
 
-    /* House Point Marker Styles */
-    .house-marker-container {
-        position: relative;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .house-marker-pulse {
-        position: absolute;
-        width: 40px;
-        height: 40px;
-        background-color: rgba(239, 68, 68, 0.4);
-        border-radius: 50%;
-        animation: house-pulse 2s ease-out infinite;
-    }
-
-    .house-marker-dot {
-        position: relative;
-        width: 28px;
-        height: 28px;
-        background-color: #ef4444;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 3px solid #fff;
-        box-shadow: 0 0 15px rgba(239, 68, 68, 0.7);
-        font-size: 14px;
-        z-index: 10;
-        cursor: pointer;
-        transition: transform 0.2s;
-    }
-
-    .house-marker-dot:hover {
-        transform: scale(1.15);
-    }
-
-    @keyframes house-pulse {
-        0% {
-            transform: scale(1);
-            opacity: 0.7;
-        }
-
-        100% {
-            transform: scale(2);
-            opacity: 0;
-        }
-    }
-
     /* Inventory Slot Styles */
     .slot {
         background-color: rgba(17, 24, 39, 0.8);
@@ -676,11 +624,10 @@ ob_start();
         background: transparent;
     }
 
-    /* House Map Point Styles */
     .house-marker-container {
         position: relative;
-        width: 48px;
-        height: 48px;
+        width: 36px;
+        height: 36px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -709,6 +656,27 @@ ob_start();
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
         color: white;
         transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .house-marker-dot {
+        position: relative;
+        width: 28px;
+        height: 28px;
+        background-color: #ef4444;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid #fff;
+        box-shadow: 0 0 15px rgba(239, 68, 68, 0.7);
+        font-size: 14px;
+        z-index: 10;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+    .house-marker-dot:hover {
+        transform: scale(1.15);
     }
 
     .house-marker-container:hover .house-marker-icon {

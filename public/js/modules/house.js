@@ -970,7 +970,9 @@ class HouseManager {
     }
 
     formatNumber(num) {
-        return new Intl.NumberFormat('fr-FR').format(num);
+        const n = Number(num);
+        if (!isFinite(n)) return '0';
+        return new Intl.NumberFormat('fr-FR').format(n);
     }
 
     escapeHtml(text) {

@@ -63,11 +63,10 @@
                     <div id="no-house-message" class="hidden text-center py-12">
                         <span class="text-6xl mb-4 block">🏚️</span>
                         <h3 class="text-xl text-gray-300 mb-2">Vous n'avez pas encore de maison</h3>
-                        <p class="text-gray-500 mb-6">Achetez votre première maison pour stocker vos objets et profiter
-                            de bonus !</p>
+                        <p class="text-gray-500 mb-6">Achetez votre première maison pour stocker vos objets et profiter de bonus !</p>
                         <button id="go-to-shop-btn"
                             class="bg-violet-600 hover:bg-violet-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
-                            🛒 Voir les maisons disponibles
+                            Acheter une maison
                         </button>
                     </div>
 
@@ -197,11 +196,11 @@
                 <div id="house-tab-workbench" class="house-tab-content hidden">
                     <!-- No House Message -->
                     <div id="workbench-no-house" class="hidden text-center py-12">
-                        <span class="text-8xl mb-4 block">🏠</span>
-                        <h3 class="text-2xl text-gray-300 mb-2">Pas de maison</h3>
-                        <p class="text-gray-500 mb-4">Vous devez d'abord acheter une maison pour accéder à l'établi d'enchantement.</p>
-                        <button id="workbench-go-to-shop-btn" class="px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-lg hover:from-amber-700 hover:to-amber-800 transition-all shadow-lg">
-                            🛒 Acheter une maison
+                        <span class="text-6xl mb-4 block">🏚️</span>
+                        <h3 class="text-xl text-gray-300 mb-2">Vous n'avez pas encore de maison</h3>
+                        <p class="text-gray-500 mb-6">Vous devez d'abord acheter une maison pour accéder à l'établi d'enchantement.</p>
+                        <button id="workbench-go-to-shop-btn" class="px-6 py-3 bg-violet-600 text-white rounded-lg font-medium hover:bg-violet-700 transition-all shadow-lg">
+                            Acheter une maison
                         </button>
                     </div>
                     

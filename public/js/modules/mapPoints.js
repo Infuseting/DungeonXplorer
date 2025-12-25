@@ -289,8 +289,8 @@ export function initMapPoints(map, points) {
             const icon = L.divIcon({
                 className: 'custom-map-icon',
                 html: `<div class="map-icon-container" style="
-                    width: 48px; 
-                    height: 48px;
+                    width: 36px; 
+                    height: 36px;
                     color: ${typeColor};
                 ">
                     <img src="/assets/map/icons/${point.icon}" 
@@ -358,15 +358,17 @@ export function initMapPoints(map, points) {
         markers.push(markerData);
     });
 
-    // Update icon sizes on zoom
+    // Disabled: Dynamic icon sizing causes position glitches during flyTo animations
+    // The icons will keep their fixed size which works better with Leaflet animations
+    /*
     map.on('zoomend', () => {
         updateIconSizes(map, markers);
     });
 
-    // Initial size update
     setTimeout(() => {
         updateIconSizes(map, markers);
     }, 100);
+    */
 
     console.log('All markers added successfully');
     return markers;

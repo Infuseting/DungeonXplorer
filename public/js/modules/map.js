@@ -77,9 +77,34 @@ export async function initMap(configUrl = '/assets/map/main/map_config.json', ti
         map.setMaxBounds(bounds);
         map.fitBounds(bounds);
 
+        // Sometimes the map container size isn't finalized when Leaflet initializes
+        // which can cause the map to appear off-center. Force a resize/invalidate
+        // shortly after init and re-fit the bounds to ensure proper centering.
+        setTimeout(() => {
+            try {
+                map.invalidateSize();
+                map.fitBounds(bounds);
+            } catch (e) {
+                // ignore if map not ready
+            }
+        }, 100);
+
         // Store globally for access
         gameMap = map;
         gameMapMaxZoom = maxZoom;
+
+        // Add/remove main-map class based on whether it's the main map
+        const mapElement = document.getElementById(containerId);
+        if (mapElement) {
+            if (configUrl.includes('/main/map_config.json')) {
+                mapElement.classList.add('main-map');
+                // Also apply visual scaled class for the 80% effect
+                mapElement.classList.add('scaled');
+            } else {
+                mapElement.classList.remove('main-map');
+                mapElement.classList.remove('scaled');
+            }
+        }
 
         // Change music category if specified in config
         if (cfg.musicCategory) {
