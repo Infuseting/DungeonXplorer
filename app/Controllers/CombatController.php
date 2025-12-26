@@ -10,8 +10,6 @@ use App\Models\Monster;
 use App\Models\Combat;
 use App\Models\CharacterStats;
 use App\Models\Inventory;
-use App\Services\LevelingService;
-use App\Models\StoryProgress;
 
 
 class CombatController
@@ -327,23 +325,13 @@ class CombatController
                 $dailyQuestModel->onGoldCollected($_SESSION['character_id'], $calc['gold']);
             }
 
-            // Fetch updated character for UI
-            $updatedCharacter = $charModel->findById($_SESSION['character_id']);
-            $xpService = new \App\Services\LevelingService();
-            $xpNext = $xpService->getXpForNextLevel($updatedCharacter['level']);
-
             $rewards = [
                 'xp' => $calc['xp'],
                 'gold' => $calc['gold'],
                 'levels_gained' => $xpRes['levels_gained'],
                 'loot' => $loot,
                 'quests' => $questUpdates,
-                'daily_quest_updates' => $dailyQuestUpdates,
-                // UI Updates
-                'current_xp' => $updatedCharacter['xp'],
-                'max_xp' => $xpNext,
-                'current_level' => $updatedCharacter['level'],
-                'current_gold' => $updatedCharacter['gold']
+                'daily_quest_updates' => $dailyQuestUpdates
             ];
 
             // Logs de victoire
@@ -407,14 +395,6 @@ class CombatController
                 $charModel = new Character();
                 $charModel->deleteById($charId);
 
-                // Clear story progress if applicable
-                if (isset($_SESSION['combat_story_id'])) {
-                    $progModel = new \App\Models\StoryProgress();
-                    $progModel->exitDungeon($charId, $_SESSION['combat_story_id']);
-                    // Optionally reset progress completely on perma-death?
-                    // $progModel->deleteProgress($charId, $_SESSION['combat_story_id']); 
-                }
-
                 echo json_encode([
                     "success" => true,
                     "player" => $pMsg,
@@ -425,20 +405,11 @@ class CombatController
                     "ironmanDeath" => true,
                     "redirect" => "/personnage/create?error=permadeath"
                 ]);
-
                 unset($_SESSION['combat']);
-                unset($_SESSION['combat_story_id']);
-                unset($_SESSION['combat_initiative']);
                 exit;
             }
 
             // Défaite en mode non-Ironman : le joueur perd le combat mais survit
-            // On sort le joueur du donjon s'il y est
-            if (isset($_SESSION['combat_story_id'])) {
-                $progModel = new \App\Models\StoryProgress();
-                $progModel->exitDungeon($charId, $_SESSION['combat_story_id']);
-            }
-
             echo json_encode([
                 "success" => true,
                 "player" => $pMsg,
@@ -450,18 +421,11 @@ class CombatController
                 "ironmanDeath" => false
             ]);
             unset($_SESSION['combat']);
-            unset($_SESSION['combat_story_id']);
-            unset($_SESSION['combat_initiative']);
             exit;
         }
 
         // Récupération des stats actuelles du joueur (avec items et compétences passives)
         $effectiveStats = CharacterStatsService::getEffectiveStats($_SESSION['character_id']);
-
-        // Add temporary defense bonus if active
-        if (isset($_SESSION['temp_defense_bonus'])) {
-            $effectiveStats['defense'] += $_SESSION['temp_defense_bonus'];
-        }
 
         $playerStats = [
             'attack' => $effectiveStats['attack'],

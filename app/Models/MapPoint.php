@@ -27,7 +27,7 @@ class MapPoint
         $stmt->bind_param("i", $mapId);
         $stmt->execute();
         $result = $stmt->get_result();
-
+        
         if (!$result) {
             return [];
         }
@@ -47,7 +47,7 @@ class MapPoint
         $stmt->bind_param("i", $id);
         $stmt->execute();
         $result = $stmt->get_result();
-
+        
         return $result->fetch_assoc();
     }
 
@@ -66,7 +66,7 @@ class MapPoint
         $stmt->bind_param("is", $mapId, $type);
         $stmt->execute();
         $result = $stmt->get_result();
-
+        
         if (!$result) {
             return [];
         }
@@ -86,9 +86,9 @@ class MapPoint
             "INSERT INTO map_points (map_id, name, description, type, x, y, icon, metadata, is_hidden) 
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
         );
-
+        
         $metadata = isset($data['metadata']) ? json_encode($data['metadata']) : null;
-
+        
         $stmt->bind_param(
             "isssddssi",
             $data['map_id'],
@@ -101,11 +101,11 @@ class MapPoint
             $metadata,
             $data['is_hidden'] ?? 0
         );
-
+        
         if ($stmt->execute()) {
             return $this->db->insert_id;
         }
-
+        
         return false;
     }
 
@@ -123,9 +123,9 @@ class MapPoint
              SET name = ?, description = ?, type = ?, x = ?, y = ?, icon = ?, metadata = ?, updated_at = NOW() 
              WHERE id = ?"
         );
-
+        
         $metadata = isset($data['metadata']) ? json_encode($data['metadata']) : null;
-
+        
         $stmt->bind_param(
             "sssddssi",
             $data['name'],
@@ -137,7 +137,7 @@ class MapPoint
             $metadata,
             $id
         );
-
+        
         return $stmt->execute();
     }
 
@@ -151,7 +151,7 @@ class MapPoint
     {
         $stmt = $this->db->prepare("DELETE FROM map_points WHERE id = ?");
         $stmt->bind_param("i", $id);
-
+        
         return $stmt->execute();
     }
 
@@ -172,11 +172,11 @@ class MapPoint
              WHERE map_id = ? AND x BETWEEN ? AND ? AND y BETWEEN ? AND ?
              ORDER BY created_at DESC"
         );
-
+        
         $stmt->bind_param("idddd", $mapId, $minX, $maxX, $minY, $maxY);
         $stmt->execute();
         $result = $stmt->get_result();
-
+        
         if (!$result) {
             return [];
         }
@@ -198,11 +198,11 @@ class MapPoint
         $stmt->bind_param("i", $pointId);
         $stmt->execute();
         $result = $stmt->get_result();
-
+        
         if ($row = $result->fetch_assoc()) {
             return !is_null($row['sub_map_id']);
         }
-
+        
         return false;
     }
 
@@ -220,11 +220,11 @@ class MapPoint
         $stmt->bind_param("i", $pointId);
         $stmt->execute();
         $result = $stmt->get_result();
-
+        
         if ($row = $result->fetch_assoc()) {
             return $row['sub_map_id'];
         }
-
+        
         return null;
     }
 
@@ -241,11 +241,11 @@ class MapPoint
              WHERE map_id = ? AND sub_map_id IS NOT NULL
              ORDER BY created_at DESC"
         );
-
+        
         $stmt->bind_param("i", $mapId);
         $stmt->execute();
         $result = $stmt->get_result();
-
+        
         if (!$result) {
             return [];
         }
@@ -265,9 +265,9 @@ class MapPoint
         $stmt = $this->db->prepare(
             "UPDATE map_points SET sub_map_id = ? WHERE id = ?"
         );
-
+        
         $stmt->bind_param("ii", $subMapId, $pointId);
-
+        
         return $stmt->execute();
     }
     /**
@@ -279,23 +279,20 @@ class MapPoint
      */
     public function isVisibleForCharacter($pointId, $characterId)
     {
-        $point = $this->findById($pointId);
-        if (!$point)
-            return false;
-
-        if ($point['is_locked'])
-            return false;
-
-        if (!$point['is_hidden'])
-            return true;
-
-        $stmt = $this->db->prepare(
+                $point = $this->findById($pointId);
+        if (!$point) return false;
+        
+                if ($point['is_locked']) return false;
+        
+                if (!$point['is_hidden']) return true;
+        
+                $stmt = $this->db->prepare(
             "SELECT 1 FROM character_map_unlocks WHERE character_id = ? AND map_point_id = ?"
         );
         $stmt->bind_param("ii", $characterId, $pointId);
         $stmt->execute();
         $result = $stmt->get_result();
-
+        
         return $result->num_rows > 0;
     }
 
@@ -313,10 +310,10 @@ class MapPoint
              VALUES (?, ?, CURRENT_TIMESTAMP)"
         );
         $stmt->bind_param("ii", $characterId, $pointId);
-
+        
         return $stmt->execute();
     }
-
+    
     /**
      * Get unlocked points for character in a map
      * 
@@ -331,22 +328,19 @@ class MapPoint
                     s.name as story_name, 
                     s.description as story_description, 
                     s.min_level as story_min_level, 
-                    s.difficulty_level as story_difficulty,
-                    s.repeatable as story_repeatable,
-                    csp.completed as story_completed
+                    s.difficulty_level as story_difficulty
              FROM map_points mp
              LEFT JOIN character_map_unlocks pup ON mp.id = pup.map_point_id AND pup.character_id = ?
              LEFT JOIN stories s ON mp.story_id = s.id
-             LEFT JOIN character_story_progress csp ON mp.story_id = csp.story_id AND csp.character_id = ?
              WHERE mp.map_id = ? 
              AND mp.is_locked = 0
              AND (mp.is_hidden = 0 OR pup.character_id IS NOT NULL)
              ORDER BY mp.created_at DESC"
         );
-        $stmt->bind_param("iii", $characterId, $characterId, $mapId);
+        $stmt->bind_param("ii", $characterId, $mapId);
         $stmt->execute();
         $result = $stmt->get_result();
-
+        
         if (!$result) {
             return [];
         }

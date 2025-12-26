@@ -65,14 +65,14 @@ ob_start();
                         <label class="block text-gray-200 font-medium mb-2">Longitude (X)</label>
                         <input type="number" step="0.00000001" name="x" id="input-x"
                             class="w-full p-2.5 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
-                            required>
+                            required readonly>
                     </div>
 
                     <div class="mb-4">
                         <label class="block text-gray-200 font-medium mb-2">Latitude (Y)</label>
                         <input type="number" step="0.00000001" name="y" id="input-y"
                             class="w-full p-2.5 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
-                            required>
+                            required readonly>
                     </div>
                 </div>
 

@@ -66,7 +66,7 @@ export function showPointDetails(point, map = null) {
         // Only save previous view if panel is not already open (first click)
         const pointPanel = document.getElementById('point-panel');
         const isPanelOpen = pointPanel && !pointPanel.classList.contains('translate-x-full');
-
+        
         if (!isPanelOpen) {
             // Save current view before zooming (only on first point click)
             previousMapView = {
@@ -75,7 +75,7 @@ export function showPointDetails(point, map = null) {
             };
         }
         currentMapInstance = map;
-
+        
         const pointLatLng = L.latLng(parseFloat(point.y), parseFloat(point.x));
         const maxZoom = map.getMaxZoom();
 
@@ -141,27 +141,10 @@ export function showPointDetails(point, map = null) {
         case 'story':
         case 'dungeon':
             actionBtn.textContent = '⚔️ Entrer dans le donjon';
-
-            // Check completion status
-            if (point.story_completed == 1) {
-                if (point.story_repeatable == 0) {
-                    actionBtn.textContent = '✅ Terminée';
-                    actionBtn.disabled = true;
-                    actionBtn.classList.add('opacity-75', 'cursor-default', 'bg-green-600', 'hover:bg-green-600');
-                    actionBtn.classList.remove('bg-violet-600', 'hover:bg-violet-700');
-                } else {
-                    actionBtn.textContent = '🔄 Rejouer';
-                    actionBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
-                    actionBtn.classList.remove('bg-violet-600', 'hover:bg-violet-700');
-                }
-            }
-
             if (point.story_id) {
-                if (!actionBtn.disabled) {
-                    actionBtn.addEventListener('click', () => {
-                        window.location.href = `/story/enter/${point.story_id}`;
-                    });
-                }
+                actionBtn.addEventListener('click', () => {
+                    window.location.href = `/story/enter/${point.story_id}`;
+                });
             } else {
                 actionBtn.disabled = true;
                 actionBtn.textContent = '⛔ Donjon non configuré';
@@ -437,7 +420,7 @@ export function initMapPoints(map, points) {
 
     // Disabled: Dynamic icon sizing causes position glitches during flyTo animations
     // The icons will keep their fixed size which works better with Leaflet animations
-
+    
     map.on('zoomend', () => {
         updateIconSizes(map, markers);
     });
@@ -459,7 +442,7 @@ export function initPanelControls() {
 
     closePanelBtn.addEventListener('click', () => {
         pointPanel.classList.add('translate-x-full');
-
+        
         // Restore previous map view when closing panel
         if (previousMapView && currentMapInstance) {
             currentMapInstance.flyTo(previousMapView.center, previousMapView.zoom, {

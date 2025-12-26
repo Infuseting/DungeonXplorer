@@ -148,8 +148,28 @@ function renderNode() {
     // Update Exit Button - DÉSACTIVÉ car "Dire au revoir" à la princesse quitte le donjon
     const exitBtn = document.getElementById('exit-dungeon-btn');
     if (exitBtn) {
-        // Toujours masquer le bouton, la sortie se fait via "Dire au revoir"
-        exitBtn.classList.add('hidden');
+        console.log('[Exit Button] can_exit:', node.can_exit, 'exit_condition_type:', node.exit_condition_type);
+
+        // Show button if node has can_exit OR has exit_condition_type
+        const shouldShowButton = node.can_exit || node.exit_condition_type;
+
+        if (shouldShowButton) {
+            exitBtn.classList.remove('hidden');
+
+            if (node.can_exit) {
+                exitBtn.disabled = false;
+                exitBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'grayscale');
+                exitBtn.classList.add('hover:scale-110');
+                exitBtn.title = 'Quitter le donjon';
+            } else {
+                exitBtn.disabled = true;
+                exitBtn.classList.add('opacity-50', 'cursor-not-allowed', 'grayscale');
+                exitBtn.classList.remove('hover:scale-110');
+                exitBtn.title = 'Conditions de sortie non remplies';
+            }
+        } else {
+            exitBtn.classList.add('hidden');
+        }
     }
 
     // Render Interactions (Now returns active entity info)
@@ -452,7 +472,18 @@ function renderChoices(node) {
                 </div>
             `;
         } else {
-            container.innerHTML += `<div class="text-gray-500 italic text-center col-span-2">Aucune issue...</div>`;
+            // Check if exit button is visible (logic mirrored from renderNode)
+            const canExit = node.can_exit || node.exit_condition_type;
+            if (canExit) {
+                container.innerHTML += `
+                    <div class="text-center col-span-2">
+                        <p class="text-gray-300 italic mb-4">Vous avez atteint la fin de ce chemin.</p>
+                        <p class="text-green-400 font-bold animate-pulse">✨ La sortie est disponible !</p>
+                        <p class="text-xs text-gray-500 mt-2">(Utilisez le bouton "Quitter le donjon" en haut à droite)</p>
+                    </div>`;
+            } else {
+                container.innerHTML += `<div class="text-gray-500 italic text-center col-span-2">Aucune issue...</div>`;
+            }
         }
     }
 

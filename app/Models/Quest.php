@@ -5,12 +5,12 @@ use App\Config\Database;
 class Quest
 {
     private $db;
-
+    
     public function __construct()
     {
         $this->db = Database::getInstance()->getConnection();
     }
-
+    
     /**
      * Get all quests
      */
@@ -19,7 +19,7 @@ class Quest
         $result = $this->db->query("SELECT * FROM quests ORDER BY created_at DESC");
         return $result->fetch_all(MYSQLI_ASSOC);
     }
-
+    
     /**
      * Find quest by ID
      */
@@ -31,7 +31,7 @@ class Quest
         $result = $stmt->get_result();
         return $result->fetch_assoc();
     }
-
+    
     /**
      * Create new quest
      */
@@ -41,13 +41,13 @@ class Quest
         $xp = $data['xp_reward'] ?? 0;
         $gold = $data['gold_reward'] ?? 0;
         $stmt->bind_param("ssisii", $data['name'], $data['description'], $data['min_level'], $data['intro_text'], $xp, $gold);
-
+        
         if ($stmt->execute()) {
             return $this->db->insert_id;
         }
         return false;
     }
-
+    
     /**
      * Update quest
      */
@@ -56,10 +56,10 @@ class Quest
         $stmt = $this->db->prepare("UPDATE quests SET name = ?, description = ?, min_level = ?, intro_text = ?, xp_reward = ?, gold_reward = ? WHERE id = ?");
         $xp = $data['xp_reward'] ?? 0;
         $gold = $data['gold_reward'] ?? 0;
-        $stmt->bind_param("ssisiii", $data['name'], $data['description'], $data['min_level'], $data['intro_text'], $xp, $gold, $id);
+        $stmt->bind_param("ssisiisi", $data['name'], $data['description'], $data['min_level'], $data['intro_text'], $xp, $gold, $id);
         return $stmt->execute();
     }
-
+    
     /**
      * Delete quest
      */
@@ -69,7 +69,7 @@ class Quest
         $stmt->bind_param("i", $id);
         return $stmt->execute();
     }
-
+    
     /**
      * Get quest stages
      */
@@ -108,18 +108,17 @@ class Quest
         $stmt->bind_param("i", $id);
         return $stmt->execute();
     }
-
+    
     /**
      * Get full quest details (stages + objectives + rewards)
      */
     public function getFullQuest($questId)
     {
         $quest = $this->findById($questId);
-        if (!$quest)
-            return null;
-
+        if (!$quest) return null;
+        
         $stages = $this->getStages($questId);
-
+        
         foreach ($stages as &$stage) {
             $stmt = $this->db->prepare("SELECT * FROM quest_objectives WHERE stage_id = ?");
             $stmt->bind_param("i", $stage['id']);
@@ -127,10 +126,10 @@ class Quest
             $result = $stmt->get_result();
             $stage['objectives'] = $result->fetch_all(MYSQLI_ASSOC);
         }
-        unset($stage);
+        unset($stage);         
         $quest['stages'] = $stages;
         $quest['reward_items'] = $this->getRewardItems($questId);
-
+        
         return $quest;
     }
     public function getPrerequisites($questId)

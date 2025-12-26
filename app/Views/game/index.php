@@ -93,20 +93,19 @@ ob_start();
     </div>
 
     <!-- XP Bar (Top Right) -->
-    <div id="xp-bar-container"
-        class="absolute top-4 right-4 z-50 flex flex-col items-center bg-gray-900/90 backdrop-blur-sm border border-gray-700 rounded-lg px-4 py-2 shadow-xl">
+    <div id="xp-bar-container" class="absolute top-4 right-4 z-50 flex flex-col items-center bg-gray-900/90 backdrop-blur-sm border border-gray-700 rounded-lg px-4 py-2 shadow-xl">
         <div class="flex items-center gap-2">
             <!-- Current Level Badge -->
             <div class="flex items-center gap-1">
                 <span class="material-symbols-outlined text-violet-400 text-lg">star</span>
-                <span id="current-level" class="text-violet-400 font-bold font-mono text-lg"><?= $currentLevel ?></span>
+                <span class="text-violet-400 font-bold font-mono text-lg"><?= $currentLevel ?></span>
             </div>
 
             <!-- XP Progress Bar -->
             <div class="w-32 md:w-48 h-3 bg-gray-800 rounded-full overflow-hidden border border-gray-600 shadow-inner">
-                <div id="xp-progress-bar"
-                    class="h-full bg-gradient-to-r from-violet-600 via-violet-500 to-purple-400 transition-all duration-500 shadow-[0_0_8px_rgba(139,92,246,0.5)]"
-                    style="width: <?= $xpPercent ?>%"></div>
+                <div id="xp-progress-bar" 
+                     class="h-full bg-gradient-to-r from-violet-600 via-violet-500 to-purple-400 transition-all duration-500 shadow-[0_0_8px_rgba(139,92,246,0.5)]"
+                     style="width: <?= $xpPercent ?>%"></div>
             </div>
 
             <!-- Next Level Indicator -->
@@ -114,12 +113,11 @@ ob_start();
                 <span class="font-bold font-mono text-lg"><?= $currentLevel + 1 ?></span>
             </div>
         </div>
-
+        
         <!-- XP Progress Text -->
         <div class="flex">
             <div class="text-[10px] text-gray-400 text-center font-mono">
-                <span id="xp-current"><?= number_format($currentXp) ?></span> / <span
-                    id="xp-max"><?= number_format($xpForNext) ?></span> XP
+                <span id="xp-current"><?= number_format($currentXp) ?></span> / <span id="xp-max"><?= number_format($xpForNext) ?></span> XP
             </div>
         </div>
     </div>
@@ -168,8 +166,7 @@ ob_start();
                 <button id="close-point-panel" class="text-gray-400 hover:text-white transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
@@ -525,41 +522,7 @@ ob_start();
         } catch (error) {
             console.error('Failed to initialize map:', error);
         }
-        document.addEventListener('DOMContentLoaded', async () => {
-            // ... (lines 284-524)
-        });
-
-        // Global function for UI updates (XP Bar, Level)
-        window.updateUserHeaderStats = function (rewards) {
-            console.log('[UI] Updating Header Stats', rewards);
-            if (!rewards) return;
-
-            // XP Update
-            if (typeof rewards.current_xp !== 'undefined' && typeof rewards.max_xp !== 'undefined') {
-                const xpPercent = Math.min(100, (rewards.current_xp / rewards.max_xp) * 100);
-
-                const xpBar = document.getElementById('xp-progress-bar');
-                if (xpBar) xpBar.style.width = xpPercent + '%';
-
-                const xpCur = document.getElementById('xp-current');
-                if (xpCur) xpCur.textContent = new Intl.NumberFormat().format(rewards.current_xp);
-
-                const xpMax = document.getElementById('xp-max');
-                if (xpMax) xpMax.textContent = new Intl.NumberFormat().format(rewards.max_xp);
-            }
-
-            // Level Update
-            if (typeof rewards.current_level !== 'undefined') {
-                const lvlEl = document.getElementById('current-level');
-                if (lvlEl) lvlEl.textContent = rewards.current_level;
-            }
-
-            // Gold (Shop Modal is separate, but we can update it if visible)
-            if (typeof rewards.current_gold !== 'undefined') {
-                const goldEl = document.getElementById('shop-player-gold');
-                if (goldEl) goldEl.textContent = new Intl.NumberFormat().format(rewards.current_gold) + " 🪙";
-            }
-        };
+    });
 </script>
 <style>
     /**
@@ -571,15 +534,15 @@ ob_start();
     #xp-bar-container {
         background: linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
         border: 1px solid #4a4a5a;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.05);
     }
-
+    
     #xp-progress-bar {
         background: linear-gradient(90deg, #d724fb, #8b5cf6, #d724fb);
         box-shadow: 0 0 10px rgba(139, 92, 246, 0.7);
         position: relative;
     }
-
+    
     #xp-progress-bar::after {
         content: '';
         position: absolute;
@@ -587,20 +550,15 @@ ob_start();
         left: 0;
         right: 0;
         height: 50%;
-        background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), transparent);
+        background: linear-gradient(to bottom, rgba(255,255,255,0.2), transparent);
     }
-
+    
     /* XP bar shine animation */
     @keyframes xpShine {
-        0% {
-            background-position: -100% 0;
-        }
-
-        100% {
-            background-position: 200% 0;
-        }
+        0% { background-position: -100% 0; }
+        100% { background-position: 200% 0; }
     }
-
+    
     #xp-progress-bar::before {
         content: '';
         position: absolute;
@@ -608,7 +566,7 @@ ob_start();
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
         background-size: 50% 100%;
         animation: xpShine 2s ease-in-out infinite;
     }
@@ -621,7 +579,6 @@ ob_start();
             padding: 0.375rem 0.75rem;
             gap: 0.5rem;
         }
-
         #xp-bar-container .w-32 {
             width: 5rem;
         }
@@ -829,21 +786,22 @@ ob_start();
             opacity: 0.2;
         }
     }
+
 </style>
 
 <script type="module">
-        import { showToast } from '/js/modules/toast.js';
+import { showToast } from '/js/modules/toast.js';
 
-        // Afficher les messages de session
-        <?php if (isset($_SESSION['success_message'])): ?>
-            showToast('<?= addslashes($_SESSION['success_message']) ?>', 'success');
-            <?php unset($_SESSION['success_message']); ?>
-        <?php endif; ?>
+// Afficher les messages de session
+<?php if (isset($_SESSION['success_message'])): ?>
+showToast('<?= addslashes($_SESSION['success_message']) ?>', 'success');
+<?php unset($_SESSION['success_message']); ?>
+<?php endif; ?>
 
-        <?php if (isset($_SESSION['error_message'])): ?>
-            showToast('<?= addslashes($_SESSION['error_message']) ?>', 'error');
-            <?php unset($_SESSION['error_message']); ?>
-        <?php endif; ?>
+<?php if (isset($_SESSION['error_message'])): ?>
+showToast('<?= addslashes($_SESSION['error_message']) ?>', 'error');
+<?php unset($_SESSION['error_message']); ?>
+<?php endif; ?>
 </script>
 
 <?php
