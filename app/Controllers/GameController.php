@@ -236,6 +236,13 @@ class GameController
         // Filtrage des dialogues selon les quêtes actives
         if (isset($_SESSION['character_id'])) {
             $playerQuestModel = new PlayerQuest();
+            
+            // Mettre à jour les quêtes qui nécessitent de parler à ce NPC (en ville)
+            $questUpdates = $playerQuestModel->onNPCInteraction($_SESSION['character_id'], $id);
+            if (!empty($questUpdates)) {
+                error_log("[Game NPC] Quest updates for NPC $id (character {$_SESSION['character_id']}): " . json_encode($questUpdates));
+            }
+            
             $db = Database::getInstance()->getConnection();
             
             foreach ($allDialogueTrees as $tree) {

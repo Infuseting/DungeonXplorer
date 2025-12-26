@@ -765,6 +765,8 @@ class StoryController
     {
         $characterId = $_SESSION['character_id'];
         $storyId = $_POST['story_id'] ?? $_GET['story_id'] ?? null;
+        
+        error_log("[Exit Story] START - Character: $characterId, Story: $storyId");
 
         // Si storyId manquant, on tente de le récupérer depuis la progression active
         if (!$storyId) {
@@ -774,53 +776,20 @@ class StoryController
         }
 
         if (!$storyId) {
+            error_log("[Exit Story] ABORT - No story ID found");
             header('Location: /game');
             exit;
         }
 
         $progress = $this->progressModel->getProgress($characterId, $storyId);
+        error_log("[Exit Story] Progress found: " . ($progress ? "YES" : "NO"));
+        
         if ($progress) {
             $node = $this->nodeModel->findById($progress['current_node_id']);
-            if ($node && $node['can_exit']) {
-                // Vérification des conditions spécifiques de sortie
-                if (!empty($node['exit_condition_type']) && $node['exit_condition_type'] !== 'none') {
-                    $canExit = true;
-                    $reason = "Condition de sortie non remplie";
-
-                    switch ($node['exit_condition_type']) {
-                        case 'monster_cleared':
-                            $nodeStatus = $this->progressModel->getNodeStatus($characterId, $node['id']);
-                            if (!$nodeStatus || !$nodeStatus['monsters_cleared']) {
-                                $canExit = false;
-                                $reason = "Vous devez vaincre les monstres avant de sortir !";
-                            }
-                            break;
-
-                        case 'npc_talked':
-                            // Easter egg : on peut quitter sans parler, mais la quête ne sera pas validée
-                            $sessionKey = 'npc_interacted_' . $characterId . '_' . $node['id'];
-                            if (!isset($_SESSION[$sessionKey]) || empty($_SESSION[$sessionKey])) {
-                                // Marquer que le joueur est parti sans parler (easter egg)
-                                $exitedWithoutTalkingKey = 'exited_without_talking_' . $characterId . '_' . $node['id'];
-                                $_SESSION[$exitedWithoutTalkingKey] = true;
-                                // On autorise quand même la sortie
-                                $canExit = true;
-                            }
-                            break;
-                    }
-
-                    if (!$canExit) {
-                        // Si GET, rediriger avec message d'erreur
-                        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-                            $_SESSION['error_message'] = $reason;
-                            header('Location: /game');
-                            exit;
-                        }
-                        echo json_encode(['success' => false, 'message' => $reason]);
-                        exit;
-                    }
-                }
-
+            error_log("[Exit Story] Node found: " . ($node ? "YES (id={$node['id']}, can_exit={$node['can_exit']})" : "NO"));
+            
+            // On permet TOUJOURS la sortie, peu importe can_exit
+            if ($node) {
                 // Vérifier si c'est une vraie complétion (avec dialogues) ou un easter egg
                 $completedProperly = true;
                 if (!empty($node['exit_condition_type']) && $node['exit_condition_type'] === 'npc_talked') {
@@ -829,15 +798,30 @@ class StoryController
                     error_log("[Exit Story] Session value: " . json_encode($_SESSION[$sessionKey] ?? 'NOT SET'));
                     
                     if (!isset($_SESSION[$sessionKey]) || empty($_SESSION[$sessionKey])) {
+                        // Marquer que le joueur est parti sans parler (easter egg)
+                        $exitedWithoutTalkingKey = 'exited_without_talking_' . $characterId . '_' . $node['id'];
+                        $_SESSION[$exitedWithoutTalkingKey] = true;
                         $completedProperly = false;
-                        error_log("[Exit Story] Completion: FALSE (no NPC interaction)");
+                        error_log("[Exit Story] Completion: FALSE (no NPC interaction) - Easter egg activated");
                     } else {
                         error_log("[Exit Story] Completion: TRUE (NPC interacted: " . json_encode($_SESSION[$sessionKey]) . ")");
                     }
                 }
 
-                // Sortie validée : Mise à jour de la progression
-                $this->progressModel->exitDungeon($characterId, $storyId);
+                // Sortie validée : Suppression complète de TOUTE la progression (progress + nodes + loots)
+                error_log("[Exit Story] Resetting all progress for character $characterId, story $storyId");
+                $deleted = $this->progressModel->resetProgress($characterId, $storyId);
+                error_log("[Exit Story] Reset result: " . ($deleted ? "SUCCESS" : "FAILED"));
+                
+                // Vérification et suppression manuelle si resetProgress a échoué
+                if (!$deleted) {
+                    error_log("[Exit Story] resetProgress failed, trying manual DELETE");
+                    $db = Database::getInstance()->getConnection();
+                    $stmt = $db->prepare("DELETE FROM character_story_progress WHERE character_id = ? AND story_id = ?");
+                    $stmt->bind_param("ii", $characterId, $storyId);
+                    $manualDelete = $stmt->execute();
+                    error_log("[Exit Story] Manual DELETE result: " . ($manualDelete ? "SUCCESS" : "FAILED"));
+                }
 
                 // Ne valider la quête quotidienne QUE si complétion correcte
                 if ($completedProperly) {
@@ -849,6 +833,14 @@ class StoryController
                 } else {
                     error_log("[Exit Story] Exiting without proper completion (easter egg)");
                 }
+                
+                // Nettoyer les clés de session liées à ce donjon
+                $nodeId = $progress['current_node_id'];
+                $sessionKey = 'npc_interacted_' . $characterId . '_' . $nodeId;
+                $exitedKey = 'exited_without_talking_' . $characterId . '_' . $nodeId;
+                $fledKey = 'fled_monsters_' . $characterId . '_' . $nodeId;
+                unset($_SESSION[$sessionKey], $_SESSION[$exitedKey], $_SESSION[$fledKey]);
+                error_log("[Exit Story] Cleaned session keys");
 
                 // Si GET, rediriger vers la carte avec message de succès
                 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
@@ -913,17 +905,14 @@ class StoryController
         $dialogueData = null;
 
         if (!empty($trees)) {
-            // Choisir l'arbre en fonction de la condition easter egg
+            // Choisir l'arbre en fonction de différentes conditions
             $selectedTree = null;
             
-            // Si le joueur est parti sans parler, chercher le dialogue spécial (ID 6)
+            // 1. Si le joueur est parti sans parler à la princesse
             if ($hasExitedWithoutTalking) {
                 foreach ($trees as $tree) {
-                    // L'arbre "Princesse Mécontente" devrait avoir un ID spécifique
-                    // On peut le détecter par son nom ou ID
                     if (stripos($tree['name'], 'Mécontente') !== false || $tree['id'] == 6) {
                         $selectedTree = $tree;
-                        // Nettoyer la session après avoir affiché ce dialogue
                         unset($_SESSION[$exitedWithoutTalkingKey]);
                         error_log("[NPC Interaction] Easter egg dialogue selected for NPC $npcId");
                         break;
@@ -931,7 +920,41 @@ class StoryController
                 }
             }
             
-            // Si aucun dialogue spécial, prendre le premier (dialogue normal)
+            // 2. Si c'est le roi Minos (NPC 1), vérifier si la quête est complétée
+            if (!$selectedTree && $npcId == 1) {
+                // Vérifier si le joueur a parlé à la princesse (objectif complété)
+                $db = \App\Config\Database::getInstance()->getConnection();
+                $stmt = $db->prepare("
+                    SELECT COUNT(*) as completed
+                    FROM player_quest_progress pqp
+                    JOIN quest_objectives qo ON pqp.objective_id = qo.id
+                    WHERE pqp.character_id = ? 
+                    AND qo.type = 'TALK_NPC' 
+                    AND qo.target_id = 3
+                    AND pqp.current_progress >= qo.count_required
+                ");
+                $stmt->bind_param("i", $characterId);
+                $stmt->execute();
+                $result = $stmt->get_result()->fetch_assoc();
+                $hasTalkedToPrincess = $result['completed'] > 0;
+                
+                error_log("[NPC Interaction] King Minos - Has talked to princess: " . ($hasTalkedToPrincess ? "YES" : "NO"));
+                
+                // Sélectionner le dialogue approprié
+                foreach ($trees as $tree) {
+                    if ($hasTalkedToPrincess && stripos($tree['name'], 'Complétée') !== false) {
+                        $selectedTree = $tree;
+                        error_log("[NPC Interaction] Selected completion dialogue for King Minos");
+                        break;
+                    } else if (!$hasTalkedToPrincess && stripos($tree['name'], 'Complétée') === false) {
+                        $selectedTree = $tree;
+                        error_log("[NPC Interaction] Selected initial dialogue for King Minos");
+                        break;
+                    }
+                }
+            }
+            
+            // 3. Si aucun dialogue spécial, prendre le premier (dialogue par défaut)
             if (!$selectedTree) {
                 $selectedTree = $trees[0];
             }
@@ -960,9 +983,45 @@ class StoryController
             error_log("[NPC Interaction] No dialogue trees found for NPC $npcId");
         }
 
+        // Vérifier si on peut sortir automatiquement après ce dialogue
+        // Si c'est la princesse (NPC 3) dans un noeud avec exit_condition_type='npc_talked'
+        $node = $this->nodeModel->findById($nodeId);
+        $autoExit = false;
+        if ($npcId == 3 && $node && $node['can_exit'] && $node['exit_condition_type'] === 'npc_talked') {
+            $autoExit = true;
+            error_log("[NPC Interaction] Auto-exit enabled for princess dialogue");
+        }
+        
+        // Log pour debug de la session
+        error_log("[NPC Interaction] Session key $sessionKey = " . json_encode($_SESSION[$sessionKey]));
+        
+        // Si c'est le roi Minos et que le joueur a complété tous les objectifs, valider la quête
+        if ($npcId == 1 && !empty($questUpdates)) {
+            foreach ($questUpdates as $update) {
+                // Vérifier si tous les objectifs de la quête sont complétés
+                if (isset($update['quest_name']) && stripos($update['quest_name'], 'princesse') !== false) {
+                    error_log("[NPC Interaction] Checking if all objectives completed for quest: {$update['quest_name']}");
+                    
+                    // Marquer la quête comme complétée si tous les objectifs sont faits
+                    $allObjectivesComplete = $pqModel->checkQuestCompletion($characterId, $update['quest_name']);
+                    if ($allObjectivesComplete) {
+                        error_log("[NPC Interaction] Quest '{$update['quest_name']}' COMPLETED!");
+                    }
+                }
+            }
+        }
+        
+        // Force l'écriture de la session immédiatement pour éviter les problèmes de timing
+        session_write_close();
+        // Redémarre la session pour les requêtes suivantes
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
         echo json_encode([
             'success' => true,
-            'dialogue' => $dialogueData
+            'dialogue' => $dialogueData,
+            'auto_exit' => $autoExit
         ]);
     }
 
