@@ -236,13 +236,6 @@ class GameController
         // Filtrage des dialogues selon les quêtes actives
         if (isset($_SESSION['character_id'])) {
             $playerQuestModel = new PlayerQuest();
-            
-            // Mettre à jour les quêtes qui nécessitent de parler à ce NPC (en ville)
-            $questUpdates = $playerQuestModel->onNPCInteraction($_SESSION['character_id'], $id);
-            if (!empty($questUpdates)) {
-                error_log("[Game NPC] Quest updates for NPC $id (character {$_SESSION['character_id']}): " . json_encode($questUpdates));
-            }
-            
             $db = Database::getInstance()->getConnection();
             
             foreach ($allDialogueTrees as $tree) {
@@ -272,7 +265,47 @@ class GameController
                     }
                 } else {
                     // Dialogue standard (non lié à une quête)
-                    $availableDialogues[] = $tree;
+                    // Exception pour le roi Minos (NPC 1) : vérifier l'objectif de la princesse
+                    if ($id == 1) {
+                        // Vérifier si la quête du roi Minos est active
+                        $stmt = $db->prepare("
+                            SELECT pq.id
+                            FROM player_quests pq
+                            JOIN quests q ON pq.quest_id = q.id
+                            WHERE pq.character_id = ?
+                            AND q.name LIKE '%princesse%'
+                            AND pq.status = 'ACTIVE'
+                        ");
+                        $stmt->bind_param("i", $_SESSION['character_id']);
+                        $stmt->execute();
+                        $result = $stmt->get_result();
+                        $activeQuest = $result->fetch_assoc();
+                        
+                        if ($activeQuest) {
+                            // La quête est active, vérifier si la princesse a été sauvée
+                            $stmt = $db->prepare("
+                                SELECT pqp.is_completed
+                                FROM player_quest_progress pqp
+                                JOIN quest_objectives qo ON pqp.objective_id = qo.id
+                                WHERE pqp.player_quest_id = ?
+                                AND qo.type = 'TALK_NPC'
+                                AND qo.target_id = 3
+                            ");
+                            $stmt->bind_param("i", $activeQuest['id']);
+                            $stmt->execute();
+                            $result = $stmt->get_result();
+                            $princessObjective = $result->fetch_assoc();
+                            
+                            // N'afficher le dialogue que si l'objectif princesse est complété
+                            if ($princessObjective && $princessObjective['is_completed']) {
+                                $availableDialogues[] = $tree;
+                            }
+                        }
+                        // Sinon, pas de quête active = pas de dialogue
+                    } else {
+                        // Autre NPC, dialogue standard
+                        $availableDialogues[] = $tree;
+                    }
                 }
             }
         } else {
@@ -346,6 +379,17 @@ class GameController
     }
     
     /**
+     * Vérifie si le joueur peut parler au roi Minos (NPC 1).
+     * Note: Le filtrage réel est fait dans getNPC(), cette méthode est conservée pour compatibilité.
+     */
+    public function checkMinosAccess()
+    {
+        header('Content-Type: application/json');
+        echo json_encode(['can_talk' => true]);
+        exit;
+    }
+    
+    /**
      * Récupère la structure d'un arbre de dialogue.
      */
     public function getDialogueTree($treeId)
@@ -358,6 +402,21 @@ class GameController
         if (empty($tree)) {
             echo json_encode(['success' => false, 'message' => 'Arbre de dialogue non trouvé']);
             exit;
+        }
+        
+        // Valider les objectifs TALK_NPC maintenant que le dialogue commence vraiment
+        if (isset($_SESSION['character_id']) && !empty($tree)) {
+            // Récupérer le NPC associé à cet arbre de dialogue
+            $npcModel = new NPC();
+            $npcId = $dialogueModel->getNPCIdForTree($treeId);
+            
+            if ($npcId) {
+                $playerQuestModel = new PlayerQuest();
+                $questUpdates = $playerQuestModel->onNPCInteraction($_SESSION['character_id'], $npcId);
+                if (!empty($questUpdates)) {
+                    error_log("[Dialogue] Quest updates for NPC $npcId (character {$_SESSION['character_id']}): " . json_encode($questUpdates));
+                }
+            }
         }
         
         // On récupère la racine de l'arbre
