@@ -88,6 +88,12 @@ class GameController
             return $s;
         }, $classSkills));
 
+        // Recupereation des données sur le niveau et l'expérience
+        $currentLevel = $character->getLevel();
+        $currentXp = $character->getExperience();
+        $xpForNext = $character->getXpForNextLevel();
+        $xpPercent = $xpForNext > 0 ? min(100, ($currentXp / $xpForNext) * 100) : 0;
+
         
         // Chargement de la carte par défaut (ID 1 - Carte du Monde)
         $mapId = 1;

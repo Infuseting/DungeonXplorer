@@ -453,7 +453,7 @@ use App\Models\Skill
 
                         if (rewards.levels_gained > 0) {
                             rewardHtml += `<div class="mt-2 p-2 bg-green-900/50 rounded border border-green-500/50 animate-bounce">
-                                    <p class="text-green-400 font-bold uppercase">🎉 Niveau Supérieur ! (+${rewards.levels_gained})</p>
+                                    <p class="text-green-400 font-bold uppercase">Niveau Supérieur ! (+${rewards.levels_gained})</p>
                                 </div>`;
                         }
 

@@ -185,18 +185,21 @@ use App\Models\Skill;
                         <!-- Skills Button -->
                         <li>
                             <?php 
-                                                                $actives = array_filter($skills ?? [], function($s) { return $s['type'] === 'active'; });
+                                $actives = array_filter($skills ?? [], function($s) { 
+                                    return isset($s['type']) && $s['type'] === 'active'; 
+                                });
+                                $hasActiveSkills = !empty($actives);
                             ?>
                             <button id="btn-skills-menu" onclick="window.toggleActionMenu('skills')" disabled
                                 class="
                                 w-full px-2 py-3 text-xs md:text-sm uppercase font-bold
-                                bg-violet-900/30 text-violet-300 border border-violet-500 rounded
+                                <?= $hasActiveSkills ? 'bg-violet-900/30 text-violet-300 border-violet-500' : 'bg-gray-800/30 text-gray-500 border-gray-600' ?> border rounded
                                 hover:not-disabled:bg-violet-900/60 hover:not-disabled:text-white hover:not-disabled:border-violet-300 transition duration-200
                                 shadow-md flex flex-col items-center gap-1 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed
                                 "
-                                title="Lancer les dés d'abord">
+                                title="<?= $hasActiveSkills ? 'Lancer les dés d\'abord' : 'Aucune compétence active débloquée' ?>">
                                 <span class="material-symbols-outlined text-lg">bolt</span>
-                                Spécial <?= !empty($actives) ? '('.count($actives).')' : '' ?>
+                                Spécial <?= $hasActiveSkills ? '('.count($actives).')' : '' ?>
                             </button>
                         </li>
                     </ul>
@@ -255,13 +258,16 @@ use App\Models\Skill;
                                         <div class="text-2xl bg-violet-900/50 p-1 rounded"><?= $skill['icon'] ?? '⚡' ?></div>
                                         <div>
                                             <div class="font-bold text-violet-100 group-hover:text-violet-400 text-sm"><?= htmlspecialchars($skill['name']) ?></div>
-                                            <div class="text-[10px] text-gray-400">Coût: <?= $skill['cost'] ?? 0 ?> MP</div> 
+                                            <div class="text-[10px] text-gray-400">Coût: <?= $skill['cost_mp'] ?? 0 ?> MP</div> 
                                         </div>
                                     </div>
                                 </button>
                             <?php endforeach; ?>
                         <?php else: ?>
-                             <p class="text-gray-500 text-center italic mt-4">Aucune compétence.</p>
+                             <div class="text-center mt-4">
+                                <p class="text-gray-500 italic">Aucune compétence active.</p>
+                                <p class="text-xs text-gray-600 mt-2">Débloquez des compétences actives dans l'arbre de compétences ⚡</p>
+                             </div>
                         <?php endif; ?>
                     </div>
                 </div>

@@ -30,6 +30,22 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Safari/Older Browser Compatibility -->
+    <script>
+        // Detect Safari and show warning if too old
+        (function() {
+            var ua = navigator.userAgent;
+            var isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+            if (isSafari) {
+                var match = ua.match(/Version\/(\d+)/);
+                var version = match ? parseInt(match[1]) : 0;
+                // Safari 14+ supports optional chaining and nullish coalescing
+                if (version > 0 && version < 14) {
+                    console.warn('[Safari] Version ' + version + ' detected - some features may not work properly');
+                }
+            }
+        })();
+    </script>
     <style>
         body {
             padding-bottom: env(safe-area-inset-bottom);

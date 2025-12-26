@@ -663,7 +663,8 @@ function moveItem(itemId, location, slot = null) {
                                 parent.remove();
                             } else if (parent.dataset.slot) {
                                 // Clear equipment slot
-                                const label = parent.querySelector('.slot-label')?.textContent || '';
+                                var labelEl = parent.querySelector('.slot-label');
+                                var label = labelEl ? labelEl.textContent : '';
                                 parent.innerHTML = '<span class="slot-label">' + label + '</span>';
                             }
                         } else {
@@ -675,7 +676,8 @@ function moveItem(itemId, location, slot = null) {
                     // 2. Add to Target Location
                     if (location === 'equipped') {
                         // Clear target container first (just to be safe)
-                        const label = targetContainer.querySelector('.slot-label')?.textContent || '';
+                        var labelEl = targetContainer.querySelector('.slot-label');
+                        var label = labelEl ? labelEl.textContent : '';
                         targetContainer.innerHTML = '<span class="slot-label">' + label + '</span>';
 
                         const img = document.createElement('img');
@@ -703,10 +705,12 @@ function moveItem(itemId, location, slot = null) {
                             else if (slot === 'off_hand') otherSlotName = 'main_hand';
 
                             if (otherSlotName) {
-                                const otherSlot = document.querySelector(`.slot[data-slot="${otherSlotName}"]`);
+                                const otherSlot = document.querySelector('.slot[data-slot="' + otherSlotName + '"]');
                                 if (otherSlot) {
                                     // Clear other slot
-                                    otherSlot.innerHTML = '<span class="slot-label">' + otherSlot.querySelector('.slot-label')?.textContent + '</span>';
+                                    var otherLabelEl = otherSlot.querySelector('.slot-label');
+                                    var otherLabel = otherLabelEl ? otherLabelEl.textContent : '';
+                                    otherSlot.innerHTML = '<span class="slot-label">' + otherLabel + '</span>';
 
                                     // Add ghost image
                                     const ghostImg = img.cloneNode(true);

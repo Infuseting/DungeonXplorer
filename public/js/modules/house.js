@@ -9,6 +9,17 @@ import { playSound } from './soundManager.js';
 // State for context menu
 let contextMenuTarget = null;
 
+// Helper function for Safari compatibility (optional chaining fallback)
+function safeGetElement(id) {
+    return document.getElementById(id);
+}
+
+function safeAddEventListener(element, event, handler) {
+    if (element) {
+        element.addEventListener(event, handler);
+    }
+}
+
 class HouseManager {
     constructor() {
         this.modal = document.getElementById('house-modal');
@@ -34,7 +45,7 @@ class HouseManager {
 
     bindEvents() {
         // Close modal
-        document.getElementById('close-house-modal')?.addEventListener('click', () => this.close());
+        safeAddEventListener(safeGetElement('close-house-modal'), 'click', () => this.close());
         
         // Tab navigation
         document.querySelectorAll('.house-tab').forEach(tab => {
@@ -47,35 +58,37 @@ class HouseManager {
         });
 
         // Go to shop button
-        document.getElementById('go-to-shop-btn')?.addEventListener('click', () => {
+        safeAddEventListener(safeGetElement('go-to-shop-btn'), 'click', () => {
             this.switchTab('shop');
         });
 
         // Workbench go to shop button
-        document.getElementById('workbench-go-to-shop-btn')?.addEventListener('click', () => {
+        safeAddEventListener(safeGetElement('workbench-go-to-shop-btn'), 'click', () => {
             this.switchTab('shop');
         });
 
         // Purchase workbench button
-        document.getElementById('purchase-workbench-btn')?.addEventListener('click', () => this.purchaseWorkbench());
+        safeAddEventListener(safeGetElement('purchase-workbench-btn'), 'click', () => this.purchaseWorkbench());
 
         // Rename house
-        document.getElementById('rename-house-btn')?.addEventListener('click', () => this.renameHouse());
+        safeAddEventListener(safeGetElement('rename-house-btn'), 'click', () => this.renameHouse());
 
         // Deposit all
-        document.getElementById('deposit-all-btn')?.addEventListener('click', () => this.depositAll());
+        safeAddEventListener(safeGetElement('deposit-all-btn'), 'click', () => this.depositAll());
 
         // Workbench apply button
-        document.getElementById('workbench-apply-btn')?.addEventListener('click', () => this.applyEnchantment());
+        safeAddEventListener(safeGetElement('workbench-apply-btn'), 'click', () => this.applyEnchantment());
 
         // Click outside to close
-        this.modal?.addEventListener('click', (e) => {
-            if (e.target === this.modal) this.close();
-        });
+        if (this.modal) {
+            this.modal.addEventListener('click', (e) => {
+                if (e.target === this.modal) this.close();
+            });
+        }
 
         // ESC to close
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && !this.modal.classList.contains('hidden')) {
+            if (e.key === 'Escape' && this.modal && !this.modal.classList.contains('hidden')) {
                 this.close();
             }
         });
@@ -256,7 +269,8 @@ class HouseManager {
         document.querySelectorAll('.house-tab-content').forEach(content => {
             content.classList.add('hidden');
         });
-        document.getElementById(`house-tab-${tabName}`)?.classList.remove('hidden');
+        var tabEl = document.getElementById('house-tab-' + tabName);
+        if (tabEl) tabEl.classList.remove('hidden');
 
         // Load tab-specific data
         switch (tabName) {
@@ -1213,66 +1227,78 @@ class HouseManager {
         });
 
         // Equip action - close house modal and open inventory
-        document.getElementById('house-ctx-equip')?.addEventListener('click', async () => {
-            if (contextMenuTarget) {
-                const location = contextMenuTarget.dataset.location;
-                const itemId = contextMenuTarget.dataset.storageId || contextMenuTarget.dataset.inventoryId;
-                
-                // If item is in storage, first withdraw it
-                if (location === 'storage') {
-                    await this.withdrawItem(itemId);
-                }
-                
-                // Close house modal
-                this.close();
-                
-                // Open inventory modal
-                setTimeout(() => {
-                    const inventoryModal = document.getElementById('inventory-modal');
-                    if (inventoryModal) {
-                        inventoryModal.classList.remove('hidden');
-                        // Highlight the item if possible
-                        this.showNotification('Équipez l\'objet depuis votre inventaire', 'info');
-                    }
-                }, 300);
-            }
-            menu.classList.add('hidden');
-        });
-
-        // Deposit action
-        document.getElementById('house-ctx-deposit')?.addEventListener('click', async () => {
-            if (contextMenuTarget) {
-                const itemId = contextMenuTarget.dataset.inventoryId;
-                await this.depositItem(itemId);
-            }
-            menu.classList.add('hidden');
-        });
-
-        // Withdraw action
-        document.getElementById('house-ctx-withdraw')?.addEventListener('click', async () => {
-            if (contextMenuTarget) {
-                const itemId = contextMenuTarget.dataset.storageId;
-                await this.withdrawItem(itemId);
-            }
-            menu.classList.add('hidden');
-        });
-
-        // Drop action
-        document.getElementById('house-ctx-drop')?.addEventListener('click', async () => {
-            if (contextMenuTarget) {
-                if (confirm('Êtes-vous sûr de vouloir jeter cet objet définitivement ?')) {
+        var ctxEquip = document.getElementById('house-ctx-equip');
+        if (ctxEquip) {
+            ctxEquip.addEventListener('click', async () => {
+                if (contextMenuTarget) {
                     const location = contextMenuTarget.dataset.location;
                     const itemId = contextMenuTarget.dataset.storageId || contextMenuTarget.dataset.inventoryId;
                     
+                    // If item is in storage, first withdraw it
                     if (location === 'storage') {
-                        await this.dropStorageItem(itemId);
-                    } else {
-                        await this.dropInventoryItem(itemId);
+                        await this.withdrawItem(itemId);
+                    }
+                    
+                    // Close house modal
+                    this.close();
+                    
+                    // Open inventory modal
+                    setTimeout(() => {
+                        const inventoryModal = document.getElementById('inventory-modal');
+                        if (inventoryModal) {
+                            inventoryModal.classList.remove('hidden');
+                            // Highlight the item if possible
+                            this.showNotification('Équipez l\'objet depuis votre inventaire', 'info');
+                        }
+                    }, 300);
+                }
+                menu.classList.add('hidden');
+            });
+        }
+
+        // Deposit action
+        var ctxDeposit = document.getElementById('house-ctx-deposit');
+        if (ctxDeposit) {
+            ctxDeposit.addEventListener('click', async () => {
+                if (contextMenuTarget) {
+                    const itemId = contextMenuTarget.dataset.inventoryId;
+                    await this.depositItem(itemId);
+                }
+                menu.classList.add('hidden');
+            });
+        }
+
+        // Withdraw action
+        var ctxWithdraw = document.getElementById('house-ctx-withdraw');
+        if (ctxWithdraw) {
+            ctxWithdraw.addEventListener('click', async () => {
+                if (contextMenuTarget) {
+                    const itemId = contextMenuTarget.dataset.storageId;
+                    await this.withdrawItem(itemId);
+                }
+                menu.classList.add('hidden');
+            });
+        }
+
+        // Drop action
+        var ctxDrop = document.getElementById('house-ctx-drop');
+        if (ctxDrop) {
+            ctxDrop.addEventListener('click', async () => {
+                if (contextMenuTarget) {
+                    if (confirm('Êtes-vous sûr de vouloir jeter cet objet définitivement ?')) {
+                        const location = contextMenuTarget.dataset.location;
+                        const itemId = contextMenuTarget.dataset.storageId || contextMenuTarget.dataset.inventoryId;
+                        
+                        if (location === 'storage') {
+                            await this.dropStorageItem(itemId);
+                        } else {
+                            await this.dropInventoryItem(itemId);
+                        }
                     }
                 }
-            }
-            menu.classList.add('hidden');
-        });
+                menu.classList.add('hidden');
+            });
+        }
     }
 
     /**
@@ -1343,21 +1369,25 @@ class HouseManager {
                 document.getElementById('house-player-gold').textContent = this.formatNumber(this.playerGold);
 
                 // Hide all states first
-                document.getElementById('workbench-no-house')?.classList.add('hidden');
-                document.getElementById('workbench-locked')?.classList.add('hidden');
-                document.getElementById('workbench-interface')?.classList.add('hidden');
+                var noHouseEl = document.getElementById('workbench-no-house');
+                var lockedEl = document.getElementById('workbench-locked');
+                var interfaceEl = document.getElementById('workbench-interface');
+                
+                if (noHouseEl) noHouseEl.classList.add('hidden');
+                if (lockedEl) lockedEl.classList.add('hidden');
+                if (interfaceEl) interfaceEl.classList.add('hidden');
 
                 if (!data.has_house) {
                     // No house - show message to buy a house
-                    document.getElementById('workbench-no-house')?.classList.remove('hidden');
+                    if (noHouseEl) noHouseEl.classList.remove('hidden');
                 } else if (data.has_workbench) {
                     // Has workbench - show interface
-                    document.getElementById('workbench-interface')?.classList.remove('hidden');
+                    if (interfaceEl) interfaceEl.classList.remove('hidden');
                     this.renderWorkbenchItems(data.items);
                     this.renderWorkbenchEnchantments(data.enchantments);
                 } else {
                     // Has house but no workbench - show paywall
-                    document.getElementById('workbench-locked')?.classList.remove('hidden');
+                    if (lockedEl) lockedEl.classList.remove('hidden');
                     document.getElementById('workbench-price').textContent = this.formatNumber(data.workbench_price);
                     document.getElementById('workbench-required-level').textContent = data.workbench_required_level;
                     
@@ -1370,13 +1400,13 @@ class HouseManager {
                         const hasLevel = data.player_level >= data.workbench_required_level;
                         purchaseBtn.disabled = !canAfford || !hasLevel;
                         
-                        errorEl?.classList.add('hidden');
-                        if (!canAfford) {
-                            errorEl.textContent = `Or insuffisant (${this.formatNumber(this.playerGold)} / ${this.formatNumber(data.workbench_price)})`;
-                            errorEl?.classList.remove('hidden');
-                        } else if (!hasLevel) {
-                            errorEl.textContent = `Niveau insuffisant (${data.player_level} / ${data.workbench_required_level})`;
-                            errorEl?.classList.remove('hidden');
+                        if (errorEl) errorEl.classList.add('hidden');
+                        if (!canAfford && errorEl) {
+                            errorEl.textContent = 'Or insuffisant (' + this.formatNumber(this.playerGold) + ' / ' + this.formatNumber(data.workbench_price) + ')';
+                            errorEl.classList.remove('hidden');
+                        } else if (!hasLevel && errorEl) {
+                            errorEl.textContent = 'Niveau insuffisant (' + data.player_level + ' / ' + data.workbench_required_level + ')';
+                            errorEl.classList.remove('hidden');
                         }
                     }
                 }
@@ -1484,6 +1514,7 @@ class HouseManager {
         // Select this item
         itemElement.classList.add('ring-2', 'ring-violet-500');
         
+        var imgEl = itemElement.querySelector('img');
         this.selectedWorkbenchItem = {
             inventoryId: itemElement.dataset.inventoryId,
             name: itemElement.dataset.name,
@@ -1491,7 +1522,7 @@ class HouseManager {
             slotType: itemElement.dataset.slotType,
             stats: JSON.parse(itemElement.dataset.stats || '{}'),
             enchantments: JSON.parse(itemElement.dataset.enchantments || '[]'),
-            icon: itemElement.querySelector('img')?.src || ''
+            icon: imgEl ? imgEl.src : ''
         };
 
         // Reset selected enchantment when changing item
@@ -1503,20 +1534,21 @@ class HouseManager {
 
         // Update item slot visual
         const itemSlot = document.getElementById('workbench-item-slot');
-        itemSlot.innerHTML = `<img src="${this.selectedWorkbenchItem.icon}" alt="${this.selectedWorkbenchItem.name}" class="w-full h-full object-contain p-1">`;
+        itemSlot.innerHTML = '<img src="' + this.selectedWorkbenchItem.icon + '" alt="' + this.selectedWorkbenchItem.name + '" class="w-full h-full object-contain p-1">';
 
         // Show item info (only enchantments, no name)
         const itemInfo = document.getElementById('workbench-item-info');
         const enchantsContainer = document.getElementById('workbench-item-enchants');
         
+        var self = this;
         if (this.selectedWorkbenchItem.enchantments.length > 0) {
             itemInfo.classList.remove('hidden');
-            enchantsContainer.innerHTML = this.selectedWorkbenchItem.enchantments.map(e => `
-                <div class="flex items-center justify-between text-xs bg-gray-900/50 rounded px-2 py-1">
-                    <span class="text-purple-300">✨ ${e.name}</span>
-                    <button class="text-red-400 hover:text-red-300 text-xs px-1" data-enchant-id="${e.id}" onclick="window.houseManager?.removeEnchantment(${e.id})" title="Retirer (50🪙)">✕</button>
-                </div>
-            `).join('');
+            enchantsContainer.innerHTML = this.selectedWorkbenchItem.enchantments.map(function(e) {
+                return '<div class="flex items-center justify-between text-xs bg-gray-900/50 rounded px-2 py-1">' +
+                    '<span class="text-purple-300">✨ ' + e.name + '</span>' +
+                    '<button class="text-red-400 hover:text-red-300 text-xs px-1" data-enchant-id="' + e.id + '" onclick="if(window.houseManager)window.houseManager.removeEnchantment(' + e.id + ')" title="Retirer (50🪙)">✕</button>' +
+                '</div>';
+            }).join('');
         } else {
             itemInfo.classList.add('hidden');
         }
@@ -1538,9 +1570,12 @@ class HouseManager {
         const items = enchantmentsList.querySelectorAll('.enchantment-item');
 
         // Get list of already applied enchantment IDs
-        const appliedEnchantmentIds = this.selectedWorkbenchItem?.enchantments?.map(e => String(e.enchantment_id)) || [];
+        var appliedEnchantmentIds = [];
+        if (this.selectedWorkbenchItem && this.selectedWorkbenchItem.enchantments) {
+            appliedEnchantmentIds = this.selectedWorkbenchItem.enchantments.map(function(e) { return String(e.enchantment_id); });
+        }
 
-        items.forEach(item => {
+        items.forEach(function(item) {
             const enchantId = item.dataset.enchantmentId;
             const compatibleSlots = JSON.parse(item.dataset.compatibleSlots || '[]');
             const isCompatible = compatibleSlots.length === 0 || compatibleSlots.includes(slotType);
@@ -1557,15 +1592,18 @@ class HouseManager {
                     const badge = document.createElement('span');
                     badge.className = 'applied-badge text-xs text-green-400 ml-2';
                     badge.textContent = '✓ Appliqué';
-                    item.querySelector('.flex')?.appendChild(badge);
+                    var flexEl = item.querySelector('.flex');
+                    if (flexEl) flexEl.appendChild(badge);
                 }
             } else if (isCompatible) {
                 item.classList.add('cursor-pointer');
                 // Remove applied badge if exists
-                item.querySelector('.applied-badge')?.remove();
+                var badge = item.querySelector('.applied-badge');
+                if (badge) badge.remove();
             } else {
                 item.classList.add('opacity-50', 'pointer-events-none');
-                item.querySelector('.applied-badge')?.remove();
+                var badge = item.querySelector('.applied-badge');
+                if (badge) badge.remove();
             }
         });
     }

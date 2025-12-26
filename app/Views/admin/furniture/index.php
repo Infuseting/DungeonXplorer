@@ -23,11 +23,11 @@ $rarityColors = [
         <div class="bg-green-900/50 border border-green-500 text-green-300 px-4 py-3 rounded-lg mb-6">
             <?php
             $messages = [
-                'created' => '✅ Meuble créé avec succès',
-                'updated' => '✅ Meuble mis à jour',
-                'deleted' => '✅ Meuble supprimé'
+                'created' => 'Meuble créé avec succès',
+                'updated' => 'Meuble mis à jour',
+                'deleted' => 'Meuble supprimé'
             ];
-            echo $messages[$_GET['success']] ?? '✅ Opération réussie';
+            echo $messages[$_GET['success']] ?? 'Opération réussie';
             ?>
         </div>
     <?php endif; ?>

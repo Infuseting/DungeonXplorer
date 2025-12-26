@@ -145,6 +145,7 @@ class Character
             $this->dexterity = $result['dexterity'] ?? 10;
             $this->intelligence = $result['intelligence'] ?? 10;
             $this->current_hp = $result['current_hp'] ?? $this->vitality;
+            $this->skillPoints = $result['skill_points'] ?? 0;
 
             // Décoder les données d'apparence si présentes
             if (isset($result['appearance']) && is_string($result['appearance'])) {

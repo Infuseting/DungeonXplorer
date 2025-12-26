@@ -92,6 +92,36 @@ ob_start();
         </div>
     </div>
 
+    <!-- XP Bar (Top Right) -->
+    <div id="xp-bar-container" class="absolute top-4 right-4 z-50 flex flex-col items-center bg-gray-900/90 backdrop-blur-sm border border-gray-700 rounded-lg px-4 py-2 shadow-xl">
+        <div class="flex items-center gap-2">
+            <!-- Current Level Badge -->
+            <div class="flex items-center gap-1">
+                <span class="material-symbols-outlined text-violet-400 text-lg">star</span>
+                <span class="text-violet-400 font-bold font-mono text-lg"><?= $currentLevel ?></span>
+            </div>
+
+            <!-- XP Progress Bar -->
+            <div class="w-32 md:w-48 h-3 bg-gray-800 rounded-full overflow-hidden border border-gray-600 shadow-inner">
+                <div id="xp-progress-bar" 
+                     class="h-full bg-gradient-to-r from-violet-600 via-violet-500 to-purple-400 transition-all duration-500 shadow-[0_0_8px_rgba(139,92,246,0.5)]"
+                     style="width: <?= $xpPercent ?>%"></div>
+            </div>
+
+            <!-- Next Level Indicator -->
+            <div class="flex items-center gap-1 text-gray-500">
+                <span class="font-bold font-mono text-lg"><?= $currentLevel + 1 ?></span>
+            </div>
+        </div>
+        
+        <!-- XP Progress Text -->
+        <div class="flex">
+            <div class="text-[10px] text-gray-400 text-center font-mono">
+                <span id="xp-current"><?= number_format($currentXp) ?></span> / <span id="xp-max"><?= number_format($xpForNext) ?></span> XP
+            </div>
+        </div>
+    </div>
+
     <!-- Action Buttons (Bottom Right) -->
     <div class="absolute right-4 md:right-8 z-40 flex flex-col gap-2 md:gap-4"
         style="bottom: calc(1rem + env(safe-area-inset-bottom));">
@@ -499,6 +529,60 @@ ob_start();
  * Game Styles
  * Styles for inventory, map, and game-specific UI elements
  */
+
+    /* XP Bar Dark Fantasy Styles */
+    #xp-bar-container {
+        background: linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
+        border: 1px solid #4a4a5a;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+    
+    #xp-progress-bar {
+        background: linear-gradient(90deg, #d724fb, #8b5cf6, #d724fb);
+        box-shadow: 0 0 10px rgba(139, 92, 246, 0.7);
+        position: relative;
+    }
+    
+    #xp-progress-bar::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 50%;
+        background: linear-gradient(to bottom, rgba(255,255,255,0.2), transparent);
+    }
+    
+    /* XP bar shine animation */
+    @keyframes xpShine {
+        0% { background-position: -100% 0; }
+        100% { background-position: 200% 0; }
+    }
+    
+    #xp-progress-bar::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        background-size: 50% 100%;
+        animation: xpShine 2s ease-in-out infinite;
+    }
+
+    /* Mobile responsive for XP bar */
+    @media (max-width: 640px) {
+        #xp-bar-container {
+            right: 50%;
+            transform: translateX(50%);
+            padding: 0.375rem 0.75rem;
+            gap: 0.5rem;
+        }
+        #xp-bar-container .w-32 {
+            width: 5rem;
+        }
+    }
 
     /* Inventory Slot Styles */
     .slot {
