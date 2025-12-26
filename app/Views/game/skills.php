@@ -1,19 +1,23 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Arbre de Compétences</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@400;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
 </head>
+
 <body class="bg-gray-900 text-gray-100 font-lato min-h-screen flex flex-col">
 
     <!-- Navbar -->
     <nav class="bg-gray-800 border-b border-gray-700 p-4">
         <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-cinzel text-amber-500">Compétences - <?= htmlspecialchars($character->getName()) ?></h1>
+            <h1 class="text-2xl font-cinzel text-amber-500">Compétences - <?= htmlspecialchars($character->getName()) ?>
+            </h1>
             <a href="/game" class="text-gray-400 hover:text-white flex items-center gap-2">
                 <span class="material-symbols-outlined">arrow_back</span> Retour
             </a>
@@ -21,7 +25,7 @@
     </nav>
 
     <main class="flex-grow container mx-auto p-6">
-        
+
         <!-- Header Info -->
         <div class="flex justify-between items-center mb-8 bg-gray-800 p-4 rounded-lg border border-gray-700">
             <div class="flex items-center gap-4">
@@ -33,7 +37,7 @@
                     <p class="text-3xl font-bold text-amber-400" id="sp-display"><?= $character->getSkillPoints() ?></p>
                 </div>
             </div>
-            
+
             <div class="text-right">
                 <p class="text-sm text-gray-400">Niveau actuel</p>
                 <p class="text-xl font-bold"><?= $character->getLevel() ?></p>
@@ -42,10 +46,12 @@
 
 
         <!-- Canvas Container -->
-        <div class="relative w-full h-[600px] bg-gray-900 border border-gray-700 rounded-lg overflow-hidden cursor-grab active:cursor-grabbing" id="skill-tree-container">
-             <!-- SVG Layer for Lines -->
-            <svg id="connections-layer" class="absolute inset-0 w-full h-full pointer-events-none transform-origin-0"></svg>
-            
+        <div class="relative w-full h-[600px] bg-gray-900 border border-gray-700 rounded-lg overflow-hidden cursor-grab active:cursor-grabbing"
+            id="skill-tree-container">
+            <!-- SVG Layer for Lines -->
+            <svg id="connections-layer"
+                class="absolute inset-0 w-full h-full pointer-events-none transform-origin-0"></svg>
+
             <!-- Nodes Layer -->
             <div id="nodes-layer" class="absolute inset-0 transform-origin-0"></div>
 
@@ -57,21 +63,24 @@
     </main>
 
     <script>
-                const CHARACTER_LEVEL = <?= $character->getLevel() ?>;
+        const CHARACTER_LEVEL = <?= $character->getLevel() ?>;
         const SKILL_POINTS = <?= $character->getSkillPoints() ?>;
         const UNLOCKED_IDS = <?= json_encode($unlockedIds) ?>;
-        
-                const SKILLS = <?= json_encode(array_map(function($s) use ($character, $unlockedIds) {
+
+        const SKILLS = <?= json_encode(array_map(function ($s) use ($character, $unlockedIds) {
             $isUnlocked = in_array($s['id'], $unlockedIds);
             $canAfford = $character->getSkillPoints() >= $s['cost_sp'];
             $levelMet = $character->getLevel() >= $s['min_level'];
             $prereqMet = true;
-            if ($s['parent_skill_id']) $prereqMet = in_array($s['parent_skill_id'], $unlockedIds);
-            
+            if ($s['parent_skill_id'])
+                $prereqMet = in_array($s['parent_skill_id'], $unlockedIds);
+
             $s['status'] = 'locked';
-            if ($isUnlocked) $s['status'] = 'unlocked';
-            else if ($canAfford && $levelMet && $prereqMet) $s['status'] = 'available';
-            
+            if ($isUnlocked)
+                $s['status'] = 'unlocked';
+            else if ($canAfford && $levelMet && $prereqMet)
+                $s['status'] = 'available';
+
             return $s;
         }, $classSkills)) ?>;
 
@@ -91,7 +100,7 @@
             },
 
             centerView() {
-                                                this.pan = { x: 20, y: 20 };
+                this.pan = { x: 20, y: 20 };
                 this.updateTransform();
             },
 
@@ -110,16 +119,16 @@
 
             renderNode(skill) {
                 const el = document.createElement('div');
-                                let classes = "absolute w-44 p-3 rounded-lg border-2 transition-all duration-300 select-none flex flex-col gap-1";
+                let classes = "absolute w-44 p-3 rounded-lg border-2 transition-all duration-300 select-none flex flex-col gap-1";
                 let statusIcon = "";
-                
+
                 if (skill.status === 'unlocked') {
                     classes += " bg-gray-800 border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)] z-20";
                     statusIcon = `<span class="material-symbols-outlined text-amber-500">check_circle</span>`;
                 } else if (skill.status === 'available') {
                     classes += " bg-gray-800 border-gray-500 hover:border-amber-400 hover:scale-105 cursor-pointer z-20";
                     statusIcon = `<span class="material-symbols-outlined text-green-400 animate-pulse">lock_open</span>`;
-                    
+
                     el.onclick = () => this.unlockSkill(skill.id, skill.name, skill.cost_sp);
                 } else {
                     classes += " bg-gray-900 border-gray-800 text-gray-600 opacity-80 z-10 grayscale";
@@ -135,11 +144,11 @@
                         <div class="font-bold text-sm ${skill.status === 'available' ? 'text-amber-100' : ''}">${skill.name}</div>
                         ${statusIcon}
                     </div>
-                    <div class="text-[10px] uppercase font-bold tracking-wide ${skill.type==='passive'?'text-blue-400':'text-red-400'}">${skill.type}</div>
+                    <div class="text-[10px] uppercase font-bold tracking-wide ${skill.type === 'passive' ? 'text-blue-400' : 'text-red-400'}">${skill.type}</div>
                     <div class="text-xs mt-1 text-gray-400 leading-tight line-clamp-2" title="${skill.description}">${skill.description}</div>
                     <div class="mt-2 text-xs font-mono flex gap-2">
-                        <span class="${skill.status==='available'?'text-green-400':''}">${skill.cost_sp} SP</span>
-                        ${skill.min_level > CHARACTER_LEVEL ? '<span class="text-red-500">Lvl '+skill.min_level+'</span>' : '<span class="opacity-50">Lvl '+skill.min_level+'</span>'}
+                        <span class="${skill.status === 'available' ? 'text-green-400' : ''}">${skill.cost_sp} SP</span>
+                        ${skill.min_level > CHARACTER_LEVEL ? '<span class="text-red-500">Lvl ' + skill.min_level + '</span>' : '<span class="opacity-50">Lvl ' + skill.min_level + '</span>'}
                     </div>
                 `;
 
@@ -147,16 +156,16 @@
             },
 
             renderConnection(parent, child) {
-                const startX = parseInt(parent.node_x) + 88;                 const startY = parseInt(parent.node_y) + 80;                 const endX = parseInt(child.node_x) + 88;                   const endY = parseInt(child.node_y);        
+                const startX = parseInt(parent.node_x) + 88; const startY = parseInt(parent.node_y) + 80; const endX = parseInt(child.node_x) + 88; const endY = parseInt(child.node_y);
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                                const d = `M ${startX} ${startY} C ${startX} ${startY + 50}, ${endX} ${endY - 50}, ${endX} ${endY}`;
-                
+                const d = `M ${startX} ${startY} C ${startX} ${startY + 50}, ${endX} ${endY - 50}, ${endX} ${endY}`;
+
                 path.setAttribute('d', d);
-                                let stroke = "#374151";                 if (child.status === 'unlocked') stroke = "#d97706";                 else if (child.status === 'available') stroke = "#9ca3af"; 
+                let stroke = "#374151"; if (child.status === 'unlocked') stroke = "#d97706"; else if (child.status === 'available') stroke = "#9ca3af";
                 path.setAttribute('stroke', stroke);
                 path.setAttribute('stroke-width', '2');
                 path.setAttribute('fill', 'none');
-                
+
                 this.connectionsLayer.appendChild(path);
             },
 
@@ -165,7 +174,7 @@
                     this.isDragging = true;
                     this.dragStart = { x: e.clientX - this.pan.x, y: e.clientY - this.pan.y };
                 });
-                
+
                 window.addEventListener('mousemove', e => {
                     if (!this.isDragging) return;
                     this.pan.x = e.clientX - this.dragStart.x;
@@ -190,21 +199,25 @@
             },
 
             unlockSkill(id, name, cost) {
-                if(!confirm(`Débloquer ${name} pour ${cost} SP ?`)) return;
-                
+                if (!confirm(`Débloquer ${name} pour ${cost} SP ?`)) return;
+
                 fetch('/game/skills/unlock', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ skill_id: id })
                 })
-                .then(res => res.json())
-                .then(data => {
-                    if(data.success) location.reload();
-                    else alert('Erreur: ' + data.message);
-                });
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) window.location.href = window.location.href;
+                        else alert('Erreur: ' + data.message);
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert('Erreur de communication');
+                    });
             }
         };
 
-                tree.init();
-</body>
-</html>
+        tree.init();
+</body >
+</html >

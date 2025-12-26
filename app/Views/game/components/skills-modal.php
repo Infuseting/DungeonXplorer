@@ -18,7 +18,8 @@
                     <div class="text-right">
                         <p class="text-xs text-gray-400">Points Disponibles</p>
                         <p class="text-2xl font-bold text-amber-400" id="modal-sp-display">
-                            <?= $character->getSkillPoints() ?></p>
+                            <?= $character->getSkillPoints() ?>
+                        </p>
                     </div>
                     <button id="skills-close-btn"
                         class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
@@ -195,18 +196,17 @@
                 })
                     .then(res => res.json())
                     .then(data => {
-                if(data.success) {
-                    // Option: show toast then reload
-                    location.reload(); 
-                }
-                else {
-                    alert('Erreur: ' + (data.message || 'Impossible de débloquer la compétence'));
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                alert('Erreur de communication avec le serveur');
-            });
+                        if (data.success) {
+                            window.location.href = '/game';
+                        }
+                        else {
+                            alert('Erreur: ' + (data.message || 'Impossible de débloquer la compétence'));
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert('Erreur de communication avec le serveur');
+                    });
             }
         };
 
