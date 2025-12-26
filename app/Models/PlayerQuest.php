@@ -412,4 +412,33 @@ class PlayerQuest
         
         return $updates;
     }
+
+    /**
+     * Handle NPC Interaction Event for Quests
+     */
+    public function onNPCInteraction($characterId, $npcId)
+    {
+        $stmt = $this->db->prepare("
+            SELECT pqp.player_quest_id, pqp.objective_id, qo.description
+            FROM player_quest_progress pqp
+            JOIN quest_objectives qo ON pqp.objective_id = qo.id
+            JOIN player_quests pq ON pqp.player_quest_id = pq.id
+            WHERE pq.character_id = ? 
+              AND pq.status = 'ACTIVE'
+              AND qo.type = 'TALK_NPC'
+              AND qo.target_id = ?
+        ");
+        $stmt->bind_param("ii", $characterId, $npcId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $updates = [];
+        while ($row = $result->fetch_assoc()) {
+            $event = $this->updateProgress($row['player_quest_id'], $row['objective_id'], 1);
+            $event['original_description'] = $row['description'];
+            $updates[] = $event;
+        }
+        
+        return $updates;
+    }
 }

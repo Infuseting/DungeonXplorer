@@ -145,10 +145,31 @@ function renderNode() {
         bg.style.backgroundImage = `url('/assets/images/placeholder_dungeon.jpg')`;
     }
 
-    // Update Exit Button
+    // Update Exit Button (Always visible if exit is possible, but disabled if conditions not met)
     const exitBtn = document.getElementById('exit-dungeon-btn');
     if (exitBtn) {
-        exitBtn.classList.toggle('hidden', !node.can_exit);
+        console.log('[Exit Button] can_exit:', node.can_exit, 'exit_condition_type:', node.exit_condition_type);
+        
+        // Show button if node has can_exit OR has exit_condition_type
+        const shouldShowButton = node.can_exit || node.exit_condition_type;
+        
+        if (shouldShowButton) {
+            exitBtn.classList.remove('hidden');
+            
+            if (node.can_exit) {
+                exitBtn.disabled = false;
+                exitBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'grayscale');
+                exitBtn.classList.add('hover:scale-110');
+                exitBtn.title = 'Quitter le donjon';
+            } else {
+                exitBtn.disabled = true;
+                exitBtn.classList.add('opacity-50', 'cursor-not-allowed', 'grayscale');
+                exitBtn.classList.remove('hover:scale-110');
+                exitBtn.title = 'Conditions de sortie non remplies';
+            }
+        } else {
+            exitBtn.classList.add('hidden');
+        }
     }
 
     // Render Interactions (Now returns active entity info)
@@ -223,7 +244,7 @@ function renderEngagementActions(type, entity) {
                 <span class="text-xs text-blue-200">Discuter avec ${entity.name}</span>
             </div>
         `;
-        btnTalk.onclick = () => interactWithNPC(entity.id);
+        btnTalk.onclick = () => interactWithNPC(entity.npc_id);
         container.appendChild(btnTalk);
 
         // Goodbye / Ignore Button
@@ -232,7 +253,6 @@ function renderEngagementActions(type, entity) {
         // User said "Parler / Dire au revoir".
         // Let's implement Goodbye as "Mark as interacted" too, but maybe with a different toast message or just skip.
         // Actually, if we want to "Move to next", we MUST mark it as interacted.
-
         const btnBye = document.createElement('button');
         btnBye.className = 'w-full bg-gradient-to-b from-gray-700 to-gray-800 border border-gray-600 p-4 rounded-lg text-gray-200 text-left shadow-lg hover:from-gray-600 hover:to-gray-700 flex items-center gap-3 group mt-2';
         btnBye.innerHTML = `
@@ -716,20 +736,26 @@ window.interactWithNPC = async (npcId) => {
             body: formData
         });
         const data = await response.json();
+        
+        console.log('[NPC Interaction] Response:', data);
 
         if (data.success) {
             if (data.dialogue) {
+                 console.log('[NPC Interaction] Rendering dialogue:', data.dialogue);
                  renderDialogue(data.dialogue);
             } else {
-                 showToast('Vous choisissez de parler avec le personnage.', 'success');
+                 console.log('[NPC Interaction] No dialogue data, NPC marked as interacted');
+                 showToast('Vous avez parlé avec le personnage.', 'success');
                  // Reload to potentially unlock exit
-                 loadCurrentNode();
+                 setTimeout(() => {
+                     loadCurrentNode();
+                 }, 500);
             }
         } else {
             showToast(data.message || 'Interaction impossible', 'error');
         }
     } catch (e) {
-        console.error(e);
+        console.error('[NPC Interaction] Error:', e);
     }
 };
 
@@ -795,9 +821,14 @@ function closeDialogue() {
     const overlay = document.getElementById('dialogue-overlay');
     if (overlay) {
         overlay.classList.add('opacity-0');
-        setTimeout(() => overlay.remove(), 300);
-        // Reload node to update state (e.g. exit unlocked)
-        loadCurrentNode();
+        setTimeout(() => {
+            overlay.remove();
+            // Reload node to update state (e.g. exit unlocked)
+            // Petit délai pour s'assurer que la session backend est à jour
+            setTimeout(() => {
+                loadCurrentNode();
+            }, 200);
+        }, 300);
     }
 }
 
@@ -823,6 +854,45 @@ window.resetStory = async (storyId) => {
              showToast(data.message, 'error');
         }
     } catch (e) {
-        console.error(e);
+        console.error('[Story] Reset error:', e);
+        showToast('Erreur lors de la réinitialisation', 'error');
+    }
+};
+
+// Exit Dungeon Global Function
+window.exitDungeon = async () => {
+    try {
+        const formData = new FormData();
+        formData.append('story_id', storyState.storyId);
+
+        const response = await fetch('/story/exit', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            // Message différent selon la complétion
+            if (data.completed_properly === false) {
+                showToast('Vous avez quitté le donjon... mais peut-être auriez-vous dû parler à quelqu\'un ? 🤔', 'warning');
+                console.log('🎭 [Easter Egg] Vous avez découvert l\'easter egg ! Retournez parler à la princesse pour voir sa réaction...');
+            } else {
+                showToast('Félicitations ! Donjon terminé ! 🎉', 'success');
+            }
+            
+            // Navigate back to map
+            setTimeout(() => {
+                if (window.GameRouter) {
+                    window.GameRouter.navigate('/game');
+                } else {
+                    window.location.href = '/game';
+                }
+            }, 1500);
+        } else {
+            showToast(data.message || 'Impossible de quitter maintenant', 'warning');
+        }
+    } catch (e) {
+        console.error('[Story] Exit error:', e);
+        showToast('Erreur lors de la sortie', 'error');
     }
 };

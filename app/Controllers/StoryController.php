@@ -797,10 +797,14 @@ class StoryController
                             break;
 
                         case 'npc_talked':
-                            // Vérifie si le joueur a interagi avec les PNJ
-                            if (!isset($_SESSION['npc_interacted_' . $characterId . '_' . $node['id']])) {
-                                $canExit = false;
-                                $reason = "Vous devez parler à la personne présente avant de partir !";
+                            // Easter egg : on peut quitter sans parler, mais la quête ne sera pas validée
+                            $sessionKey = 'npc_interacted_' . $characterId . '_' . $node['id'];
+                            if (!isset($_SESSION[$sessionKey]) || empty($_SESSION[$sessionKey])) {
+                                // Marquer que le joueur est parti sans parler (easter egg)
+                                $exitedWithoutTalkingKey = 'exited_without_talking_' . $characterId . '_' . $node['id'];
+                                $_SESSION[$exitedWithoutTalkingKey] = true;
+                                // On autorise quand même la sortie
+                                $canExit = true;
                             }
                             break;
                     }
@@ -817,21 +821,47 @@ class StoryController
                     }
                 }
 
+                // Vérifier si c'est une vraie complétion (avec dialogues) ou un easter egg
+                $completedProperly = true;
+                if (!empty($node['exit_condition_type']) && $node['exit_condition_type'] === 'npc_talked') {
+                    $sessionKey = 'npc_interacted_' . $characterId . '_' . $node['id'];
+                    error_log("[Exit Story] Checking completion - Session key: $sessionKey");
+                    error_log("[Exit Story] Session value: " . json_encode($_SESSION[$sessionKey] ?? 'NOT SET'));
+                    
+                    if (!isset($_SESSION[$sessionKey]) || empty($_SESSION[$sessionKey])) {
+                        $completedProperly = false;
+                        error_log("[Exit Story] Completion: FALSE (no NPC interaction)");
+                    } else {
+                        error_log("[Exit Story] Completion: TRUE (NPC interacted: " . json_encode($_SESSION[$sessionKey]) . ")");
+                    }
+                }
+
                 // Sortie validée : Mise à jour de la progression
                 $this->progressModel->exitDungeon($characterId, $storyId);
 
-                // Mise à jour des quêtes quotidiennes (COMPLETE_DUNGEON)
-                $dailyQuestModel = new \App\Models\DailyQuest();
-                $dailyQuestModel->onDungeonCompleted($characterId, $storyId);
+                // Ne valider la quête quotidienne QUE si complétion correcte
+                if ($completedProperly) {
+                    error_log("[Exit Story] Completing dungeon properly - updating daily quests");
+                    
+                    // Mise à jour des quêtes quotidiennes (COMPLETE_DUNGEON)
+                    $dailyQuestModel = new \App\Models\DailyQuest();
+                    $dailyQuestModel->onDungeonCompleted($characterId, $storyId);
+                } else {
+                    error_log("[Exit Story] Exiting without proper completion (easter egg)");
+                }
 
                 // Si GET, rediriger vers la carte avec message de succès
                 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-                    $_SESSION['success_message'] = 'Félicitations ! Vous avez terminé le donjon avec succès ! 🎉';
+                    if ($completedProperly) {
+                        $_SESSION['success_message'] = 'Félicitations ! Vous avez terminé le donjon avec succès ! 🎉';
+                    } else {
+                        $_SESSION['success_message'] = 'Vous avez quitté le donjon... mais peut-être auriez-vous dû parler à quelqu\'un ? 🤔';
+                    }
                     header('Location: /game');
                     exit;
                 }
 
-                echo json_encode(['success' => true]);
+                echo json_encode(['success' => true, 'completed_properly' => $completedProperly]);
                 exit;
             }
         }
@@ -864,31 +894,70 @@ class StoryController
             $_SESSION[$sessionKey][] = $npcId;
         }
 
+        // Mettre à jour les quêtes qui nécessitent de parler à ce NPC
+        $pqModel = new \App\Models\PlayerQuest();
+        $questUpdates = $pqModel->onNPCInteraction($characterId, $npcId);
+        error_log("[NPC Interaction] Quest updates: " . json_encode($questUpdates));
+
+        // Vérifier si le joueur est parti sans parler (easter egg)
+        $exitedWithoutTalkingKey = 'exited_without_talking_' . $characterId . '_' . $nodeId;
+        $hasExitedWithoutTalking = isset($_SESSION[$exitedWithoutTalkingKey]) && $_SESSION[$exitedWithoutTalkingKey];
+
         // Récupération du dialogue
         $npcModel = new NPC();
         $dialogueTreeModel = new DialogueTree();
 
         $trees = $npcModel->getDialogueTrees($npcId);
+        error_log("[NPC Interaction] NPC ID: $npcId, Trees found: " . count($trees));
+        
         $dialogueData = null;
 
         if (!empty($trees)) {
-            // Pour l'instant on prend le premier arbre
-            // TODO: Ajouter logique conditionnelle pour choisir l'arbre
-            $treeId = $trees[0]['id'];
+            // Choisir l'arbre en fonction de la condition easter egg
+            $selectedTree = null;
+            
+            // Si le joueur est parti sans parler, chercher le dialogue spécial (ID 6)
+            if ($hasExitedWithoutTalking) {
+                foreach ($trees as $tree) {
+                    // L'arbre "Princesse Mécontente" devrait avoir un ID spécifique
+                    // On peut le détecter par son nom ou ID
+                    if (stripos($tree['name'], 'Mécontente') !== false || $tree['id'] == 6) {
+                        $selectedTree = $tree;
+                        // Nettoyer la session après avoir affiché ce dialogue
+                        unset($_SESSION[$exitedWithoutTalkingKey]);
+                        error_log("[NPC Interaction] Easter egg dialogue selected for NPC $npcId");
+                        break;
+                    }
+                }
+            }
+            
+            // Si aucun dialogue spécial, prendre le premier (dialogue normal)
+            if (!$selectedTree) {
+                $selectedTree = $trees[0];
+            }
+
+            $treeId = $selectedTree['id'];
+            error_log("[NPC Interaction] Using tree ID: $treeId");
+            
             $rootDialogues = $dialogueTreeModel->getRootDialogues($treeId);
+            error_log("[NPC Interaction] Root dialogues found: " . count($rootDialogues));
 
             // On construit une structure simple pour le frontend
             if (!empty($rootDialogues)) {
                 $dialogueData = [
                     'tree_id' => $treeId,
                     'root' => $rootDialogues[0], // Premier message
-                    'title' => $trees[0]['name']
+                    'title' => $selectedTree['name']
                 ];
 
                 // Récupérer les enfants (réponses possibles) du noeud racine
                 $children = $dialogueTreeModel->getChildren($rootDialogues[0]['id']);
                 $dialogueData['root']['choices'] = $children;
+                
+                error_log("[NPC Interaction] Dialogue data prepared with " . count($children) . " choices");
             }
+        } else {
+            error_log("[NPC Interaction] No dialogue trees found for NPC $npcId");
         }
 
         echo json_encode([
