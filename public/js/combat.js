@@ -77,6 +77,22 @@ function attachEventListeners() {
 
     // Dice
     if (btn) btn.onclick = rollDice;
+
+    // Ensure submenu back buttons correctly return to main menu
+    const potionsMenu = document.getElementById('action-menu-potions');
+    const skillsMenu = document.getElementById('action-menu-skills');
+    [potionsMenu, skillsMenu].forEach(menu => {
+        if (!menu) return;
+        const backBtns = menu.querySelectorAll('button[onclick*="toggleActionMenu"]');
+        backBtns.forEach(b => {
+            // add an explicit listener to ensure it works even if attribute-based handlers are disabled
+            b.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleActionMenu('main');
+            });
+        });
+    });
 }
 
 function toggleActionMenu(menuName) {
@@ -99,9 +115,20 @@ function toggleActionMenu(menuName) {
     }
 }
 
+function closeSubMenus() {
+    const main = document.getElementById('action-menu-main');
+    const potions = document.getElementById('action-menu-potions');
+    const skills = document.getElementById('action-menu-skills');
+    if (potions) potions.classList.add('hidden');
+    if (skills) skills.classList.add('hidden');
+    if (main) main.classList.remove('hidden');
+}
+
 function usePotion(itemId) {
     // Determine action. Assuming 'usePotion' expects 'item_id'.
     // If backend controller expects 'action=usePotion' and 'item_id', we pass that.
+    // Close the submenu immediately to reflect the action
+    closeSubMenus();
     sendAction('usePotion', null, itemId);
 }
 
@@ -189,6 +216,8 @@ function handleInitialData(initialData) {
 }
 
 function sendAction(action, skillId = null, itemId = null) {
+    // Close any open submenus and disable inputs while request is in-flight
+    closeSubMenus();
     disableActions();
     dice.textContent = "🎲 ";
 

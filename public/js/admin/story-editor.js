@@ -81,14 +81,7 @@ const storyEditor = {
     updateTransform() {
         const transform = `translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.scale})`;
         this.nodesLayer.style.transform = transform;
-        // SVG transform is handled differently or we just transform the container content
-        // Actually for SVG lines to line up with HTML nodes, they need same transform
-        // But SVG inside HTML container inherits transform if applied to container?
-        // No, let's apply to a group inside SVG or just the SVG itself if it's absolute
-        // Wait, nodesLayer and connectionsLayer are siblings.
-        // Let's wrap them in a 'world' div? Or apply to both.
         this.connectionsLayer.style.transform = transform;
-        // Need to set transform-origin to 0 0
         this.nodesLayer.style.transformOrigin = '0 0';
         this.connectionsLayer.style.transformOrigin = '0 0';
     },
@@ -548,15 +541,6 @@ const storyEditor = {
     },
 
     saveLayout() {
-        // Save all node positions
-        // Ideally batch update, but for now loop? No, that's bad.
-        // Let's just save the selected/moved ones or all.
-        // For MVP, maybe just alert "Layout saved locally" as we update DB on drop?
-        // Actually, I implemented updateNode on drop? No, I implemented drag visual only.
-        // I need to save position on drag end.
-
-        // Let's iterate and save all (inefficient but works for MVP)
-        // Or better: add a 'save positions' endpoint that takes an array
         alert("Sauvegarde des positions non implémentée en batch. Utilisez le formulaire pour sauvegarder.");
     },
 
@@ -937,9 +921,6 @@ const storyEditor = {
             `;
         }
 
-        // Show modal (we'll implement a simple modal here since we don't have a shared modal component visible)
-        // Or reuse properties panel? No, modal is better.
-        // Let's create a temporary modal div
         const modalId = 'add-entity-modal';
         let modal = document.getElementById(modalId);
         if (modal) modal.remove();

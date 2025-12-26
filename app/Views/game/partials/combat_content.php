@@ -5,13 +5,13 @@ use App\Models\Stats;
 use App\Models\Skill;
 
 ?>
-<div id="combat-scene" class="absolute inset-0 w-full h-full bg-gray-900 overflow-y-auto z-50 p-4 md:p-8"
+<div id="combat-scene" class="absolute inset-0 w-full h-full bg-gray-900 overflow-y-auto z-50 p-2 md:p-3"
      data-max-hp="<?= (int)$characterModel->getVitality() ?>"
      data-return-story-id="<?= htmlspecialchars($returnStoryId ?? '') ?>"
      data-initial-data="<?= htmlspecialchars(json_encode($initialData ?? null), ENT_QUOTES, 'UTF-8') ?>">
 
     <!-- Interface Graphique Combat -->
-    <div class="flex flex-col md:flex-col justify-center items-center gap-8 max-w-7xl mx-auto py-8">
+    <div class="flex flex-col md:flex-col justify-center items-center gap-8 max-w-7xl mx-auto">
 
         <div class="w-full md:w-[70%] h-[500px] bg-gray-700 rounded-lg flex items-center justify-center drop-shadow-[0_0_5px_#a78bfa] relative overflow-hidden">
             <img src="<?= $monsterModel->getSallePath() ?>" class="w-full h-full object-cover absolute inset-0 text-white" id="bg" alt="Décor de salle">
@@ -222,7 +222,9 @@ use App\Models\Skill;
                                         class="w-full flex items-center justify-between p-2 rounded bg-gray-800 border border-gray-600 hover:border-yellow-500 hover:bg-gray-700 group transition-all text-left"
                                         title="<?= htmlspecialchars($potion['description'] ?? 'Restaure de la santé') ?>">
                                     <div class="flex items-center gap-2">
-                                        <div class="text-2xl"><?= $potion['icon'] ?? '🧪' ?></div>
+                                        <div class="text-2xl" style="height: 32px; width: 32px;">
+                                            <img src="/<?= htmlspecialchars($potion['icon']) ?>" height="32" width="32" alt="🧪" />
+                                        </div>
                                         <div>
                                             <div class="font-bold text-yellow-100 group-hover:text-yellow-400 text-sm"><?= htmlspecialchars($potion['name']) ?></div>
                                             <!-- Simple stat preview if available -->
