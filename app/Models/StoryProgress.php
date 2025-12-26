@@ -234,4 +234,44 @@ class StoryProgress
         $stmt->bind_param("ii", $characterId, $nodeId);
         return $stmt->execute();
     }
+
+    /**
+     * Reset all progress for a story (Hard Reset)
+     * Clears: Progress, Node Status, Loots Collected
+     */
+    public function resetProgress($characterId, $storyId)
+    {
+        $this->db->begin_transaction();
+
+        try {
+            // 1. Delete Main Progress
+            $stmt = $this->db->prepare("DELETE FROM character_story_progress WHERE character_id = ? AND story_id = ?");
+            $stmt->bind_param("ii", $characterId, $storyId);
+            $stmt->execute();
+
+            // 2. Delete Node Statuses for this story
+            $stmt = $this->db->prepare("
+                DELETE csns FROM character_story_node_status csns
+                JOIN story_nodes sn ON csns.node_id = sn.id
+                WHERE csns.character_id = ? AND sn.story_id = ?
+            ");
+            $stmt->bind_param("ii", $characterId, $storyId);
+            $stmt->execute();
+
+            // 3. Delete Collected Loots for this story
+            $stmt = $this->db->prepare("
+                DELETE cslc FROM character_story_loots_collected cslc
+                JOIN story_nodes sn ON cslc.node_id = sn.id
+                WHERE cslc.character_id = ? AND sn.story_id = ?
+            ");
+            $stmt->bind_param("ii", $characterId, $storyId);
+            $stmt->execute();
+
+            $this->db->commit();
+            return true;
+        } catch (\Exception $e) {
+            $this->db->rollback();
+            return false;
+        }
+    }
 }

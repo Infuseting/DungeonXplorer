@@ -9,6 +9,8 @@ use App\Models\StoryInstance;
 use App\Models\Character;
 use App\Models\Inventory;
 use App\Models\CharacterStats;
+use App\Models\NPC;
+use App\Models\DialogueTree;
 use App\Config\Database;
 
 class StoryController
@@ -55,7 +57,7 @@ class StoryController
     {
         $characterId = $_SESSION['character_id'];
         $story = $this->storyModel->findById($storyId);
-        
+
         if (!$story) {
             header('Location: /game');
             exit;
@@ -63,7 +65,7 @@ class StoryController
 
         // Vérifie si une progression existe déjà pour ce personnage et cette histoire
         $progress = $this->progressModel->getProgress($characterId, $storyId);
-        
+
         if (!$progress) {
             // Pas de progression : Initialisation
             if ($story['type'] === 'manual') {
@@ -77,26 +79,26 @@ class StoryController
             } else {
                 // Histoire procédurale : On cherche ou génère une instance
                 $instance = $this->instanceModel->getByStoryAndCharacter($storyId, $characterId);
-                
+
                 if (!$instance) {
                     // Génération d'une nouvelle instance procédurale
                     $generator = new ProceduralGenerator();
                     $instanceId = $generator->generate($storyId, $characterId);
-                    
+
                     if (!$instanceId) {
                         header('Location: /game?error=generation_failed');
                         exit;
                     }
                     $instance = $this->instanceModel->findById($instanceId);
                 }
-                
+
                 // Récupération du noeud de départ de l'instance
                 $startNode = $this->nodeModel->getInstanceStartNode($instance['id']);
                 if ($startNode) {
-                     $this->progressModel->startStory($characterId, $storyId, $startNode['id']);
+                    $this->progressModel->startStory($characterId, $storyId, $startNode['id']);
                 } else {
-                     header('Location: /game?error=no_start_node');
-                     exit;
+                    header('Location: /game?error=no_start_node');
+                    exit;
                 }
             }
         }
@@ -106,8 +108,8 @@ class StoryController
             // Mise à jour des quêtes quotidiennes (VISIT_LOCATIONS)
             $dailyQuestModel = new \App\Models\DailyQuest();
             $dailyQuestModel->onLocationVisited($characterId, $storyId);
-            
-             extract([
+
+            extract([
                 'story' => $story,
                 'inventory' => $this->inventoryModel->getCharacterInventory($characterId)
             ]);
@@ -137,7 +139,7 @@ class StoryController
     public function getCurrentNode()
     {
         $characterId = $_SESSION['character_id'];
-                                        
+
         // Validation de l'ID de l'histoire
         $storyId = $_GET['story_id'] ?? null;
         if (!$storyId) {
@@ -155,7 +157,7 @@ class StoryController
         // Chargement des données brutes du noeud
         $node = $this->nodeModel->getFullNodeData($progress['current_node_id']);
         $nodeStatus = $this->progressModel->getNodeStatus($characterId, $node['id']);
-        
+
         // Marquer le noeud comme visité si c'est la première fois
         if (!$nodeStatus || !$nodeStatus['is_visited']) {
             $this->progressModel->markNodeVisited($characterId, $node['id']);
@@ -164,12 +166,12 @@ class StoryController
         // --- Filtrage des Monstres (Fuis ou Tués) ---
 
         // Récupération des monstres fuis (en session)
-        $sessionKeyFled = 'fled_monsters_' . $node['id'];
+        $sessionKeyFled = 'fled_monsters_' . $characterId . '_' . $node['id'];
         $fledMonsters = $_SESSION[$sessionKeyFled] ?? [];
 
         // Récupération des monstres tués (en session ou DB, ici session par simplification temporaire)
         // TODO: Vérifier la cohérence avec la DB story_node_monsters
-        $sessionKeyKilled = 'killed_monsters_' . $node['id'];
+        $sessionKeyKilled = 'killed_monsters_' . $characterId . '_' . $node['id'];
         $killedMonsters = $_SESSION[$sessionKeyKilled] ?? [];
 
         // --- Filtrage des Butins (Déjà ramassés) ---
@@ -197,7 +199,7 @@ class StoryController
                     }
                 }
                 $node['monsters'] = array_values($node['monsters']);
-            
+
                 // Si tous les monstres sont morts, on marque la salle comme nettoyée
                 if (empty($node['monsters'])) {
                     $this->progressModel->markNodeCleared($characterId, $node['id']);
@@ -208,12 +210,13 @@ class StoryController
             // Vérification de la présence de monstres actifs (non fuis)
             if (!empty($node['monsters'])) {
                 $allFled = true;
-                foreach($node['monsters'] as $m) {
+                foreach ($node['monsters'] as $m) {
                     if (!in_array($m['id'], $fledMonsters)) {
-                        $allFled = false; break;
+                        $allFled = false;
+                        break;
                     }
                 }
-                
+
                 // Si des monstres sont présents et non fuis, on masque les PNJ et les butins
                 // pour obliger le joueur à gérer la menace (combat ou fuite)
                 if (!$allFled) {
@@ -225,10 +228,11 @@ class StoryController
 
         // --- Filtrage des PNJ (Interactions uniques) ---
 
-        $sessionKeyNPC = 'npc_interacted_' . $node['id'];
+        $sessionKeyNPC = 'npc_interacted_' . $characterId . '_' . $node['id'];
         $interactedNPCs = $_SESSION[$sessionKeyNPC] ?? [];
-        if ($interactedNPCs === true) $interactedNPCs = array_column($node['npcs'], 'id');
-        
+        if ($interactedNPCs === true)
+            $interactedNPCs = array_column($node['npcs'], 'id');
+
         if (!empty($node['npcs'])) {
             foreach ($node['npcs'] as $key => $n) {
                 if (in_array($n['id'], $interactedNPCs)) {
@@ -241,13 +245,13 @@ class StoryController
         // --- Chargement des Pièges ---
 
         $node['traps'] = $this->nodeModel->getTraps($node['id']);
-        
+
         // --- Vérification de l'accessibilité des chemins ---
 
         if (!empty($node['connections'])) {
             foreach ($node['connections'] as &$conn) {
                 $conn['is_accessible'] = $this->checkCondition($conn, $characterId);
-                
+
                 // Ajout d'une raison textuelle si le chemin est verrouillé
                 if (!$conn['is_accessible']) {
                     if (strpos($conn['condition_type'], 'stat_') === 0) {
@@ -256,20 +260,21 @@ class StoryController
                     } elseif ($conn['condition_type'] === 'level') {
                         $conn['lock_reason'] = "Niveau " . $conn['condition_value'] . " requis";
                     } elseif ($conn['condition_type'] === 'item') {
-                         $conn['lock_reason'] = "Objet requis";
+                        $conn['lock_reason'] = "Objet requis";
                     } elseif ($conn['condition_type'] === 'class') {
-                         $conn['lock_reason'] = "Classe requise";
+                        $conn['lock_reason'] = "Classe requise";
                     } else {
                         $conn['lock_reason'] = "Condition non remplie";
                     }
                 }
             }
         }
-        
+
         echo json_encode([
             'node' => $node,
             'status' => $nodeStatus,
-            'fled_monsters' => $fledMonsters
+            'fled_monsters' => $fledMonsters,
+            'character_id' => $characterId
         ]);
     }
 
@@ -282,12 +287,12 @@ class StoryController
         $characterId = $_SESSION['character_id'];
         $storyId = $_POST['story_id'];
         $nodeId = $_POST['node_id'];
-        
+
         error_log("Move request: Story $storyId, Node $nodeId, Char $characterId");
 
         // Vérification de la progression
         $progress = $this->progressModel->getProgress($characterId, $storyId);
-        
+
         if (!$progress) {
             error_log("No progress found");
             echo json_encode(['success' => false, 'message' => 'No progress found']);
@@ -295,19 +300,19 @@ class StoryController
         }
 
         $currentNodeId = $progress['current_node_id'];
-        
+
         // Vérification : Les monstres doivent être gérés (tués ou fuis) avant de partir
         $nodeStatus = $this->progressModel->getNodeStatus($characterId, $currentNodeId);
         $monsters = $this->nodeModel->getMonsters($currentNodeId);
-        
+
         $canMove = true;
         if (!empty($monsters)) {
             $areMonstersCleared = $nodeStatus && $nodeStatus['monsters_cleared'];
             if (!$areMonstersCleared) {
                 // Si non nettoyés, on vérifie si tous les monstres restants ont été fuis
-                $sessionKey = 'fled_monsters_' . $currentNodeId;
+                $sessionKey = 'fled_monsters_' . $characterId . '_' . $currentNodeId;
                 $fledMonsters = $_SESSION[$sessionKey] ?? [];
-                
+
                 $allFled = true;
                 foreach ($monsters as $m) {
                     if (!in_array($m['id'], $fledMonsters)) {
@@ -315,19 +320,19 @@ class StoryController
                         break;
                     }
                 }
-                
+
                 if (!$allFled) {
                     echo json_encode(['success' => false, 'message' => 'Vous ne pouvez pas partir ! Il reste des monstres actifs.']);
                     return;
                 }
             }
         }
-        
+
         // Validation de la connexion entre les noeuds
         $connections = $this->nodeModel->getConnections($currentNodeId);
         $returnConnections = $this->nodeModel->getReturnConnections($currentNodeId);
         $allConnections = array_merge($connections, $returnConnections);
-        
+
         $validMove = false;
         foreach ($allConnections as $conn) {
             if ($conn['to_node_id'] == $nodeId) {
@@ -344,7 +349,7 @@ class StoryController
         if ($validMove) {
             // Nettoyage de la session de fuite pour cette salle (optionnel, ou garder si on revient?)
             // Pour l'instant on nettoie pour réinitialiser l'état si on revient
-            $sessionKey = 'fled_monsters_' . $currentNodeId;
+            $sessionKey = 'fled_monsters_' . $characterId . '_' . $currentNodeId;
             if (isset($_SESSION[$sessionKey])) {
                 unset($_SESSION[$sessionKey]);
             }
@@ -367,19 +372,21 @@ class StoryController
      */
     private function checkCondition($connection, $characterId)
     {
-        if ($connection['condition_type'] === 'none') return true;
+        if ($connection['condition_type'] === 'none')
+            return true;
 
         // Condition basée sur une statistique (ex: stat_strength)
         if (strpos($connection['condition_type'], 'stat_') === 0) {
-            $statName = substr($connection['condition_type'], 5);             
+            $statName = substr($connection['condition_type'], 5);
             $statsModel = new CharacterStats();
             $effectiveStats = $statsModel->getEffectiveStats($characterId);
-            
-            if (!$effectiveStats) return false;
-            
+
+            if (!$effectiveStats)
+                return false;
+
             $currentVal = $effectiveStats[$statName] ?? 0;
-            $requiredVal = (int)$connection['condition_value'];
-            
+            $requiredVal = (int) $connection['condition_value'];
+
             // On vérifie si la stat est supérieure ou égale
             return $currentVal >= $requiredVal;
         }
@@ -392,7 +399,7 @@ class StoryController
             case 'level':
                 // Requiert un niveau minimum
                 $character = $this->characterModel->findById($characterId);
-                return $character['level'] >= (int)$connection['condition_value'];
+                return $character['level'] >= (int) $connection['condition_value'];
             case 'class':
                 // Requiert une classe spécifique
                 $character = $this->characterModel->findById($characterId);
@@ -418,14 +425,14 @@ class StoryController
     {
         $characterId = $_SESSION['character_id'];
         $storyId = $_POST['story_id'];
-        $monsterId = $_POST['monster_id']; 
-        
+        $monsterId = $_POST['monster_id'];
+
         $progress = $this->progressModel->getProgress($characterId, $storyId);
         if (!$progress) {
-             echo json_encode(['success' => false, 'message' => 'Not in story']);
-             exit;
+            echo json_encode(['success' => false, 'message' => 'Not in story']);
+            exit;
         }
-        
+
         $currentNodeId = $progress['current_node_id'];
         $monsters = $this->nodeModel->getMonsters($currentNodeId);
         $targetMonster = null;
@@ -449,44 +456,44 @@ class StoryController
         // Calcul des chances de fuite
         $statsModel = new CharacterStats();
         $stats = $statsModel->getEffectiveStats($characterId);
-        
+
         $dexterity = $stats ? $stats['dexterity'] : 10;
-        
+
         $monsterLevel = $targetMonster['monster_level'];
-        
+
         // Formule : Base 50% + Différence (Dex - Niveau Monstre) * 2
         $baseChance = 50;
         $bonus = ($dexterity - $monsterLevel) * 2;
         $chance = $baseChance + $bonus;
-        
+
         // Bornage entre 5 et 95%
         $chance = max(5, min(95, $chance));
-        
+
         $roll = rand(1, 100);
         $success = $roll <= $chance;
-        
+
         if ($success) {
             // Fuite réussie : On mémorise que ce monstre a été fui pour cette session/salle
-            $sessionKey = 'fled_monsters_' . $currentNodeId;
+            $sessionKey = 'fled_monsters_' . $characterId . '_' . $currentNodeId;
             if (!isset($_SESSION[$sessionKey])) {
                 $_SESSION[$sessionKey] = [];
             }
             if (!in_array($monsterId, $_SESSION[$sessionKey])) {
                 $_SESSION[$sessionKey][] = $monsterId;
             }
-            
+
             // Faire reculer le joueur : trouver un nœud connecté pour y retourner
             $returnConnections = $this->nodeModel->getReturnConnections($currentNodeId);
             $previousNodeId = null;
-            
+
             if (!empty($returnConnections)) {
                 // Prendre la première connexion de retour disponible
                 $previousNodeId = $returnConnections[0]['from_node_id'];
                 $this->progressModel->updateProgress($characterId, $storyId, $previousNodeId);
             }
         } else {
-             // Echec : Le monstre a l'initiative pour le combat (implémentation future)
-             $_SESSION['combat_initiative'] = 'enemy';
+            // Echec : Le monstre a l'initiative pour le combat (implémentation future)
+            $_SESSION['combat_initiative'] = 'enemy';
         }
 
         echo json_encode([
@@ -507,7 +514,7 @@ class StoryController
     {
         $characterId = $_SESSION['character_id'];
         $storyId = $_POST['story_id'];
-        
+
         $progress = $this->progressModel->getProgress($characterId, $storyId);
         if ($progress) {
             $this->progressModel->markNodeCleared($characterId, $progress['current_node_id']);
@@ -525,13 +532,13 @@ class StoryController
     {
         $characterId = $_SESSION['character_id'];
         $trapId = $_POST['trap_id'];
-        
+
         $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare("SELECT * FROM story_node_traps WHERE id = ?");
         $stmt->bind_param("i", $trapId);
         $stmt->execute();
         $trap = $stmt->get_result()->fetch_assoc();
-        
+
         if (!$trap) {
             echo json_encode(['success' => false, 'message' => 'Piège introuvable']);
             exit;
@@ -539,7 +546,7 @@ class StoryController
 
         $statsModel = new CharacterStats();
         $stats = $statsModel->getEffectiveStats($characterId);
-        
+
         // Mappage des stats (Code court -> Nom complet)
         $statMap = [
             'DEX' => 'dexterity',
@@ -551,25 +558,25 @@ class StoryController
         // Détermine la stat à utiliser pour l'évitement/désamorçage
         $statName = $statMap[$trap['avoid_stat']] ?? 'dexterity';
         $statValue = $stats[$statName] ?? 10;
-        
+
         // Calcul du jet : 1d20 + Modificateur de stat
         $mod = floor(($statValue - 10) / 2);
         $roll = rand(1, 20);
         $total = $roll + $mod;
-        
+
         $success = $total >= $trap['difficulty_class'];
         $damageTaken = 0;
-        
+
         if (!$success) {
             // Echec : Le piège se déclenche et inflige des dégâts
             $parts = explode('d', $trap['damage_dice']);
-            $count = (int)$parts[0]; 
-            $faces = (int)($parts[1] ?? 6);
-            
-            for ($i=0; $i<$count; $i++) {
+            $count = (int) $parts[0];
+            $faces = (int) ($parts[1] ?? 6);
+
+            for ($i = 0; $i < $count; $i++) {
                 $damageTaken += rand(1, $faces);
             }
-            
+
             $this->characterModel->takeDamage($characterId, $damageTaken);
         }
 
@@ -598,11 +605,11 @@ class StoryController
         // Vérification : Les monstres doivent être vaincus avant de piller
         $nodeStatus = $this->progressModel->getNodeStatus($characterId, $nodeId);
         $monsters = $this->nodeModel->getMonsters($nodeId);
-        
+
         if (!empty($monsters)) {
             if (!$nodeStatus || !$nodeStatus['monsters_cleared']) {
-                 echo json_encode(['success' => false, 'message' => 'Vous devez d\'abord vaincre les monstres !']);
-                 return;
+                echo json_encode(['success' => false, 'message' => 'Vous devez d\'abord vaincre les monstres !']);
+                return;
             }
         }
 
@@ -632,17 +639,17 @@ class StoryController
                 $stats = $statsModel->getEffectiveStats($characterId);
                 $dex = $stats['dexterity'] ?? 10;
                 $mod = floor(($dex - 10) / 2);
-                
+
                 $roll = rand(1, 20);
                 $total = $roll + $mod;
-                
+
                 if ($total < $validLoot['trap_dc']) {
                     $trapTriggered = true;
                     // Déclenchement du piège
                     $parts = explode('d', $validLoot['trap_damage']);
-                    $count = (int)$parts[0];
-                    $faces = (int)($parts[1] ?? 4);
-                    for ($i=0; $i<$count; $i++) {
+                    $count = (int) $parts[0];
+                    $faces = (int) ($parts[1] ?? 4);
+                    for ($i = 0; $i < $count; $i++) {
                         $damageTaken += rand(1, $faces);
                     }
                     $this->characterModel->takeDamage($characterId, $damageTaken);
@@ -652,10 +659,10 @@ class StoryController
 
             // Ajout de l'objet à l'inventaire
             $this->inventoryModel->addItem($characterId, $validLoot['item_id'], $validLoot['quantity']);
-            
+
             // Marquage du butin comme collecté
             $this->progressModel->collectLoot($characterId, $nodeId, $lootId);
-            
+
             echo json_encode([
                 'success' => true,
                 'trap_triggered' => $trapTriggered,
@@ -675,7 +682,7 @@ class StoryController
     {
         $characterId = $_SESSION['character_id'];
         $storyId = $_POST['story_id'];
-        
+
         $progress = $this->progressModel->getProgress($characterId, $storyId);
         if (!$progress) {
             echo json_encode(['success' => false, 'message' => 'Not in story']);
@@ -690,54 +697,54 @@ class StoryController
         $stats = $statsModel->getEffectiveStats($characterId);
         $wis = $stats['wisdom'] ?? 10;
         $int = $stats['intelligence'] ?? 10;
-        
+
         // Calcul du jet de recherche
         $mod = floor((max($wis, $int) - 10) / 2);
         $roll = rand(1, 20);
         $total = $roll + $mod;
 
         $message = "Vous fouillez minutieusement la pièce...";
-        $foundTraps = [];         
+        $foundTraps = [];
         $triggeredTrap = null;
         $damageTaken = 0;
 
         foreach ($traps as $trap) {
-             // TODO: Stocker l'état "déjà trouvé" pour ne pas le redécouvrir à chaque fois ?                                               
+            // TODO: Stocker l'état "déjà trouvé" pour ne pas le redécouvrir à chaque fois ?                                               
             if ($total >= $trap['difficulty_class']) {
                 $foundTraps[] = $trap['id'];
                 $message .= " Vous repérez un piège !";
             } elseif ($total < $trap['difficulty_class'] - 5) {
                 // Echec critique (> 5 points en dessous) : Déclenchement accidentel
                 $triggeredTrap = $trap;
-                break;             
+                break;
             }
         }
 
         if ($triggeredTrap) {
             // Déclenchement du piège lors de la fouille
             $parts = explode('d', $triggeredTrap['damage_dice']);
-            $count = (int)$parts[0]; 
-            $faces = (int)($parts[1] ?? 6);
-            
-            for ($i=0; $i<$count; $i++) {
+            $count = (int) $parts[0];
+            $faces = (int) ($parts[1] ?? 6);
+
+            for ($i = 0; $i < $count; $i++) {
                 $damageTaken += rand(1, $faces);
             }
             $this->characterModel->takeDamage($characterId, $damageTaken);
             $message = "En fouillant, vous déclenchez un piège ! " . $triggeredTrap['effect_text'];
-            
+
             return json_encode([
                 'success' => true,
                 'action' => 'triggered',
                 'damage' => $damageTaken,
                 'message' => $message,
-                'found_loot' => !empty($loots) 
+                'found_loot' => !empty($loots)
             ]);
         }
-                        
+
         if (empty($traps) && empty($loots)) {
-             $message = "Vous ne trouvez rien d'intéressant.";
+            $message = "Vous ne trouvez rien d'intéressant.";
         } elseif (!empty($loots)) {
-             $message .= " Vous trouvez des objets.";
+            $message .= " Vous trouvez des objets.";
         }
 
         echo json_encode([
@@ -757,12 +764,13 @@ class StoryController
     public function exitStory()
     {
         $characterId = $_SESSION['character_id'];
-        $storyId = $_POST['story_id'] ?? $_GET['story_id'] ?? null;         
-        
+        $storyId = $_POST['story_id'] ?? $_GET['story_id'] ?? null;
+
         // Si storyId manquant, on tente de le récupérer depuis la progression active
         if (!$storyId) {
             $active = $this->progressModel->getActiveStory($characterId);
-            if ($active) $storyId = $active['story_id'];
+            if ($active)
+                $storyId = $active['story_id'];
         }
 
         if (!$storyId) {
@@ -779,7 +787,7 @@ class StoryController
                     $canExit = true;
                     $reason = "Condition de sortie non remplie";
 
-                    switch($node['exit_condition_type']) {
+                    switch ($node['exit_condition_type']) {
                         case 'monster_cleared':
                             $nodeStatus = $this->progressModel->getNodeStatus($characterId, $node['id']);
                             if (!$nodeStatus || !$nodeStatus['monsters_cleared']) {
@@ -787,10 +795,10 @@ class StoryController
                                 $reason = "Vous devez vaincre les monstres avant de sortir !";
                             }
                             break;
-                            
+
                         case 'npc_talked':
                             // Vérifie si le joueur a interagi avec les PNJ
-                            if (!isset($_SESSION['npc_interacted_' . $node['id']])) {
+                            if (!isset($_SESSION['npc_interacted_' . $characterId . '_' . $node['id']])) {
                                 $canExit = false;
                                 $reason = "Vous devez parler à la personne présente avant de partir !";
                             }
@@ -811,34 +819,34 @@ class StoryController
 
                 // Sortie validée : Mise à jour de la progression
                 $this->progressModel->exitDungeon($characterId, $storyId);
-                
+
                 // Mise à jour des quêtes quotidiennes (COMPLETE_DUNGEON)
                 $dailyQuestModel = new \App\Models\DailyQuest();
                 $dailyQuestModel->onDungeonCompleted($characterId, $storyId);
-                
+
                 // Si GET, rediriger vers la carte avec message de succès
                 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                     $_SESSION['success_message'] = 'Félicitations ! Vous avez terminé le donjon avec succès ! 🎉';
                     header('Location: /game');
                     exit;
                 }
-                
+
                 echo json_encode(['success' => true]);
                 exit;
             }
         }
-        
+
         // Si GET, rediriger
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             header('Location: /game');
             exit;
         }
-        
+
         echo json_encode(['success' => false, 'message' => 'Sortie impossible ici']);
     }
     /**
      * Enregistre l'interaction avec un PNJ.
-     * Utilisé notamment pour les conditions de sortie 'npc_talked'.
+     * Renvoie l'arbre de dialogue du PNJ s'il en a un.
      */
     public function interactWithNPC()
     {
@@ -846,17 +854,94 @@ class StoryController
         $storyId = $_POST['story_id'];
         $nodeId = $_POST['node_id'];
         $npcId = $_POST['npc_id'];
-        
-        $sessionKey = 'npc_interacted_' . $nodeId;
+
+        $sessionKey = 'npc_interacted_' . $characterId . '_' . $nodeId;
         if (!isset($_SESSION[$sessionKey]) || !is_array($_SESSION[$sessionKey])) {
             $_SESSION[$sessionKey] = [];
         }
-        
+
         if (!in_array($npcId, $_SESSION[$sessionKey])) {
             $_SESSION[$sessionKey][] = $npcId;
         }
-        
-        echo json_encode(['success' => true]);
+
+        // Récupération du dialogue
+        $npcModel = new NPC();
+        $dialogueTreeModel = new DialogueTree();
+
+        $trees = $npcModel->getDialogueTrees($npcId);
+        $dialogueData = null;
+
+        if (!empty($trees)) {
+            // Pour l'instant on prend le premier arbre
+            // TODO: Ajouter logique conditionnelle pour choisir l'arbre
+            $treeId = $trees[0]['id'];
+            $rootDialogues = $dialogueTreeModel->getRootDialogues($treeId);
+
+            // On construit une structure simple pour le frontend
+            if (!empty($rootDialogues)) {
+                $dialogueData = [
+                    'tree_id' => $treeId,
+                    'root' => $rootDialogues[0], // Premier message
+                    'title' => $trees[0]['name']
+                ];
+
+                // Récupérer les enfants (réponses possibles) du noeud racine
+                $children = $dialogueTreeModel->getChildren($rootDialogues[0]['id']);
+                $dialogueData['root']['choices'] = $children;
+            }
+        }
+
+        echo json_encode([
+            'success' => true,
+            'dialogue' => $dialogueData
+        ]);
+    }
+
+    /**
+     * Réinitialise la progression de l'histoire pour permettre de rejouer.
+     */
+    public function resetStory()
+    {
+        $characterId = $_SESSION['character_id'];
+        $storyId = $_POST['story_id'] ?? null;
+
+        if (!$storyId) {
+            echo json_encode(['success' => false, 'message' => 'Missing Story ID']);
+            return;
+        }
+
+        // Supprimer la progression en base de données
+        if ($this->progressModel->resetProgress($characterId, $storyId)) {
+
+            // Nettoyage des clés de session liées à cette histoire
+            // Note: C'est une approche brutale mais efficace. 
+            // On pourrait affiner en listant tous les noeuds de l'histoire mais c'est coûteux.
+
+            // On parcourt toutes les clés de session pour trouver celles correspondant à ce char/story ?
+            // Trop lourd. On va supposer que le joueur recommence à zéro et que les clés de session deviendront orphelines (TTL session) ou on les laisse.
+            // Le plus important est que la progression DB soit reset. 
+            // Les clés de session (killed_monsters_XXX) sont liées au NodeID.
+            // Si on recommence, on repasse par les mêmes NodeID (pour une histoire manuelle).
+            // Donc il FAUT nettoyer la session si on veut que les monstres réapparaissent.
+
+            // Récupération des noeuds de l'histoire pour nettoyer la session
+            $nodes = $this->nodeModel->getByStoryId($storyId);
+            foreach ($nodes as $node) {
+                $nid = $node['id'];
+                unset($_SESSION['killed_monsters_' . $characterId . '_' . $nid]);
+                unset($_SESSION['fled_monsters_' . $characterId . '_' . $nid]);
+                unset($_SESSION['npc_interacted_' . $characterId . '_' . $nid]);
+
+                // Legacy support (old keys)
+                unset($_SESSION['killed_monsters_' . $nid]);
+                unset($_SESSION['fled_monsters_' . $nid]);
+                unset($_SESSION['npc_interacted_' . $nid]);
+            }
+
+            echo json_encode(['success' => true, 'message' => 'Histoire réinitialisée']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Erreur lors de la réinitialisation']);
+        }
     }
 
     /**
@@ -866,27 +951,30 @@ class StoryController
     {
         $characterId = $_SESSION['character_id'];
         $storyId = $_POST['story_id'] ?? null;
-        
+
         // Si storyId manquant, on tente de le récupérer depuis la progression active
         if (!$storyId) {
             $active = $this->progressModel->getActiveStory($characterId);
-            if ($active) $storyId = $active['story_id'];
+            if ($active)
+                $storyId = $active['story_id'];
         }
 
         if ($storyId) {
             // Supprimer la progression
             $this->progressModel->deleteProgress($characterId, $storyId);
-            
+
             // Nettoyer les sessions
             $keys = array_keys($_SESSION);
             foreach ($keys as $key) {
-                if (strpos($key, 'fled_monsters_') === 0 || 
-                    strpos($key, 'killed_monsters_') === 0 || 
-                    strpos($key, 'npc_interacted_') === 0) {
+                if (
+                    strpos($key, 'fled_monsters_') === 0 ||
+                    strpos($key, 'killed_monsters_') === 0 ||
+                    strpos($key, 'npc_interacted_') === 0
+                ) {
                     unset($_SESSION[$key]);
                 }
             }
-            
+
             echo json_encode(['success' => true]);
         } else {
             echo json_encode(['success' => false, 'message' => 'Aucune histoire active']);

@@ -148,19 +148,19 @@ function handleInitialData(initialData) {
         if (initialData.hit) {
             playerHit();
         }
-        
+
         // Mise à jour des HP après l'attaque initiale
         if (typeof initialData.playerHp !== "undefined") {
             const hpEl = document.getElementById('player-hp');
             const hpBar = document.getElementById('player-hp-bar');
-            
+
             updateCombatState(initialData.playerHp, MAX_HP);
             hpEl.textContent = initialData.playerHp;
-            
+
             if (hpBar) {
                 const hpPercent = (initialData.playerHp / MAX_HP) * 100;
                 hpBar.style.width = hpPercent + "%";
-                
+
                 // Changement de couleur selon le pourcentage
                 if (hpPercent <= 25) {
                     hpBar.className = "bg-red-600 h-full transition-all duration-500 animate-pulse";
@@ -171,7 +171,7 @@ function handleInitialData(initialData) {
                 }
             }
         }
-        
+
         // Vérification de mort instantanée
         if (initialData.playerDead || initialData.gameOver) {
             playerLoss();
@@ -232,18 +232,18 @@ function sendAction(action, skillId = null, itemId = null) {
                         end = true;
                         playerWin(data.rewards);
                     }
-                    
+
                     // Vérification du Game Over
                     if (data.gameOver && !data.win) {
                         end = true;
                         playerLoss();
                     }
-                    
+
                     // Mise à jour des HP du joueur
                     if (typeof data.playerHp !== "undefined") {
                         const hpEl = document.getElementById('player-hp');
                         const hpBar = document.getElementById('player-hp-bar');
-                        
+
                         updateCombatState(data.playerHp, MAX_HP);
 
                         if (data.playerHp <= 0) {
@@ -252,12 +252,12 @@ function sendAction(action, skillId = null, itemId = null) {
                             if (hpBar) hpBar.style.width = "0%";
                         } else {
                             hpEl.textContent = data.playerHp;
-                            
+
                             // Mise à jour de la barre de PV
                             if (hpBar) {
                                 const hpPercent = (data.playerHp / MAX_HP) * 100;
                                 hpBar.style.width = hpPercent + "%";
-                                
+
                                 // Changement de couleur selon le pourcentage
                                 if (hpPercent <= 25) {
                                     hpBar.className = "bg-red-600 h-full transition-all duration-500 animate-pulse";
@@ -267,7 +267,7 @@ function sendAction(action, skillId = null, itemId = null) {
                                     hpBar.className = "bg-gradient-to-r from-red-600 to-red-400 h-full transition-all duration-500";
                                 }
                             }
-                            
+
                             // Animation de dégâts
                             if (data.damageJ) {
                                 hpEl.classList.add('animate-bounce');
@@ -275,18 +275,18 @@ function sendAction(action, skillId = null, itemId = null) {
                             }
                         }
                     }
-                    
+
                     // Mise à jour de la barre de PV du monstre (uniquement visuelle)
                     if (typeof data.monsterHp !== "undefined") {
                         const monsterHpBar = document.getElementById('monster-hp-bar');
-                        
+
                         if (monsterHpBar) {
                             const maxHp = parseInt(monsterHpBar.dataset.maxHp) || 100;
                             const hpPercent = (data.monsterHp / maxHp) * 100;
-                            
+
                             // Mise à jour de la largeur de la barre
                             monsterHpBar.style.width = hpPercent + "%";
-                            
+
                             // Changement de couleur selon le pourcentage
                             if (hpPercent <= 0) {
                                 monsterHpBar.className = "bg-gray-600 h-full transition-all duration-500 shadow-lg";
@@ -299,7 +299,7 @@ function sendAction(action, skillId = null, itemId = null) {
                             } else {
                                 monsterHpBar.className = "bg-red-500 h-full transition-all duration-500 shadow-lg";
                             }
-                            
+
                             // Animation si le monstre prend des dégâts
                             if (data.damageM) {
                                 monsterHpBar.classList.add('scale-105');
@@ -348,6 +348,9 @@ function playerWin(rewards) {
         setTimeout(() => {
             log.textContent = "";
             winOrLoss.classList.add("text-black-600", "animate-pulse");
+
+            // Update Header Stats (XP/Gold)
+            updateUserHeaderStats(rewards);
 
             let rewardHtml = '';
             if (rewards) {
@@ -431,7 +434,7 @@ function playerLoss() {
 
     setTimeout(() => {
         log.textContent = "";
-        
+
         // Récupérer le story_id si disponible
         const sceneCtx = document.getElementById('combat-scene');
         const returnStoryId = sceneCtx ? sceneCtx.dataset.returnStoryId : null;
@@ -682,7 +685,7 @@ window.resetStoryAndReturnToMap = function (storyId) {
     if (storyId && storyId !== 'null' && storyId !== 'undefined') {
         formData.append('story_id', storyId);
     }
-    
+
     fetch('/story/reset', {
         method: 'POST',
         body: formData
@@ -756,4 +759,36 @@ function bossDie() {
         duration: 0.4,
         ease: "power3.in"
     });
-}  
+}
+
+function updateUserHeaderStats(rewards) {
+    if (!rewards) return;
+
+    // Helper to animate numbers
+    const animateValue = (id, addValue) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        // Remove non-numeric chars (like ' XP', ' Gold')
+        let currentText = el.innerText.replace(/[^0-9]/g, '');
+        let current = parseInt(currentText) || 0;
+        let target = current + addValue;
+
+        // Simple animation
+        gsap.to(el, {
+            innerText: target,
+            duration: 1.5,
+            snap: { innerText: 1 },
+            onUpdate: function () {
+                el.innerText = Math.ceil(this.targets()[0].innerText); // Format if needed
+            }
+        });
+
+        // Flash effect
+        el.classList.add('text-green-400', 'scale-110');
+        setTimeout(() => el.classList.remove('text-green-400', 'scale-110'), 500);
+    };
+
+    if (rewards.gold > 0) animateValue('header-gold', rewards.gold);
+    if (rewards.xp > 0) animateValue('header-xp', rewards.xp);
+}

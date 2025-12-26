@@ -322,7 +322,7 @@ class CombatController
                      $nodeId = $progress['current_node_id'];
                      $monsterId = $monsterModel->getId();
                      
-                     $sessionKey = 'killed_monsters_' . $nodeId;
+                    $sessionKey = 'killed_monsters_' . $_SESSION['character_id'] . '_' . $nodeId;
                      if (!isset($_SESSION[$sessionKey])) {
                          $_SESSION[$sessionKey] = [];
                      }

@@ -82,6 +82,11 @@ async function loadCurrentNode() {
     if (storyState.isLoading) return;
     storyState.isLoading = true;
 
+    // Clear current view if fleeting to simulate movement
+    if (storyState.isFleeting) {
+        document.getElementById('choices-container').innerHTML = '<div class="col-span-full text-center text-gray-400 italic">Fuite en cours...</div>';
+    }
+
     try {
         const response = await fetch(`/story/current?story_id=${storyState.storyId}`);
         const data = await response.json();
@@ -94,6 +99,10 @@ async function loadCurrentNode() {
         storyState.currentNode = data.node;
         storyState.nodeStatus = data.status;
         storyState.fledMonsters = data.fled_monsters || []; // Store fled IDs
+        
+        // Reset fleeting state
+        storyState.isFleeting = false;
+        
         renderNode();
     } catch (error) {
         console.error('Error loading node:', error);
@@ -122,7 +131,16 @@ function renderNode() {
     // Update Background
     const bg = document.getElementById('story-background');
     if (node.image_path) {
-        bg.style.backgroundImage = `url('${node.image_path}')`;
+        // Create a temp image to check if it loads
+        const img = new Image();
+        img.onload = () => {
+             bg.style.backgroundImage = `url('${node.image_path}')`;
+        };
+        img.onerror = () => {
+             console.warn('Image failed to load, utilizing placeholder:', node.image_path);
+             bg.style.backgroundImage = `url('/assets/images/placeholder_dungeon.jpg')`;
+        };
+        img.src = node.image_path;
     } else {
         bg.style.backgroundImage = `url('/assets/images/placeholder_dungeon.jpg')`;
     }
@@ -394,9 +412,14 @@ function renderChoices(node) {
             container.innerHTML += `
                 <div class="col-span-2 text-center">
                     <h3 class="text-green-400 font-bold text-xl mb-4">🎉 Donjon Terminé !</h3>
-                    <a href="/story/exit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-bold inline-block">
-                        Quitter et récupérer les récompenses
-                    </a>
+                    <div class="flex flex-col gap-2 justify-center items-center">
+                        <button onclick="window.exitDungeon()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-bold inline-block w-full max-w-xs transition-transform hover:scale-105">
+                            Quitter et récupérer les récompenses
+                        </button>
+                        <button onclick="window.resetStory(${storyState.storyId})" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-6 py-2 rounded-lg font-medium inline-block w-full max-w-xs border border-gray-600">
+                             ↺ Rejouer l'histoire
+                        </button>
+                    </div>
                 </div>
             `;
         } else {
@@ -624,6 +647,7 @@ window.attemptFlee = async (monsterId) => {
             showToast(data.message, 'success');
             // Si le joueur a reculé, recharger le nœud (qui est maintenant le précédent)
             if (data.retreated) {
+                storyState.isFleeting = true;
                 setTimeout(() => {
                     loadCurrentNode();
                 }, 800);
@@ -694,11 +718,109 @@ window.interactWithNPC = async (npcId) => {
         const data = await response.json();
 
         if (data.success) {
-            showToast('Vous choisissez de parler avec le personnage.', 'success');
-            // Reload to potentially unlock exit
-            loadCurrentNode();
+            if (data.dialogue) {
+                 renderDialogue(data.dialogue);
+            } else {
+                 showToast('Vous choisissez de parler avec le personnage.', 'success');
+                 // Reload to potentially unlock exit
+                 loadCurrentNode();
+            }
         } else {
             showToast(data.message || 'Interaction impossible', 'error');
+        }
+    } catch (e) {
+        console.error(e);
+    }
+};
+
+function renderDialogue(dialogueData) {
+    // Create Dialogue Overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'dialogue-overlay';
+    overlay.className = 'fixed inset-0 z-50 flex items-end justify-center pointer-events-auto bg-black/50 backdrop-blur-[2px] animate-fade-in';
+    
+    // Bubble Container
+    const bubble = document.createElement('div');
+    bubble.className = 'bg-gray-900 border-2 border-white/20 p-6 md:p-8 rounded-t-2xl md:rounded-2xl max-w-4xl w-full mx-auto md:mb-12 shadow-[0_-10px_40px_rgba(0,0,0,0.8)] animate-slide-up transform transition-all';
+    
+    // Header (Title)
+    const header = document.createElement('div');
+    header.innerHTML = `<h3 class="text-yellow-500 font-bold text-xl mb-2">${dialogueData.title || 'Inconnu'}</h3>`;
+    bubble.appendChild(header);
+
+    // Text Content
+    const content = document.createElement('div');
+    content.id = 'dialogue-text';
+    content.className = 'text-white text-lg leading-relaxed mb-6 font-serif';
+    // Typewriter effect could go here
+    content.innerText = dialogueData.root.text;
+    bubble.appendChild(content);
+
+    // Choices Container
+    const choicesDiv = document.createElement('div');
+    choicesDiv.className = 'flex flex-col gap-2 mt-4 border-t border-gray-700 pt-4';
+    
+    // Render Choices
+    if(dialogueData.root.choices && dialogueData.root.choices.length > 0) {
+        dialogueData.root.choices.forEach(choice => {
+            const btn = document.createElement('button');
+            btn.className = 'text-left px-4 py-3 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded border border-gray-700 hover:border-gray-500 transition-colors flex items-center gap-3 group';
+            btn.innerHTML = `<span class="text-blue-400 group-hover:text-blue-300">➤</span> ${choice.text}`; // Assuming child node text is the choice text
+            
+            // On click -> Traverse to next node (would need logic to fetch children of this child)
+            // For now, let's assume simple 1-depth or close dialogue
+            btn.onclick = () => {
+                 // Close logic for now as deep traversal isn't fully implemented in this MVP block
+                 // TODO: Implement deep traversal via API
+                 closeDialogue();
+                 // Trigger actions if any (not implemented yet in this block)
+            };
+            choicesDiv.appendChild(btn);
+        });
+    } else {
+        // Continue/Close button
+        const btn = document.createElement('button');
+        btn.className = 'text-center px-4 py-3 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded border border-gray-700 hover:border-gray-500 transition-colors font-bold uppercase tracking-widest';
+        btn.innerText = "Fermer";
+        btn.onclick = closeDialogue;
+        choicesDiv.appendChild(btn);
+    }
+    
+    bubble.appendChild(choicesDiv);
+    overlay.appendChild(bubble);
+    document.body.appendChild(overlay);
+}
+
+function closeDialogue() {
+    const overlay = document.getElementById('dialogue-overlay');
+    if (overlay) {
+        overlay.classList.add('opacity-0');
+        setTimeout(() => overlay.remove(), 300);
+        // Reload node to update state (e.g. exit unlocked)
+        loadCurrentNode();
+    }
+}
+
+// Reset Story Global Function
+window.resetStory = async (storyId) => {
+    if(!confirm("Voulez-vous vraiment recommencer l'histoire à zéro ?")) return;
+    
+    try {
+        const formData = new FormData();
+        formData.append('story_id', storyId);
+
+        const response = await fetch('/story/reset', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            showToast('Histoire réinitialisée', 'success');
+            // Reload page to restart
+            setTimeout(() => window.location.reload(), 500);
+        } else {
+             showToast(data.message, 'error');
         }
     } catch (e) {
         console.error(e);

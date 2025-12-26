@@ -1,5 +1,5 @@
 // gameRouter.js - Client-Side Router for SPA
-import { initMap, loadMapPoints } from '/js/modules/map.js';
+import { initMap, loadMapPoints, getMap } from '/js/modules/map.js';
 
 const GameRouter = {
     currentUrl: window.location.href,
@@ -109,6 +109,14 @@ const GameRouter = {
         }
         if (mapContainer) {
             mapContainer.classList.remove('hidden');
+
+            // Fix Leaflet map size/rendering issues when container becomes visible
+            const mapInstance = getMap();
+            if (mapInstance) {
+                setTimeout(() => {
+                    mapInstance.invalidateSize();
+                }, 100);
+            }
         }
 
         history.pushState({ url: '/game' }, '', '/game');
