@@ -47,12 +47,12 @@ class Character
                 // First try instance_stats (which includes enchantment bonuses)
                 $instanceStats = json_decode($item['instance_stats'] ?? '{}', true);
                 if (!empty($instanceStats) && isset($instanceStats[$statKey])) {
-                    $total += (int)$instanceStats[$statKey];
+                    $total += (int) $instanceStats[$statKey];
                 } else {
                     // Fallback to base stats
                     $stats = json_decode($item['stats'] ?? '[]', true);
                     if (isset($stats[$statKey])) {
-                        $total += (int)$stats[$statKey];
+                        $total += (int) $stats[$statKey];
                     }
                 }
             }
@@ -167,6 +167,29 @@ class Character
     public function getSkillPoints()
     {
         return $this->skillPoints ?? 0;
+    }
+
+    /**
+     * Spend skill points
+     */
+    public function spendSkillPoints($amount)
+    {
+        if ($this->skillPoints < $amount) {
+            return false;
+        }
+
+        if (!$this->db) {
+            $this->db = Database::getInstance()->getConnection();
+        }
+
+        $stmt = $this->db->prepare("UPDATE character_stats SET skill_points = skill_points - ? WHERE character_id = ?");
+        $stmt->bind_param("ii", $amount, $this->id);
+
+        if ($stmt->execute()) {
+            $this->skillPoints -= $amount;
+            return true;
+        }
+        return false;
     }
 
     public function getLevel()
