@@ -834,13 +834,23 @@ class StoryController
                     error_log("[Exit Story] Exiting without proper completion (easter egg)");
                 }
                 
-                // Nettoyer les clés de session liées à ce donjon
-                $nodeId = $progress['current_node_id'];
-                $sessionKey = 'npc_interacted_' . $characterId . '_' . $nodeId;
-                $exitedKey = 'exited_without_talking_' . $characterId . '_' . $nodeId;
-                $fledKey = 'fled_monsters_' . $characterId . '_' . $nodeId;
-                unset($_SESSION[$sessionKey], $_SESSION[$exitedKey], $_SESSION[$fledKey]);
-                error_log("[Exit Story] Cleaned session keys");
+                // Nettoyer TOUTES les clés de session liées à ce donjon (pour la rejouabilité)
+                error_log("[Exit Story] Cleaning session keys for all nodes");
+                $nodes = $this->nodeModel->getByStoryId($storyId);
+                foreach ($nodes as $node) {
+                    $nid = $node['id'];
+                    unset($_SESSION['killed_monsters_' . $characterId . '_' . $nid]);
+                    unset($_SESSION['fled_monsters_' . $characterId . '_' . $nid]);
+                    unset($_SESSION['npc_interacted_' . $characterId . '_' . $nid]);
+                    unset($_SESSION['exited_without_talking_' . $characterId . '_' . $nid]);
+                    
+                    // Legacy support (old keys)
+                    unset($_SESSION['killed_monsters_' . $nid]);
+                    unset($_SESSION['fled_monsters_' . $nid]);
+                    unset($_SESSION['npc_interacted_' . $nid]);
+                    unset($_SESSION['exited_without_talking_' . $nid]);
+                }
+                error_log("[Exit Story] Cleaned session keys for " . count($nodes) . " nodes");
 
                 // Si GET, rediriger vers la carte avec message de succès
                 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
