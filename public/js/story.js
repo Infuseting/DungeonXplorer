@@ -145,31 +145,11 @@ function renderNode() {
         bg.style.backgroundImage = `url('/assets/images/placeholder_dungeon.jpg')`;
     }
 
-    // Update Exit Button (Always visible if exit is possible, but disabled if conditions not met)
+    // Update Exit Button - DÉSACTIVÉ car "Dire au revoir" à la princesse quitte le donjon
     const exitBtn = document.getElementById('exit-dungeon-btn');
     if (exitBtn) {
-        console.log('[Exit Button] can_exit:', node.can_exit, 'exit_condition_type:', node.exit_condition_type);
-
-        // Show button if node has can_exit OR has exit_condition_type
-        const shouldShowButton = node.can_exit || node.exit_condition_type;
-
-        if (shouldShowButton) {
-            exitBtn.classList.remove('hidden');
-
-            if (node.can_exit) {
-                exitBtn.disabled = false;
-                exitBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'grayscale');
-                exitBtn.classList.add('hover:scale-110');
-                exitBtn.title = 'Quitter le donjon';
-            } else {
-                exitBtn.disabled = true;
-                exitBtn.classList.add('opacity-50', 'cursor-not-allowed', 'grayscale');
-                exitBtn.classList.remove('hover:scale-110');
-                exitBtn.title = 'Conditions de sortie non remplies';
-            }
-        } else {
-            exitBtn.classList.add('hidden');
-        }
+        // Toujours masquer le bouton, la sortie se fait via "Dire au revoir"
+        exitBtn.classList.add('hidden');
     }
 
     // Render Interactions (Now returns active entity info)
@@ -248,23 +228,52 @@ function renderEngagementActions(type, entity) {
         container.appendChild(btnTalk);
 
         // Goodbye / Ignore Button
-        // "Dire au revoir" essentially skips the interaction (marks as interacted without "talking" logic deep dive?)
-        // Or we assume "Parler" is the only way to progress if it's forced?
-        // User said "Parler / Dire au revoir".
-        // Let's implement Goodbye as "Mark as interacted" too, but maybe with a different toast message or just skip.
-        // Actually, if we want to "Move to next", we MUST mark it as interacted.
         const btnBye = document.createElement('button');
         btnBye.className = 'w-full bg-gradient-to-b from-gray-700 to-gray-800 border border-gray-600 p-4 rounded-lg text-gray-200 text-left shadow-lg hover:from-gray-600 hover:to-gray-700 flex items-center gap-3 group mt-2';
         btnBye.innerHTML = `
             <span class="text-3xl group-hover:scale-110 transition-transform">👋</span>
             <div class="flex flex-col">
                 <span class="font-bold text-lg">Dire au revoir</span>
-                <span class="text-xs text-gray-400">Quitter la conversation</span>
+                <span class="text-xs text-gray-400">Quitter le donjon</span>
             </div>
         `;
-        // We reuse interactWithNPC but maybe we should distinguish?
-        // For now, reuse it to clear the "active" status.
-        btnBye.onclick = () => interactWithNPC(entity.id);
+        // Si c'est la princesse (NPC 3), toujours quitter le donjon
+        btnBye.onclick = async () => {
+            if (entity.npc_id === 3) {
+                console.log('[Story] Princess goodbye - marking as interacted and exiting dungeon');
+
+                // D'abord marquer la princesse comme interagée pour valider la quête
+                try {
+                    const formData = new FormData();
+                    formData.append('story_id', storyState.storyId);
+                    formData.append('node_id', storyState.currentNode.id);
+                    formData.append('npc_id', entity.npc_id);
+
+                    const response = await fetch('/story/npc/interact', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+                    console.log('[Story] NPC interact response:', data);
+
+                    // Attendre un peu pour que PHP sauvegarde la session
+                    await new Promise(resolve => setTimeout(resolve, 300));
+
+                    // Puis quitter le donjon
+                    showToast('Au revoir Princesse !', 'success');
+                    setTimeout(() => {
+                        window.exitDungeon();
+                    }, 1000);
+                } catch (e) {
+                    console.error('[Story] Error marking NPC interaction:', e);
+                    showToast('Erreur lors de la sortie', 'error');
+                }
+            } else {
+                // Sinon, comportement normal (marquer comme interagi)
+                interactWithNPC(entity.npc_id);
+            }
+        };
         container.appendChild(btnBye);
     }
 }
@@ -443,18 +452,7 @@ function renderChoices(node) {
                 </div>
             `;
         } else {
-            // Check if exit button is visible (logic mirrored from renderNode)
-            const canExit = node.can_exit || node.exit_condition_type;
-            if (canExit) {
-                container.innerHTML += `
-                    <div class="text-center col-span-2">
-                        <p class="text-gray-300 italic mb-4">Vous avez atteint la fin de ce chemin.</p>
-                        <p class="text-green-400 font-bold animate-pulse">✨ La sortie est disponible !</p>
-                        <p class="text-xs text-gray-500 mt-2">(Utilisez le bouton "Quitter le donjon" en haut à droite)</p>
-                    </div>`;
-            } else {
-                container.innerHTML += `<div class="text-gray-500 italic text-center col-span-2">Aucune issue...</div>`;
-            }
+            container.innerHTML += `<div class="text-gray-500 italic text-center col-span-2">Aucune issue...</div>`;
         }
     }
 
@@ -770,7 +768,7 @@ window.interactWithNPC = async (npcId) => {
     }
 };
 
-function renderDialogue(dialogueData) {
+function renderDialogue(dialogueData, autoExit = false) {
     // Create Dialogue Overlay
     const overlay = document.createElement('div');
     overlay.id = 'dialogue-overlay';
@@ -831,14 +829,26 @@ function renderDialogue(dialogueData) {
 function closeDialogue() {
     const overlay = document.getElementById('dialogue-overlay');
     if (overlay) {
+        const shouldAutoExit = overlay.dataset.autoExit === 'true';
+
         overlay.classList.add('opacity-0');
         setTimeout(() => {
             overlay.remove();
-            // Reload node to update state (e.g. exit unlocked)
-            // Petit délai pour s'assurer que la session backend est à jour
-            setTimeout(() => {
-                loadCurrentNode();
-            }, 200);
+
+            // Si c'est la princesse et qu'on peut sortir automatiquement, quitter le donjon
+            if (shouldAutoExit) {
+                console.log('[Dialogue] Auto-exit triggered, leaving dungeon...');
+                showToast('Vous quittez le donjon avec la princesse ! 👑', 'success');
+                setTimeout(() => {
+                    window.exitDungeon();
+                }, 500);
+            } else {
+                // Reload node to update state (e.g. exit unlocked)
+                // Petit délai pour s'assurer que la session backend est à jour
+                setTimeout(() => {
+                    loadCurrentNode();
+                }, 200);
+            }
         }, 300);
     }
 }
@@ -870,16 +880,21 @@ window.resetStory = async (storyId) => {
     }
 };
 
-// Exit Dungeon Global Function
+// Exit Dungeon Global Function - Sortir sans recharger la page
 window.exitDungeon = async () => {
     try {
         const formData = new FormData();
         formData.append('story_id', storyState.storyId);
 
+        // Afficher le toast immédiatement
+        showToast('Vous quittez le donjon... 🚪', 'success');
+
+        // Attendre que le backend supprime complètement la progression
         const response = await fetch('/story/exit', {
             method: 'POST',
             body: formData
         });
+
         const data = await response.json();
 
         if (data.success) {
@@ -904,6 +919,11 @@ window.exitDungeon = async () => {
         }
     } catch (e) {
         console.error('[Story] Exit error:', e);
-        showToast('Erreur lors de la sortie', 'error');
+        // En cas d'erreur, afficher la map quand même
+        if (window.GameRouter) {
+            window.GameRouter.showMap();
+        } else {
+            window.location.href = '/game';
+        }
     }
 };

@@ -303,36 +303,94 @@ export function initMapPoints(map, points) {
                 markerData.element = this.getElement();
             });
         } else if (point.icon) {
-            // Use custom SVG icon
+            // Use custom SVG icon with fallback to default marker
             const typeColor = getTypeColor(point.type);
-            const icon = L.divIcon({
-                className: 'custom-map-icon',
-                html: `<div class="map-icon-container" style="
-                    width: 36px; 
-                    height: 36px;
-                    color: ${typeColor};
-                ">
-                    <img src="/assets/map/icons/${point.icon}" 
-                         alt="${point.name}" 
-                         class="map-icon-svg"
-                         style="
-                            width: 100%; 
-                            height: 100%; 
-                            object-fit: contain;
-                         ">
-                </div>`,
-                iconSize: [48, 48],
-                iconAnchor: [24, 24]
-            });
+            
+            // Fonction pour ajouter les événements sur le marqueur
+            const addMarkerEvents = (m) => {
+                // Click handler
+                m.on('click', () => {
+                    console.log('Marker clicked:', point.name);
+                    showPointDetails(point, map);
+                });
 
-            marker = L.marker([parseFloat(point.y), parseFloat(point.x)], {
-                icon: icon
-            }).addTo(map);
+                // Hover effect (only for circle markers)
+                if (!point.has_quest && m.setStyle) {
+                    m.on('mouseover', function () {
+                        this.setStyle({
+                            radius: 10,
+                            weight: 3
+                        });
+                    });
 
-            // Store reference to marker element for dynamic sizing
-            marker.on('add', function () {
-                markerData.element = this.getElement();
-            });
+                    m.on('mouseout', function () {
+                        this.setStyle({
+                            radius: 8,
+                            weight: 2
+                        });
+                    });
+                }
+            };
+            
+            // Créer d'abord un marqueur temporaire pour tester l'icône
+            const testImg = new Image();
+            testImg.src = `/assets/map/icons/${point.icon}`;
+            
+            testImg.onload = function() {
+                // L'icône existe, créer le marqueur avec l'icône
+                const icon = L.divIcon({
+                    className: 'custom-map-icon',
+                    html: `<div class="map-icon-container" style="
+                        width: 36px; 
+                        height: 36px;
+                        color: ${typeColor};
+                    ">
+                        <img src="/assets/map/icons/${point.icon}" 
+                             alt="${point.name}" 
+                             class="map-icon-svg"
+                             style="
+                                width: 100%; 
+                                height: 100%; 
+                                object-fit: contain;
+                             ">
+                    </div>`,
+                    iconSize: [48, 48],
+                    iconAnchor: [24, 24]
+                });
+
+                const m = L.marker([parseFloat(point.y), parseFloat(point.x)], {
+                    icon: icon
+                }).addTo(map);
+
+                // Store reference to marker element for dynamic sizing
+                m.on('add', function () {
+                    markerData.element = this.getElement();
+                });
+                
+                addMarkerEvents(m);
+                markerData.marker = m;
+                markers.push(markerData);
+            };
+            
+            testImg.onerror = function() {
+                // L'icône n'existe pas, utiliser le marqueur par défaut (cercle)
+                console.warn(`Icon not found: ${point.icon}, using default marker for ${point.name}`);
+                const m = L.circleMarker([parseFloat(point.y), parseFloat(point.x)], {
+                    radius: 8,
+                    fillColor: typeColor,
+                    color: '#fff',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }).addTo(map);
+                
+                addMarkerEvents(m);
+                markerData.marker = m;
+                markers.push(markerData);
+            };
+            
+            // Ne pas continuer le traitement normal pour les icônes custom
+            return; // Sortir de cette itération du forEach
         } else {
             marker = L.circleMarker([parseFloat(point.y), parseFloat(point.x)], {
                 radius: 8,
