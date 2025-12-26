@@ -14,8 +14,8 @@ if (isset($_POST['diceRoll'])) {
 }
 
 class Combat
-{ 
-    private  $joueur;
+{
+    private $joueur;
     private $boss;
     private $end = false;
 
@@ -30,24 +30,29 @@ class Combat
         return rand(1, 20);
     }
 
-    public function getPlayerHp() {
+    public function getPlayerHp()
+    {
         return $this->joueur->getCurrentHp();
     }
 
-    public function getMonster() {
+    public function getMonster()
+    {
         return $this->boss;
     }
 
-    public function getJoueur() {
+    public function getJoueur()
+    {
         return $this->joueur;
     }
 
-    public function isMonsterAlive() {
+    public function isMonsterAlive()
+    {
         return $this->boss->isAlive();
     }
-    
-    public function isEnd() { 
-        return $this->end; 
+
+    public function isEnd()
+    {
+        return $this->end;
     }
 
     public function isAlive($entity)
@@ -59,40 +64,47 @@ class Combat
         return true;
     }
 
-    public function playerTurn($action, $skillId = null){
+    public function playerTurn($action, $skillId = null)
+    {
         $bool = false;
 
         switch ($action) {
             case 'use_skill':
-                if (!$skillId) { $message = "Aucune compétence sélectionnée."; break; }
+                if (!$skillId) {
+                    $message = "Aucune compétence sélectionnée.";
+                    break;
+                }
                 $skillModel = new Skill();
                 $skill = $skillModel->findById($skillId);
-                if (!$skill) { $message = "Compétence introuvable."; break; }
-                
+                if (!$skill) {
+                    $message = "Compétence introuvable.";
+                    break;
+                }
+
                 $message = $this->joueur->getName() . " utilise <span class='text-purple-400 font-bold'>" . $skill['name'] . "</span> !\n";
-                
+
                 // Compétences de dégâts
                 if (strpos($skill['effect_type'], 'damage_') !== false) {
                     $isPhys = strpos($skill['effect_type'], '_phys') !== false;
                     $multiplier = ($skill['effect_value'] / 100);
-                    
+
                     if ($isPhys) {
                         // Attaque physique avec jet d'attaque
                         $diceRoll = $this->dice();
                         $dexMod = floor(($this->joueur->getDexterity() - 10) / 2);
                         $hitRoll = $diceRoll + $dexMod;
                         $defenseScore = 10 + floor(($this->boss->getDexterity() - 10) / 2);
-                        
+
                         if ($hitRoll >= $defenseScore) {
                             $bool = true;
                             $baseDmg = $this->joueur->getAttaqueClass();
                             $dmg = floor($baseDmg * $multiplier);
-                            
+
                             // Réduction par défense (max 80%)
                             $defenseValue = $this->boss->getDefense();
                             $reduction = min($dmg * 0.8, $defenseValue);
                             $actual = max(1, $dmg - $reduction);
-                            
+
                             $this->boss->reduceVitality($actual);
                             $message .= "Inflige <span class='text-red-500 font-bold'>$actual dégâts</span> ! <span class='text-gray-400 text-sm'>(mult: {$multiplier}x)</span>\n";
                         } else {
@@ -103,12 +115,12 @@ class Combat
                         $bool = true;
                         $baseDmg = $this->joueur->getIntelligence() * 2;
                         $dmg = floor($baseDmg * $multiplier);
-                        
+
                         // Les sorts magiques ignorent 50% de la défense
                         $defenseValue = $this->boss->getDefense();
                         $reduction = min($dmg * 0.8, $defenseValue * 0.5);
                         $actual = max(1, $dmg - $reduction);
-                        
+
                         $this->boss->reduceVitality($actual);
                         $message .= "Explosion magique : <span class='text-blue-500 font-bold'>$actual dégâts</span> !\n";
                     }
@@ -116,17 +128,21 @@ class Combat
                     // Buffs de statistiques
                     $parts = explode('_', $skill['effect_type']);
                     $stat = $parts[1];
-                    $val = (int)$skill['effect_value'];
-                    
+                    $val = (int) $skill['effect_value'];
+
+                    if (!isset($_SESSION['combat_buffs'])) {
+                        $_SESSION['combat_buffs'] = ['str' => 0, 'dex' => 0];
+                    }
+
                     if ($stat === 'str') {
-                        $this->joueur->setStrength($this->joueur->getStrength() + $val);
+                        $_SESSION['combat_buffs']['str'] += $val;
                         $message .= "<span class='text-orange-400'>Force augmentée de $val !</span>\n";
                     } elseif ($stat === 'dex') {
-                        $this->joueur->setDexterity($this->joueur->getDexterity() + $val);
+                        $_SESSION['combat_buffs']['dex'] += $val;
                         $message .= "<span class='text-green-400'>Dextérité augmentée de $val !</span>\n";
                     }
                 } elseif ($skill['effect_type'] === 'heal') {
-                    $healAmount = (int)$skill['effect_value'];
+                    $healAmount = (int) $skill['effect_value'];
                     $this->joueur->heal($this->joueur->getId(), $healAmount);
                     $message .= "<span class='text-green-400'>Soigné de $healAmount PV !</span>\n";
                 }
@@ -138,53 +154,54 @@ class Combat
                 $dexMod = floor(($this->joueur->getDexterity() - 10) / 2);
                 $hitRoll = $diceRoll + $dexMod;
                 $defenseScore = 10 + floor(($this->boss->getDexterity() - 10) / 2);
-                
+
                 if ($hitRoll >= $defenseScore) {
                     $bool = true;
-                    
+
                     // Vérification du coup critique (20 naturel ou selon difficulté)
                     $isCritical = false;
                     $critMessage = '';
-                    
+
                     if (isset($_SESSION['current_difficulty'])) {
                         $critThreshold = 20; // Base: seulement 20 naturel
-                        
+
                         if ($_SESSION['current_difficulty'] === 'STORY') {
                             $critThreshold = 18; // 18-20 en mode Story
                         }
-                        
+
                         if ($diceRoll >= $critThreshold) {
                             $isCritical = true;
                             $critMessage = " <span class='text-yellow-400 font-bold'>💥 COUP CRITIQUE !</span>";
                         }
                     } else {
                         $isCritical = ($diceRoll === 20);
-                        if ($isCritical) $critMessage = " <span class='text-yellow-400 font-bold'>💥 COUP CRITIQUE !</span>";
+                        if ($isCritical)
+                            $critMessage = " <span class='text-yellow-400 font-bold'>💥 COUP CRITIQUE !</span>";
                     }
-                    
+
                     // Calcul des dégâts de base : Force + Dégâts d'équipement
                     $baseDamage = $this->joueur->getAttaqueClass();
-                    
+
                     // Coups critiques : dégâts x2
                     if ($isCritical) {
                         $baseDamage *= 2;
                     }
-                    
+
                     // Réduction par défense : 1 point de défense = 1 point de réduction (max 80%)
                     $defenseValue = $this->boss->getDefense();
                     $reduction = min($baseDamage * 0.8, $defenseValue);
                     $actualDamage = max(1, $baseDamage - $reduction);
-                    
+
                     // Type de dégâts (pour affinités)
                     $damageType = 'physical';
-                    
+
                     // Application des affinités (résistances/faiblesses)
                     $affinity = $this->boss->getAffinityModifier($damageType);
                     $affinityMessage = '';
                     if ($affinity) {
                         $type = $affinity['type'] ?? 'percent';
                         $value = floatval($affinity['value'] ?? 0);
-                        
+
                         if ($type === 'percent') {
                             $modifier = 1 + ($value / 100);
                             $actualDamage *= $modifier;
@@ -194,7 +211,7 @@ class Combat
                             $affinityMessage = $value > 0 ? " (Faiblesse: +{$value})" : " (Résistance: {$value})";
                         }
                     }
-                    
+
                     $actualDamage = max(1, floor($actualDamage));
                     $this->boss->reduceVitality($actualDamage);
                     $message = $this->joueur->getName() . " frappe " . $this->boss->getName() . " pour <span class='text-red-500 font-bold'>" . $actualDamage . " dégâts</span>!" . $critMessage . $affinityMessage . " <span class='text-gray-400 text-sm'>(Jet: $hitRoll vs CA: $defenseScore)</span>\n";
@@ -210,13 +227,13 @@ class Combat
                 $_SESSION['damage_reduction'] = 0.5; // Réduction de 50% des dégâts
                 $message = $this->joueur->getName() . " <span class='text-blue-400 font-bold'>adopte une posture défensive</span> ! <span class='text-gray-400'>(+{$defenseBonus} CA, -50% dégâts reçus)</span>\n";
                 break;
-                
+
             case 'usePotion':
                 $restore = 20;
                 $maxHp = $_SESSION['maxHpPlayer'];
                 $current = $this->joueur->getVitality();
                 $newHp = min($maxHp, $current + $restore);
-                
+
                 $this->joueur->heal($_SESSION['character_id'], $restore);
                 $message = $this->joueur->getName() . " <span class='text-yellow-400'>boit une potion</span> (+20 PV) !\n";
                 break;
@@ -226,7 +243,7 @@ class Combat
                 break;
         }
 
-        if(!$this->boss->isAlive()) {
+        if (!$this->boss->isAlive()) {
             $message .= "<span class='text-green-400 font-bold'>✓ " . $this->boss->getName() . " est vaincu !</span>\n";
         }
 
@@ -245,32 +262,32 @@ class Combat
             return [$message, false];
         }
 
-        if($this->boss->isAlive()) {
+        if ($this->boss->isAlive()) {
             // Jet d'attaque du monstre : 1d20 + Mod DEX
             $diceRoll = $this->dice();
             $dexMod = floor(($this->boss->getDexterity() - 10) / 2);
             $hitRoll = $diceRoll + $dexMod;
-            
+
             // Classe d'armure du joueur
             $playerDexMod = floor(($this->joueur->getDexterity() - 10) / 2);
             $defenseScore = 10 + $playerDexMod;
-            
+
             // Bonus de défense temporaire (action Défendre)
             if (isset($_SESSION['temp_defense_bonus'])) {
                 $defenseScore += $_SESSION['temp_defense_bonus'];
             }
-            
-            if($hitRoll >= $defenseScore) {
+
+            if ($hitRoll >= $defenseScore) {
                 $bool = true;
-                
+
                 // Dégâts de base du monstre
                 $baseDamage = $this->boss->getAttaqueClass();
-                
+
                 // Réduction par armure : 1 point d'armure = 1 point de réduction (max 80%)
                 $armorValue = $this->joueur->getArmorClass();
                 $reduction = min($baseDamage * 0.8, $armorValue);
                 $actualDamage = max(1, $baseDamage - $reduction);
-                
+
                 // Réduction de dégâts supplémentaire (action Défendre)
                 if (isset($_SESSION['damage_reduction'])) {
                     $actualDamage = floor($actualDamage * (1 - $_SESSION['damage_reduction']));
@@ -284,32 +301,34 @@ class Combat
                     $actualDamage = floor($actualDamage * $dmgMod);
                     $actualDamage = max(1, $actualDamage);
                 }
-                
+
                 $defenseMessage = '';
                 if (isset($_SESSION['temp_defense_bonus']) || isset($_SESSION['damage_reduction'])) {
                     $defenseMessage = " <span class='text-blue-400'>(Défense active !)</span>";
                 }
-                
+
                 $this->joueur->reduceVitality($actualDamage);
                 $message = $this->boss->getName() . " frappe " . $this->joueur->getName() . " pour <span class='text-orange-500 font-bold'>" . $actualDamage . " dégâts</span>!" . $defenseMessage . " <span class='text-gray-400 text-sm'>(Jet: $hitRoll vs CA: $defenseScore)</span>\n";
             } else {
-                $message =  $this->boss->getName() . " <span class='text-gray-400'>rate</span> " . $this->joueur->getName() . "! <span class='text-gray-400 text-sm'>(Jet: $hitRoll vs CA: $defenseScore)</span>\n";
+                $message = $this->boss->getName() . " <span class='text-gray-400'>rate</span> " . $this->joueur->getName() . "! <span class='text-gray-400 text-sm'>(Jet: $hitRoll vs CA: $defenseScore)</span>\n";
             }
-            
-            // Nettoyer les bonus de défense après l'attaque
-            if (isset($_SESSION['temp_defense_bonus'])) unset($_SESSION['temp_defense_bonus']);
-            if (isset($_SESSION['damage_reduction'])) unset($_SESSION['damage_reduction']);
 
-            if(!$this->joueur->isAlive()) {
+            // Nettoyer les bonus de défense après l'attaque
+            if (isset($_SESSION['temp_defense_bonus']))
+                unset($_SESSION['temp_defense_bonus']);
+            if (isset($_SESSION['damage_reduction']))
+                unset($_SESSION['damage_reduction']);
+
+            if (!$this->joueur->isAlive()) {
                 $message .= "<span class='text-red-400 font-bold'>☠ " . $this->boss->getName() . " remporte le combat !</span>\n";
                 $this->endCombat();
             }
-            
+
         } else {
-            $message = $this->boss->getName()." <span class='text-gray-400'>est déjà mort.</span>";
+            $message = $this->boss->getName() . " <span class='text-gray-400'>est déjà mort.</span>";
         }
-        
-        return [$message,$bool];
+
+        return [$message, $bool];
     }
 
     public function endCombat()
@@ -317,7 +336,8 @@ class Combat
         $this->end = true;
     }
 
-    public function getActions() {
+    public function getActions()
+    {
         return ['attack', 'usePotion', 'defend'];
     }
 }

@@ -434,6 +434,11 @@ class Character
         return $this->intelligence ?? 10;
     }
 
+    public function getGold()
+    {
+        return $this->gold ?? 0;
+    }
+
     public function setArmorClass($nArmor)
     {
         $this->armor = $nArmor;

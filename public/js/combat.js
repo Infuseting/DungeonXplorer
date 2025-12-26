@@ -201,7 +201,7 @@ function handleInitialData(initialData) {
         // Mise à jour des stats initiales (avec items et compétences)
         if (initialData.playerStats) {
             updatePlayerStats(initialData.playerStats);
-            
+
             // Mettre à jour MAX_HP si la vitalité a changé
             if (initialData.playerStats.vitality) {
                 MAX_HP = initialData.playerStats.vitality;
@@ -283,7 +283,7 @@ function sendAction(action, skillId = null, itemId = null) {
                     // Mise à jour des stats (incluant vitalité)
                     if (data.playerStats) {
                         updatePlayerStats(data.playerStats);
-                        
+
                         // Mettre à jour MAX_HP si la vitalité a changé
                         if (data.playerStats.vitality) {
                             MAX_HP = data.playerStats.vitality;
@@ -385,7 +385,7 @@ function updatePlayerStats(stats) {
         if (element && typeof stats[key] !== 'undefined') {
             const oldValue = parseInt(element.textContent) || 0;
             const newValue = stats[key];
-            
+
             // Si la valeur change, on anime
             if (oldValue !== newValue) {
                 element.textContent = newValue;
@@ -396,7 +396,7 @@ function updatePlayerStats(stats) {
             }
         }
     }
-    
+
     // Mise à jour des HP max affichés si la vitalité a changé
     if (stats.vitality) {
         const hpMaxElement = document.getElementById('player-hp-max');
@@ -864,34 +864,52 @@ function bossDie() {
     });
 }
 
-function updateUserHeaderStats(rewards) {
-    if (!rewards) return;
+// Function to update the user header stats (XP, Level, Gold)
+window.updateUserHeaderStats = function (stats) {
+    if (!stats) return;
 
-    // Helper to animate numbers
-    const animateValue = (id, addValue) => {
-        const el = document.getElementById(id);
-        if (!el) return;
+    // Update XP Text
+    if (typeof stats.current_xp !== 'undefined' && typeof stats.max_xp !== 'undefined') {
+        const xpCurrentEl = document.getElementById('xp-current');
+        const xpMaxEl = document.getElementById('xp-max');
+        const xpBar = document.getElementById('xp-progress-bar');
 
-        // Remove non-numeric chars (like ' XP', ' Gold')
-        let currentText = el.innerText.replace(/[^0-9]/g, '');
-        let current = parseInt(currentText) || 0;
-        let target = current + addValue;
+        if (xpCurrentEl) {
+            const current = parseInt(xpCurrentEl.innerText.replace(/[^0-9]/g, '')) || 0;
+            animateValue(xpCurrentEl, current, stats.current_xp);
+        }
+        if (xpMaxEl) {
+            xpMaxEl.textContent = new Intl.NumberFormat().format(stats.max_xp);
+        }
 
-        // Simple animation
-        gsap.to(el, {
-            innerText: target,
-            duration: 1.5,
-            snap: { innerText: 1 },
-            onUpdate: function () {
-                el.innerText = Math.ceil(this.targets()[0].innerText); // Format if needed
-            }
-        });
+        if (xpBar) {
+            const percent = Math.min(100, Math.max(0, (stats.current_xp / stats.max_xp) * 100));
+            xpBar.style.width = percent + '%';
+        }
+    }
 
-        // Flash effect
-        el.classList.add('text-green-400', 'scale-110');
-        setTimeout(() => el.classList.remove('text-green-400', 'scale-110'), 500);
+    // Update Level
+    if (typeof stats.current_level !== 'undefined') {
+        const levelEl = document.getElementById('user-level');
+        if (levelEl) {
+            levelEl.textContent = stats.current_level;
+            levelEl.classList.add('animate-bounce', 'text-yellow-400');
+            setTimeout(() => levelEl.classList.remove('animate-bounce', 'text-yellow-400'), 1000);
+        }
+    }
+};
+
+function animateValue(obj, start, end) {
+    if (start === end) return;
+    let startTimestamp = null;
+    const duration = 1500;
+    const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        obj.innerHTML = new Intl.NumberFormat().format(Math.floor(progress * (end - start) + start));
+        if (progress < 1) {
+            window.requestAnimationFrame(step);
+        }
     };
-
-    if (rewards.gold > 0) animateValue('header-gold', rewards.gold);
-    if (rewards.xp > 0) animateValue('header-xp', rewards.xp);
+    window.requestAnimationFrame(step);
 }

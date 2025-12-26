@@ -325,10 +325,17 @@ class CombatController
                 $dailyQuestModel->onGoldCollected($_SESSION['character_id'], $calc['gold']);
             }
 
+            // Reload Character to get final stats (including potential quest rewards)
+            $saveChar->findById($_SESSION['character_id']);
+
             $rewards = [
                 'xp' => $calc['xp'],
                 'gold' => $calc['gold'],
-                'levels_gained' => $xpRes['levels_gained'],
+                'levels_gained' => $xpRes['levels_gained'], // Keep this from monster kill for notification
+                'current_xp' => $saveChar->getExperience(),
+                'max_xp' => $saveChar->getXpForNextLevel(),
+                'current_level' => $saveChar->getLevel(),
+                'total_gold' => $saveChar->getGold(),
                 'loot' => $loot,
                 'quests' => $questUpdates,
                 'daily_quest_updates' => $dailyQuestUpdates
@@ -426,6 +433,22 @@ class CombatController
 
         // Récupération des stats actuelles du joueur (avec items et compétences passives)
         $effectiveStats = CharacterStatsService::getEffectiveStats($_SESSION['character_id']);
+
+        // Apply Combat Session Buffs (Skill Buffs)
+        if (isset($_SESSION['combat_buffs'])) {
+            $effectiveStats['strength'] += ($_SESSION['combat_buffs']['str'] ?? 0);
+            $effectiveStats['dexterity'] += ($_SESSION['combat_buffs']['dex'] ?? 0);
+        }
+
+        // Recalculate derived stats based on buffered attributes
+        $dexMod = floor(($effectiveStats['dexterity'] - 10) / 2);
+        $effectiveStats['attack'] = $effectiveStats['strength'] + max(0, $dexMod);
+        $effectiveStats['defense'] = 10 + $dexMod;
+
+        // Apply Temporary Defense Bonus (Defend Action)
+        if (isset($_SESSION['temp_defense_bonus'])) {
+            $effectiveStats['defense'] += $_SESSION['temp_defense_bonus'];
+        }
 
         $playerStats = [
             'attack' => $effectiveStats['attack'],

@@ -29,7 +29,7 @@ class Database
     {
         // Récupération de la configuration avec valeurs par défaut
         $host = $_ENV['DB_HOST'] ?? $_SERVER['DB_HOST'] ?? getenv('DB_HOST') ?? '127.0.0.1';
-        $db   = $_ENV['DB_DATABASE'] ?? $_SERVER['DB_DATABASE'] ?? getenv('DB_DATABASE') ?? 'dungeonxplorer';
+        $db = $_ENV['DB_DATABASE'] ?? $_SERVER['DB_DATABASE'] ?? getenv('DB_DATABASE') ?? 'dungeonxplorer';
         $user = $_ENV['DB_USERNAME'] ?? $_SERVER['DB_USERNAME'] ?? getenv('DB_USERNAME') ?? 'root';
         $pass = $_ENV['DB_PASSWORD'] ?? $_SERVER['DB_PASSWORD'] ?? getenv('DB_PASSWORD') ?? '';
         $port = $_ENV['DB_PORT'] ?? $_SERVER['DB_PORT'] ?? getenv('DB_PORT') ?? '3306';
@@ -39,7 +39,7 @@ class Database
         mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
         try {
-            $this->connection = new mysqli($host, $user, $pass, $db, (int)$port);
+            $this->connection = new mysqli($host, $user, $pass, $db, (int) $port);
             $this->connection->set_charset($charset);
         } catch (\Exception $e) {
             throw new \Exception("Erreur de connexion à la base de données : " . $e->getMessage());
