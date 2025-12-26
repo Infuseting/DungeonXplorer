@@ -28,12 +28,20 @@ class WorkbenchController
 
             // Vérifier si le joueur a une maison
             $primaryHouse = $houseModel->getPrimaryHouse($characterId);
-            
+
             if (!$primaryHouse) {
+                // Récupérer l'or du personnage même sans maison
+                $db = Database::getInstance()->getConnection();
+                $stmt = $db->prepare("SELECT gold FROM characters WHERE id = ?");
+                $stmt->bind_param("i", $characterId);
+                $stmt->execute();
+                $character = $stmt->get_result()->fetch_assoc();
+
                 echo json_encode([
                     'success' => true,
                     'has_house' => false,
                     'has_workbench' => false,
+                    'player_gold' => $character['gold'] ?? 0,
                     'message' => 'Vous devez d\'abord acheter une maison'
                 ]);
                 exit;
@@ -226,7 +234,7 @@ class WorkbenchController
         $allEnchantments = $workbenchModel->getAvailableEnchantments($level);
 
         // Filtrer les enchantements compatibles
-        $compatible = array_filter($allEnchantments, function($ench) use ($itemSlotType, $workbenchModel) {
+        $compatible = array_filter($allEnchantments, function ($ench) use ($itemSlotType, $workbenchModel) {
             return $workbenchModel->isEnchantmentCompatible($ench['id'], $itemSlotType);
         });
 

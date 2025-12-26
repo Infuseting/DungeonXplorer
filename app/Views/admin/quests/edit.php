@@ -109,7 +109,8 @@ ob_start();
                                 <option value="">-- Choisir un lieu à débloquer --</option>
                                 <?php foreach ($allMapPoints as $mp): ?>
                                     <option value="<?= $mp['id'] ?>"><?= htmlspecialchars($mp['name']) ?> (Map
-                                        <?= $mp['map_id'] ?>)</option>
+                                        <?= $mp['map_id'] ?>)
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
                             <button onclick="addMapUnlock(<?= $stage['id'] ?>)"
@@ -177,9 +178,9 @@ ob_start();
 
         <div class="form-group">
             <label class="text-slate-300">Ajouter un objet</label>
-            <div style="display: flex; gap: 0.5rem;">
+            <div class="flex gap-2">
                 <select id="reward-item-select"
-                    class="flex-1 p-2 bg-slate-950 border border-slate-700 rounded-lg text-slate-200" style="flex: 2;">
+                    class="flex-grow p-2.5 bg-slate-950 border border-slate-700 rounded-lg text-slate-200">
                     <option value="">-- Choisir un objet --</option>
                     <?php foreach ($allItems as $item): ?>
                         <option value="<?= $item['id'] ?>"><?= htmlspecialchars($item['name']) ?> (<?= $item['type'] ?>)
@@ -187,9 +188,10 @@ ob_start();
                     <?php endforeach; ?>
                 </select>
                 <input type="number" id="reward-item-qty" value="1" min="1"
-                    class="w-32 p-2 bg-slate-950 border border-slate-700 rounded-lg text-slate-200">
+                    class="w-24 p-2.5 bg-slate-950 border border-slate-700 rounded-lg text-slate-200 text-center"
+                    placeholder="Qté">
                 <button onclick="addRewardItem()"
-                    class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-all">➕
+                    class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-all whitespace-nowrap">➕
                     Ajouter</button>
             </div>
         </div>

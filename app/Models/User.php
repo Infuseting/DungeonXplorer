@@ -16,7 +16,7 @@ class User
     public function create($username, $email, $password)
     {
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-        
+
         $stmt = $this->db->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
         $stmt->bind_param("sss", $username, $email, $hashedPassword);
         return $stmt->execute();
@@ -45,7 +45,7 @@ class User
         return password_verify($password, $hash);
     }
 
-        public function createRememberToken($userId, $selector, $validator, $expiresAt)
+    public function createRememberToken($userId, $selector, $validator, $expiresAt)
     {
         $hashedValidator = hash('sha256', $validator);
         $stmt = $this->db->prepare("INSERT INTO user_tokens (user_id, selector, hashed_validator, expires_at) VALUES (?, ?, ?, ?)");
@@ -74,7 +74,7 @@ class User
         $stmt->bind_param("s", $selector);
         return $stmt->execute();
     }
-    
+
     public function deleteUserTokens($userId)
     {
         $stmt = $this->db->prepare("DELETE FROM user_tokens WHERE user_id = ?");
@@ -82,12 +82,12 @@ class User
         return $stmt->execute();
     }
 
-        public function getAllUsers()
+    public function getAllUsers()
     {
         $result = $this->db->query("
             SELECT u.*, 
-            (SELECT COUNT(*) FROM characters c WHERE c.user_id = u.id) as character_count,
-            (SELECT COALESCE(SUM(c.gold), 0) FROM characters c WHERE c.user_id = u.id) as total_gold
+            (SELECT COUNT(*) FROM characters c WHERE c.user_id = u.id) as character_count
+
             FROM users u 
             ORDER BY u.created_at DESC
         ");

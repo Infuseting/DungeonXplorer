@@ -799,6 +799,10 @@ ob_start();
 
 <script type="module">
     import { showToast } from '/js/modules/toast.js';
+    import { initInventory } from '/js/modules/inventory.js';
+
+    // Initialize inventory system
+    initInventory();
 
     // Afficher les messages de session
     <?php if (isset($_SESSION['success_message'])): ?>

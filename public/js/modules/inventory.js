@@ -51,6 +51,98 @@ export function initInventory() {
 
     // Setup Context Menu Events
     setupContextMenuEvents();
+
+    // Setup filter and sort controls
+    setupFilters();
+}
+
+/**
+ * Setup filter and sort controls for inventory
+ */
+function setupFilters() {
+    const container = document.getElementById('inventory-container');
+    const sortSelect = document.getElementById('sort-select');
+    const filterBtns = document.querySelectorAll('.filter-btn');
+
+    if (!container || !sortSelect || filterBtns.length === 0) {
+        // Elements not found, probably not on inventory page
+        return;
+    }
+
+    let items = Array.from(document.querySelectorAll('.inventory-item-slot'));
+
+    // Filter function
+    function filterItems(type) {
+        items = Array.from(document.querySelectorAll('.inventory-item-slot')); // Refresh items list
+        items.forEach(item => {
+            const itemType = item.dataset.type;
+            const slotType = item.dataset.slotType;
+
+            let visible = (type === 'all');
+
+            if (type === 'equipment') {
+                visible = (itemType === 'equipment' || itemType === 'weapon' || itemType === 'armor' || (slotType && slotType !== 'none'));
+            } else if (type === 'resource') {
+                visible = (itemType === 'resource' || itemType === 'material');
+            } else {
+                visible = (itemType === type);
+            }
+
+            if (visible) {
+                item.classList.remove('hidden');
+            } else {
+                item.classList.add('hidden');
+            }
+        });
+    }
+
+    // Sort function
+    function sortItems(criteria) {
+        items = Array.from(document.querySelectorAll('.inventory-item-slot')); // Refresh items list
+        const sorted = items.sort((a, b) => {
+            switch (criteria) {
+                case 'weight-desc':
+                    return (parseFloat(b.dataset.weight) || 0) - (parseFloat(a.dataset.weight) || 0);
+                case 'weight-asc':
+                    return (parseFloat(a.dataset.weight) || 0) - (parseFloat(b.dataset.weight) || 0);
+                case 'price-desc':
+                    return (parseFloat(b.dataset.price) || 0) - (parseFloat(a.dataset.price) || 0);
+                case 'name-asc':
+                    return a.dataset.name.localeCompare(b.dataset.name);
+                default:
+                    return 0;
+            }
+        });
+        sorted.forEach(item => container.appendChild(item));
+    }
+
+    // Remove existing listeners by cloning elements
+    const newSortSelect = sortSelect.cloneNode(true);
+    sortSelect.parentNode.replaceChild(newSortSelect, sortSelect);
+
+    // Attach sort listener
+    newSortSelect.addEventListener('change', (e) => sortItems(e.target.value));
+
+    // Attach filter listeners
+    filterBtns.forEach(btn => {
+        // Remove existing listeners by cloning
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+    });
+
+    // Re-query after cloning
+    const newFilterBtns = document.querySelectorAll('.filter-btn');
+    newFilterBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            newFilterBtns.forEach(b => {
+                b.classList.remove('bg-violet-600', 'text-white', 'active');
+                b.classList.add('bg-gray-700', 'text-gray-300');
+            });
+            e.target.classList.remove('bg-gray-700', 'text-gray-300');
+            e.target.classList.add('bg-violet-600', 'text-white', 'active');
+            filterItems(e.target.dataset.filter);
+        });
+    });
 }
 
 /**
@@ -177,6 +269,7 @@ export function setupTooltip(item) {
         tooltip.classList.add('hidden');
     });
 }
+
 
 /**
  * Setup mobile interaction for an item (click-based)
@@ -325,6 +418,9 @@ function handleMobileItemClick(item, e) {
  * @param {HTMLElement} item - Item element
  */
 function setupDraggable(item) {
+    // Make item draggable
+    item.setAttribute('draggable', 'true');
+
     // Ctrl+Click to quick equip
     item.addEventListener('click', e => {
         if (e.ctrlKey && item.dataset.slotType && item.dataset.slotType !== 'none') {
@@ -810,18 +906,82 @@ function getTargetContainer(location, slot) {
 
 
 
+
+/**
+ * Refresh inventory after dynamic content update
+ * Re-attaches all event listeners for items
+ */
+function refreshInventory() {
+    // Re-initialize all item icons
+    document.querySelectorAll('.item-icon').forEach(item => {
+        if (isMobile()) {
+            setupMobileInteraction(item);
+        } else {
+            setupDraggable(item);
+            setupTooltip(item);
+            setupContextMenu(item);
+        }
+    });
+
+    // Re-setup drop zones (desktop only)
+    if (!isMobile()) {
+        setupEquipmentSlots();
+        setupInventoryGrid();
+    }
+
+    // Re-setup filters and sort controls
+    setupFilters();
+}
+
 /**
  * Setup inventory modal controls
  */
 function setupModalControls() {
-    const inventoryModal = document.getElementById('inventory-modal');
     const inventoryToggleBtn = document.getElementById('inventory-toggle');
-    const inventoryBackdrop = document.getElementById('inventory-backdrop');
-    const inventoryCloseBtn = document.getElementById('inventory-close-btn');
 
-    function toggleInventory() {
+    // Internal function to toggle inventory (async for fetch)
+    async function toggleInventory() {
+        // ALWAYS query the modal from DOM to ensure we have the live element
+        let inventoryModal = document.getElementById('inventory-modal');
+        if (!inventoryModal) return;
+
         const isHidden = inventoryModal.classList.contains('hidden');
+
         if (isHidden) {
+            // Refresh inventory content before showing
+            try {
+                const response = await fetch('/game/inventory/component');
+                if (response.ok) {
+                    const html = await response.text();
+                    const temp = document.createElement('div');
+                    temp.innerHTML = html;
+                    const newModal = temp.querySelector('#inventory-modal');
+
+                    if (newModal) {
+                        inventoryModal.replaceWith(newModal);
+                        inventoryModal = newModal; // Update local reference
+
+                        // Re-initialize item draggables/tooltips
+                        refreshInventory();
+
+                        // Re-bind INTERNAL listeners for the new modal elements
+                        const newBackdrop = document.getElementById('inventory-backdrop');
+                        const newCloseBtn = document.getElementById('inventory-close-btn');
+
+                        if (newBackdrop) {
+                            newBackdrop.addEventListener('click', (e) => {
+                                if (e.target === newBackdrop) toggleInventory();
+                            });
+                        }
+                        if (newCloseBtn) {
+                            newCloseBtn.addEventListener('click', toggleInventory);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to refresh inventory:', e);
+            }
+
             inventoryModal.classList.remove('hidden');
             playSound('open');
         } else {
@@ -835,36 +995,37 @@ function setupModalControls() {
         }
     }
 
-    inventoryToggleBtn.addEventListener('click', toggleInventory);
-    inventoryBackdrop.addEventListener('click', toggleInventory);
+    // Bind external button (only once)
+    if (inventoryToggleBtn) {
+        // Remove existing listeners to be safe if called multiple times (though init only calls once)
+        const newBtn = inventoryToggleBtn.cloneNode(true);
+        inventoryToggleBtn.parentNode.replaceChild(newBtn, inventoryToggleBtn);
+        newBtn.addEventListener('click', toggleInventory);
+    }
 
-    // Mobile close button
-    if (inventoryCloseBtn) {
-        inventoryCloseBtn.addEventListener('click', toggleInventory);
+    // Initial bind for valid internal elements already in DOM
+    const initialBackdrop = document.getElementById('inventory-backdrop');
+    const initialCloseBtn = document.getElementById('inventory-close-btn');
+
+    if (initialBackdrop) {
+        initialBackdrop.addEventListener('click', (e) => {
+            if (e.target === initialBackdrop) toggleInventory();
+        });
+    }
+    if (initialCloseBtn) {
+        initialCloseBtn.addEventListener('click', toggleInventory);
     }
 
     // Close on Escape key
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !inventoryModal.classList.contains('hidden')) {
+        const modal = document.getElementById('inventory-modal');
+        if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
             toggleInventory();
         }
     });
 }
 
-/**
- * Refresh inventory items (re-initialize draggables and tooltips)
- */
-export function refreshInventory() {
-    document.querySelectorAll('.item-icon').forEach(item => {
-        if (isMobile()) {
-            setupMobileInteraction(item);
-        } else {
-            setupDraggable(item);
-            setupTooltip(item);
-            setupContextMenu(item);
-        }
-    });
-}
+
 
 /**
  * Setup Context Menu for an item

@@ -208,8 +208,12 @@
                 })
                     .then(res => res.json())
                     .then(data => {
-                        if (data.success) window.location.href = window.location.href;
-                        else alert('Erreur: ' + data.message);
+                        if (data.success) {
+                            // Reload the page to show the unlocked skill
+                            location.reload();
+                        } else {
+                            alert('Erreur: ' + data.message);
+                        }
                     })
                     .catch(err => {
                         console.error(err);

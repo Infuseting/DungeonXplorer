@@ -60,7 +60,7 @@ $router->post('/forgot-password', 'App\Controllers\AuthController@forgotPassword
 $router->post('/user/update-profile', 'App\Controllers\UserController@updateProfile');
 $router->post('/user/update-email', 'App\Controllers\UserController@updateEmail');
 $router->post('/user/update-password', 'App\Controllers\UserController@updatePassword');
-$router->get('/user/connected-accounts', 'App\Controllers\OAuthController@getConnectedAccounts'); 
+$router->get('/user/connected-accounts', 'App\Controllers\OAuthController@getConnectedAccounts');
 $router->get('/oauth/login/(\w+)', 'App\Controllers\OAuthController@redirect');
 $router->get('/oauth/callback/(\w+)', 'App\Controllers\OAuthController@callback');
 $router->post('/oauth/callback/(\w+)', 'App\Controllers\OAuthController@callback');
@@ -69,61 +69,62 @@ $router->post('/oauth/unlink/(\w+)', 'App\Controllers\OAuthController@unlink');
 $router->get('/api/character/(\d+)/render', 'App\Controllers\CharacterAppearanceController@toFullArray');
 
 // --- Routes Personnage (Création, Sélection, Apparence) ---
-$router->mount('/personnage', function() use ($router) {
-    $router->before('GET|POST', '', function() {
+$router->mount('/personnage', function () use ($router) {
+    $router->before('GET|POST', '', function () {
         (new AuthMiddleware())->handle();
     });
-    $router->before('GET|POST', '.*', function() {
+    $router->before('GET|POST', '.*', function () {
         (new AuthMiddleware())->handle();
     });
     $router->get('/', 'App\Controllers\CharacterController@index');
     $router->get('/create', 'App\Controllers\CharacterController@create');
     $router->post('/create', 'App\Controllers\CharacterController@store');
     $router->post('/delete', 'App\Controllers\CharacterController@delete');
-    
-        $router->get('/apparence/(preview|\d+)', 'App\Controllers\CharacterAppearanceController@index');
+
+    $router->get('/apparence/(preview|\d+)', 'App\Controllers\CharacterAppearanceController@index');
     $router->post('/apparence/(preview|\d+)', 'App\Controllers\CharacterAppearanceController@update');
 
-        $router->get('/difficulty', 'App\Controllers\CharacterDifficultyController@index');
+    $router->get('/difficulty', 'App\Controllers\CharacterDifficultyController@index');
     $router->post('/difficulty', 'App\Controllers\CharacterDifficultyController@store');
 });
 
 // --- Routes Jeu (Gameplay principal) ---
-$router->mount('/game', function() use ($router) {
-    $router->before('GET|POST', '', function() {
+$router->mount('/game', function () use ($router) {
+    $router->before('GET|POST', '', function () {
         (new AuthMiddleware())->handle();
     });
-    $router->before('GET|POST', '.*', function() {
+    $router->before('GET|POST', '.*', function () {
         (new AuthMiddleware())->handle();
     });
 
-        $router->get('/', 'App\Controllers\GameController@index');
+    $router->get('/', 'App\Controllers\GameController@index');
     $router->post('/', 'App\Controllers\GameController@index');
-        $router->post('/submap/load', 'App\Controllers\GameController@loadSubMap');
+    $router->post('/submap/load', 'App\Controllers\GameController@loadSubMap');
     $router->get('/map/points/(\\d+)', 'App\\Controllers\\GameController@getMapPoints');
-        $router->get('/npc/(\d+)', 'App\Controllers\GameController@getNPC');
+    $router->get('/npc/(\d+)', 'App\Controllers\GameController@getNPC');
     $router->get('/dialogue/tree/(\d+)', 'App\Controllers\GameController@getDialogueTree');
     $router->post('/dialogue/complete', 'App\Controllers\GameController@completeDialogue');
     $router->get('/check-minos-access', 'App\Controllers\GameController@checkMinosAccess');
 
-        $router->post('/quest/accept', 'App\Controllers\GameController@acceptQuest');
+    $router->post('/quest/accept', 'App\Controllers\GameController@acceptQuest');
     $router->get('/quest/log', 'App\Controllers\GameController@getQuestLog');
-    
-        $router->get('/quest/daily', 'App\Controllers\GameController@getDailyQuests');
+
+    $router->get('/quest/daily', 'App\Controllers\GameController@getDailyQuests');
     $router->post('/quest/daily/claim', 'App\Controllers\GameController@claimDailyQuestReward');
-    
+
     $router->get('/combat/start/(\d+)', 'App\Controllers\CombatController@startCombat');
     $router->post('/combat/roll-dice', 'App\Controllers\CombatController@rollDice');
     $router->post('/combat/action', 'App\Controllers\CombatController@performAction');
-        $router->post('/inventory/move', 'App\Controllers\InventoryController@move');
+    $router->post('/inventory/move', 'App\Controllers\InventoryController@move');
     $router->post('/inventory/equip', 'App\Controllers\InventoryController@equip');
     $router->post('/inventory/unequip', 'App\Controllers\InventoryController@unequip');
+    $router->get('/inventory/component', 'App\Controllers\InventoryController@getComponent');
 
-        $router->get('/shop/(\d+)', 'App\Controllers\ShopController@getShop');
+    $router->get('/shop/(\d+)', 'App\Controllers\ShopController@getShop');
     $router->post('/shop/buy', 'App\Controllers\ShopController@buy');
     $router->post('/shop/sell', 'App\Controllers\ShopController@sell');
 
-        $router->get('/skills', 'App\Controllers\SkillsController@index');
+    $router->get('/skills', 'App\Controllers\SkillsController@index');
     $router->post('/skills/unlock', 'App\Controllers\SkillsController@unlock');
 
     // Routes Maison
@@ -151,8 +152,8 @@ $router->mount('/game', function() use ($router) {
 });
 
 // --- Routes Histoires (Navigation, Exploration) ---
-$router->mount('/story', function() use ($router) {
-    $router->before('GET|POST', '.*', function() {
+$router->mount('/story', function () use ($router) {
+    $router->before('GET|POST', '.*', function () {
         (new AuthMiddleware())->handle();
     });
 
@@ -170,50 +171,50 @@ $router->mount('/story', function() use ($router) {
 });
 
 // --- Routes Administration ---
-$router->mount('/admin', function() use ($router) {
-    $router->before('GET|POST', '.*', function() {
+$router->mount('/admin', function () use ($router) {
+    $router->before('GET|POST', '.*', function () {
         (new AdminMiddleware())->handle();
     });
-    $router->before('GET|POST', '', function() {
+    $router->before('GET|POST', '', function () {
         (new AdminMiddleware())->handle();
     });
 
     $router->get('/', 'App\Controllers\AdminController@dashboard');
     $router->get('/stats', 'App\Controllers\AdminController@stats');
     $router->get('/logs', 'App\Controllers\AdminLogController@index');
-    
-        $router->get('/factions', 'App\Controllers\AdminFactionController@index');
+
+    $router->get('/factions', 'App\Controllers\AdminFactionController@index');
     $router->get('/factions/create', 'App\Controllers\AdminFactionController@create');
     $router->post('/factions/create', 'App\Controllers\AdminFactionController@create');
     $router->get('/factions/edit/(\d+)', 'App\Controllers\AdminFactionController@edit');
     $router->post('/factions/edit/(\d+)', 'App\Controllers\AdminFactionController@edit');
     $router->post('/factions/delete/(\d+)', 'App\Controllers\AdminFactionController@delete');
 
-        $router->get('/map', 'App\Controllers\AdminMapController@index');
+    $router->get('/map', 'App\Controllers\AdminMapController@index');
     $router->post('/map/update', 'App\Controllers\AdminMapController@updateMap');
     $router->post('/map/update/(\d+)', 'App\Controllers\AdminMapController@updatePoint');
     $router->post('/map/create', 'App\Controllers\AdminMapController@createPoint');
     $router->post('/map/delete/(\d+)', 'App\Controllers\AdminMapController@deletePoint');
     $router->post('/map/upload-icon', 'App\Controllers\AdminMapController@uploadIcon');
-    
-        $router->get('/points', 'App\Controllers\AdminMapController@managePoints');
+
+    $router->get('/points', 'App\Controllers\AdminMapController@managePoints');
     $router->post('/points/update-submap', 'App\Controllers\AdminMapController@updatePointSubMap');
     $router->post('/points/update-npc', 'App\Controllers\AdminMapController@updatePointNPC');
     $router->post('/points/update-visibility', 'App\Controllers\AdminMapController@updatePointVisibility');
     $router->post('/points/update-story', 'App\Controllers\AdminMapController@updatePointStory');
-    
-        $router->get('/items', 'App\Controllers\AdminItemController@index');
+
+    $router->get('/items', 'App\Controllers\AdminItemController@index');
     $router->match('GET|POST', '/items/create', 'App\Controllers\AdminItemController@create');
     $router->match('GET|POST', '/items/edit/(\d+)', 'App\Controllers\AdminItemController@edit');
     $router->post('/items/delete/(\d+)', 'App\Controllers\AdminItemController@delete');
-    
-        $router->get('/npcs', 'App\Controllers\AdminNPCController@index');
+
+    $router->get('/npcs', 'App\Controllers\AdminNPCController@index');
     $router->match('GET|POST', '/npcs/create', 'App\Controllers\AdminNPCController@create');
     $router->match('GET|POST', '/npcs/edit/(\d+)', 'App\Controllers\AdminNPCController@edit');
     $router->post('/npcs/delete/(\d+)', 'App\Controllers\AdminNPCController@delete');
     $router->post('/npcs/(\d+)/regenerate-inventory', 'App\Controllers\AdminNPCController@regenerateInventory');
-    
-        $router->get('/dialogues', 'App\Controllers\AdminDialogueController@index');
+
+    $router->get('/dialogues', 'App\Controllers\AdminDialogueController@index');
     $router->match('GET|POST', '/dialogues/create', 'App\Controllers\AdminDialogueController@create');
     $router->match('GET|POST', '/dialogues/edit/(\d+)', 'App\Controllers\AdminDialogueController@edit');
     $router->post('/dialogues/delete/(\d+)', 'App\Controllers\AdminDialogueController@delete');
@@ -221,8 +222,8 @@ $router->mount('/admin', function() use ($router) {
     $router->post('/dialogues/node/add', 'App\Controllers\AdminDialogueController@addNode');
     $router->post('/dialogues/node/update', 'App\Controllers\AdminDialogueController@updateNode');
     $router->post('/dialogues/node/delete', 'App\Controllers\AdminDialogueController@deleteNode');
-    
-        $router->get('/quests', 'App\Controllers\AdminQuestController@index');
+
+    $router->get('/quests', 'App\Controllers\AdminQuestController@index');
     $router->match('GET|POST', '/quests/create', 'App\Controllers\AdminQuestController@create');
     $router->match('GET|POST', '/quests/edit/(\d+)', 'App\Controllers\AdminQuestController@edit');
     $router->post('/quests/delete/(\d+)', 'App\Controllers\AdminQuestController@delete');
@@ -240,40 +241,40 @@ $router->mount('/admin', function() use ($router) {
     $router->post('/quests/prerequisite/remove', 'App\Controllers\AdminQuestController@removePrerequisite');
     $router->post('/quests/reward/item/add', 'App\Controllers\AdminQuestController@addRewardItem');
     $router->post('/quests/reward/item/remove', 'App\Controllers\AdminQuestController@removeRewardItem');
-    
+
     $router->get('/quests/daily', 'App\Controllers\AdminQuestController@dailyIndex');
     $router->post('/quests/daily/create', 'App\Controllers\AdminQuestController@dailyCreate');
     $router->post('/quests/daily/edit/(\d+)', 'App\Controllers\AdminQuestController@dailyEdit');
     $router->post('/quests/daily/toggle/(\d+)', 'App\Controllers\AdminQuestController@dailyToggle');
     $router->post('/quests/daily/delete/(\d+)', 'App\Controllers\AdminQuestController@dailyDelete');
-    
+
     // Routes maisons admin
     $router->get('/houses', 'App\Controllers\AdminHouseController@index');
     $router->match('GET|POST', '/houses/create', 'App\Controllers\AdminHouseController@create');
     $router->match('GET|POST', '/houses/edit/(\d+)', 'App\Controllers\AdminHouseController@edit');
     $router->post('/houses/delete/(\d+)', 'App\Controllers\AdminHouseController@delete');
-    
+
     // Routes meubles admin
     $router->get('/furniture', 'App\Controllers\AdminHouseController@furnitureIndex');
     $router->match('GET|POST', '/furniture/create', 'App\Controllers\AdminHouseController@furnitureCreate');
     $router->match('GET|POST', '/furniture/edit/(\d+)', 'App\Controllers\AdminHouseController@furnitureEdit');
     $router->post('/furniture/delete/(\d+)', 'App\Controllers\AdminHouseController@furnitureDelete');
-    
-        $router->get('/users', 'App\Controllers\AdminUserController@index');
+
+    $router->get('/users', 'App\Controllers\AdminUserController@index');
     $router->post('/users/reset-password/(\d+)', 'App\Controllers\AdminUserController@resetPassword');
     $router->post('/users/delete/(\d+)', 'App\Controllers\AdminUserController@delete');
-    
-    
 
-        $router->get('/characters', 'App\Controllers\AdminCharacterController@index');
+
+
+    $router->get('/characters', 'App\Controllers\AdminCharacterController@index');
     $router->post('/characters/delete/(\d+)', 'App\Controllers\AdminCharacterController@delete');
 
-        $router->get('/stories', 'App\Controllers\AdminStoryController@index');
+    $router->get('/stories', 'App\Controllers\AdminStoryController@index');
     $router->match('GET|POST', '/stories/create', 'App\Controllers\AdminStoryController@create');
     $router->match('GET|POST', '/stories/edit/(\d+)', 'App\Controllers\AdminStoryController@edit');
     $router->post('/stories/delete/(\d+)', 'App\Controllers\AdminStoryController@delete');
-    
-        $router->get('/stories/(\d+)/nodes', 'App\Controllers\AdminStoryController@manageNodes');
+
+    $router->get('/stories/(\d+)/nodes', 'App\Controllers\AdminStoryController@manageNodes');
     $router->post('/stories/(\d+)/nodes/create', 'App\Controllers\AdminStoryController@createNode');
     $router->post('/stories/nodes/(\d+)/edit', 'App\Controllers\AdminStoryController@updateNode');
     $router->post('/stories/nodes/(\d+)/delete', 'App\Controllers\AdminStoryController@deleteNode');
@@ -282,29 +283,29 @@ $router->mount('/admin', function() use ($router) {
     $router->post('/stories/connections/(\d+)/edit', 'App\Controllers\AdminStoryController@updateConnection');
     $router->post('/stories/connections/(\d+)/delete', 'App\Controllers\AdminStoryController@deleteConnection');
 
-        $router->get('/procedural', 'App\Controllers\AdminProceduralController@index');
+    $router->get('/procedural', 'App\Controllers\AdminProceduralController@index');
     $router->match('GET|POST', '/procedural/create', 'App\Controllers\AdminProceduralController@create');
     $router->match('GET|POST', '/procedural/edit/(\d+)', 'App\Controllers\AdminProceduralController@edit');
     $router->post('/procedural/delete/(\d+)', 'App\Controllers\AdminProceduralController@delete');
 
-        $router->get('/procedural/(\d+)/monsters', 'App\Controllers\AdminProceduralController@monsterPools');
+    $router->get('/procedural/(\d+)/monsters', 'App\Controllers\AdminProceduralController@monsterPools');
     $router->post('/procedural/(\d+)/monsters/add', 'App\Controllers\AdminProceduralController@addMonsterPool');
     $router->post('/procedural/monsters/delete/(\d+)', 'App\Controllers\AdminProceduralController@deleteMonsterPool');
-    
+
     $router->get('/procedural/(\d+)/loot', 'App\Controllers\AdminProceduralController@lootPools');
     $router->post('/procedural/(\d+)/loot/add', 'App\Controllers\AdminProceduralController@addLootPool');
     $router->post('/procedural/loot/delete/(\d+)', 'App\Controllers\AdminProceduralController@deleteLootPool');
 
-        $router->get('/monsters', 'App\Controllers\AdminMonsterController@index');
+    $router->get('/monsters', 'App\Controllers\AdminMonsterController@index');
     $router->match('GET|POST', '/monsters/create', 'App\Controllers\AdminMonsterController@create');
     $router->match('GET|POST', '/monsters/edit/(\d+)', 'App\Controllers\AdminMonsterController@edit');
     $router->post('/monsters/delete/(\d+)', 'App\Controllers\AdminMonsterController@delete');
 
-        $router->get('/stories/nodes/(\d+)/entities', 'App\Controllers\AdminStoryController@getNodeEntities');
+    $router->get('/stories/nodes/(\d+)/entities', 'App\Controllers\AdminStoryController@getNodeEntities');
     $router->post('/stories/nodes/entities/add', 'App\Controllers\AdminStoryController@addNodeEntity');
     $router->post('/stories/nodes/entities/remove', 'App\Controllers\AdminStoryController@removeNodeEntity');
 
-        $router->get('/classes', 'App\Controllers\AdminClassController@index');
+    $router->get('/classes', 'App\Controllers\AdminClassController@index');
     $router->match('GET|POST', '/classes/create', 'App\Controllers\AdminClassController@create');
     $router->post('/classes/store', 'App\Controllers\AdminClassController@store');
     $router->match('GET|POST', '/classes/edit/(\d+)', 'App\Controllers\AdminClassController@edit');
@@ -317,6 +318,11 @@ $router->mount('/admin', function() use ($router) {
     $router->post('/classes/skills/update/(\d+)', 'App\Controllers\AdminClassController@updateSkill');
     $router->post('/classes/skills/delete/(\d+)', 'App\Controllers\AdminClassController@deleteSkill');
     $router->post('/classes/skills/save-positions', 'App\Controllers\AdminClassController@updateSkillPositions');
+
+    $router->get('/enchantments', 'App\Controllers\AdminEnchantmentController@index');
+    $router->post('/enchantments/create', 'App\Controllers\AdminEnchantmentController@create');
+    $router->post('/enchantments/edit/(\d+)', 'App\Controllers\AdminEnchantmentController@edit');
+    $router->get('/enchantments/delete/(\d+)', 'App\Controllers\AdminEnchantmentController@delete');
 });
 
 // Gestion de l'erreur 404

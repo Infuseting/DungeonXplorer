@@ -5,7 +5,7 @@ use App\Models\Skill;
 use App\Models\Character;
 use App\Services\DifficultyService;
 use App\Models\Stats;
-use App\Models\Database;
+use App\Config\Database;
 use App\Models\Inventory;
 use App\Models\CharacterBuff;
 
@@ -231,10 +231,30 @@ class Combat
             case 'usePotion':
                 $restore = 20;
                 $maxHp = $_SESSION['maxHpPlayer'];
-                $current = $this->joueur->getVitality();
+                $current = $this->joueur->getCurrentHp();
                 $newHp = min($maxHp, $current + $restore);
 
-                $this->joueur->heal($_SESSION['character_id'], $restore);
+                // Mettre à jour les HP en base de données
+                $db = Database::getInstance()->getConnection();
+                $stmt = $db->prepare("UPDATE character_stats SET current_hp = LEAST(vitality, current_hp + ?) WHERE character_id = ?");
+                $stmt->bind_param("ii", $restore, $_SESSION['character_id']);
+                $stmt->execute();
+
+                // Mettre à jour l'objet en mémoire (utiliser current_hp avec underscore)
+                $this->joueur->current_hp = $newHp;
+
+                // Consommer la potion de l'inventaire
+                $inventoryModel = new Inventory();
+                $inventory = $inventoryModel->getCharacterInventory($_SESSION['character_id']);
+
+                // Trouver la première potion disponible
+                foreach ($inventory['inventory'] as $item) {
+                    if ($item['type'] === 'consumable' && stripos($item['name'], 'potion') !== false) {
+                        $inventoryModel->consumeItem($_SESSION['character_id'], $item['id']);
+                        break;
+                    }
+                }
+
                 $message = $this->joueur->getName() . " <span class='text-yellow-400'>boit une potion</span> (+20 PV) !\n";
                 break;
 

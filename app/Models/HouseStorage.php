@@ -20,24 +20,44 @@ class HouseStorage
     {
         try {
             $stmt = $this->db->prepare("
-                SELECT hs.*, i.name, i.description, i.type, i.icon, i.stats, i.price, i.max_stack, i.slot_type
+                SELECT hs.*, i.name, i.description, i.type, i.icon, i.price, i.max_stack, i.slot_type, i.stat_ranges
                 FROM house_storage hs
                 JOIN items i ON hs.item_id = i.id
                 WHERE hs.character_house_id = ?
                 ORDER BY hs.slot_index ASC
             ");
-            if (!$stmt) return [];
+            if (!$stmt)
+                return [];
             $stmt->bind_param("i", $characterHouseId);
             $stmt->execute();
             $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-            
-            // Ensure stats is always a valid JSON string
+
+            // Ensure stats is always a valid JSON string and populate enchantments
             foreach ($items as &$item) {
-                if (empty($item['stats'])) {
+                // Initialise enchantments array
+                $item['enchantments'] = [];
+
+                // If instance_stats is present
+                if (!empty($item['instance_stats']) && $item['instance_stats'] !== 'null') {
+                    $item['stats'] = $item['instance_stats'];
+
+                    // Parse instance stats to recover enchantments
+                    $statsObj = json_decode($item['instance_stats'], true);
+                    if (isset($statsObj['enchantment_ids']) && is_array($statsObj['enchantment_ids'])) {
+                        foreach ($statsObj['enchantment_ids'] as $enchId) {
+                            $enchantInfo = $this->fetchEnchantmentDetails($enchId);
+                            if ($enchantInfo) {
+                                $item['enchantments'][] = $enchantInfo;
+                            }
+                        }
+                    }
+                }
+                // Fallback: if stats is still empty (e.g. no instance_stats and no base stats), default to empty JSON
+                elseif (empty($item['stats'])) {
                     $item['stats'] = '{}';
                 }
             }
-            
+
             return $items;
         } catch (\Exception $e) {
             return [];
@@ -57,7 +77,8 @@ class HouseStorage
                 JOIN houses h ON ch.house_id = h.id
                 WHERE ch.id = ?
             ");
-            if (!$stmt) return 0;
+            if (!$stmt)
+                return 0;
             $stmt->bind_param("i", $characterHouseId);
             $stmt->execute();
             $house = $stmt->get_result()->fetch_assoc();
@@ -75,7 +96,7 @@ class HouseStorage
                 $stmt->bind_param("i", $characterHouseId);
                 $stmt->execute();
                 $bonus = $stmt->get_result()->fetch_assoc();
-                $storageBonus = $bonus ? (int)$bonus['storage_bonus'] : 0;
+                $storageBonus = $bonus ? (int) $bonus['storage_bonus'] : 0;
             }
 
             return $baseCapacity + $storageBonus;
@@ -95,7 +116,7 @@ class HouseStorage
         $stmt->bind_param("i", $characterHouseId);
         $stmt->execute();
         $result = $stmt->get_result()->fetch_assoc();
-        return $result ? (int)$result['count'] : 0;
+        return $result ? (int) $result['count'] : 0;
     }
 
     /**
@@ -118,16 +139,16 @@ class HouseStorage
             // Vérifier la capacité de stockage
             $capacity = $this->getStorageCapacity($characterHouseId);
             $currentCount = $this->getCurrentStorageCount($characterHouseId);
-            
+
             if ($capacity <= 0) {
                 return ['success' => false, 'message' => 'Erreur: capacité de stockage non trouvée'];
             }
-            
+
             if ($currentCount >= $capacity) {
                 return ['success' => false, 'message' => "Le coffre est plein ({$currentCount}/{$capacity})"];
             }
 
-            // Récupérer l'item de l'inventaire
+            // Récupérer l'item de l'inventaire avec ses stats
             $stmt = $this->db->prepare("
                 SELECT ci.*, i.max_stack
                 FROM character_inventory ci
@@ -152,21 +173,49 @@ class HouseStorage
 
             $itemId = $inventoryItem['item_id'];
             $availableQuantity = $inventoryItem['quantity'];
+            $instanceStats = $inventoryItem['instance_stats'] ?? null;
+
+            // --- NEW: Capture Enchantments ---
+            $stmt = $this->db->prepare("SELECT enchantment_id FROM item_enchantments WHERE character_inventory_id = ?");
+            if ($stmt) {
+                $stmt->bind_param("i", $inventoryItemId);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $enchantmentIds = [];
+                while ($row = $result->fetch_assoc()) {
+                    $enchantmentIds[] = $row['enchantment_id'];
+                }
+
+                if (!empty($enchantmentIds)) {
+                    $statsArr = json_decode($instanceStats, true);
+                    if (!is_array($statsArr))
+                        $statsArr = [];
+                    $statsArr['enchantment_ids'] = $enchantmentIds;
+                    $instanceStats = json_encode($statsArr);
+                }
+            }
+            // ---------------------------------
+
             $transferQuantity = min($quantity, $availableQuantity);
 
             // Vérifier si l'item existe déjà dans le stockage (pour stacking)
-            $stmt = $this->db->prepare("
-                SELECT hs.id, hs.quantity, i.max_stack
-                FROM house_storage hs
-                JOIN items i ON hs.item_id = i.id
-                WHERE hs.character_house_id = ? AND hs.item_id = ?
-            ");
-            if (!$stmt) {
-                return ['success' => false, 'message' => 'Erreur: table house_storage non trouvée. Exécutez database_house.sql'];
+            // Note: On ne stack PAS si l'item a des stats spécifiques (instance_stats non null/vide) ou des enchantements
+            $hasStats = !empty($instanceStats) && $instanceStats !== '{}' && $instanceStats !== '[]';
+
+            $existingStorage = null;
+            if (!$hasStats) {
+                $stmt = $this->db->prepare("
+                    SELECT hs.id, hs.quantity, i.max_stack
+                    FROM house_storage hs
+                    JOIN items i ON hs.item_id = i.id
+                    WHERE hs.character_house_id = ? AND hs.item_id = ? AND (hs.instance_stats IS NULL OR hs.instance_stats = '{}' OR hs.instance_stats = '[]')
+                ");
+                if ($stmt) {
+                    $stmt->bind_param("ii", $characterHouseId, $itemId);
+                    $stmt->execute();
+                    $existingStorage = $stmt->get_result()->fetch_assoc();
+                }
             }
-            $stmt->bind_param("ii", $characterHouseId, $itemId);
-            $stmt->execute();
-            $existingStorage = $stmt->get_result()->fetch_assoc();
 
             if ($existingStorage && $existingStorage['max_stack'] > 1) {
                 // Ajouter au stack existant
@@ -180,13 +229,13 @@ class HouseStorage
                 // Créer un nouveau slot de stockage
                 $nextSlot = $currentCount;
                 $stmt = $this->db->prepare("
-                    INSERT INTO house_storage (character_house_id, item_id, quantity, slot_index)
-                    VALUES (?, ?, ?, ?)
+                    INSERT INTO house_storage (character_house_id, item_id, quantity, slot_index, instance_stats)
+                    VALUES (?, ?, ?, ?, ?)
                 ");
                 if (!$stmt) {
                     return ['success' => false, 'message' => 'Erreur: impossible d\'insérer dans house_storage'];
                 }
-                $stmt->bind_param("iiii", $characterHouseId, $itemId, $transferQuantity, $nextSlot);
+                $stmt->bind_param("iiiis", $characterHouseId, $itemId, $transferQuantity, $nextSlot, $instanceStats);
                 if (!$stmt->execute()) {
                     return ['success' => false, 'message' => 'Erreur lors du dépôt: ' . $stmt->error];
                 }
@@ -194,14 +243,23 @@ class HouseStorage
 
             // Retirer de l'inventaire
             if ($transferQuantity >= $availableQuantity) {
+                // DELETE CASCADE should handle item_enchantments deletion
                 $stmt = $this->db->prepare("DELETE FROM character_inventory WHERE id = ?");
                 $stmt->bind_param("i", $inventoryItemId);
             } else {
+                // If we split the stack, the enchantments stay on the original stack (inventory)?
+                // Logic debate: If 5 potions, specific potions aren't enchanted.
+                // If 1 Sword, we move whole quantity (1).
+                // If Stackable items are enchanted... usually they are not.
+                // Assuming enchantments apply to the whole stack or non-stackable items.
+                // If we move PART of a stack, do we clone enchantments?
+                // For now, assuming standard RPG behavior: Enchanted items are usually unique/non-stackable.
+                // If they ARE stackable, this logic leaves enchantments on the source stack.
                 $newInventoryQuantity = $availableQuantity - $transferQuantity;
                 $stmt = $this->db->prepare("UPDATE character_inventory SET quantity = ? WHERE id = ?");
                 $stmt->bind_param("ii", $newInventoryQuantity, $inventoryItemId);
             }
-            
+
             if (!$stmt->execute()) {
                 return ['success' => false, 'message' => 'Erreur lors du retrait de l\'inventaire'];
             }
@@ -242,18 +300,25 @@ class HouseStorage
 
         $itemId = $storageItem['item_id'];
         $availableQuantity = $storageItem['quantity'];
+        $instanceStats = $storageItem['instance_stats'] ?? null;
         $transferQuantity = min($quantity, $availableQuantity);
 
         // Vérifier si l'item existe déjà dans l'inventaire (pour stacking)
-        $stmt = $this->db->prepare("
-            SELECT ci.id, ci.quantity, i.max_stack
-            FROM character_inventory ci
-            JOIN items i ON ci.item_id = i.id
-            WHERE ci.character_id = ? AND ci.item_id = ? AND ci.location = 'backpack'
-        ");
-        $stmt->bind_param("ii", $characterId, $itemId);
-        $stmt->execute();
-        $existingInventory = $stmt->get_result()->fetch_assoc();
+        // Note: On ne stack PAS si l'item a des stats spécifiques (instance_stats non null/vide)
+        $canStack = empty($instanceStats) || $instanceStats === '{}' || $instanceStats === '[]';
+
+        $existingInventory = null;
+        if ($canStack) {
+            $stmt = $this->db->prepare("
+                SELECT ci.id, ci.quantity, i.max_stack
+                FROM character_inventory ci
+                JOIN items i ON ci.item_id = i.id
+                WHERE ci.character_id = ? AND ci.item_id = ? AND ci.location = 'backpack' AND (ci.instance_stats IS NULL OR ci.instance_stats = '{}' OR ci.instance_stats = '[]')
+            ");
+            $stmt->bind_param("ii", $characterId, $itemId);
+            $stmt->execute();
+            $existingInventory = $stmt->get_result()->fetch_assoc();
+        }
 
         if ($existingInventory && $existingInventory['max_stack'] > 1) {
             // Ajouter au stack existant
@@ -264,11 +329,28 @@ class HouseStorage
         } else {
             // Créer un nouveau slot d'inventaire
             $stmt = $this->db->prepare("
-                INSERT INTO character_inventory (character_id, item_id, location, quantity)
-                VALUES (?, ?, 'backpack', ?)
+                INSERT INTO character_inventory (character_id, item_id, location, quantity, instance_stats)
+                VALUES (?, ?, 'backpack', ?, ?)
             ");
-            $stmt->bind_param("iii", $characterId, $itemId, $transferQuantity);
+            $stmt->bind_param("iiis", $characterId, $itemId, $transferQuantity, $instanceStats);
             $stmt->execute();
+            $newInventoryId = $stmt->insert_id;
+
+            // --- NEW: Restore Enchantments ---
+            if ($newInventoryId && !empty($instanceStats)) {
+                $statsArr = json_decode($instanceStats, true);
+                if (isset($statsArr['enchantment_ids']) && is_array($statsArr['enchantment_ids'])) {
+                    $insertEnch = $this->db->prepare("INSERT INTO item_enchantments (character_inventory_id, enchantment_id) VALUES (?, ?)");
+                    foreach ($statsArr['enchantment_ids'] as $eid) {
+                        $insertEnch->bind_param("ii", $newInventoryId, $eid);
+                        $insertEnch->execute();
+                    }
+                    // Optional: remove enchantment_ids from instance_stats? 
+                    // Keeping it is safer for now, or we can update it to remove the key.
+                    // Doing a 'silent' cleanup might be good but not critical.
+                }
+            }
+            // ---------------------------------
         }
 
         // Retirer du stockage
@@ -341,5 +423,19 @@ class HouseStorage
         } catch (\Exception $e) {
             return ['success' => false, 'message' => 'Erreur lors de la suppression'];
         }
+    }
+
+    /**
+     * Helper to fetch enchantment details by ID
+     */
+    private function fetchEnchantmentDetails($enchantmentId)
+    {
+        $stmt = $this->db->prepare("SELECT id as enchantment_id, name, description, rarity FROM enchantments WHERE id = ?");
+        if ($stmt) {
+            $stmt->bind_param("i", $enchantmentId);
+            $stmt->execute();
+            return $stmt->get_result()->fetch_assoc();
+        }
+        return null;
     }
 }

@@ -121,9 +121,18 @@ const GameRouter = {
 
         history.pushState({ url: '/game' }, '', '/game');
 
-        // Re-initialize map/UI if needed? 
-        // Usually map state is preserved in existing DOM.
-        // But we might want to refresh data (health, etc)
+        // Re-initialize map points to restore interactivity
+        const currentMapId = window.getCurrentMapId ? window.getCurrentMapId() : null;
+        const characterId = window.characterId;
+
+        if (currentMapId && characterId) {
+            console.log(`[Router] Reloading map points for map ${currentMapId}`);
+            loadMapPoints(currentMapId, characterId).catch(err => {
+                console.error('[Router] Failed to reload map points:', err);
+            });
+        } else {
+            console.warn('[Router] Cannot reload map points - missing mapId or characterId');
+        }
     }
 };
 

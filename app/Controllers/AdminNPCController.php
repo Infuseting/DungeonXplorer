@@ -238,13 +238,13 @@ class AdminNPCController
                     }
                 }
                 $this->npcModel->saveMerchantInventory($id, $itemsToSave);
-            } elseif ($inventoryType === 'seed' && $merchantSeed != $npc['merchant_seed']) {
-                // Only regenerate if seed changed or switched back to seed mode? 
-                // Actually, if switched to seed mode, we should regen if the seed is different OR if the inventory was manual before.
-                // But checking if it was manual is harder without checking null seed state.
-                // Let's just regen if seed is provided.
-                if ($merchantSeed) {
-                    $inventory = $this->npcModel->generateMerchantInventory($merchantSeed);
+            } elseif ($inventoryType === 'seed') {
+                // Force regeneration if seed changed OR if it was manual before (merchant_seed was null)
+                $oldSeed = $npc['merchant_seed'] !== null ? (int) $npc['merchant_seed'] : null;
+                $newSeed = $merchantSeed !== null ? (int) $merchantSeed : null;
+
+                if ($newSeed !== null && ($newSeed !== $oldSeed || $oldSeed === null)) {
+                    $inventory = $this->npcModel->generateMerchantInventory($newSeed);
                     $this->npcModel->saveMerchantInventory($id, $inventory);
                 }
             }

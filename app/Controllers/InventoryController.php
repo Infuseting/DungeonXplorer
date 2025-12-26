@@ -107,4 +107,29 @@ class InventoryController
 
         echo json_encode($result);
     }
+
+    /**
+     * Renvoie le HTML du composant inventaire mis à jour
+     */
+    public function getComponent()
+    {
+        if (!isset($_SESSION['user_id']) || !isset($_SESSION['character_id'])) {
+            http_response_code(401);
+            echo 'Unauthorized';
+            exit;
+        }
+
+        $characterId = $_SESSION['character_id'];
+        $inventoryModel = new Inventory();
+        $inventory = $inventoryModel->getCharacterInventory($characterId);
+
+        // Nécessaire pour la vue si elle utilise d'autres variables globalement disponibles
+        // Ici on suppose que $inventory suffit comme vu dans l'analyse
+
+        ob_start();
+        require __DIR__ . '/../Views/game/components/inventory.php';
+        $html = ob_get_clean();
+
+        echo $html;
+    }
 }

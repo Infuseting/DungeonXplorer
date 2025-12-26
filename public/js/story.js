@@ -940,7 +940,7 @@ window.exitDungeon = async () => {
             // Navigate back to map
             setTimeout(() => {
                 if (window.GameRouter) {
-                    window.GameRouter.navigate('/game');
+                    window.GameRouter.showMap();
                 } else {
                     window.location.href = '/game';
                 }
