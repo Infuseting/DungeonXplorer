@@ -8,12 +8,13 @@ import { setupTooltip } from './inventory.js';
 import { playSound } from './soundManager.js';
 
 let currentShopNPC = null;
+let currentShopName = null; // preferred shop name to display (may differ from NPC name)
 let playerGold = 0;
 
 /**
  * Open Shop Modal
  */
-export function openShop(npcId) {
+export function openShop(npcId, shopName = null) {
     // Close NPC modal first if open
     if (window.closeNPCModal) {
         window.closeNPCModal();
@@ -24,6 +25,17 @@ export function openShop(npcId) {
         .then(data => {
             if (data.success) {
                 currentShopNPC = data.npc;
+                // Determine shop display name priority:
+                // 1. explicit shopName passed from caller
+                // 2. shop_name returned by backend in npc object
+                // 3. previously stored currentShopName (preserve across refreshes)
+                // 4. fallback to NPC name (handled in renderShop)
+                if (shopName) {
+                    currentShopName = shopName;
+                } else if (data.npc && data.npc.shop_name) {
+                    currentShopName = data.npc.shop_name;
+                }
+
                 playerGold = data.player_gold;
                 renderShop(data);
                 document.getElementById('shop-modal').classList.remove('hidden');
@@ -42,8 +54,17 @@ export function openShop(npcId) {
  * Render Shop Interface
  */
 function renderShop(data) {
+    console.log(data);
+
     const merchantInventory = data.merchant_inventory;
     const playerInventory = data.player_inventory;
+
+    // Update Shop Title with preferred shop name (shop_name) or fallback to NPC name
+    const shopTitle = document.getElementById('shop-title');
+    if (shopTitle && currentShopNPC) {
+        const displayName = currentShopName || currentShopNPC.shop_name || currentShopNPC.name || '';
+        shopTitle.textContent = displayName ? `🪙 Boutique - ${displayName}` : '🪙 Boutique';
+    }
 
     // Update Gold Display
     updateGoldDisplay();

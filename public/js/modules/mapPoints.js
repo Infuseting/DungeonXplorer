@@ -55,7 +55,9 @@ export function showPointDetails(point, map = null) {
     // Check if this is an NPC point
     if (point.type === 'npc' && point.target_id) {
         console.log('Opening NPC modal:', point.target_id);
-        openNPCModal(point.target_id);
+        // Pass the point name as shop name when available so the NPC modal/shop
+        // can display the actual boutique name instead of the NPC name.
+        openNPCModal(point.target_id, point.name);
         return;
     }
 

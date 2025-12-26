@@ -13,12 +13,17 @@ let currentQuests = [];
 /**
  * Open NPC modal
  */
-export function openNPCModal(npcId) {
+export function openNPCModal(npcId, shopName = null) {
     fetch(`/game/npc/${npcId}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 currentNPC = data.npc;
+                // If a shopName was provided (from map point label), store it
+                // on the NPC object so the shop UI can prefer it.
+                if (shopName) {
+                    currentNPC.shop_name = shopName;
+                }
                 currentDialogueTree = data.dialogue_trees;
                 currentQuests = data.quests || [];
                 displayNPCModal();
@@ -482,7 +487,9 @@ function closeDialogue() {
 function openMerchantShop() {
     if (currentNPC) {
         import('./shop.js').then(module => {
-            module.openShop(currentNPC.id);
+            // Pass any shop_name present on currentNPC so the shop modal shows
+            // the boutique name rather than the NPC's name when available.
+            module.openShop(currentNPC.id, currentNPC.shop_name);
         });
     }
 }

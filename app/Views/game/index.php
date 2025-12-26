@@ -224,7 +224,7 @@ ob_start();
             class="bg-gray-900 border-2 border-yellow-600 rounded-lg p-4 w-full max-w-6xl h-5/6 flex flex-col relative shadow-2xl">
             <!-- Header -->
             <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
-                <h2 class="text-2xl font-bold text-yellow-500">🪙 Boutique</h2>
+                <h2 id="shop-title" class="text-2xl font-bold text-yellow-500">🪙 Boutique</h2>
                 <div class="flex items-center gap-4">
                     <div class="text-xl font-bold text-yellow-400" id="shop-player-gold">0 🪙</div>
                     <button id="shop-close-btn" class="text-gray-400 hover:text-white text-2xl">&times;</button>
