@@ -267,6 +267,15 @@ class StoryProgress
             $stmt->bind_param("ii", $characterId, $storyId);
             $stmt->execute();
 
+            // 4. Delete Killed Monsters for this story (pour la rejouabilité)
+            $stmt = $this->db->prepare("
+                DELETE csmk FROM character_story_monsters_killed csmk
+                JOIN story_nodes sn ON csmk.node_id = sn.id
+                WHERE csmk.character_id = ? AND sn.story_id = ?
+            ");
+            $stmt->bind_param("ii", $characterId, $storyId);
+            $stmt->execute();
+
             $this->db->commit();
             return true;
         } catch (\Exception $e) {
