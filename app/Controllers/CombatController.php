@@ -3,6 +3,7 @@ namespace App\Controllers;
 use App\Services\LoggerService;
 use App\Services\DifficultyService;
 use App\Services\StatusEffectService;
+use App\Services\CharacterStatsService;
 use App\Config\Database;
 use App\Models\Character;
 use App\Models\Monster;
@@ -28,10 +29,25 @@ class CombatController
         // Chargement du personnage sans garder la connexion DB active dans l'objet
         $characterModel = new Character();
         $characterModel->findById($_SESSION['character_id']);
+        
+        // Récupération de la vitalité de base et effective
+        $baseVitality = $characterModel->vitality ?? 10;
+        $effectiveVitality = $characterModel->getVitality(); // Avec équipement et passives
+        
+        // Ajustement proportionnel des HP actuels si l'équipement change la vitalité
+        if ($effectiveVitality != $baseVitality) {
+            $currentHp = $characterModel->getCurrentHp();
+            // Calculer le ratio de HP actuels par rapport à la vitalité de base
+            $hpRatio = $baseVitality > 0 ? ($currentHp / $baseVitality) : 1.0;
+            // Appliquer ce ratio à la vitalité effective
+            $adjustedHp = (int)round($effectiveVitality * $hpRatio);
+            $characterModel->current_hp = min($adjustedHp, $effectiveVitality);
+        }
+        
         $characterModel->unsetDb();
         
         // Sauvegarde des PV max pour le calcul des pourcentages côté client
-        $_SESSION['maxHpPlayer'] = $characterModel->getVitality();
+        $_SESSION['maxHpPlayer'] = $effectiveVitality;
         
         // Chargement du monstre
         $monsterModel = new Monster();
@@ -80,6 +96,19 @@ class CombatController
         }
 
         $initialData = null;
+        
+        // Récupération des stats effectives dès le début du combat
+        $effectiveStats = CharacterStatsService::getEffectiveStats($_SESSION['character_id']);
+        
+        $initialPlayerStats = [
+            'attack' => $effectiveStats['attack'],
+            'defense' => $effectiveStats['defense'],
+            'strength' => $effectiveStats['strength'],
+            'intelligence' => $effectiveStats['intelligence'],
+            'dexterity' => $effectiveStats['dexterity'],
+            'vitality' => $effectiveStats['vitality']
+        ];
+        
         if ($monsterStarts) {
             // Le monstre attaque immédiatement si c'est son tour
             $monsterResult = $combat->monsterTurn();
@@ -89,7 +118,8 @@ class CombatController
                 'hit' => $monsterResult[1],
                 'monster_starts' => true,
                 'playerHp' => $combat->getPlayerHp(),
-                'playerDead' => !$combat->getJoueur()->isAlive()
+                'playerDead' => !$combat->getJoueur()->isAlive(),
+                'playerStats' => $initialPlayerStats
             ];
             
             // Si le joueur est mort immédiatement, terminer le combat
@@ -110,7 +140,8 @@ class CombatController
                 'hit' => false,
                 'monster_starts' => false,
                 'playerHp' => $combat->getPlayerHp(),
-                'playerDead' => false
+                'playerDead' => false,
+                'playerStats' => $initialPlayerStats
             ];
         }
 
@@ -382,12 +413,25 @@ class CombatController
              exit;
         }
 
+        // Récupération des stats actuelles du joueur (avec items et compétences passives)
+        $effectiveStats = CharacterStatsService::getEffectiveStats($_SESSION['character_id']);
+        
+        $playerStats = [
+            'attack' => $effectiveStats['attack'],
+            'defense' => $effectiveStats['defense'],
+            'strength' => $effectiveStats['strength'],
+            'intelligence' => $effectiveStats['intelligence'],
+            'dexterity' => $effectiveStats['dexterity'],
+            'vitality' => $effectiveStats['vitality']
+        ];
+
         echo json_encode([
             "success" => true,
             "player" => $pMsg,
             "monster" => $mMsg,
             "playerHp" => $combat->getPlayerHp(),
             "monsterHp" => $combat->getMonster()->getVitality(),
+            "playerStats" => $playerStats,
             "win" => (!$combat->isMonsterAlive()),
             "newTurn" => ($combat->isMonsterAlive() && !$preventAction),
             "damageM" => $playerMessage[1] ?? false, 

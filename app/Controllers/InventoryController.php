@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\Inventory;
+use App\Services\CharacterStatsService;
 
 class InventoryController
 {
@@ -53,6 +54,9 @@ class InventoryController
         $inventoryModel = new Inventory();
         $result = $inventoryModel->equipItemById($_SESSION['character_id'], $itemId);
 
+        // Invalider le cache des stats après équipement
+        CharacterStatsService::clearCache($_SESSION['character_id']);
+
         echo json_encode($result);
     }
 
@@ -72,6 +76,9 @@ class InventoryController
             echo json_encode(['success' => false, 'message' => 'Missing slot']);
             exit;
         }
+
+        // Invalider le cache des stats après déséquipement
+        CharacterStatsService::clearCache($_SESSION['character_id']);
 
         $inventoryModel = new Inventory();
         $result = $inventoryModel->unequipItem($_SESSION['character_id'], $slotName);
