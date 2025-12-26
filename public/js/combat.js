@@ -1,4 +1,3 @@
-
 import { updateCombatState, changeMusicCategory } from '/js/modules/soundManager.js';
 
 let end = false;
@@ -681,6 +680,13 @@ window.loadSave = function (id) {
 
 // Réinitialiser la progression de l'histoire et retourner à la map
 window.resetStoryAndReturnToMap = function (storyId) {
+    // Supprimer l'overlay de Game Over
+    const gameOverOverlay = document.getElementById('game-over-overlay');
+    if (gameOverOverlay) {
+        gameOverOverlay.remove();
+    }
+
+    // Reste du code inchangé
     const formData = new FormData();
     if (storyId && storyId !== 'null' && storyId !== 'undefined') {
         formData.append('story_id', storyId);
@@ -692,7 +698,6 @@ window.resetStoryAndReturnToMap = function (storyId) {
     })
         .then(r => r.json())
         .then(d => {
-            // Rediriger vers la map que la réinitialisation ait réussi ou non
             if (window.GameRouter) {
                 window.GameRouter.showMap();
             } else {
@@ -701,7 +706,6 @@ window.resetStoryAndReturnToMap = function (storyId) {
         })
         .catch(err => {
             console.error('Error resetting story:', err);
-            // Rediriger quand même vers la map
             if (window.GameRouter) {
                 window.GameRouter.showMap();
             } else {

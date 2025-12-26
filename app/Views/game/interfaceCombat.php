@@ -427,7 +427,7 @@ use App\Models\Skill
                     throw new Error("Network response was not ok");
                 }
                 return response.text();
-            }).then(data => {
+            }).then data => {
                 console.log("Dice roll sent to server:", data);
             }).catch(error => {
                 console.error("There was a problem with the fetch operation:", error);
@@ -515,6 +515,13 @@ use App\Models\Skill
 
         function loadSave(id) {
             if (!confirm("Charger cette sauvegarde ?")) return;
+            
+            // Supprimer l'overlay de Game Over avant de charger
+            const gameOverOverlay = document.getElementById('game-over-overlay');
+            if (gameOverOverlay) {
+                gameOverOverlay.remove();
+            }
+            
             fetch('/game/load', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
