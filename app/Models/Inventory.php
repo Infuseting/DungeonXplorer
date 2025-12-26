@@ -16,7 +16,7 @@ class Inventory
     public function getCharacterInventory($characterId)
     {
         $stmt = $this->db->prepare("
-            SELECT ci.*, i.name, i.description, i.type, i.slot_type as item_slot_type, i.two_handed, i.width, i.height, i.weight, i.icon, i.stats as base_stats, i.max_stack, i.price
+            SELECT ci.*, i.name, i.description, i.type, i.slot_type as item_slot_type, i.two_handed, i.width, i.height, i.weight, i.icon, i.max_stack, i.price, i.stat_ranges
             FROM character_inventory ci
             JOIN items i ON ci.item_id = i.id
             WHERE ci.character_id = ?
@@ -37,16 +37,14 @@ class Inventory
         foreach ($result as $item) {
             $itemWeight = floatval($item['weight'] ?? 0);
             $currentWeight += $itemWeight;
-            
+
             // Get enchantments for this item
             $item['enchantments'] = $this->getItemEnchantments($item['id']);
-            
-            // Use instance_stats if available (includes enchantment bonuses), otherwise use base_stats
+
+            // Use instance_stats if available (includes enchantment bonuses)
             // Ensure stats is always a valid JSON string
             if (!empty($item['instance_stats'])) {
                 $item['stats'] = $item['instance_stats'];
-            } elseif (!empty($item['base_stats'])) {
-                $item['stats'] = $item['base_stats'];
             } else {
                 $item['stats'] = '{}';
             }
@@ -54,18 +52,18 @@ class Inventory
             if ($item['location'] === 'equipped') {
                 $inventory['equipped'][$item['slot_name']] = $item;
             } else {
-                                $inventory['inventory'][] = $item;
+                $inventory['inventory'][] = $item;
             }
         }
 
-                $maxWeight = $this->calculateMaxWeight($characterId, $inventory['equipped']);
+        $maxWeight = $this->calculateMaxWeight($characterId, $inventory['equipped']);
 
         $inventory['current_weight'] = $currentWeight;
         $inventory['max_weight'] = $maxWeight;
 
         return $inventory;
     }
-    
+
     /**
      * Get enchantments for an inventory item
      */
@@ -77,7 +75,8 @@ class Inventory
             JOIN enchantments e ON ie.enchantment_id = e.id
             WHERE ie.character_inventory_id = ?
         ");
-        if (!$stmt) return [];
+        if (!$stmt)
+            return [];
         $stmt->bind_param("i", $inventoryItemId);
         $stmt->execute();
         return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -85,15 +84,15 @@ class Inventory
 
     private function calculateMaxWeight($characterId, $equippedItems)
     {
-                $baseWeight = 60;
+        $baseWeight = 60;
 
-                $stmt = $this->db->prepare("SELECT strength FROM character_stats WHERE character_id = ?");
+        $stmt = $this->db->prepare("SELECT strength FROM character_stats WHERE character_id = ?");
         $stmt->bind_param("i", $characterId);
         $stmt->execute();
         $stats = $stmt->get_result()->fetch_assoc();
         $strength = $stats['strength'] ?? 0;
 
-                $backpackCapacity = 0;
+        $backpackCapacity = 0;
         if (isset($equippedItems['backpack'])) {
             $backpackStats = json_decode($equippedItems['backpack']['stats'] ?? '{}', true);
             $backpackCapacity = $backpackStats['capacity'] ?? 0;
@@ -104,10 +103,11 @@ class Inventory
 
     public function moveItem($characterId, $inventoryItemId, $targetLocation, $targetSlot = null, $targetX = null, $targetY = null)
     {
-                $item = $this->getItemInInventory($characterId, $inventoryItemId);
-        if (!$item) return ['success' => false, 'message' => 'Item not found'];
+        $item = $this->getItemInInventory($characterId, $inventoryItemId);
+        if (!$item)
+            return ['success' => false, 'message' => 'Item not found'];
 
-                if ($targetLocation === 'inventory' || $targetLocation === 'backpack' || $targetLocation === 'pockets') {
+        if ($targetLocation === 'inventory' || $targetLocation === 'backpack' || $targetLocation === 'pockets') {
             return $this->moveToInventory($characterId, $item);
         } elseif ($targetLocation === 'equipped') {
             return $this->equipItem($characterId, $item, $targetSlot);
@@ -131,38 +131,36 @@ class Inventory
 
     private function moveToInventory($characterId, $item)
     {
-                $stmt = $this->db->prepare("UPDATE character_inventory SET location = 'backpack', slot_name = NULL, grid_x = NULL, grid_y = NULL WHERE id = ?");
+        $stmt = $this->db->prepare("UPDATE character_inventory SET location = 'backpack', slot_name = NULL, grid_x = NULL, grid_y = NULL WHERE id = ?");
         $stmt->bind_param("i", $item['id']);
-        
+
         return ['success' => $stmt->execute()];
     }
 
     private function equipItem($characterId, $item, $slotName)
     {
-                $validSlot = false;
-        
-                if ($item['item_slot_type'] === $slotName) {
+        $validSlot = false;
+
+        if ($item['item_slot_type'] === $slotName) {
             $validSlot = true;
-        }
-                elseif ($item['item_slot_type'] === 'ring' && in_array($slotName, ['ring_1', 'ring_2'])) {
+        } elseif ($item['item_slot_type'] === 'ring' && in_array($slotName, ['ring_1', 'ring_2'])) {
             $validSlot = true;
-        }
-                elseif ($item['item_slot_type'] === 'main_hand' && in_array($slotName, ['main_hand', 'off_hand'])) {
+        } elseif ($item['item_slot_type'] === 'main_hand' && in_array($slotName, ['main_hand', 'off_hand'])) {
             $validSlot = true;
-        }
-        
-        if (!$validSlot) {
-             return ['success' => false, 'message' => 'Invalid slot for this item'];
         }
 
-                $stmt = $this->db->prepare("SELECT id FROM character_inventory WHERE character_id = ? AND location = 'equipped' AND slot_name = ?");
+        if (!$validSlot) {
+            return ['success' => false, 'message' => 'Invalid slot for this item'];
+        }
+
+        $stmt = $this->db->prepare("SELECT id FROM character_inventory WHERE character_id = ? AND location = 'equipped' AND slot_name = ?");
         $stmt->bind_param("is", $characterId, $slotName);
         $stmt->execute();
         if ($stmt->get_result()->num_rows > 0) {
-             return ['success' => false, 'message' => 'Slot occupied'];
+            return ['success' => false, 'message' => 'Slot occupied'];
         }
 
-                if ($item['two_handed']) {
+        if ($item['two_handed']) {
             $oppositeSlot = ($slotName === 'main_hand') ? 'off_hand' : 'main_hand';
             $stmt = $this->db->prepare("SELECT id FROM character_inventory WHERE character_id = ? AND location = 'equipped' AND slot_name = ?");
             $stmt->bind_param("is", $characterId, $oppositeSlot);
@@ -172,7 +170,7 @@ class Inventory
             }
         }
 
-                if ($slotName === 'main_hand') {
+        if ($slotName === 'main_hand') {
             $stmt = $this->db->prepare("
                 SELECT i.two_handed 
                 FROM character_inventory ci
@@ -187,7 +185,7 @@ class Inventory
             }
         }
 
-                if ($slotName === 'off_hand') {
+        if ($slotName === 'off_hand') {
             $stmt = $this->db->prepare("
                 SELECT i.two_handed 
                 FROM character_inventory ci
@@ -204,22 +202,23 @@ class Inventory
 
         $stmt = $this->db->prepare("UPDATE character_inventory SET location = 'equipped', slot_name = ?, grid_x = NULL, grid_y = NULL WHERE id = ?");
         $stmt->bind_param("si", $slotName, $item['id']);
-        
+
         $success = $stmt->execute();
         return [
-            'success' => $success, 
+            'success' => $success,
             'two_handed' => $item['two_handed'],
             'slot_name' => $slotName,
             'icon' => $item['icon']
         ];
     }
 
-        public function equipItemById($characterId, $inventoryItemId)
+    public function equipItemById($characterId, $inventoryItemId)
     {
         $item = $this->getItemInInventory($characterId, $inventoryItemId);
-        if (!$item) return ['success' => false, 'message' => 'Item not found'];
+        if (!$item)
+            return ['success' => false, 'message' => 'Item not found'];
 
-                $slotName = $this->determineSlotForItem($item['item_slot_type']);
+        $slotName = $this->determineSlotForItem($item['item_slot_type']);
         if (!$slotName) {
             return ['success' => false, 'message' => 'This item cannot be equipped'];
         }
@@ -227,9 +226,9 @@ class Inventory
         return $this->equipItem($characterId, $item, $slotName);
     }
 
-        public function unequipItem($characterId, $slotName)
+    public function unequipItem($characterId, $slotName)
     {
-                $stmt = $this->db->prepare("
+        $stmt = $this->db->prepare("
             SELECT ci.id 
             FROM character_inventory ci
             WHERE ci.character_id = ? AND ci.location = 'equipped' AND ci.slot_name = ?
@@ -237,19 +236,19 @@ class Inventory
         $stmt->bind_param("is", $characterId, $slotName);
         $stmt->execute();
         $result = $stmt->get_result()->fetch_assoc();
-        
+
         if (!$result) {
             return ['success' => false, 'message' => 'No item in this slot'];
         }
 
-                $stmt = $this->db->prepare("UPDATE character_inventory SET location = 'backpack', slot_name = NULL, grid_x = NULL, grid_y = NULL WHERE id = ?");
+        $stmt = $this->db->prepare("UPDATE character_inventory SET location = 'backpack', slot_name = NULL, grid_x = NULL, grid_y = NULL WHERE id = ?");
         $stmt->bind_param("i", $result['id']);
         return ['success' => $stmt->execute()];
     }
 
     public function addItem($characterId, $itemId)
     {
-                $stmt = $this->db->prepare("SELECT width, height, max_stack, type, weight FROM items WHERE id = ?");
+        $stmt = $this->db->prepare("SELECT width, height, max_stack, type, weight, stat_ranges FROM items WHERE id = ?");
         $stmt->bind_param("i", $itemId);
         $stmt->execute();
         $itemData = $stmt->get_result()->fetch_assoc();
@@ -258,16 +257,33 @@ class Inventory
             return ['success' => false, 'message' => 'Item not found'];
         }
 
-                $inventory = $this->getCharacterInventory($characterId);
+        $inventory = $this->getCharacterInventory($characterId);
         $itemWeight = floatval($itemData['weight'] ?? 0);
-        
+
         if (($inventory['current_weight'] + $itemWeight) > $inventory['max_weight']) {
             return ['success' => false, 'message' => 'Inventory too heavy'];
         }
 
-                $stmt = $this->db->prepare("INSERT INTO character_inventory (character_id, item_id, location) VALUES (?, ?, 'backpack')");
-        $stmt->bind_param("ii", $characterId, $itemId);
-        
+        // Generate instance stats from ranges
+        $instanceStats = [];
+        if (!empty($itemData['stat_ranges'])) {
+            $ranges = json_decode($itemData['stat_ranges'], true);
+            if (is_array($ranges)) {
+                foreach ($ranges as $stat => $range) {
+                    if (is_array($range) && isset($range['min']) && isset($range['max'])) {
+                        $instanceStats[$stat] = rand((int) $range['min'], (int) $range['max']);
+                    } elseif (is_numeric($range)) {
+                        // Handle case where range might be just a number (backward compatibility or fixed value)
+                        $instanceStats[$stat] = $range;
+                    }
+                }
+            }
+        }
+        $instanceStatsJson = empty($instanceStats) ? '{}' : json_encode($instanceStats);
+
+        $stmt = $this->db->prepare("INSERT INTO character_inventory (character_id, item_id, location, instance_stats) VALUES (?, ?, 'backpack', ?)");
+        $stmt->bind_param("iis", $characterId, $itemId, $instanceStatsJson);
+
         if ($stmt->execute()) {
             return ['success' => true, 'message' => 'Item added', 'new_item_id' => $this->db->insert_id];
         } else {
@@ -277,16 +293,16 @@ class Inventory
 
     public function deleteItem($characterId, $inventoryItemId)
     {
-                $stmt = $this->db->prepare("SELECT id FROM character_inventory WHERE character_id = ? AND id = ?");
+        $stmt = $this->db->prepare("SELECT id FROM character_inventory WHERE character_id = ? AND id = ?");
         $stmt->bind_param("ii", $characterId, $inventoryItemId);
         $stmt->execute();
         if ($stmt->get_result()->num_rows === 0) {
             return ['success' => false, 'message' => 'Item not found or not owned'];
         }
 
-                $stmt = $this->db->prepare("DELETE FROM character_inventory WHERE id = ?");
+        $stmt = $this->db->prepare("DELETE FROM character_inventory WHERE id = ?");
         $stmt->bind_param("i", $inventoryItemId);
-        
+
         if ($stmt->execute()) {
             return ['success' => true, 'message' => 'Item deleted'];
         } else {
@@ -296,7 +312,7 @@ class Inventory
 
     public function consumeItem($characterId, $inventoryItemId)
     {
-                $stmt = $this->db->prepare("SELECT id, quantity, item_id FROM character_inventory WHERE character_id = ? AND id = ?");
+        $stmt = $this->db->prepare("SELECT id, quantity, item_id FROM character_inventory WHERE character_id = ? AND id = ?");
         $stmt->bind_param("ii", $characterId, $inventoryItemId);
         $stmt->execute();
         $result = $stmt->get_result()->fetch_assoc();
@@ -305,7 +321,7 @@ class Inventory
             return ['success' => false, 'message' => 'Item not found'];
         }
 
-                if (isset($result['quantity']) && $result['quantity'] > 1) {
+        if (isset($result['quantity']) && $result['quantity'] > 1) {
             $stmt = $this->db->prepare("UPDATE character_inventory SET quantity = quantity - 1 WHERE id = ?");
             $stmt->bind_param("i", $inventoryItemId);
         } else {
@@ -314,15 +330,15 @@ class Inventory
         }
 
         if ($stmt->execute()) {
-             return ['success' => true, 'message' => 'Item consumed', 'itemId' => $result['item_id']];
+            return ['success' => true, 'message' => 'Item consumed', 'itemId' => $result['item_id']];
         } else {
-             return ['success' => false, 'message' => 'Database error'];
+            return ['success' => false, 'message' => 'Database error'];
         }
     }
 
     private function determineSlotForItem($itemSlotType)
     {
-                $slotMap = [
+        $slotMap = [
             'head' => 'head',
             'shoulders' => 'shoulders',
             'amulet' => 'amulet',

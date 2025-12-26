@@ -79,25 +79,50 @@ export function setupTooltip(item) {
             const statsRaw = item.dataset.stats || '{}';
             const stats = typeof statsRaw === 'string' ? JSON.parse(statsRaw) : statsRaw;
             const enchantBonuses = stats.enchantment_bonuses || {};
-            
-            for (const [key, value] of Object.entries(stats)) {
-                // Skip internal fields and non-numeric values
-                if (key === 'enchantment_bonuses' || key === 'rarity') continue;
-                if (typeof value !== 'number') continue;
-                
-                const statRow = document.createElement('div');
-                statRow.className = 'tooltip-stat';
-                // Format key (e.g., capacity_width -> Capacity Width)
-                const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                
-                // Check if this stat has an enchantment bonus - show total in green if enchanted
-                const bonus = enchantBonuses[key] || 0;
-                if (bonus > 0) {
-                    statRow.innerHTML = `<span>${label}</span><span class="text-green-400">+${value}</span>`;
-                } else {
-                    statRow.innerHTML = `<span>${label}</span><span>+${value}</span>`;
+
+            const hasStats = Object.keys(stats).length > 0 && JSON.stringify(stats) !== '{}';
+
+            if (hasStats) {
+                for (const [key, value] of Object.entries(stats)) {
+                    // Skip internal fields and non-numeric values
+                    if (key === 'enchantment_bonuses' || key === 'rarity') continue;
+                    if (typeof value !== 'number') continue;
+
+                    const statRow = document.createElement('div');
+                    statRow.className = 'tooltip-stat';
+                    // Format key
+                    const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+                    // Check if this stat has an enchantment bonus
+                    const bonus = enchantBonuses[key] || 0;
+                    if (bonus > 0) {
+                        statRow.innerHTML = `<span>${label}</span><span class="text-green-400">+${value}</span>`;
+                    } else {
+                        statRow.innerHTML = `<span>${label}</span><span>+${value}</span>`;
+                    }
+                    statsEl.appendChild(statRow);
                 }
-                statsEl.appendChild(statRow);
+            } else {
+                // Try displaying ranges if no specific stats
+                const rangesRaw = item.dataset.statRanges || '{}';
+                const ranges = typeof rangesRaw === 'string' ? JSON.parse(rangesRaw) : rangesRaw;
+
+                for (const [key, range] of Object.entries(ranges)) {
+                    const statRow = document.createElement('div');
+                    statRow.className = 'tooltip-stat';
+                    const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+                    if (typeof range === 'object' && range.min !== undefined && range.max !== undefined) {
+                        if (range.min === range.max) {
+                            statRow.innerHTML = `<span>${label}</span><span>+${range.min}</span>`;
+                        } else {
+                            statRow.innerHTML = `<span>${label}</span><span>${range.min}-${range.max}</span>`;
+                        }
+                    } else if (typeof range === 'number') {
+                        statRow.innerHTML = `<span>${label}</span><span>+${range}</span>`;
+                    }
+                    statsEl.appendChild(statRow);
+                }
             }
         } catch (e) {
             console.error('Error parsing stats', e, item.dataset.stats);

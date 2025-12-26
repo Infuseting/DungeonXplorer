@@ -82,7 +82,7 @@ function createShopSlot(item, action) {
     const enchantments = item.enchantments || [];
     const enchantCount = enchantments.length;
     const isEnchanted = enchantCount > 0;
-    
+
     const slot = document.createElement('div');
     slot.className = `w-16 h-16 slot rounded-lg flex items-center justify-center relative bg-gray-800 hover:bg-gray-700 transition-colors border border-gray-600 cursor-pointer ${isEnchanted ? 'enchanted-item' : ''}`;
 
@@ -101,7 +101,7 @@ function createShopSlot(item, action) {
     img.dataset.name = item.name;
     img.dataset.type = item.type;
     img.dataset.description = item.description;
-    
+
     // Handle stats - ensure it's a proper JSON string
     let statsString = '{}';
     if (item.stats) {
@@ -112,6 +112,18 @@ function createShopSlot(item, action) {
         }
     }
     img.dataset.stats = statsString;
+
+    // Handle stat ranges
+    let statRangesString = '{}';
+    if (item.stat_ranges) {
+        if (typeof item.stat_ranges === 'string') {
+            statRangesString = item.stat_ranges;
+        } else if (typeof item.stat_ranges === 'object') {
+            statRangesString = JSON.stringify(item.stat_ranges);
+        }
+    }
+    img.dataset.statRanges = statRangesString;
+
     img.dataset.enchantments = JSON.stringify(enchantments);
 
     // Add price info to tooltip data (custom handling or append to description)
@@ -136,7 +148,7 @@ function createShopSlot(item, action) {
     img.dataset.description = originalDesc + (originalDesc ? '<br><br>' : '') + priceText;
 
     slot.appendChild(img);
-    
+
     // Add enchantment badge if enchanted
     if (isEnchanted) {
         const badge = document.createElement('span');
