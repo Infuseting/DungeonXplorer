@@ -230,4 +230,22 @@ class DialogueTree
         $result = $stmt->get_result();
         return $result->fetch_assoc();
     }
+    
+    /**
+     * Get NPC ID associated with this dialogue tree
+     */
+    public function getNPCIdForTree($treeId)
+    {
+        $stmt = $this->db->prepare("
+            SELECT npc_id 
+            FROM npc_dialogue_trees 
+            WHERE tree_id = ?
+            LIMIT 1
+        ");
+        $stmt->bind_param("i", $treeId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        return $row ? $row['npc_id'] : null;
+    }
 }

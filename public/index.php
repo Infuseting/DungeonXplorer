@@ -104,6 +104,7 @@ $router->mount('/game', function() use ($router) {
         $router->get('/npc/(\d+)', 'App\Controllers\GameController@getNPC');
     $router->get('/dialogue/tree/(\d+)', 'App\Controllers\GameController@getDialogueTree');
     $router->post('/dialogue/complete', 'App\Controllers\GameController@completeDialogue');
+    $router->get('/check-minos-access', 'App\Controllers\GameController@checkMinosAccess');
 
         $router->post('/quest/accept', 'App\Controllers\GameController@acceptQuest');
     $router->get('/quest/log', 'App\Controllers\GameController@getQuestLog');

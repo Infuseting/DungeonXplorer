@@ -887,6 +887,33 @@ class StoryController
         $nodeId = $_POST['node_id'];
         $npcId = $_POST['npc_id'];
 
+        // Bloquer l'interaction avec le roi Minos (NPC 1) tant qu'on n'a pas parlé à la princesse (NPC 3)
+        if ($npcId == 1) {
+            // Vérifier si le joueur a parlé à la princesse dans cette session de donjon
+            $princessSessionKey = 'npc_interacted_' . $characterId . '_' . $nodeId;
+            $hasTalkedToPrincess = false;
+            
+            // Parcourir tous les nœuds possibles pour voir si la princesse a été interagée
+            $nodeModel = new \App\Models\StoryNode();
+            $nodes = $nodeModel->getByStoryId($storyId);
+            foreach ($nodes as $node) {
+                $sessionKey = 'npc_interacted_' . $characterId . '_' . $node['id'];
+                if (isset($_SESSION[$sessionKey]) && is_array($_SESSION[$sessionKey]) && in_array(3, $_SESSION[$sessionKey])) {
+                    $hasTalkedToPrincess = true;
+                    break;
+                }
+            }
+            
+            if (!$hasTalkedToPrincess) {
+                error_log("[NPC Interaction] Blocked interaction with King Minos - Princess not talked yet");
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Le roi semble occupé... Peut-être devriez-vous d\'abord accomplir votre mission ? 🤔'
+                ]);
+                return;
+            }
+        }
+
         $sessionKey = 'npc_interacted_' . $characterId . '_' . $nodeId;
         if (!isset($_SESSION[$sessionKey]) || !is_array($_SESSION[$sessionKey])) {
             $_SESSION[$sessionKey] = [];

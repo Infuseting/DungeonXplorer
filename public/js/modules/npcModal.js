@@ -28,7 +28,13 @@ export function openNPCModal(npcId, shopName = null) {
                 currentQuests = data.quests || [];
                 displayNPCModal();
             } else {
-                console.error('Failed to load NPC data');
+                console.error('Failed to load NPC data:', data.message);
+                // Afficher le message d'erreur à l'utilisateur
+                if (window.showToast && data.message) {
+                    window.showToast(data.message, 'warning');
+                } else {
+                    alert(data.message || 'Impossible d\'interagir avec ce PNJ');
+                }
             }
         })
         .catch(error => {
