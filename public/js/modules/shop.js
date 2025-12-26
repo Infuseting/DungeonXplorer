@@ -25,11 +25,6 @@ export function openShop(npcId, shopName = null) {
         .then(data => {
             if (data.success) {
                 currentShopNPC = data.npc;
-                // Determine shop display name priority:
-                // 1. explicit shopName passed from caller
-                // 2. shop_name returned by backend in npc object
-                // 3. previously stored currentShopName (preserve across refreshes)
-                // 4. fallback to NPC name (handled in renderShop)
                 if (shopName) {
                     currentShopName = shopName;
                 } else if (data.npc && data.npc.shop_name) {
@@ -69,7 +64,6 @@ function renderShop(data) {
     // Update Gold Display
     updateGoldDisplay();
 
-    // 1. Render Merchant Inventory (Left Column)
     const merchantList = document.getElementById('shop-merchant-list');
     merchantList.innerHTML = '';
 
@@ -82,7 +76,6 @@ function renderShop(data) {
         });
     }
 
-    // 2. Render Player Inventory (Right Column)
     const inventoryList = document.getElementById('shop-inventory-list');
     inventoryList.innerHTML = '';
 
@@ -147,10 +140,6 @@ function createShopSlot(item, action) {
 
     img.dataset.enchantments = JSON.stringify(enchantments);
 
-    // Add price info to tooltip data (custom handling or append to description)
-    // We'll use a custom tooltip handler or modify the description temporarily for the tooltip
-    // But better: let's use the existing setupTooltip but inject the price info into the description or a new attribute
-
     let priceText = '';
     if (action === 'buy') {
         const price = Math.floor(item.buy_price || item.price);
@@ -162,9 +151,6 @@ function createShopSlot(item, action) {
         slot.onclick = () => sellItem(item.id);
     }
 
-    // Append price to description for the tooltip to pick it up
-    // The existing setupTooltip reads data-description. 
-    // We can append the price HTML to it.
     const originalDesc = item.description || '';
     img.dataset.description = originalDesc + (originalDesc ? '<br><br>' : '') + priceText;
 
