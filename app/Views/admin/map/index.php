@@ -89,36 +89,15 @@ ob_start();
                         <button type="button" class="icon-option aspect-square p-3 bg-gray-800 hover:bg-gray-700 border-2 border-transparent hover:border-indigo-500 rounded-lg transition-all flex items-center justify-center group" data-icon="" title="Aucune icône">
                             <span class="text-gray-400 text-xs">Aucune</span>
                         </button>
-                        <button type="button" class="icon-option aspect-square p-3 bg-gray-800 hover:bg-gray-700 border-2 border-transparent hover:border-indigo-500 rounded-lg transition-all" data-icon="dungeon.svg" title="Donjon">
-                            <img src="/assets/map/icons/dungeon.svg" alt="Donjon" class="w-full h-full object-contain opacity-70 group-hover:opacity-100">
-                        </button>
-                        <button type="button" class="icon-option aspect-square p-3 bg-gray-800 hover:bg-gray-700 border-2 border-transparent hover:border-indigo-500 rounded-lg transition-all" data-icon="place.svg" title="Lieu">
-                            <img src="/assets/map/icons/place.svg" alt="Lieu" class="w-full h-full object-contain opacity-70 group-hover:opacity-100">
-                        </button>
-                        <button type="button" class="icon-option aspect-square p-3 bg-gray-800 hover:bg-gray-700 border-2 border-transparent hover:border-indigo-500 rounded-lg transition-all" data-icon="npc.svg" title="PNJ">
-                            <img src="/assets/map/icons/npc.svg" alt="PNJ" class="w-full h-full object-contain opacity-70 group-hover:opacity-100">
-                        </button>
-                        <button type="button" class="icon-option aspect-square p-3 bg-gray-800 hover:bg-gray-700 border-2 border-transparent hover:border-indigo-500 rounded-lg transition-all" data-icon="quest.svg" title="Quête">
-                            <img src="/assets/map/icons/quest.svg" alt="Quête" class="w-full h-full object-contain opacity-70 group-hover:opacity-100">
-                        </button>
-                        <button type="button" class="icon-option aspect-square p-3 bg-gray-800 hover:bg-gray-700 border-2 border-transparent hover:border-indigo-500 rounded-lg transition-all" data-icon="story.svg" title="Histoire">
-                            <img src="/assets/map/icons/story.svg" alt="Histoire" class="w-full h-full object-contain opacity-70 group-hover:opacity-100">
-                        </button>
-                        <button type="button" class="icon-option aspect-square p-3 bg-gray-800 hover:bg-gray-700 border-2 border-transparent hover:border-indigo-500 rounded-lg transition-all" data-icon="treasure.svg" title="Trésor">
-                            <img src="/assets/map/icons/treasure.svg" alt="Trésor" class="w-full h-full object-contain opacity-70 group-hover:opacity-100">
-                        </button>
-                        <button type="button" class="icon-option aspect-square p-3 bg-gray-800 hover:bg-gray-700 border-2 border-transparent hover:border-indigo-500 rounded-lg transition-all" data-icon="shop.svg" title="Boutique">
-                            <img src="/assets/map/icons/shop.svg" alt="Boutique" class="w-full h-full object-contain opacity-70 group-hover:opacity-100">
-                        </button>
-                        <button type="button" class="icon-option aspect-square p-3 bg-gray-800 hover:bg-gray-700 border-2 border-transparent hover:border-indigo-500 rounded-lg transition-all" data-icon="camp.svg" title="Campement">
-                            <img src="/assets/map/icons/camp.svg" alt="Campement" class="w-full h-full object-contain opacity-70 group-hover:opacity-100">
-                        </button>
-                        <button type="button" class="icon-option aspect-square p-3 bg-gray-800 hover:bg-gray-700 border-2 border-transparent hover:border-indigo-500 rounded-lg transition-all" data-icon="boss.svg" title="Boss">
-                            <img src="/assets/map/icons/boss.svg" alt="Boss" class="w-full h-full object-contain opacity-70 group-hover:opacity-100">
-                        </button>
-                        <button type="button" class="icon-option aspect-square p-3 bg-gray-800 hover:bg-gray-700 border-2 border-transparent hover:border-indigo-500 rounded-lg transition-all" data-icon="portal.svg" title="Portail">
-                            <img src="/assets/map/icons/portal.svg" alt="Portail" class="w-full h-full object-contain opacity-70 group-hover:opacity-100">
-                        </button>
+                        <?php foreach ($availableIcons as $icon): ?>
+                            <?php 
+                                $iconName = pathinfo($icon, PATHINFO_FILENAME);
+                                $displayName = ucfirst(str_replace(['_', '-'], ' ', $iconName));
+                            ?>
+                            <button type="button" class="icon-option aspect-square p-3 bg-gray-800 hover:bg-gray-700 border-2 border-transparent hover:border-indigo-500 rounded-lg transition-all" data-icon="<?= htmlspecialchars($icon) ?>" title="<?= htmlspecialchars($displayName) ?>">
+                                <img src="/assets/map/icons/<?= htmlspecialchars($icon) ?>" alt="<?= htmlspecialchars($displayName) ?>" class="w-full h-full object-contain opacity-70 group-hover:opacity-100">
+                            </button>
+                        <?php endforeach; ?>
                     </div>
                     
                     <!-- Upload Custom Icon -->

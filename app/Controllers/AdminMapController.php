@@ -15,6 +15,27 @@ class AdminMapController
         $this->db = Database::getInstance()->getConnection();
     }
     
+    private function getAvailableIcons()
+    {
+        $iconsPath = __DIR__ . '/../../public/assets/map/icons';
+        $icons = [];
+        
+        if (is_dir($iconsPath)) {
+            $files = glob($iconsPath . '/*.{svg,png,jpg,jpeg}', GLOB_BRACE);
+            if ($files) {
+                foreach ($files as $file) {
+                    $filename = basename($file);
+                    $icons[] = $filename;
+                }
+            }
+        }
+        
+        // Trier alphabétiquement
+        sort($icons);
+        
+        return $icons;
+    }
+    
     public function index()
     {
                 $selectedMapId = isset($_GET['map_id']) ? (int)$_GET['map_id'] : null;
@@ -33,6 +54,9 @@ class AdminMapController
         
                 $factionModel = new Faction();
         $factions = $factionModel->getAll();
+        
+        // Charger les icônes disponibles
+        $availableIcons = $this->getAvailableIcons();
 
         require_once __DIR__ . '/../Views/admin/map/index.php';
     }
