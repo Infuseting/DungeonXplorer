@@ -18,7 +18,8 @@
                     <div class="text-right">
                         <p class="text-xs text-gray-400">Points Disponibles</p>
                         <p class="text-2xl font-bold text-amber-400" id="modal-sp-display">
-                            <?= $character->getSkillPoints() ?></p>
+                            <?= $character->getSkillPoints() ?>
+                        </p>
                     </div>
                     <button id="skills-close-btn"
                         class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
@@ -51,7 +52,15 @@
         const closeBtn = document.getElementById('skills-close-btn');
         const toggleBtn = document.getElementById('skills-toggle');
         const CHARACTER_LEVEL = <?= $character->getLevel() ?>;
-        const SKILLS_DATA = <?= $playerSkillsJson ?? '[]' ?>;
+
+        // Use 'let' for mutable data
+        let skillsData = <?= $playerSkillsJson ?? '[]' ?>;
+        let currentSP = <?= $character->getSkillPoints() ?>;
+
+        // Initialize 'unlocked' property based on initial status
+        skillsData.forEach(s => {
+            s.isOwned = (s.status === 'unlocked');
+        });
 
         const SkillTree = {
             container: document.getElementById('skill-tree-container'),
@@ -64,6 +73,7 @@
             dragStart: { x: 0, y: 0 },
 
             init() {
+                this.updateStatuses();
                 this.render();
                 this.setupEvents();
                 this.centerView();
@@ -76,23 +86,61 @@
 
             open() {
                 modal.classList.remove('hidden');
+                // Ensure UI is up to date if SP changed elsewhere
+                // (Optional: fetch latest SP here if needed)
             },
 
             close() {
                 modal.classList.add('hidden');
             },
 
+            // Recalculate status (locked/available/unlocked) for all skills
+            updateStatuses() {
+                skillsData.forEach(skill => {
+                    if (skill.isOwned) {
+                        skill.status = 'unlocked';
+                        return;
+                    }
+
+                    const canAfford = currentSP >= skill.cost_sp;
+                    const levelMet = CHARACTER_LEVEL >= skill.min_level;
+
+                    let prereqMet = true;
+                    if (skill.parent_skill_id) {
+                        const parent = skillsData.find(s => s.id == skill.parent_skill_id);
+                        // Parent must be owned/unlocked
+                        if (parent && !parent.isOwned) {
+                            prereqMet = false;
+                        }
+                    }
+
+                    if (canAfford && levelMet && prereqMet) {
+                        skill.status = 'available';
+                    } else {
+                        skill.status = 'locked';
+                    }
+                });
+            },
+
             render() {
                 this.nodesLayer.innerHTML = '';
                 this.connectionsLayer.innerHTML = '';
 
-                SKILLS_DATA.forEach(skill => {
-                    this.renderNode(skill);
+                // Render connections first (so they are behind nodes)
+                skillsData.forEach(skill => {
                     if (skill.parent_skill_id) {
-                        const parent = SKILLS_DATA.find(s => s.id == skill.parent_skill_id);
+                        const parent = skillsData.find(s => s.id == skill.parent_skill_id);
                         if (parent) this.renderConnection(parent, skill);
                     }
                 });
+
+                // Render nodes
+                skillsData.forEach(skill => {
+                    this.renderNode(skill);
+                });
+
+                // Update SP Display
+                if (this.spDisplay) this.spDisplay.textContent = currentSP;
             },
 
             renderNode(skill) {
@@ -195,18 +243,26 @@
                 })
                     .then(res => res.json())
                     .then(data => {
-                if(data.success) {
-                    // Option: show toast then reload
-                    location.reload(); 
-                }
-                else {
-                    alert('Erreur: ' + (data.message || 'Impossible de débloquer la compétence'));
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                alert('Erreur de communication avec le serveur');
-            });
+                        if (data.success) {
+                            // Update local state
+                            currentSP -= cost;
+
+                            const skill = skillsData.find(s => s.id === id);
+                            if (skill) {
+                                skill.isOwned = true; // Mark as owned
+                            }
+
+                            this.updateStatuses(); // Recalculate available/locked logic
+                            this.render(); // Redraw UI
+                        }
+                        else {
+                            alert('Erreur: ' + (data.message || 'Impossible de débloquer la compétence'));
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert('Erreur de communication avec le serveur. Vérifiez votre connexion.');
+                    });
             }
         };
 

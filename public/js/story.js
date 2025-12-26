@@ -99,10 +99,10 @@ async function loadCurrentNode() {
         storyState.currentNode = data.node;
         storyState.nodeStatus = data.status;
         storyState.fledMonsters = data.fled_monsters || []; // Store fled IDs
-        
+
         // Reset fleeting state
         storyState.isFleeting = false;
-        
+
         renderNode();
     } catch (error) {
         console.error('Error loading node:', error);
@@ -134,11 +134,11 @@ function renderNode() {
         // Create a temp image to check if it loads
         const img = new Image();
         img.onload = () => {
-             bg.style.backgroundImage = `url('${node.image_path}')`;
+            bg.style.backgroundImage = `url('${node.image_path}')`;
         };
         img.onerror = () => {
-             console.warn('Image failed to load, utilizing placeholder:', node.image_path);
-             bg.style.backgroundImage = `url('/assets/images/placeholder_dungeon.jpg')`;
+            console.warn('Image failed to load, utilizing placeholder:', node.image_path);
+            bg.style.backgroundImage = `url('/assets/images/placeholder_dungeon.jpg')`;
         };
         img.src = node.image_path;
     } else {
@@ -149,13 +149,13 @@ function renderNode() {
     const exitBtn = document.getElementById('exit-dungeon-btn');
     if (exitBtn) {
         console.log('[Exit Button] can_exit:', node.can_exit, 'exit_condition_type:', node.exit_condition_type);
-        
+
         // Show button if node has can_exit OR has exit_condition_type
         const shouldShowButton = node.can_exit || node.exit_condition_type;
-        
+
         if (shouldShowButton) {
             exitBtn.classList.remove('hidden');
-            
+
             if (node.can_exit) {
                 exitBtn.disabled = false;
                 exitBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'grayscale');
@@ -443,7 +443,18 @@ function renderChoices(node) {
                 </div>
             `;
         } else {
-            container.innerHTML += `<div class="text-gray-500 italic text-center col-span-2">Aucune issue...</div>`;
+            // Check if exit button is visible (logic mirrored from renderNode)
+            const canExit = node.can_exit || node.exit_condition_type;
+            if (canExit) {
+                container.innerHTML += `
+                    <div class="text-center col-span-2">
+                        <p class="text-gray-300 italic mb-4">Vous avez atteint la fin de ce chemin.</p>
+                        <p class="text-green-400 font-bold animate-pulse">✨ La sortie est disponible !</p>
+                        <p class="text-xs text-gray-500 mt-2">(Utilisez le bouton "Quitter le donjon" en haut à droite)</p>
+                    </div>`;
+            } else {
+                container.innerHTML += `<div class="text-gray-500 italic text-center col-span-2">Aucune issue...</div>`;
+            }
         }
     }
 
@@ -736,20 +747,20 @@ window.interactWithNPC = async (npcId) => {
             body: formData
         });
         const data = await response.json();
-        
+
         console.log('[NPC Interaction] Response:', data);
 
         if (data.success) {
             if (data.dialogue) {
-                 console.log('[NPC Interaction] Rendering dialogue:', data.dialogue);
-                 renderDialogue(data.dialogue);
+                console.log('[NPC Interaction] Rendering dialogue:', data.dialogue);
+                renderDialogue(data.dialogue);
             } else {
-                 console.log('[NPC Interaction] No dialogue data, NPC marked as interacted');
-                 showToast('Vous avez parlé avec le personnage.', 'success');
-                 // Reload to potentially unlock exit
-                 setTimeout(() => {
-                     loadCurrentNode();
-                 }, 500);
+                console.log('[NPC Interaction] No dialogue data, NPC marked as interacted');
+                showToast('Vous avez parlé avec le personnage.', 'success');
+                // Reload to potentially unlock exit
+                setTimeout(() => {
+                    loadCurrentNode();
+                }, 500);
             }
         } else {
             showToast(data.message || 'Interaction impossible', 'error');
@@ -764,11 +775,11 @@ function renderDialogue(dialogueData) {
     const overlay = document.createElement('div');
     overlay.id = 'dialogue-overlay';
     overlay.className = 'fixed inset-0 z-50 flex items-end justify-center pointer-events-auto bg-black/50 backdrop-blur-[2px] animate-fade-in';
-    
+
     // Bubble Container
     const bubble = document.createElement('div');
     bubble.className = 'bg-gray-900 border-2 border-white/20 p-6 md:p-8 rounded-t-2xl md:rounded-2xl max-w-4xl w-full mx-auto md:mb-12 shadow-[0_-10px_40px_rgba(0,0,0,0.8)] animate-slide-up transform transition-all';
-    
+
     // Header (Title)
     const header = document.createElement('div');
     header.innerHTML = `<h3 class="text-yellow-500 font-bold text-xl mb-2">${dialogueData.title || 'Inconnu'}</h3>`;
@@ -785,21 +796,21 @@ function renderDialogue(dialogueData) {
     // Choices Container
     const choicesDiv = document.createElement('div');
     choicesDiv.className = 'flex flex-col gap-2 mt-4 border-t border-gray-700 pt-4';
-    
+
     // Render Choices
-    if(dialogueData.root.choices && dialogueData.root.choices.length > 0) {
+    if (dialogueData.root.choices && dialogueData.root.choices.length > 0) {
         dialogueData.root.choices.forEach(choice => {
             const btn = document.createElement('button');
             btn.className = 'text-left px-4 py-3 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded border border-gray-700 hover:border-gray-500 transition-colors flex items-center gap-3 group';
             btn.innerHTML = `<span class="text-blue-400 group-hover:text-blue-300">➤</span> ${choice.text}`; // Assuming child node text is the choice text
-            
+
             // On click -> Traverse to next node (would need logic to fetch children of this child)
             // For now, let's assume simple 1-depth or close dialogue
             btn.onclick = () => {
-                 // Close logic for now as deep traversal isn't fully implemented in this MVP block
-                 // TODO: Implement deep traversal via API
-                 closeDialogue();
-                 // Trigger actions if any (not implemented yet in this block)
+                // Close logic for now as deep traversal isn't fully implemented in this MVP block
+                // TODO: Implement deep traversal via API
+                closeDialogue();
+                // Trigger actions if any (not implemented yet in this block)
             };
             choicesDiv.appendChild(btn);
         });
@@ -811,7 +822,7 @@ function renderDialogue(dialogueData) {
         btn.onclick = closeDialogue;
         choicesDiv.appendChild(btn);
     }
-    
+
     bubble.appendChild(choicesDiv);
     overlay.appendChild(bubble);
     document.body.appendChild(overlay);
@@ -834,8 +845,8 @@ function closeDialogue() {
 
 // Reset Story Global Function
 window.resetStory = async (storyId) => {
-    if(!confirm("Voulez-vous vraiment recommencer l'histoire à zéro ?")) return;
-    
+    if (!confirm("Voulez-vous vraiment recommencer l'histoire à zéro ?")) return;
+
     try {
         const formData = new FormData();
         formData.append('story_id', storyId);
@@ -851,7 +862,7 @@ window.resetStory = async (storyId) => {
             // Reload page to restart
             setTimeout(() => window.location.reload(), 500);
         } else {
-             showToast(data.message, 'error');
+            showToast(data.message, 'error');
         }
     } catch (e) {
         console.error('[Story] Reset error:', e);
@@ -879,7 +890,7 @@ window.exitDungeon = async () => {
             } else {
                 showToast('Félicitations ! Donjon terminé ! 🎉', 'success');
             }
-            
+
             // Navigate back to map
             setTimeout(() => {
                 if (window.GameRouter) {
