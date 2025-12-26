@@ -55,20 +55,20 @@ class StoryNode
             "INSERT INTO story_nodes (story_id, story_instance_id, name, description, image_path, is_start_node, is_end_node, can_exit, node_x, node_y, is_searchable, exit_condition_type, exit_condition_value) 
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         );
-        
+
         $instanceId = !empty($data['story_instance_id']) ? $data['story_instance_id'] : null;
         $canExit = $data['can_exit'] ?? 0;
         $isSearchable = $data['is_searchable'] ?? 1;
         $exitType = $data['exit_condition_type'] ?? 'none';
         $exitValue = $data['exit_condition_value'] ?? null;
-        
+
         $stmt->bind_param(
-            "iisssiiiiisss", 
-            $data['story_id'], 
+            "iisssiiiiisss",
+            $data['story_id'],
             $instanceId,
-            $data['name'], 
-            $data['description'], 
-            $data['image_path'], 
+            $data['name'],
+            $data['description'],
+            $data['image_path'],
             $data['is_start_node'],
             $data['is_end_node'],
             $canExit,
@@ -78,7 +78,7 @@ class StoryNode
             $exitType,
             $exitValue
         );
-        
+
         if ($stmt->execute()) {
             return $this->db->insert_id;
         }
@@ -99,17 +99,17 @@ class StoryNode
              SET name = ?, description = ?, image_path = ?, is_start_node = ?, is_end_node = ?, can_exit = ?, node_x = ?, node_y = ?, is_searchable = ?, exit_condition_type = ?, exit_condition_value = ? 
              WHERE id = ?"
         );
-        
+
         $canExit = $data['can_exit'] ?? 0;
         $isSearchable = $data['is_searchable'] ?? 1;
         $exitType = $data['exit_condition_type'] ?? 'none';
         $exitValue = $data['exit_condition_value'] ?? null;
-        
+
         $stmt->bind_param(
-            "sssiiiiisssi", 
-            $data['name'], 
-            $data['description'], 
-            $data['image_path'], 
+            "sssiiiiisssi",
+            $data['name'],
+            $data['description'],
+            $data['image_path'],
             $data['is_start_node'],
             $data['is_end_node'],
             $canExit,
@@ -120,7 +120,7 @@ class StoryNode
             $exitValue,
             $id
         );
-        
+
         return $stmt->execute();
     }
 
@@ -166,7 +166,7 @@ class StoryNode
      */
     public function getReturnConnections($nodeId)
     {
-                        $stmt = $this->db->prepare(
+        $stmt = $this->db->prepare(
             "SELECT c.*, n.name as to_node_name, 1 as is_return
              FROM story_node_connections c
              JOIN story_nodes n ON c.from_node_id = n.id
@@ -176,18 +176,18 @@ class StoryNode
         $stmt->execute();
         $result = $stmt->get_result();
         $connections = $result->fetch_all(MYSQLI_ASSOC);
-        
-                        foreach ($connections as &$conn) {
+
+        foreach ($connections as &$conn) {
             $conn['to_node_id'] = $conn['from_node_id'];
-            
-                        $displayText = !empty($conn['return_text']) ? $conn['return_text'] : ("Retour : " . ($conn['action_text'] ?: $conn['to_node_name']));
-            
+
+            $displayText = !empty($conn['return_text']) ? $conn['return_text'] : ("Retour : " . ($conn['action_text'] ?: $conn['to_node_name']));
+
             $conn['action_text'] = $displayText;
             $conn['direction_text'] = $displayText;
         }
-        
+
         error_log("Found " . count($connections) . " return connections for node $nodeId");
-        
+
         return $connections;
     }
 
@@ -225,13 +225,13 @@ class StoryNode
         $stmt->execute();
         $result = $stmt->get_result();
         $monsters = $result->fetch_all(MYSQLI_ASSOC);
-        
-                foreach ($monsters as &$monster) {
+
+        foreach ($monsters as &$monster) {
             if ($monster['monster_stats']) {
                 $monster['monster_stats'] = json_decode($monster['monster_stats'], true);
             }
         }
-        
+
         return $monsters;
     }
 
@@ -264,17 +264,18 @@ class StoryNode
     public function getFullNodeData($nodeId)
     {
         $node = $this->findById($nodeId);
-        if (!$node) return null;
-        
+        if (!$node)
+            return null;
+
         $connections = $this->getConnections($nodeId);
         $returnConnections = $this->getReturnConnections($nodeId);
-        
+
         $node['connections'] = array_merge($connections, $returnConnections);
         $node['npcs'] = $this->getNPCs($nodeId);
         $node['monsters'] = $this->getMonsters($nodeId);
         $node['loots'] = $this->getLoots($nodeId);
         $node['traps'] = $this->getTraps($nodeId);
-        
+
         return $node;
     }
 
@@ -297,32 +298,37 @@ class StoryNode
         return $result->fetch_assoc();
     }
 
-    
+
     /**
      * Add a monster to a node
      */
     public function addMonster($nodeId, $monsterData)
     {
         $stmt = $this->db->prepare(
-            "INSERT INTO story_node_monsters (node_id, monster_name, monster_level, monster_stats, quantity, is_boss, can_flee) 
-             VALUES (?, ?, ?, ?, ?, ?, ?)"
+            "INSERT INTO story_node_monsters (node_id, monster_name, monster_level, monster_stats, quantity, is_boss, can_flee, image_path, salle_path) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
         );
-        
+
         $statsJson = json_encode($monsterData['stats'] ?? []);
         $quantity = $monsterData['quantity'] ?? 1;
         $isBoss = $monsterData['is_boss'] ?? 0;
-        $canFlee = isset($monsterData['can_flee']) ? $monsterData['can_flee'] : 1;         
+        $canFlee = isset($monsterData['can_flee']) ? $monsterData['can_flee'] : 1;
+        $imagePath = $monsterData['image_path'] ?? null;
+        $sallePath = $monsterData['salle_path'] ?? null;
+
         $stmt->bind_param(
-            "isssiii", 
-            $nodeId, 
-            $monsterData['name'], 
-            $monsterData['level'], 
+            "isssiiiss",
+            $nodeId,
+            $monsterData['name'],
+            $monsterData['level'],
             $statsJson,
             $quantity,
             $isBoss,
-            $canFlee
+            $canFlee,
+            $imagePath,
+            $sallePath
         );
-        
+
         if ($stmt->execute()) {
             return $this->db->insert_id;
         }
@@ -349,7 +355,7 @@ class StoryNode
              VALUES (?, ?, ?, ?)"
         );
         $stmt->bind_param("iidd", $nodeId, $npcId, $x, $y);
-        
+
         if ($stmt->execute()) {
             return $this->db->insert_id;
         }
@@ -390,21 +396,21 @@ class StoryNode
             "INSERT INTO story_node_traps (node_id, description, damage_dice, effect_text, avoid_stat, difficulty_class) 
              VALUES (?, ?, ?, ?, ?, ?)"
         );
-        
+
         $damage = $data['damage_dice'] ?? '1d6';
         $dc = $data['difficulty_class'] ?? 12;
         $stat = $data['avoid_stat'] ?? 'DEX';
-        
+
         $stmt->bind_param(
-            "issssi", 
-            $nodeId, 
-            $data['description'], 
+            "issssi",
+            $nodeId,
+            $data['description'],
             $damage,
             $data['effect_text'],
             $stat,
             $dc
         );
-        
+
         if ($stmt->execute()) {
             return $this->db->insert_id;
         }
@@ -430,14 +436,14 @@ class StoryNode
             "INSERT INTO story_node_loots (node_id, item_id, quantity, drop_chance, is_guaranteed, is_trapped, trap_damage, trap_dc, trap_description) 
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
         );
-        
+
         $isTrapped = $trapData ? 1 : 0;
         $trapDamage = $trapData['damage'] ?? null;
         $trapDc = $trapData['dc'] ?? null;
         $trapDesc = $trapData['description'] ?? null;
-        
+
         $stmt->bind_param("iiidiisis", $nodeId, $itemId, $quantity, $chance, $isGuaranteed, $isTrapped, $trapDamage, $trapDc, $trapDesc);
-        
+
         if ($stmt->execute()) {
             return $this->db->insert_id;
         }

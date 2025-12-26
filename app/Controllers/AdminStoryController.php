@@ -9,6 +9,7 @@ use App\Models\Monster;
 use App\Models\NPC;
 use App\Models\Item;
 use App\Models\Quest;
+use App\Config\Database;
 
 class AdminStoryController
 {
@@ -52,7 +53,7 @@ class AdminStoryController
                 exit;
             }
         }
-        
+
         $templates = $this->templateModel->getAll();
         $this->render('admin/stories/create', ['templates' => $templates]);
     }
@@ -103,12 +104,16 @@ class AdminStoryController
         }
 
         $nodes = $this->nodeModel->getByStoryId($id);
-        
-                foreach ($nodes as &$node) {
+
+        foreach ($nodes as &$node) {
             $node['connections'] = $this->nodeModel->getConnections($node['id']);
+            $node['monsters'] = $this->nodeModel->getMonsters($node['id']);
+            $node['npcs'] = $this->nodeModel->getNPCs($node['id']);
+            $node['loots'] = $this->nodeModel->getLoots($node['id']);
+            $node['traps'] = $this->nodeModel->getTraps($node['id']);
         }
 
-                $monsterModel = new Monster();
+        $monsterModel = new Monster();
         $npcModel = new NPC();
         $itemModel = new Item();
 
@@ -117,7 +122,7 @@ class AdminStoryController
         $items = $itemModel->getAll();
 
         $this->render('admin/stories/nodes', [
-            'story' => $story, 
+            'story' => $story,
             'nodes' => $nodes,
             'availableMonsters' => $monsters,
             'availableNPCs' => $npcs,
@@ -140,7 +145,7 @@ class AdminStoryController
             ];
 
             $nodeId = $this->nodeModel->create($data);
-            
+
             header('Content-Type: application/json');
             echo json_encode(['success' => !!$nodeId, 'id' => $nodeId]);
             exit;
@@ -162,7 +167,7 @@ class AdminStoryController
             ];
 
             $success = $this->nodeModel->update($nodeId, $data);
-            
+
             header('Content-Type: application/json');
             echo json_encode(['success' => $success]);
             exit;
@@ -173,7 +178,7 @@ class AdminStoryController
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $success = $this->nodeModel->delete($nodeId);
-            
+
             header('Content-Type: application/json');
             echo json_encode(['success' => $success]);
             exit;
@@ -183,35 +188,35 @@ class AdminStoryController
     public function uploadNodeImage()
     {
         header('Content-Type: application/json');
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_FILES['image'])) {
             echo json_encode(['success' => false, 'message' => 'Aucune image fournie']);
             exit;
         }
 
         $file = $_FILES['image'];
-        
-                $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+
+        $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
         if (!in_array($file['type'], $allowedTypes)) {
             echo json_encode(['success' => false, 'message' => 'Type de fichier non autorisé']);
             exit;
         }
 
-                if ($file['size'] > 5 * 1024 * 1024) {
+        if ($file['size'] > 5 * 1024 * 1024) {
             echo json_encode(['success' => false, 'message' => 'Fichier trop volumineux (max 5MB)']);
             exit;
         }
 
-                $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
         $filename = uniqid('story_') . '.' . $extension;
         $uploadPath = __DIR__ . '/../../public/assets/story-images/' . $filename;
-        
-                $directory = dirname($uploadPath);
+
+        $directory = dirname($uploadPath);
         if (!is_dir($directory)) {
             mkdir($directory, 0755, true);
         }
 
-                if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
+        if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
             $imagePath = '/assets/story-images/' . $filename;
             echo json_encode([
                 'success' => true,
@@ -226,7 +231,7 @@ class AdminStoryController
     public function createConnection()
     {
         header('Content-Type: application/json');
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['success' => false, 'message' => 'Méthode non autorisée']);
             exit;
@@ -234,7 +239,7 @@ class AdminStoryController
 
         $fromNodeId = $_POST['from_node_id'] ?? null;
         $toNodeId = $_POST['to_node_id'] ?? null;
-        
+
         if (!$fromNodeId || !$toNodeId) {
             echo json_encode(['success' => false, 'message' => 'Nœuds manquants']);
             exit;
@@ -245,13 +250,13 @@ class AdminStoryController
             "INSERT INTO story_node_connections (from_node_id, to_node_id, direction_text, condition_type, condition_value) 
              VALUES (?, ?, ?, ?, ?)"
         );
-        
+
         $directionText = $_POST['direction_text'] ?? '';
         $conditionType = $_POST['condition_type'] ?? 'none';
         $conditionValue = $_POST['condition_value'] ?? '';
-        
+
         $stmt->bind_param("iisss", $fromNodeId, $toNodeId, $directionText, $conditionType, $conditionValue);
-        
+
         if ($stmt->execute()) {
             echo json_encode([
                 'success' => true,
@@ -266,7 +271,7 @@ class AdminStoryController
     public function updateConnection($id)
     {
         header('Content-Type: application/json');
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['success' => false, 'message' => 'Méthode non autorisée']);
             exit;
@@ -279,7 +284,7 @@ class AdminStoryController
                  allow_return = ?, return_text = ?, return_condition_type = ?, return_condition_value = ?
              WHERE id = ?"
         );
-        
+
         $directionText = $_POST['direction_text'] ?? '';
         $conditionType = $_POST['condition_type'] ?? 'none';
         $conditionValue = $_POST['condition_value'] ?? '';
@@ -287,13 +292,19 @@ class AdminStoryController
         $returnText = $_POST['return_text'] ?? '';
         $returnConditionType = $_POST['return_condition_type'] ?? 'none';
         $returnConditionValue = $_POST['return_condition_value'] ?? '';
-        
-        $stmt->bind_param("sssisssi", 
-            $directionText, $conditionType, $conditionValue,
-            $allowReturn, $returnText, $returnConditionType, $returnConditionValue,
+
+        $stmt->bind_param(
+            "sssisssi",
+            $directionText,
+            $conditionType,
+            $conditionValue,
+            $allowReturn,
+            $returnText,
+            $returnConditionType,
+            $returnConditionValue,
             $id
         );
-        
+
         if ($stmt->execute()) {
             echo json_encode(['success' => true]);
         } else {
@@ -305,7 +316,7 @@ class AdminStoryController
     public function deleteConnection($id)
     {
         header('Content-Type: application/json');
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['success' => false, 'message' => 'Méthode non autorisée']);
             exit;
@@ -314,7 +325,7 @@ class AdminStoryController
         $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare("DELETE FROM story_node_connections WHERE id = ?");
         $stmt->bind_param("i", $id);
-        
+
         if ($stmt->execute()) {
             echo json_encode(['success' => true]);
         } else {
@@ -323,7 +334,7 @@ class AdminStoryController
         exit;
     }
 
-    
+
     public function getNodeEntities($nodeId)
     {
         header('Content-Type: application/json');
@@ -346,7 +357,7 @@ class AdminStoryController
     public function addNodeEntity()
     {
         header('Content-Type: application/json');
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['success' => false, 'message' => 'Méthode non autorisée']);
             exit;
@@ -354,7 +365,7 @@ class AdminStoryController
 
         $nodeId = $_POST['node_id'] ?? null;
         $type = $_POST['type'] ?? null;
-        
+
         if (!$nodeId || !$type) {
             echo json_encode(['success' => false, 'message' => 'Paramètres manquants']);
             exit;
@@ -364,26 +375,30 @@ class AdminStoryController
 
         switch ($type) {
             case 'monster':
-              
+
                 $monsterData = [
                     'name' => $_POST['monster_name'] ?? 'Monstre',
                     'level' => $_POST['monster_level'] ?? 1,
                     'quantity' => $_POST['quantity'] ?? 1,
                     'is_boss' => isset($_POST['is_boss']) ? 1 : 0,
                     'can_flee' => isset($_POST['can_flee']) ? 1 : 0,
-                    'stats' => []                 ];
-                
-             
-                
+                    'stats' => []
+                ];
+
+
+
                 if (!empty($_POST['template_id'])) {
                     $monsterModel = new Monster();
                     $template = $monsterModel->findById($_POST['template_id']);
                     if ($template) {
                         $monsterData['name'] = $template['name'];
-                        $monsterData['level'] = $template['level_min'];                         $monsterData['stats'] = json_decode($template['base_stats_json'], true);
+                        $monsterData['level'] = $template['level_min'];
+                        $monsterData['stats'] = json_decode($template['base_stats_json'], true);
+                        $monsterData['image_path'] = $template['image_path'];
+                        $monsterData['salle_path'] = $template['salle_path'];
                     }
                 }
-                
+
                 $id = $this->nodeModel->addMonster($nodeId, $monsterData);
                 break;
 
@@ -400,7 +415,7 @@ class AdminStoryController
                     $chance = $_POST['drop_chance'] ?? 1.0;
                     $quantity = $_POST['quantity'] ?? 1;
                     $isGuaranteed = isset($_POST['is_guaranteed']) ? 1 : 0;
-                    
+
                     $trapData = null;
                     if (!empty($_POST['is_trapped'])) {
                         $trapData = [
@@ -409,11 +424,11 @@ class AdminStoryController
                             'description' => $_POST['trap_description'] ?? ''
                         ];
                     }
-                    
+
                     $id = $this->nodeModel->addLoot($nodeId, $itemId, $quantity, $chance, $isGuaranteed, $trapData);
                 }
                 break;
-                
+
             case 'trap':
                 $data = [
                     'description' => $_POST['description'] ?? 'Un piège',
@@ -437,7 +452,7 @@ class AdminStoryController
     public function removeNodeEntity()
     {
         header('Content-Type: application/json');
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['success' => false, 'message' => 'Méthode non autorisée']);
             exit;
