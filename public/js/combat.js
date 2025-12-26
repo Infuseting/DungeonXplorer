@@ -1,4 +1,3 @@
-
 import { updateCombatState, changeMusicCategory } from '/js/modules/soundManager.js';
 
 let end = false;
@@ -172,6 +171,16 @@ function handleInitialData(initialData) {
             }
         }
 
+        // Mise à jour des stats initiales (avec items et compétences)
+        if (initialData.playerStats) {
+            updatePlayerStats(initialData.playerStats);
+            
+            // Mettre à jour MAX_HP si la vitalité a changé
+            if (initialData.playerStats.vitality) {
+                MAX_HP = initialData.playerStats.vitality;
+            }
+        }
+
         // Vérification de mort instantanée
         if (initialData.playerDead || initialData.gameOver) {
             playerLoss();
@@ -182,6 +191,9 @@ function handleInitialData(initialData) {
 function sendAction(action, skillId = null, itemId = null) {
     disableActions();
     dice.textContent = "🎲 ";
+
+    // Retourner au menu principal après utilisation d'une compétence ou potion
+    toggleActionMenu('main');
 
     let body = "action=" + encodeURIComponent(action);
     if (skillId) body += "&skill_id=" + encodeURIComponent(skillId);
@@ -237,6 +249,16 @@ function sendAction(action, skillId = null, itemId = null) {
                     if (data.gameOver && !data.win) {
                         end = true;
                         playerLoss();
+                    }
+
+                    // Mise à jour des stats (incluant vitalité)
+                    if (data.playerStats) {
+                        updatePlayerStats(data.playerStats);
+                        
+                        // Mettre à jour MAX_HP si la vitalité a changé
+                        if (data.playerStats.vitality) {
+                            MAX_HP = data.playerStats.vitality;
+                        }
                     }
 
                     // Mise à jour des HP du joueur
@@ -307,12 +329,59 @@ function sendAction(action, skillId = null, itemId = null) {
                             }
                         }
                     }
+
+                    // Mise à jour des stats du joueur si présentes dans la réponse
+                    if (data.playerStats) {
+                        updatePlayerStats(data.playerStats);
+                    }
                     // if (btn) btn.disabled = false; // Logic moved inside newTurn check with highlight
                 }, 1500);
             } catch (e) {
                 console.error("Réponse non JSON:", e);
             }
         });
+}
+
+function updatePlayerStats(stats) {
+    // Mise à jour des stats affichées avec animation
+    const statElements = {
+        'attack': document.getElementById('player-attack'),
+        'defense': document.getElementById('player-defense'),
+        'strength': document.getElementById('player-strength'),
+        'intelligence': document.getElementById('player-intelligence'),
+        'dexterity': document.getElementById('player-dexterity')
+    };
+
+    for (const [key, element] of Object.entries(statElements)) {
+        if (element && typeof stats[key] !== 'undefined') {
+            const oldValue = parseInt(element.textContent) || 0;
+            const newValue = stats[key];
+            
+            // Si la valeur change, on anime
+            if (oldValue !== newValue) {
+                element.textContent = newValue;
+                element.classList.add('animate-pulse', 'text-yellow-400');
+                setTimeout(() => {
+                    element.classList.remove('animate-pulse', 'text-yellow-400');
+                }, 1000);
+            }
+        }
+    }
+    
+    // Mise à jour des HP max affichés si la vitalité a changé
+    if (stats.vitality) {
+        const hpMaxElement = document.getElementById('player-hp-max');
+        if (hpMaxElement) {
+            const oldMax = parseInt(hpMaxElement.textContent) || MAX_HP;
+            if (oldMax !== stats.vitality) {
+                hpMaxElement.textContent = stats.vitality;
+                hpMaxElement.classList.add('animate-pulse', 'text-green-400');
+                setTimeout(() => {
+                    hpMaxElement.classList.remove('animate-pulse', 'text-green-400');
+                }, 1000);
+            }
+        }
+    }
 }
 
 function rollDice() {
@@ -681,6 +750,13 @@ window.loadSave = function (id) {
 
 // Réinitialiser la progression de l'histoire et retourner à la map
 window.resetStoryAndReturnToMap = function (storyId) {
+    // Supprimer l'overlay de Game Over
+    const gameOverOverlay = document.getElementById('game-over-overlay');
+    if (gameOverOverlay) {
+        gameOverOverlay.remove();
+    }
+
+    // Reste du code inchangé
     const formData = new FormData();
     if (storyId && storyId !== 'null' && storyId !== 'undefined') {
         formData.append('story_id', storyId);
@@ -692,7 +768,6 @@ window.resetStoryAndReturnToMap = function (storyId) {
     })
         .then(r => r.json())
         .then(d => {
-            // Rediriger vers la map que la réinitialisation ait réussi ou non
             if (window.GameRouter) {
                 window.GameRouter.showMap();
             } else {
@@ -701,7 +776,6 @@ window.resetStoryAndReturnToMap = function (storyId) {
         })
         .catch(err => {
             console.error('Error resetting story:', err);
-            // Rediriger quand même vers la map
             if (window.GameRouter) {
                 window.GameRouter.showMap();
             } else {

@@ -200,7 +200,8 @@ class StoryNode
     public function getNPCs($nodeId)
     {
         $stmt = $this->db->prepare(
-            "SELECT snn.*, n.name, n.role, n.texture 
+            "SELECT snn.id, snn.npc_id, snn.position_x, snn.position_y, 
+                    n.name, n.role, n.texture 
              FROM story_node_npcs snn
              JOIN npcs n ON snn.npc_id = n.id
              WHERE snn.node_id = ?"

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Config\Database;
 use App\Models\Inventory;
 use App\Models\Stats as StatsEnum;
+use App\Services\CharacterStatsService;
 
 #[\AllowDynamicProperties]
 class Character
@@ -64,7 +65,10 @@ class Character
 
     public function getAttaqueClass()
     {
-        return $this->getStrength() + $this->getEquippedStats(StatsEnum::Damage);
+        if ($this->id) {
+            return CharacterStatsService::getStat($this->id, 'attack');
+        }
+        return $this->getStrength();
     }
 
     public function resetCache(): void
@@ -408,16 +412,25 @@ class Character
 
     public function getStrength()
     {
+        if ($this->id) {
+            return CharacterStatsService::getStat($this->id, 'strength');
+        }
         return $this->strength ?? 10;
     }
 
     public function getVitality()
     {
+        if ($this->id) {
+            return CharacterStatsService::getStat($this->id, 'vitality');
+        }
         return $this->vitality ?? 10;
     }
 
     public function getIntelligence()
     {
+        if ($this->id) {
+            return CharacterStatsService::getStat($this->id, 'intelligence');
+        }
         return $this->intelligence ?? 10;
     }
 
@@ -428,6 +441,9 @@ class Character
 
     public function getDexterity()
     {
+        if ($this->id) {
+            return CharacterStatsService::getStat($this->id, 'dexterity');
+        }
         return $this->dexterity ?? 10;
     }
 
@@ -437,16 +453,13 @@ class Character
     }
 
     /**
-     * Réduit la vitalité actuelle du personnage.
+     * Réduit les HP actuels du personnage
      */
     public function reduceVitality($number)
     {
-        // Mise à jour en mémoire (prioritaire pour le combat)
-        if (isset($this->vitality)) {
-            $this->vitality = max(0, $this->vitality - $number);
-        }
-        if (isset($this->currentHp)) {
-            $this->currentHp = max(0, $this->currentHp - $number);
+        // Mise à jour en mémoire de current_hp uniquement
+        if (isset($this->current_hp)) {
+            $this->current_hp = max(0, $this->current_hp - $number);
         }
 
         // Mise à jour en base si la connexion est disponible
@@ -462,14 +475,9 @@ class Character
      */
     public function isAlive()
     {
-        // Priorité à la propriété vitality (utilisée en combat)
-        if (isset($this->vitality)) {
-            return $this->vitality > 0;
-        }
-
-        // Sinon, vérifier currentHp
-        if (isset($this->currentHp)) {
-            return $this->currentHp > 0;
+        // Priorité à current_hp (utilisé en combat)
+        if (isset($this->current_hp)) {
+            return $this->current_hp > 0;
         }
 
         // Dernier recours : vérifier en base de données si disponible
@@ -481,7 +489,8 @@ class Character
             return ($res['current_hp'] > 0);
         }
 
-        // Si aucune info disponible, considérer mort par sécurité
+        // Si aucune info disponible, considérer vivant par défaut
+        return true;
         return false;
     }
 
@@ -500,10 +509,10 @@ class Character
      */
     public function getArmorClass()
     {
-        if ($this->armor == null) {
-            $this->armor = $this->getEquippedStats(StatsEnum::Defense);
+        if ($this->id) {
+            return CharacterStatsService::getStat($this->id, 'defense');
         }
-        return $this->armor;
+        return 10;
     }
 
     public function getUserId()

@@ -64,7 +64,7 @@
     <!-- Bottom Right: Inventory, Quests & Exit -->
     <div class="fixed bottom-8 right-8 z-50 flex flex-col gap-4">
         <!-- Exit Dungeon Button (Conditional) -->
-        <button id="exit-dungeon-btn" class="hidden w-16 h-16 bg-yellow-600 hover:bg-yellow-500 text-white rounded-full shadow-lg border-2 border-yellow-400 flex items-center justify-center transition-transform hover:scale-110 active:scale-95">
+        <button id="exit-dungeon-btn" onclick="window.exitDungeon()" class="hidden w-16 h-16 bg-yellow-600 hover:bg-yellow-500 text-white rounded-full shadow-lg border-2 border-yellow-400 flex items-center justify-center transition-transform hover:scale-110 active:scale-95" title="Quitter le donjon">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>

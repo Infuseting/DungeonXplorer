@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Models\Character;
 use App\Models\CharacterClass;
 use App\Models\CharacterStats;
+use App\Services\CharacterStatsService;
 
 class CharacterController
 {
@@ -17,7 +18,6 @@ class CharacterController
 
         $characterModel = new Character();
         $classModel = new CharacterClass();
-        $statsModel = new CharacterStats();
         
         $characters = $characterModel->findAllByUserId($_SESSION['user_id']);
         
@@ -26,27 +26,27 @@ class CharacterController
             exit;
         }
 
-                foreach ($characters as &$character) {
-                        $character['class'] = $classModel->findById($character['class_id']);
+        // Enrichir chaque personnage avec ses stats effectives
+        foreach ($characters as &$character) {
+            // Classe
+            $character['class'] = $classModel->findById($character['class_id']);
             
-                        $character['stats'] = $statsModel->findByCharacterId($character['id']);
+            // Stats effectives (base + items + compétences)
+            $effectiveStats = CharacterStatsService::getEffectiveStats($character['id']);
             
-                        if (!$character['stats']) {
-                $baseStats = json_decode($character['class']['base_stats_json'], true);
-                $character['stats'] = [
-                    'strength' => $baseStats['strength'] ?? 10,
-                    'dexterity' => $baseStats['dexterity'] ?? 10,
-                    'intelligence' => $baseStats['intelligence'] ?? 10,
-                    'vitality' => $baseStats['vitality'] ?? 10,
-                    'level' => 1
-                ];
-            }
+            // Assigner les stats pour l'affichage
+            $character['strength'] = $effectiveStats['strength'];
+            $character['dexterity'] = $effectiveStats['dexterity'];
+            $character['intelligence'] = $effectiveStats['intelligence'];
+            $character['vitality'] = $effectiveStats['vitality'];
+            $character['attack'] = $effectiveStats['attack'];
+            $character['defense'] = $effectiveStats['defense'];
             
-                        $character['strength'] = $character['stats']['strength'];
-            $character['dexterity'] = $character['stats']['dexterity'];
-            $character['intelligence'] = $character['stats']['intelligence'];
-            $character['vitality'] = $character['stats']['vitality'];
-            $character['level'] = $character['stats']['level'] ?? 1;
+            // Niveau et XP depuis character_stats
+            $statsModel = new CharacterStats();
+            $baseStats = $statsModel->findByCharacterId($character['id']);
+            $character['level'] = $baseStats['level'] ?? 1;
+            $character['xp'] = $baseStats['xp'] ?? 0;
             
             // Décoder les données d'apparence si elles sont en JSON
             if (isset($character['appearance']) && is_string($character['appearance'])) {

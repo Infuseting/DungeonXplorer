@@ -107,35 +107,35 @@ use App\Models\Skill
                             <li class="flex items-center gap-2 w-full">
                                 <span class="material-symbols-outlined text-violet-400"
                                     title="Puissance d'attaque">swords</span>
-                                <span
+                                <span id="player-attack"
                                     class="text-xl font-bold"><?php echo htmlspecialchars($characterModel->getAttaqueClass()); ?></span>
                             </li>
 
                             <li class="flex items-center gap-2 w-full">
                                 <span class="material-symbols-outlined text-violet-400"
                                     title="Défense du joueur">shield</span>
-                                <span
+                                <span id="player-defense"
                                     class="text-xl font-bold"><?php echo htmlspecialchars($characterModel->getArmorClass()); ?></span>
                             </li>
 
                             <li class="flex items-center gap-2 w-full">
                                 <span class="material-symbols-outlined text-violet-400"
                                     title="Force du joueur">fitness_center</span>
-                                <span
+                                <span id="player-strength"
                                     class="text-xl font-bold"><?php echo htmlspecialchars($characterModel->getStrength()); ?></span>
                             </li>
 
                             <li class="flex items-center gap-2 w-full">
                                 <span class="material-symbols-outlined text-violet-400"
                                     title="Intelligence du joueur">psychology</span>
-                                <span
+                                <span id="player-intelligence"
                                     class="text-xl font-bold"><?php echo htmlspecialchars($characterModel->getIntelligence()); ?></span>
                             </li>
 
                             <li class="flex items-center gap-2 w-full">
                                 <span class="material-symbols-outlined text-violet-400"
                                     title="Dextérié du joueur">directions_run</span>
-                                <span
+                                <span id="player-dexterity"
                                     class="text-xl font-bold"><?php echo htmlspecialchars($characterModel->getDexterity()); ?></span>
                             </li>
                         </ul>
@@ -427,7 +427,7 @@ use App\Models\Skill
                     throw new Error("Network response was not ok");
                 }
                 return response.text();
-            }).then(data => {
+            }).then data => {
                 console.log("Dice roll sent to server:", data);
             }).catch(error => {
                 console.error("There was a problem with the fetch operation:", error);
@@ -515,6 +515,13 @@ use App\Models\Skill
 
         function loadSave(id) {
             if (!confirm("Charger cette sauvegarde ?")) return;
+            
+            // Supprimer l'overlay de Game Over avant de charger
+            const gameOverOverlay = document.getElementById('game-over-overlay');
+            if (gameOverOverlay) {
+                gameOverOverlay.remove();
+            }
+            
             fetch('/game/load', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

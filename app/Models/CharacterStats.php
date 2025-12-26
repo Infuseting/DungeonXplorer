@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Services\CharacterStatsService;
 
 class CharacterStats
 {
@@ -96,88 +97,26 @@ class CharacterStats
      * Get effective stats (Base + Equipment + Penalties)
      * @param int $characterId
      * @return array
+     * @deprecated Utiliser CharacterStatsService::getEffectiveStats() à la place
      */
     public function getEffectiveStats($characterId)
     {
-                $baseStats = $this->findByCharacterId($characterId);
-        if (!$baseStats) return null;
-
-        $effectiveStats = [
-            'strength' => (int)$baseStats['strength'],
-            'dexterity' => (int)$baseStats['dexterity'],
-            'intelligence' => (int)$baseStats['intelligence'],
-            'vitality' => (int)$baseStats['vitality'],
-            
-        ];
-
-                $inventoryModel = new Inventory();
-        $inventoryData = $inventoryModel->getCharacterInventory($characterId);
-        $equippedItems = $inventoryData['equipped'];
-
-                foreach ($equippedItems as $item) {
-            if (!empty($item['stats'])) {
-                $itemStats = json_decode($item['stats'], true);
-                if ($itemStats) {
-                    foreach ($itemStats as $stat => $value) {
-                                                                        if (isset($effectiveStats[$stat])) {
-                            $effectiveStats[$stat] += (int)$value;
-                        }
-                    }
-                }
-            }
-        }
-
-
-                $skillModel = new Skill();
-        $passives = $skillModel->getPassiveBonuses($characterId);
-        foreach ($passives as $p) {
-            $type = $p['effect_type'];             $value = (int)$p['effect_value'];
-            
-                                    if ($type === 'passive_def_flat') {
-                                                                                                            } elseif (strpos($type, 'passive_') === 0 && strpos($type, '_flat') !== false) {
-                                                                $parts = explode('_', $type);
-                if (count($parts) >= 3) {
-                    $statShort = $parts[1];
-                    $statMap = [
-                        'str' => 'strength',
-                        'dex' => 'dexterity',
-                        'int' => 'intelligence',
-                        'vit' => 'vitality'
-                    ];
-                    if (isset($statMap[$statShort])) {
-                        $fullStat = $statMap[$statShort];
-                        if (isset($effectiveStats[$fullStat])) {
-                            $effectiveStats[$fullStat] += $value;
-                        }
-                    }
-                }
-                }
-            }
-
-                                                            
-                                    
-                    if (isset($equippedItems['backpack']) && !empty($equippedItems['backpack']['stats'])) {
-            $bpStats = json_decode($equippedItems['backpack']['stats'], true);
-            $backpackCapacity = (int)($bpStats['capacity'] ?? 0);
-        }
-
-        $maxWeight = 60 + $effectiveStats['strength'] + $backpackCapacity;
-        $currentWeight = $inventoryData['current_weight'];
-
-                $isOverweight = $currentWeight > $maxWeight;
+        // Déléguer au service centralisé
+        $stats = CharacterStatsService::getEffectiveStats($characterId);
         
-        if ($isOverweight) {
-            foreach ($effectiveStats as $key => $val) {
-                $effectiveStats[$key] = floor($val * 0.5);             }
-        }
-
+        // Retourner dans l'ancien format pour compatibilité
         return [
-            'stats' => $effectiveStats,
-            'base_stats' => $baseStats,
+            'stats' => [
+                'strength' => $stats['strength'],
+                'dexterity' => $stats['dexterity'],
+                'intelligence' => $stats['intelligence'],
+                'vitality' => $stats['vitality']
+            ],
+            'base_stats' => $this->findByCharacterId($characterId),
             'weight' => [
-                'current' => $currentWeight,
-                'max' => $maxWeight,
-                'is_overweight' => $isOverweight
+                'current' => $stats['current_weight'],
+                'max' => $stats['max_weight'],
+                'is_overweight' => $stats['is_overweight']
             ]
         ];
     }
